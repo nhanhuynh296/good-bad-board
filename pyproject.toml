@@ -5,7 +5,7 @@ description = "Default template for PDM package"
 authors = [
     {name = "Nathan Huynh", email = "nhanhuynh296@gmail.com"},
 ]
-dependencies = ["faker>=36.1.1"]
+dependencies = ["faker>=36.1.1", "numpy>=2.2.3"]
 requires-python = "==3.13.*"
 readme = "README.md"
 license = {text = "MIT"}
