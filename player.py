@@ -1,19 +1,16 @@
-from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
+from pydantic import BaseModel, Field
 
-@dataclass
-class Player:
+
+class Player(BaseModel):
     name: str
     elo: int
-    id: UUID = field(default_factory=uuid4)
+    id: UUID = Field(default_factory=uuid4)
     ...
 
     def __hash__(self):
         return hash(self.id)
 
     def __str__(self):
-        return f"{self.name} ({self.elo})"
-
-    def __repr__(self):
-        return f"Player(name={self.name}, elo={self.elo})"
+        return f"{self.name:15s} ({self.elo})"
