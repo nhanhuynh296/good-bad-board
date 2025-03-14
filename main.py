@@ -22,6 +22,17 @@ game_maker = GameMaker()
 for player in players:
     game_maker.add_player(player)
 game_maker.set_court(2)
+
+
+while (user_input := input("enter command ")) != "q":
+    if user_input == "s":
+        print("saving game...")
+        game_maker.accept_game()
+    if user_input == "n":
+        game_maker.make_game()
+    if user_input.split(" ")[0] == "sw":
+        ...
+print("goodbye")
 game_maker.make_game()
 game_maker.make_game()
 game_maker.make_game()

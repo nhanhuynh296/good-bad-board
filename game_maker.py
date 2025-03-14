@@ -37,9 +37,9 @@ class GameMaker:
         ...
 
     def set_court(self, court: int):
-        assert 0 <= court <= len(self._players) / Match.PLAYER_PER_COURT, (
-            "Not enough players"
-        )
+        assert (
+            0 <= court <= len(self._players) / Match.PLAYER_PER_COURT
+        ), "Not enough players"
         self._court = court
 
     def add_player(self, player: Player):
@@ -50,12 +50,14 @@ class GameMaker:
 
     def make_game(self):
         candidate_players = self._choose_players()
-        matches = self._make_match(candidate_players)
-        self._history.extend(matches)
-        self.improve_elo_spread(matches, 2)
-        print(f"{self.calculate_elo_spread(matches):.2f}")
-        for court_num, match in enumerate(matches, start=1):
+        self.current_matches = self._make_match(candidate_players)
+        self.improve_elo_spread(self.current_matches, 2)
+        for court_num, match in enumerate(self.current_matches, start=1):
             print(f"Court {court_num}: {match}")
+        print(f"Max elo gap {self.calculate_elo_spread(self.current_matches):.2f}")
+
+    def accept_game(self):
+        self._history.extend(self.current_matches)
         self.print_statistic_history()
 
     def _choose_players(self) -> list[Player]:
