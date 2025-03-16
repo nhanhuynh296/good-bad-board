@@ -8,7 +8,14 @@ extension Picker<E> on List<E> {
       weights.length == length,
       'List and weights must be of the same length.',
     );
-    assert(count <= 0 || count > length);
+    assert(count >= 0);
+    if (!replace) {
+      assert(
+        count < length,
+        'Can not pick number of elements more than a list, maximum of $length.',
+      );
+    }
+
     final availableWeights = List<double>.from(weights);
 
     final random = Random();
@@ -32,7 +39,7 @@ extension Picker<E> on List<E> {
         pickedElements.add(availableElements[j]);
         if (!replace) {
           availableElements.removeAt(j);
-          normalizedWeights.removeAt(j);
+          availableWeights.removeAt(j);
         }
         break;
       }

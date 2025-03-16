@@ -16,5 +16,5 @@ class Player {
   final Elo elo;
   final String id;
 
-  Player({required this.name, required this.elo}) : id = Uuid().v4();
+  Player({required this.name, required this.elo}) : id = const Uuid().v4();
 }
