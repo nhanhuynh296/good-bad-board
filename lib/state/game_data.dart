@@ -10,7 +10,7 @@ import 'package:trotter/trotter.dart';
 class GameData extends ChangeNotifier {
   final int numberOfCourt = 2;
 
-  final List<Player> players = [
+  final List<Player> _players = [
     Player(name: "Howard", elo: Elo.b1),
     Player(name: "Yong", elo: Elo.b2),
     Player(name: "Ryan", elo: Elo.b2),
@@ -26,14 +26,42 @@ class GameData extends ChangeNotifier {
     Player(name: "Nathan", elo: Elo.a1),
   ];
 
+  List<Player> get player => List.unmodifiable(_players);
+
   final List<List<Game>> history = [];
-  int currentGameIndex = 0;
 
   /// Candidate to be added to history
   List<Game> currentMatches = [];
 
+  /// When a player came after the late and paid a fractional price.
+  /// Use a average count of all player, multiply by total game to represent the
+  /// number of "matches" that the player had played.
+  /// This create fairness so that the one come really late would not have a
+  /// very high chance of playing for the rest of the session.
+  ///
+  /// If paying full price then just adding to the list as usual
+  final Map<Player, double> _fractionalAverageGamePlayer = {};
+
+  void addFractionalPricedPlayer(Player player) {
+    _players.add(player);
+    _fractionalAverageGamePlayer[player] =
+        getCurrentPlayerAverageMatchPlayed() * history.length;
+    notifyListeners();
+  }
+
+  void addFullPricedPlayer(Player player) {
+    _players.add(player);
+    notifyListeners();
+  }
+
+  void removePlayer(Player player) {
+    _players.remove(player);
+    _fractionalAverageGamePlayer.remove(player);
+    notifyListeners();
+  }
+
   void makeGame() {
-    assert(players.isNotEmpty && numberOfCourt > 0);
+    if (_players.isEmpty || numberOfCourt <= 0) return;
     final candidatePlayer = _choosePlayer().shuffled();
     assert(
       candidatePlayer.isNotEmpty && candidatePlayer.length % 4 == 0,
@@ -59,11 +87,11 @@ class GameData extends ChangeNotifier {
     final playerHistory = getCurrentPlayersHistory();
     final averageMatchPlayed = getCurrentPlayerAverageMatchPlayed();
 
-    final weights = players
+    final weights = _players
         .map((player) {
           final modifier =
               1 / exp(2 * ((playerHistory[player]! - averageMatchPlayed)));
-          return modifier / players.length;
+          return modifier / _players.length;
         })
         .toList(growable: false);
     return playerHistory.keys
@@ -74,14 +102,24 @@ class GameData extends ChangeNotifier {
   /// Only using the currently active player to calculate the average.
   ///
   /// Prevent scenario where a player leaves and still got chosen to play.
-  Map<Player, int> getCurrentPlayersHistory() {
-    final Map<Player, int> matchCount = {for (var player in players) player: 0};
+  Map<Player, double> getCurrentPlayersHistory() {
+    final Map<Player, double> matchCount = {
+      for (var player in _players) player: 0,
+    };
     final currentPlayerHistory = history.expand(
-      (games) => games.expand((game) => game.players).where(players.contains),
+      (games) => games.expand((game) => game.players).where(_players.contains),
     );
     for (final player in currentPlayerHistory) {
       matchCount[player] = matchCount.update(player, (value) => value + 1);
     }
+
+    _fractionalAverageGamePlayer.forEach(
+      (player, nMatchPlayed) =>
+          matchCount[player] = matchCount.update(
+            player,
+            (value) => value + nMatchPlayed,
+          ),
+    );
     return matchCount;
   }
 
@@ -129,7 +167,7 @@ class GameData extends ChangeNotifier {
   }
 
   Iterable<Player> getInactivePlayer() {
-    final allPlayer = players.toSet();
+    final allPlayer = _players.toSet();
     final currentPlayer = currentMatches.expand((game) => game.players).toSet();
     return allPlayer.difference(currentPlayer);
   }
