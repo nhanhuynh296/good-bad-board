@@ -48,14 +48,16 @@ class GameData extends ChangeNotifier {
   }
 
   void saveCurrentGame() {
+    if (currentMatches.isEmpty) return;
     history.add(currentMatches);
     currentMatches = [];
     notifyListeners();
+    print(getCurrentPlayerAverageMatchPlayed());
   }
 
   Iterable<Player> _choosePlayer() {
-    final playerHistory = getPlayersHistory();
-    final averageMatchPlayed = getPlayerAverageMatchPlayed(playerHistory);
+    final playerHistory = getCurrentPlayersHistory();
+    final averageMatchPlayed = getCurrentPlayerAverageMatchPlayed();
 
     final weights = players
         .map((player) {
@@ -69,23 +71,22 @@ class GameData extends ChangeNotifier {
         .choices(weights, count: numberOfCourt * Game.playerPerCourt);
   }
 
-  Map<Player, int> getPlayersHistory() {
+  /// Only using the currently active player to calculate the average.
+  ///
+  /// Prevent scenario where a player leaves and still got chosen to play.
+  Map<Player, int> getCurrentPlayersHistory() {
     final Map<Player, int> matchCount = {for (var player in players) player: 0};
-    final playerHistory = history.expand(
-      (games) => games.expand((game) => game.players),
+    final currentPlayerHistory = history.expand(
+      (games) => games.expand((game) => game.players).where(players.contains),
     );
-    for (final player in playerHistory) {
-      matchCount[player] = matchCount.update(
-        player,
-        (value) => value + 1,
-        ifAbsent: () => 0,
-      );
+    for (final player in currentPlayerHistory) {
+      matchCount[player] = matchCount.update(player, (value) => value + 1);
     }
     return matchCount;
   }
 
-  double getPlayerAverageMatchPlayed([Map<Player, int>? cachedHistory]) {
-    final history = cachedHistory ?? getPlayersHistory();
+  double getCurrentPlayerAverageMatchPlayed() {
+    final history = getCurrentPlayersHistory();
     final playerMatches = history.values;
     if (playerMatches.isEmpty) return 0;
     return playerMatches.average;

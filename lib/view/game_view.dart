@@ -14,8 +14,10 @@ class GameView extends StatelessWidget {
     final sortedPlayer = players.sortedBy((player) => player.elo.index);
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black),
-        // color: Colors.primaries[Random().nextInt(Colors.primaries.length)],
+        border: Border.all(
+          color: Colors.black,
+          strokeAlign: BorderSide.strokeAlignInside,
+        ),
       ),
       child: IntrinsicWidth(
         child: Column(
@@ -42,7 +44,6 @@ class GameView extends StatelessWidget {
               child: Row(
                 spacing: gutter,
                 mainAxisSize: MainAxisSize.min,
-
                 children: [
                   PlayerView(sortedPlayer[1]),
                   PlayerView(sortedPlayer[2]),
