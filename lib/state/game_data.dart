@@ -33,6 +33,9 @@ class GameData extends ChangeNotifier {
   /// Candidate to be added to history
   List<Game> currentMatches = [];
 
+  Iterable<Player> get currentMatchesPlayers =>
+      currentMatches.expand((game) => game.players);
+
   /// When a player came after the late and paid a fractional price.
   /// Use a average count of all player, multiply by total game to represent the
   /// number of "matches" that the player had played.
@@ -168,7 +171,36 @@ class GameData extends ChangeNotifier {
 
   Iterable<Player> getInactivePlayer() {
     final allPlayer = _players.toSet();
-    final currentPlayer = currentMatches.expand((game) => game.players).toSet();
+    final currentPlayer = currentMatchesPlayers.toSet();
     return allPlayer.difference(currentPlayer);
+  }
+
+  Map<Player, List<int>> getIndexOfPlayers() {
+    final Map<Player, List<int>> out = {};
+    for (var i = 0; i < currentMatches.length; i++) {
+      for (var j = 0; j < currentMatches[i].players.length; j++) {
+        out[currentMatches[i].players[j]] = [i, j];
+      }
+    }
+    return out;
+  }
+
+  void swapActivePlayer(Player player1, Player player2) {
+    final indices = getIndexOfPlayers();
+    var tmp =
+        currentMatches[indices[player1]![0]].players[indices[player1]![1]];
+
+    currentMatches[indices[player1]![0]].players[indices[player1]![1]] =
+        currentMatches[indices[player2]![0]].players[indices[player2]![1]];
+    currentMatches[indices[player2]![0]].players[indices[player2]![1]] = tmp;
+    notifyListeners();
+  }
+
+  void swapWithInactivePlayer(Player activePlayer, Player inactivePlayer) {
+    final indices = getIndexOfPlayers();
+    currentMatches[indices[activePlayer]![0]]
+            .players[indices[activePlayer]![1]] =
+        inactivePlayer;
+    notifyListeners();
   }
 }

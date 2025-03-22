@@ -61,7 +61,13 @@ class GameMaker extends StatelessWidget {
                       'Courts',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    const Expanded(child: CurrentGameView()),
+                    Expanded(
+                      child:
+                          (gameData.currentMatches.isNotEmpty ||
+                                  gameData.history.isNotEmpty)
+                              ? const CurrentGameView()
+                              : const SizedBox.shrink(),
+                    ),
                   ],
                 ),
               ),
@@ -110,17 +116,24 @@ class InactivePlayerView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    final inactivePlayer = gameData
+    final inactivePlayers = gameData
         .getInactivePlayer()
         .sortedBy((player) => player.name)
         .toList(growable: false);
 
     return ListView.separated(
-      itemCount: inactivePlayer.length,
+      itemCount: inactivePlayers.length,
       padding: const EdgeInsets.symmetric(horizontal: gutter),
       itemBuilder:
-          (BuildContext context, int index) =>
-              PlayerView(inactivePlayer[index]),
+          (BuildContext context, int index) => DraggablePlayerView(
+            data: inactivePlayers[index],
+            shouldAcceptIncomingDragPlayer:
+                // Disallow dragging to other inactive player
+                (player) => !inactivePlayers.contains(player),
+            onDragToTarget: (player) {
+              gameData.swapWithInactivePlayer(player, inactivePlayers[index]);
+            },
+          ),
       separatorBuilder:
           (BuildContext context, int index) => const SizedBox(height: gutter),
     );
@@ -157,14 +170,13 @@ class _CurrentGameViewState extends State<CurrentGameView> {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    final numberOfTabs = 1 + gameData.history.length;
+    final numberOfTabs =
+        gameData.history.length + (gameData.currentMatches.isNotEmpty ? 1 : 0);
     // When history is not none and staging is empty, then show the history
     // Otherwise showing the stage
-    final shouldShowStagingTab =
-        gameData.currentMatches.isEmpty && gameData.history.isNotEmpty;
     return DefaultTabController(
       key: ValueKey(gameData.currentMatches.isEmpty),
-      initialIndex: (numberOfTabs - 1) - (shouldShowStagingTab ? 1 : 0),
+      initialIndex: (numberOfTabs - 1),
       length: numberOfTabs,
       child: Scaffold(
         bottomNavigationBar: TabBar(
@@ -173,13 +185,15 @@ class _CurrentGameViewState extends State<CurrentGameView> {
             ...gameData.history.mapIndexed(
               (i, game) => Tab(text: 'Game ${i + 1}'),
             ),
-            const Tab(text: 'Current Game'),
+            if (gameData.currentMatches.isNotEmpty)
+              const Tab(text: 'Current Game'),
           ],
         ),
         body: TabBarView(
           children: [
             ...gameData.history.map((game) => CourtGameView(game)),
-            CourtGameView(gameData.currentMatches),
+            if (gameData.currentMatches.isNotEmpty)
+              CourtGameView(gameData.currentMatches),
           ],
         ),
       ),
