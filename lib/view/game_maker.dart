@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/dialog.dart';
 import 'package:good_bad_board/view/game_view.dart';
 import 'package:good_bad_board/view/player_view.dart';
 import 'package:provider/provider.dart';
@@ -23,20 +24,38 @@ class GameMaker extends StatelessWidget {
               Expanded(
                 flex: 1,
                 child: Column(
+                  spacing: gutter,
                   mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Text(
                       'Inactive Players',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const Expanded(child: InactivePlayerView()),
+                    FilledButton.tonalIcon(
+                      onPressed: () {
+                        showAdaptiveDialog(
+                          context: context,
+                          builder: (_) => const AddNewPlayer(),
+                        );
+                      },
+                      label: const Text(
+                        'Add New Player',
+                        textAlign: TextAlign.center,
+                      ),
+                      icon: const Icon(Icons.person_add),
+                    ),
                   ],
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Column(
+                  spacing: gutter,
                   mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+
                   children: [
                     Text(
                       'Courts',
@@ -96,16 +115,14 @@ class InactivePlayerView extends StatelessWidget {
         .sortedBy((player) => player.name)
         .toList(growable: false);
 
-    return ListView.builder(
+    return ListView.separated(
       itemCount: inactivePlayer.length,
+      padding: const EdgeInsets.symmetric(horizontal: gutter),
       itemBuilder:
-          (BuildContext context, int index) => Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: gutter,
-              vertical: gutter / 2,
-            ),
-            child: PlayerView(inactivePlayer[index]),
-          ),
+          (BuildContext context, int index) =>
+              PlayerView(inactivePlayer[index]),
+      separatorBuilder:
+          (BuildContext context, int index) => const SizedBox(height: gutter),
     );
   }
 }
@@ -118,18 +135,13 @@ class CourtGameView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: gutter),
       itemCount: games.length,
 
       itemBuilder:
-          (BuildContext context, int index) => Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: gutter,
-              vertical: gutter / 2,
-            ),
-            child: GameView(players: games[index].players),
-          ),
-      separatorBuilder: (_, _) => const SizedBox(),
+          (BuildContext context, int index) =>
+              GameView(players: games[index].players),
+      separatorBuilder: (_, _) => const SizedBox(height: gutter),
     );
   }
 }
