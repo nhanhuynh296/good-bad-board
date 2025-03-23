@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/theme.dart';
 import 'package:good_bad_board/view/game_maker.dart' show GameMaker;
 import 'package:provider/provider.dart';
 
@@ -20,12 +21,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.black,
-          dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
-        ),
-      ),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.system,
       home: const MyHomePage(title: 'Badminton Game Generator'),
     );
   }
@@ -63,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // TRY THIS: Try changing the color here to a specific color (to
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
         // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        // backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
