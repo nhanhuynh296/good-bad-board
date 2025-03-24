@@ -3,12 +3,12 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/core/random.dart';
-import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/model/game.dart';
+import 'package:good_bad_board/model/player.dart';
 import 'package:trotter/trotter.dart';
 
 class GameData extends ChangeNotifier {
-  final int numberOfCourt = 2;
+  final int numberOfCourt = 4;
 
   final List<Player> _players = [
     Player(name: "Howard", elo: Elo.b1),
@@ -30,11 +30,14 @@ class GameData extends ChangeNotifier {
 
   final List<List<Game>> history = [];
 
+  /// Current view of the game
+  List<Game> currentView = [];
+
   /// Candidate to be added to history
-  List<Game> currentMatches = [];
+  List<Game> stagingMatches = [];
 
   Iterable<Player> get currentMatchesPlayers =>
-      currentMatches.expand((game) => game.players);
+      stagingMatches.expand((game) => game.players);
 
   /// When a player came after the late and paid a fractional price.
   /// Use a average count of all player, multiply by total game to represent the
@@ -70,18 +73,18 @@ class GameData extends ChangeNotifier {
       candidatePlayer.isNotEmpty && candidatePlayer.length % 4 == 0,
       'Candidate player is empty or not a multiple of 4, ${candidatePlayer.length}',
     );
-    currentMatches =
+    stagingMatches =
         candidatePlayer.slices(4).map((players) => Game(players)).toList();
-    assert(currentMatches.isNotEmpty);
+    assert(stagingMatches.isNotEmpty);
     _improveEloSpread();
     print('Match elo spread: ${eloSpread()}');
     notifyListeners();
   }
 
   void saveCurrentGame() {
-    if (currentMatches.isEmpty) return;
-    history.add(currentMatches);
-    currentMatches = [];
+    if (stagingMatches.isEmpty) return;
+    history.add(stagingMatches);
+    stagingMatches = [];
     notifyListeners();
     print(getCurrentPlayerAverageMatchPlayed());
   }
@@ -134,7 +137,7 @@ class GameData extends ChangeNotifier {
   }
 
   int eloSpread() {
-    return currentMatches.map((match) => match.eloGap()).max;
+    return stagingMatches.map((match) => match.eloGap()).max;
   }
 
   void _improveEloSpread({int targetSpread = 1}) {
@@ -142,7 +145,7 @@ class GameData extends ChangeNotifier {
     int currentSpread = eloSpread();
     debugPrint('current spread $currentSpread');
     if (currentSpread < targetSpread) return;
-    final combinations = Combinations(2, currentMatches);
+    final combinations = Combinations(2, stagingMatches);
     for (final [match1, match2] in combinations()) {
       for (final [i, j] in Amalgams(2, List.generate(4, (k) => k))()) {
         var temp = match1.players[i];
@@ -177,9 +180,9 @@ class GameData extends ChangeNotifier {
 
   Map<Player, List<int>> getIndexOfPlayers() {
     final Map<Player, List<int>> out = {};
-    for (var i = 0; i < currentMatches.length; i++) {
-      for (var j = 0; j < currentMatches[i].players.length; j++) {
-        out[currentMatches[i].players[j]] = [i, j];
+    for (var i = 0; i < stagingMatches.length; i++) {
+      for (var j = 0; j < stagingMatches[i].players.length; j++) {
+        out[stagingMatches[i].players[j]] = [i, j];
       }
     }
     return out;
@@ -188,19 +191,21 @@ class GameData extends ChangeNotifier {
   void swapActivePlayer(Player player1, Player player2) {
     final indices = getIndexOfPlayers();
     var tmp =
-        currentMatches[indices[player1]![0]].players[indices[player1]![1]];
+        stagingMatches[indices[player1]![0]].players[indices[player1]![1]];
 
-    currentMatches[indices[player1]![0]].players[indices[player1]![1]] =
-        currentMatches[indices[player2]![0]].players[indices[player2]![1]];
-    currentMatches[indices[player2]![0]].players[indices[player2]![1]] = tmp;
+    stagingMatches[indices[player1]![0]].players[indices[player1]![1]] =
+        stagingMatches[indices[player2]![0]].players[indices[player2]![1]];
+    stagingMatches[indices[player2]![0]].players[indices[player2]![1]] = tmp;
     notifyListeners();
   }
 
   void swapWithInactivePlayer(Player activePlayer, Player inactivePlayer) {
     final indices = getIndexOfPlayers();
-    currentMatches[indices[activePlayer]![0]]
+    stagingMatches[indices[activePlayer]![0]]
             .players[indices[activePlayer]![1]] =
         inactivePlayer;
     notifyListeners();
   }
+
+  void swapWithHistory(Player player) {}
 }

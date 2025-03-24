@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
-import 'package:good_bad_board/view/player_view.dart';
+import 'package:good_bad_board/view/component/player.dart';
 import 'package:provider/provider.dart';
 
-class GameView extends StatelessWidget {
+class CourtComponent extends StatelessWidget {
   final List<Player> players;
 
-  const GameView({super.key, required this.players});
+  const CourtComponent({super.key, required this.players});
 
   @override
   Widget build(BuildContext context) {
@@ -30,26 +30,36 @@ class GameView extends StatelessWidget {
           strokeAlign: BorderSide.strokeAlignInside,
         ),
       ),
+      padding: const EdgeInsets.all(gutter),
       child: IntrinsicWidth(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Flexible(
               child: Row(
                 spacing: gutter,
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: MainAxisSize.max,
                 children: [
-                  DraggablePlayerView(
-                    data: sortedPlayer.first,
-                    onDragToTarget:
-                        (draggedToPlayer) =>
-                            onDragToTarget(sortedPlayer.first, draggedToPlayer),
+                  Expanded(
+                    child: DraggablePlayerComponent(
+                      data: sortedPlayer.first,
+                      onDragToTarget:
+                          (draggedToPlayer) => onDragToTarget(
+                            sortedPlayer.first,
+                            draggedToPlayer,
+                          ),
+                    ),
                   ),
-                  DraggablePlayerView(
-                    data: sortedPlayer.last,
-                    onDragToTarget:
-                        (draggedToPlayer) =>
-                            onDragToTarget(sortedPlayer.last, draggedToPlayer),
+                  Expanded(
+                    child: DraggablePlayerComponent(
+                      data: sortedPlayer.last,
+                      onDragToTarget:
+                          (draggedToPlayer) => onDragToTarget(
+                            sortedPlayer.last,
+                            draggedToPlayer,
+                          ),
+                    ),
                   ),
                 ],
               ),
@@ -66,17 +76,21 @@ class GameView extends StatelessWidget {
                 spacing: gutter,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  DraggablePlayerView(
-                    data: sortedPlayer[2],
-                    onDragToTarget:
-                        (draggedToPlayer) =>
-                            onDragToTarget(sortedPlayer[2], draggedToPlayer),
+                  Expanded(
+                    child: DraggablePlayerComponent(
+                      data: sortedPlayer[2],
+                      onDragToTarget:
+                          (draggedToPlayer) =>
+                              onDragToTarget(sortedPlayer[2], draggedToPlayer),
+                    ),
                   ),
-                  DraggablePlayerView(
-                    data: sortedPlayer[1],
-                    onDragToTarget:
-                        (draggedToPlayer) =>
-                            onDragToTarget(sortedPlayer[1], draggedToPlayer),
+                  Expanded(
+                    child: DraggablePlayerComponent(
+                      data: sortedPlayer[1],
+                      onDragToTarget:
+                          (draggedToPlayer) =>
+                              onDragToTarget(sortedPlayer[1], draggedToPlayer),
+                    ),
                   ),
                 ],
               ),

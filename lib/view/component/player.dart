@@ -1,29 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
 
-class _PlayerView extends StatelessWidget {
+class _PlayerComponent extends StatelessWidget {
   final Player data;
 
-  const _PlayerView({required this.data});
+  const _PlayerComponent({required this.data});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 200,
-      child: Text(
-        '${data.name} (${data.elo.name.toUpperCase()})',
-        textAlign: TextAlign.center,
-      ),
+    return Text(
+      '${data.name} (${data.elo.name.toUpperCase()})',
+      textAlign: TextAlign.center,
     );
   }
 }
 
-class DraggablePlayerView extends StatelessWidget {
+class DraggablePlayerComponent extends StatelessWidget {
   final Player data;
   final DragTargetAccept<Player>? onDragToTarget;
   final DragTargetWillAccept<Player>? shouldAcceptIncomingDragPlayer;
 
-  const DraggablePlayerView({
+  const DraggablePlayerComponent({
     super.key,
     required this.data,
     this.onDragToTarget,
@@ -45,7 +42,7 @@ class DraggablePlayerView extends StatelessWidget {
           data: data,
           // delay: Durations.short1,
           dragAnchorStrategy: pointerDragAnchorStrategy,
-          feedback: _DraggingPlayerView(data: data),
+          feedback: _DraggingPlayerComponent(data: data),
           child: Transform.scale(
             scale: isValidDragHovering ? 1.2 : 1.0,
             child: FilledButton(
@@ -55,7 +52,7 @@ class DraggablePlayerView extends StatelessWidget {
                       : () {
                         print("Pressed ${data.name}");
                       },
-              child: _PlayerView(data: data),
+              child: _PlayerComponent(data: data),
             ),
           ),
         );
@@ -64,13 +61,13 @@ class DraggablePlayerView extends StatelessWidget {
   }
 }
 
-class _DraggingPlayerView extends StatelessWidget {
+class _DraggingPlayerComponent extends StatelessWidget {
   final Player data;
 
-  const _DraggingPlayerView({required this.data});
+  const _DraggingPlayerComponent({required this.data});
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(onPressed: null, child: _PlayerView(data: data));
+    return OutlinedButton(onPressed: null, child: _PlayerComponent(data: data));
   }
 }

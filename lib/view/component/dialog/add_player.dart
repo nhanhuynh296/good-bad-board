@@ -3,14 +3,14 @@ import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:provider/provider.dart';
 
-class AddNewPlayer extends StatefulWidget {
-  const AddNewPlayer({super.key});
+class AddPlayerDialog extends StatefulWidget {
+  const AddPlayerDialog({super.key});
 
   @override
-  State<AddNewPlayer> createState() => _AddNewPlayerState();
+  State<AddPlayerDialog> createState() => _AddPlayerDialogState();
 }
 
-class _AddNewPlayerState extends State<AddNewPlayer> {
+class _AddPlayerDialogState extends State<AddPlayerDialog> {
   final _formKey = GlobalKey<FormState>();
 
   late String name;
