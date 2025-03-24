@@ -10,7 +10,7 @@ import 'package:trotter/trotter.dart';
 class GameData extends ChangeNotifier {
   int numberOfCourt = 2;
 
-  final List<Player> _players = [
+  final Set<Player> _players = {
     Player(name: "Howard", elo: Elo.b1),
     Player(name: "Yong", elo: Elo.b2),
     Player(name: "Ryan", elo: Elo.b2),
@@ -24,9 +24,8 @@ class GameData extends ChangeNotifier {
     Player(name: "Victor", elo: Elo.a1),
     Player(name: "Daniel", elo: Elo.a2),
     Player(name: "Nathan", elo: Elo.a1),
-  ];
 
-  final List<Player> _mockPlayer = [
+    // Mock player
     // C2 Tier (Newbie)
     Player(name: "Alice", elo: Elo.c2),
     Player(name: "Bob", elo: Elo.c2),
@@ -98,9 +97,9 @@ class GameData extends ChangeNotifier {
     Player(name: "Bella", elo: Elo.s1),
     Player(name: "Cody", elo: Elo.s1),
     Player(name: "Diana", elo: Elo.s1),
-  ];
+  };
 
-  List<Player> get player => List.unmodifiable(_players);
+  Set<Player> get player => Set.unmodifiable(_players);
 
   final List<List<Game>> history = [];
 
@@ -110,7 +109,7 @@ class GameData extends ChangeNotifier {
   /// Candidate to be added to history
   List<Game> stagingMatches = [];
 
-  Iterable<Player> get currentMatchesPlayers =>
+  Iterable<Player> getCurrentMatchesPlayers() =>
       stagingMatches.expand((game) => game.players);
 
   /// When a player came after the late and paid a fractional price.
@@ -151,6 +150,7 @@ class GameData extends ChangeNotifier {
         candidatePlayer.slices(4).map((players) => Game(players)).toList();
     assert(stagingMatches.isNotEmpty);
     _improveEloSpread();
+    currentView = stagingMatches;
     print('Match elo spread: ${eloSpread()}');
     notifyListeners();
   }
@@ -158,9 +158,12 @@ class GameData extends ChangeNotifier {
   void saveCurrentGame() {
     if (stagingMatches.isEmpty) return;
     history.add(stagingMatches);
+    currentView = history.last;
     stagingMatches = [];
     notifyListeners();
-    print(getCurrentPlayerAverageMatchPlayed());
+    debugPrint(
+      'Average match every should have played: ${getCurrentPlayerAverageMatchPlayed().toStringAsFixed(2)}',
+    );
   }
 
   Iterable<Player> _choosePlayer() {
@@ -246,40 +249,37 @@ class GameData extends ChangeNotifier {
     }
   }
 
-  Iterable<Player> getInactivePlayer() {
-    final allPlayer = _players.toSet();
-    final currentPlayer = currentMatchesPlayers.toSet();
-    return allPlayer.difference(currentPlayer);
-  }
-
-  Map<Player, List<int>> getIndexOfPlayers() {
+  Map<Player, List<int>> getPlayerIndexOfCurrentView() {
     final Map<Player, List<int>> out = {};
-    for (var i = 0; i < stagingMatches.length; i++) {
-      for (var j = 0; j < stagingMatches[i].players.length; j++) {
-        out[stagingMatches[i].players[j]] = [i, j];
+    for (var i = 0; i < currentView.length; i++) {
+      for (var j = 0; j < currentView[i].players.length; j++) {
+        out[currentView[i].players[j]] = [i, j];
       }
     }
     return out;
   }
 
-  void swapActivePlayer(Player player1, Player player2) {
-    final indices = getIndexOfPlayers();
-    var tmp =
-        stagingMatches[indices[player1]![0]].players[indices[player1]![1]];
+  void swapPlayer(Player player1, Player player2) {
+    final indices = getPlayerIndexOfCurrentView();
+    // At least one player has to be from the current view
+    assert(
+      indices.containsKey(player1) || indices.containsKey(player2),
+      "This should not be happen, can not swap between inactive players",
+    );
 
-    stagingMatches[indices[player1]![0]].players[indices[player1]![1]] =
-        stagingMatches[indices[player2]![0]].players[indices[player2]![1]];
-    stagingMatches[indices[player2]![0]].players[indices[player2]![1]] = tmp;
+    final [playerToBeReplaced, otherPlayer] =
+        indices.containsKey(player1) ? [player1, player2] : [player2, player1];
+
+    currentView[indices[playerToBeReplaced]![0]]
+            .players[indices[playerToBeReplaced]![1]] =
+        otherPlayer;
+
+    // If the other player is also in the current view, swap them too.
+    // But if not, they are inactive player, so do nothing
+    if (indices.containsKey(otherPlayer)) {
+      currentView[indices[otherPlayer]![0]].players[indices[otherPlayer]![1]] =
+          playerToBeReplaced;
+    }
     notifyListeners();
   }
-
-  void swapWithInactivePlayer(Player activePlayer, Player inactivePlayer) {
-    final indices = getIndexOfPlayers();
-    stagingMatches[indices[activePlayer]![0]]
-            .players[indices[activePlayer]![1]] =
-        inactivePlayer;
-    notifyListeners();
-  }
-
-  void swapWithHistory(Player player) {}
 }

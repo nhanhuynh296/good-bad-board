@@ -4,31 +4,8 @@ import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
 import 'package:provider/provider.dart';
 
-class CurrentGameView extends StatefulWidget {
+class CurrentGameView extends StatelessWidget {
   const CurrentGameView({super.key});
-
-  @override
-  State<CurrentGameView> createState() => _CurrentGameViewState();
-}
-
-class _CurrentGameViewState extends State<CurrentGameView>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    final gameData = Provider.of<GameData>(context, listen: false);
-    final numberOfTabs =
-        gameData.history.length + (gameData.stagingMatches.isNotEmpty ? 1 : 0);
-    _tabController = TabController(vsync: this, length: numberOfTabs);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,33 +14,36 @@ class _CurrentGameViewState extends State<CurrentGameView>
         gameData.history.length + (gameData.stagingMatches.isNotEmpty ? 1 : 0);
     // When history is not none and staging is empty, then show the history
     // Otherwise showing the staging
-    return Scaffold(
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          ...gameData.history.map((game) => StagingGameComponent(game)),
-          if (gameData.stagingMatches.isNotEmpty)
-            StagingGameComponent(gameData.stagingMatches),
-        ],
-      ),
-      bottomNavigationBar: TabBar(
-        onTap: (index) {
-          final bool isStagingView = index > (gameData.history.length - 1);
-          if (isStagingView) {
-            gameData.currentView = gameData.stagingMatches;
-          } else {
-            gameData.currentView = gameData.history[index];
-          }
-        },
-        controller: _tabController,
-        isScrollable: true,
-        tabs: [
-          ...gameData.history.mapIndexed(
-            (i, game) => Tab(text: 'Game ${i + 1}'),
-          ),
-          if (gameData.stagingMatches.isNotEmpty)
-            const Tab(text: 'Current Game'),
-        ],
+    return DefaultTabController(
+      length: numberOfTabs,
+      child: Scaffold(
+        body: TabBarView(
+          children: [
+            ...gameData.history.map((game) => StagingGameComponent(game)),
+            if (gameData.stagingMatches.isNotEmpty)
+              StagingGameComponent(gameData.stagingMatches),
+          ],
+        ),
+        bottomNavigationBar: TabBar(
+          onTap: (index) {
+            print(index);
+            final bool isStagingView = index > (gameData.history.length - 1);
+            if (isStagingView) {
+              gameData.currentView = gameData.stagingMatches;
+            } else {
+              gameData.currentView = gameData.history[index];
+            }
+          },
+
+          isScrollable: true,
+          tabs: [
+            ...gameData.history.mapIndexed(
+              (i, game) => Tab(text: 'Game ${i + 1}'),
+            ),
+            if (gameData.stagingMatches.isNotEmpty)
+              const Tab(text: 'Current Game'),
+          ],
+        ),
       ),
     );
   }

@@ -15,11 +15,7 @@ class CourtComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     void onDragToTarget(Player player, Player draggedToPlayer) {
       final gameData = Provider.of<GameData>(context, listen: false);
-      if (gameData.getInactivePlayer().contains(draggedToPlayer)) {
-        gameData.swapWithInactivePlayer(player, draggedToPlayer);
-      } else {
-        gameData.swapActivePlayer(player, draggedToPlayer);
-      }
+      gameData.swapPlayer(player, draggedToPlayer);
     }
 
     final sortedPlayer = players.sortedBy((player) => player.elo.index);

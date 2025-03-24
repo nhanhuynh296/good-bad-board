@@ -13,10 +13,12 @@ class InactivePlayerComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    final inactivePlayers = gameData
-        .getInactivePlayer()
-        .sortedBy((player) => player.name)
-        .toList(growable: false);
+    final playingPlayers = Set.unmodifiable(
+      gameData.getCurrentMatchesPlayers(),
+    );
+    final inactivePlayers = gameData.player
+        .difference(playingPlayers)
+        .sortedBy((player) => player.name);
 
     return Column(
       spacing: gutter,
@@ -36,10 +38,7 @@ class InactivePlayerComponent extends StatelessWidget {
                       // Disallow dragging to other inactive player
                       (player) => !inactivePlayers.contains(player),
                   onDragToTarget: (player) {
-                    gameData.swapWithInactivePlayer(
-                      player,
-                      inactivePlayers[index],
-                    );
+                    gameData.swapPlayer(player, inactivePlayers[index]);
                   },
                 ),
             separatorBuilder:
