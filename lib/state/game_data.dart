@@ -104,13 +104,17 @@ class GameData extends ChangeNotifier {
   final List<List<Game>> history = [];
 
   /// Current view of the game
-  List<Game> currentView = [];
+  List<Game> _currentView = [];
+
+  List<Game> get currentView => _currentView;
+
+  void setCurrentView(List<Game> newView) {
+    _currentView = newView;
+    notifyListeners();
+  }
 
   /// Candidate to be added to history
   List<Game> stagingMatches = [];
-
-  Iterable<Player> getCurrentMatchesPlayers() =>
-      stagingMatches.expand((game) => game.players);
 
   /// When a player came after the late and paid a fractional price.
   /// Use a average count of all player, multiply by total game to represent the
@@ -150,7 +154,7 @@ class GameData extends ChangeNotifier {
         candidatePlayer.slices(4).map((players) => Game(players)).toList();
     assert(stagingMatches.isNotEmpty);
     _improveEloSpread();
-    currentView = stagingMatches;
+    _currentView = stagingMatches;
     print('Match elo spread: ${eloSpread()}');
     notifyListeners();
   }
@@ -158,7 +162,7 @@ class GameData extends ChangeNotifier {
   void saveCurrentGame() {
     if (stagingMatches.isEmpty) return;
     history.add(stagingMatches);
-    currentView = history.last;
+    _currentView = history.last;
     stagingMatches = [];
     notifyListeners();
     debugPrint(
@@ -283,3 +287,6 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+Iterable<Player> getPlayerFromGames(List<Game> games) =>
+    games.expand((game) => game.players);

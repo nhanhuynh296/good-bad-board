@@ -14,7 +14,7 @@ class InactivePlayerComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
     final playingPlayers = Set.unmodifiable(
-      gameData.getCurrentMatchesPlayers(),
+      getPlayerFromGames(gameData.currentView),
     );
     final inactivePlayers = gameData.player
         .difference(playingPlayers)
@@ -29,6 +29,7 @@ class InactivePlayerComponent extends StatelessWidget {
         ),
         Expanded(
           child: ListView.separated(
+            key: ValueKey(gameData.currentView),
             itemCount: inactivePlayers.length,
             padding: const EdgeInsets.symmetric(horizontal: gutter),
             itemBuilder:

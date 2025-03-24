@@ -28,19 +28,13 @@ class GameMaker extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Courts',
+                        '${gameData.numberOfCourt} Court(s)',
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       Expanded(
-                        child:
-                            (gameData.stagingMatches.isNotEmpty ||
-                                    gameData.history.isNotEmpty)
-                                ? CurrentGameView(
-                                  key: ValueKey(
-                                    gameData.stagingMatches.isEmpty,
-                                  ),
-                                )
-                                : const SizedBox.shrink(),
+                        child: CurrentGameView(
+                          key: ValueKey(gameData.stagingMatches.isEmpty),
+                        ),
                       ),
                     ],
                   ),

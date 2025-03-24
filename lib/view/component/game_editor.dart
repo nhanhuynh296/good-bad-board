@@ -14,8 +14,12 @@ class CurrentGameView extends StatelessWidget {
         gameData.history.length + (gameData.stagingMatches.isNotEmpty ? 1 : 0);
     // When history is not none and staging is empty, then show the history
     // Otherwise showing the staging
+    if (numberOfTabs == 0) {
+      return const _BlankGame();
+    }
     return DefaultTabController(
       length: numberOfTabs,
+      initialIndex: numberOfTabs - 1,
       child: Scaffold(
         body: TabBarView(
           children: [
@@ -29,9 +33,9 @@ class CurrentGameView extends StatelessWidget {
             print(index);
             final bool isStagingView = index > (gameData.history.length - 1);
             if (isStagingView) {
-              gameData.currentView = gameData.stagingMatches;
+              gameData.setCurrentView(gameData.stagingMatches);
             } else {
-              gameData.currentView = gameData.history[index];
+              gameData.setCurrentView(gameData.history[index]);
             }
           },
 
@@ -45,6 +49,23 @@ class CurrentGameView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BlankGame extends StatelessWidget {
+  const _BlankGame();
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.bodyLarge!;
+    return Row(
+      spacing: textStyle.fontSize!,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.auto_awesome, size: textStyle.fontSize!),
+        Text("Generate some game to start", style: textStyle),
+      ],
     );
   }
 }

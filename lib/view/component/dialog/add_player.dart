@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +24,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
       content: Form(
         key: _formKey,
         child: Column(
+          spacing: gutter,
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
