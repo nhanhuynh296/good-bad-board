@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/model/Player.dart';
+import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:provider/provider.dart';
 

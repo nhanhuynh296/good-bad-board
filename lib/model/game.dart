@@ -1,5 +1,5 @@
 import 'package:collection/collection.dart';
-import 'package:good_bad_board/model/Player.dart';
+import 'package:good_bad_board/model/player.dart';
 
 class Game {
   static const int playerPerCourt = 4;

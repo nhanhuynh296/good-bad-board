@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/model/Player.dart';
+import 'package:good_bad_board/model/player.dart';
 
 class _PlayerView extends StatelessWidget {
   final Player data;

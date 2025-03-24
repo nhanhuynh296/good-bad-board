@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/core/random.dart';
-import 'package:good_bad_board/model/Player.dart';
+import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:trotter/trotter.dart';
 

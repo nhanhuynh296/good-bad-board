@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
-import 'package:good_bad_board/model/Player.dart';
+import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/player_view.dart';
 import 'package:provider/provider.dart';
