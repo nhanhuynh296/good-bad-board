@@ -4,6 +4,7 @@ import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/court.dart';
+import 'package:good_bad_board/view/component/dialog/add_player.dart';
 import 'package:good_bad_board/view/component/player.dart';
 import 'package:provider/provider.dart';
 
@@ -45,12 +46,25 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: gutter),
           child: SearchBar(
+            hintText: 'Search for name, elo...',
             leading: query.isEmpty ? const Icon(Icons.search) : null,
             onChanged: (i) {
               setState(() {
                 query = i;
               });
             },
+            trailing: [
+              IconButton(
+                onPressed: () {
+                  showAdaptiveDialog(
+                    context: context,
+                    builder: (_) => const AddPlayerDialog(),
+                  );
+                },
+                icon: const Icon(Icons.person_add),
+                tooltip: 'Add New Player',
+              ),
+            ],
           ),
         ),
         Expanded(

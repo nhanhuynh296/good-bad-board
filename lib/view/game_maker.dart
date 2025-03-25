@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/state/game_data.dart';
-import 'package:good_bad_board/view/component/dialog/add_player.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
 import 'package:good_bad_board/view/timer.dart';
@@ -14,7 +13,10 @@ class GameMaker extends StatelessWidget {
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Badminton Game Generator')),
+      appBar: AppBar(
+        title: const Text('Badminton Game Generator'),
+        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.save))],
+      ),
       body: Column(
         spacing: gutter,
         children: [
@@ -53,13 +55,14 @@ class GameMaker extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         mini: true,
-        child: const Icon(Icons.person_add),
         onPressed: () {
-          showAdaptiveDialog(
-            context: context,
-            builder: (_) => const AddPlayerDialog(),
+          final snackBar = SnackBar(
+            content: const Text('To be Implemented'),
+            action: SnackBarAction(label: 'OK', onPressed: () {}),
           );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
         },
+        child: const Icon(Icons.apps),
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.miniStartDocked,
