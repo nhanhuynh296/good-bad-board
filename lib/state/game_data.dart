@@ -8,6 +8,7 @@ import 'package:good_bad_board/core/random.dart';
 import 'package:good_bad_board/dto/players.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
 
@@ -301,7 +302,9 @@ class GameData extends ChangeNotifier {
   Future<File> saveGame() async {
     final Directory? downloadsDir = await getDownloadsDirectory();
     final dto = SessionDto(players: _players, games: history);
-    final file = File('${downloadsDir!.path}/players.json');
+
+    final timeString = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
+    final file = File('${downloadsDir!.path}/game_data_$timeString.json');
     await file.writeAsString(jsonEncode(dto.toJson()));
     return file;
   }
