@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/theme.dart';
 import 'package:good_bad_board/view/game_maker.dart' show GameMaker;
 import 'package:provider/provider.dart';
@@ -7,7 +8,10 @@ import 'package:provider/provider.dart';
 void main() {
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => GameData())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => GameData()),
+        ChangeNotifierProvider(create: (_) => TimerData()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -24,7 +28,7 @@ class MyApp extends StatelessWidget {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
-      home: const MyHomePage(title: 'Badminton Game Generator'),
+      home: const GameMaker(),
     );
   }
 }

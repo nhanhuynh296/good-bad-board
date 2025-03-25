@@ -7,8 +7,16 @@ import 'package:good_bad_board/view/component/court.dart';
 import 'package:good_bad_board/view/component/player.dart';
 import 'package:provider/provider.dart';
 
-class InactivePlayerComponent extends StatelessWidget {
+class InactivePlayerComponent extends StatefulWidget {
   const InactivePlayerComponent({super.key});
+
+  @override
+  State<InactivePlayerComponent> createState() =>
+      _InactivePlayerComponentState();
+}
+
+class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
+  String query = '';
 
   @override
   Widget build(BuildContext context) {
@@ -18,18 +26,36 @@ class InactivePlayerComponent extends StatelessWidget {
     );
     final inactivePlayers = gameData.player
         .difference(playingPlayers)
+        .where(
+          (player) => '${player.name}${player.elo}'.toLowerCase().contains(
+            query.toLowerCase(),
+          ),
+        )
         .sortedBy((player) => player.name);
 
     return Column(
-      spacing: gutter,
+      spacing: gutter / 2,
       children: [
-        Text(
-          'Inactive Players',
-          style: Theme.of(context).textTheme.headlineSmall,
+        if (query.isEmpty)
+          Text(
+            'Inactive Players',
+            style: Theme.of(context).textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: gutter),
+          child: SearchBar(
+            leading: query.isEmpty ? const Icon(Icons.search) : null,
+            onChanged: (i) {
+              setState(() {
+                query = i;
+              });
+            },
+          ),
         ),
         Expanded(
           child: ListView.separated(
-            key: ValueKey(gameData.currentView),
+            key: ValueKey([gameData.currentView, query]),
             itemCount: inactivePlayers.length,
             padding: const EdgeInsets.symmetric(horizontal: gutter),
             itemBuilder:

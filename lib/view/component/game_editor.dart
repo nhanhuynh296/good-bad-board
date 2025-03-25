@@ -30,7 +30,6 @@ class CurrentGameView extends StatelessWidget {
         ),
         bottomNavigationBar: TabBar(
           onTap: (index) {
-            print(index);
             final bool isStagingView = index > (gameData.history.length - 1);
             if (isStagingView) {
               gameData.setCurrentView(gameData.stagingMatches);

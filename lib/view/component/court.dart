@@ -22,7 +22,7 @@ class CourtComponent extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.black,
+          color: Theme.of(context).colorScheme.primary,
           strokeAlign: BorderSide.strokeAlignInside,
         ),
       ),

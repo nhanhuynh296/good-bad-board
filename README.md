@@ -2,8 +2,8 @@
 Good badminton board organizer
 
 # High Priority
-- [ ] Player Search
-- [ ] Game Timer
+- [x] Player Search
+- [x] Game Timer
 - [ ] Import/Export players
 - [ ] Export game
 - [ ] Paying tracker

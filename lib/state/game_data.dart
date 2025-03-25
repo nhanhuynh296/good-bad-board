@@ -103,6 +103,13 @@ class GameData extends ChangeNotifier {
 
   final List<List<Game>> history = [];
 
+  int gameNumber = 0;
+
+  void nextGame() {
+    gameNumber++;
+    notifyListeners();
+  }
+
   /// Current view of the game
   List<Game> _currentView = [];
 

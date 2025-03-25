@@ -4,6 +4,7 @@ import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/dialog/add_player.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
+import 'package:good_bad_board/view/timer.dart';
 import 'package:provider/provider.dart';
 
 class GameMaker extends StatelessWidget {
@@ -13,12 +14,14 @@ class GameMaker extends StatelessWidget {
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
     return Scaffold(
+      appBar: AppBar(title: const Text('Badminton Game Generator')),
       body: Column(
         spacing: gutter,
         children: [
+          const CountdownTimer(),
           Expanded(
             child: Row(
-              spacing: gutter,
+              spacing: gutter / 2,
               children: [
                 const Expanded(child: InactivePlayerComponent()),
                 Expanded(
@@ -48,16 +51,18 @@ class GameMaker extends StatelessWidget {
         padding: EdgeInsets.all(gutter),
         child: BottomActionBar(),
       ),
-      floatingActionButton: IconButton.filled(
+      floatingActionButton: FloatingActionButton(
+        mini: true,
+        child: const Icon(Icons.person_add),
         onPressed: () {
           showAdaptiveDialog(
             context: context,
             builder: (_) => const AddPlayerDialog(),
           );
         },
-        icon: const Icon(Icons.person_add),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.miniStartDocked,
     );
   }
 }
