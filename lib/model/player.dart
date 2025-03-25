@@ -1,4 +1,7 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:uuid/uuid.dart';
+
+part 'player.g.dart';
 
 enum Elo {
   c2, // Newbie
@@ -11,10 +14,15 @@ enum Elo {
   s1,
 }
 
+@JsonSerializable(includeIfNull: true)
 class Player {
   final String name;
   final Elo elo;
   final String id;
 
   Player({required this.name, required this.elo}) : id = const Uuid().v4();
+
+  factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PlayerToJson(this);
 }
