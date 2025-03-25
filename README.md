@@ -13,6 +13,7 @@ Good badminton board organizer
 # Feature Request
 - [ ] About
 - [ ] Game based
+- [ ] Parallelizing or moving to thread
 
 ## Player Administration
 - [ ] PLayer sign-in
