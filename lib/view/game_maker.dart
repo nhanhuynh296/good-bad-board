@@ -15,7 +15,19 @@ class GameMaker extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Badminton Game Generator'),
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.save))],
+        actions: [
+          IconButton(
+            onPressed: () async {
+              final savedFile = await gameData.saveGame();
+              final snackBar = SnackBar(
+                content: Text('Game saved at ${savedFile.path}'),
+                showCloseIcon: true,
+              );
+              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            },
+            icon: const Icon(Icons.save),
+          ),
+        ],
       ),
       body: Column(
         spacing: gutter,
@@ -56,9 +68,9 @@ class GameMaker extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         mini: true,
         onPressed: () {
-          final snackBar = SnackBar(
-            content: const Text('To be Implemented'),
-            action: SnackBarAction(label: 'OK', onPressed: () {}),
+          const snackBar = SnackBar(
+            content: Text('To be Implemented'),
+            duration: Durations.extralong4,
           );
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
         },

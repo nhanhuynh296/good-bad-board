@@ -14,7 +14,11 @@ enum Elo {
   s1,
 }
 
-@JsonSerializable(includeIfNull: true)
+@JsonSerializable(
+  includeIfNull: true,
+  constructor: '_jsonConstructor',
+  createPerFieldToJson: true,
+)
 class Player {
   final String name;
   final Elo elo;
@@ -22,7 +26,12 @@ class Player {
 
   Player({required this.name, required this.elo}) : id = const Uuid().v4();
 
+  // Json Serialization
+  Player._jsonConstructor(this.name, this.elo, this.id);
+
   factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
 
   Map<String, dynamic> toJson() => _$PlayerToJson(this);
+
+  static String jsonReferencedPlayer(Player player) => player.id;
 }

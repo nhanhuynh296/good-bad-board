@@ -1,10 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/core/random.dart';
+import 'package:good_bad_board/dto/players.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
 
 class GameData extends ChangeNotifier {
@@ -292,6 +296,14 @@ class GameData extends ChangeNotifier {
           playerToBeReplaced;
     }
     notifyListeners();
+  }
+
+  Future<File> saveGame() async {
+    final Directory? downloadsDir = await getDownloadsDirectory();
+    final dto = SessionDto(players: _players, games: history);
+    final file = File('${downloadsDir!.path}/players.json');
+    await file.writeAsString(jsonEncode(dto.toJson()));
+    return file;
   }
 }
 

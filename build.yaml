@@ -6,6 +6,7 @@ targets:
         generate_for:
           include:
             - lib/model/**
+            - lib/dto/**
 
         options:
           explicit_to_json: true

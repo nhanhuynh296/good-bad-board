@@ -17,7 +17,12 @@ class Game {
     return (sortedPlayers.last.elo.index - sortedPlayers.first.elo.index).abs();
   }
 
+  // Json Serialization
+
   factory Game.fromJson(Map<String, dynamic> json) => _$GameFromJson(json);
 
   Map<String, dynamic> toJson() => _$GameToJson(this);
+
+  static List<String> gameSerializer(Game game) =>
+      game.players.map(Player.jsonReferencedPlayer).toList(growable: false);
 }
