@@ -67,26 +67,32 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
             ],
           ),
         ),
-        Expanded(
-          child: ListView.separated(
-            key: ValueKey([gameData.currentView, query]),
-            itemCount: inactivePlayers.length,
-            padding: const EdgeInsets.symmetric(horizontal: gutter),
-            itemBuilder:
-                (BuildContext context, int index) => DraggablePlayerComponent(
-                  data: inactivePlayers[index],
-                  shouldAcceptIncomingDragPlayer:
-                      // Disallow dragging to other inactive player
-                      (player) => !inactivePlayers.contains(player),
-                  onDragToTarget: (player) {
-                    gameData.swapPlayer(player, inactivePlayers[index]);
-                  },
-                ),
-            separatorBuilder:
-                (BuildContext context, int index) =>
-                    const SizedBox(height: gutter),
-          ),
-        ),
+        (inactivePlayers.isNotEmpty)
+            ? Expanded(
+              child: ListView.separated(
+                key: ValueKey([gameData.currentView, query]),
+                itemCount: inactivePlayers.length,
+                padding: const EdgeInsets.symmetric(horizontal: gutter),
+                itemBuilder:
+                    (BuildContext context, int index) =>
+                        DraggablePlayerComponent(
+                          data: inactivePlayers[index],
+                          shouldAcceptIncomingDragPlayer:
+                              // Disallow dragging to other inactive player
+                              (player) => !inactivePlayers.contains(player),
+                          onDragToTarget: (player) {
+                            gameData.swapPlayer(player, inactivePlayers[index]);
+                          },
+                        ),
+                separatorBuilder:
+                    (BuildContext context, int index) =>
+                        const SizedBox(height: gutter),
+              ),
+            )
+            : Text(
+              'No player with that name, or elo',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
       ],
     );
   }
