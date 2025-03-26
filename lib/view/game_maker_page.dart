@@ -3,11 +3,11 @@ import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
-import 'package:good_bad_board/view/timer.dart';
+import 'package:good_bad_board/view/component/timer.dart';
 import 'package:provider/provider.dart';
 
-class GameMaker extends StatelessWidget {
-  const GameMaker({super.key});
+class GameMakerPage extends StatelessWidget {
+  const GameMakerPage({super.key});
 
   @override
   Widget build(BuildContext context) {

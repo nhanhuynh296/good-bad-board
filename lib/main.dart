@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/theme.dart';
-import 'package:good_bad_board/view/game_maker.dart' show GameMaker;
+import 'package:good_bad_board/view/game_maker_page.dart' show GameMakerPage;
+import 'package:good_bad_board/view/landing_page.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
-      home: const GameMaker(),
+      home: const LandingPage(),
     );
   }
 }
@@ -70,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: const GameMaker(),
+      body: const GameMakerPage(),
       // floatingActionButton: FloatingActionButton(
       //   onPressed: _incrementCounter,
       //   tooltip: 'Increment',
