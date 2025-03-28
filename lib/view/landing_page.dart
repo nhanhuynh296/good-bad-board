@@ -10,58 +10,63 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      spacing: gutter,
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Flexible(
-          child: Column(
-            spacing: gutter,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SignInPage()),
-                  );
-                },
-                child: const Card.outlined(
-                  child: LandingPageOption(child: Text('Player Sign In')),
-                ),
-              ),
-              GestureDetector(
-                onTap: () async {
-                  final downloadDir = await getDownloadsDirectory();
-                  await FilePicker.platform.pickFiles(
-                    dialogTitle: 'Select saved data file',
-                    initialDirectory: downloadDir?.path,
-                    type: FileType.custom,
-                    allowedExtensions: ['json'],
-                  );
-                },
-                child: const Card.outlined(
-                  child: LandingPageOption(child: Text('Import from file')),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Flexible(
-          child: GestureDetector(
-            onTap:
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const GameMakerPage(),
+    return Scaffold(
+      appBar: AppBar(title: const Text(appName)),
+      body: Row(
+        spacing: gutter,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Flexible(
+            child: Column(
+              spacing: gutter,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SignInPage(),
+                      ),
+                    );
+                  },
+                  child: const Card.outlined(
+                    child: LandingPageOption(child: Text('Player Sign In')),
                   ),
                 ),
-            child: const Card(
-              child: LandingPageOption(child: Text('Make Game')),
+                GestureDetector(
+                  onTap: () async {
+                    final downloadDir = await getDownloadsDirectory();
+                    await FilePicker.platform.pickFiles(
+                      dialogTitle: 'Select saved data file',
+                      initialDirectory: downloadDir?.path,
+                      type: FileType.custom,
+                      allowedExtensions: ['json'],
+                    );
+                  },
+                  child: const Card.outlined(
+                    child: LandingPageOption(child: Text('Import from file')),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+          Flexible(
+            child: GestureDetector(
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const GameMakerPage(),
+                    ),
+                  ),
+              child: const Card(
+                child: LandingPageOption(child: Text('Make Game')),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

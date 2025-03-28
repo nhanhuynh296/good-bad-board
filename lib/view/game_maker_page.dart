@@ -14,7 +14,7 @@ class GameMakerPage extends StatelessWidget {
     final gameData = Provider.of<GameData>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Badminton Game Generator'),
+        title: const Text(appName),
         actions: [
           IconButton(
             onPressed: () async {
