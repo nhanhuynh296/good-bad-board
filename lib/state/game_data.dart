@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/core/random.dart';
 import 'package:good_bad_board/dto/players.dart';
@@ -299,12 +300,21 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<File> saveGame() async {
+  Future<File?> saveGame() async {
     final Directory? downloadsDir = await getDownloadsDirectory();
     final dto = SessionDto(players: _players, games: history);
 
     final timeString = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
-    final file = File('${downloadsDir!.path}/game_data_$timeString.json');
+    String? targetFilePath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Please select an output file:',
+      initialDirectory: downloadsDir?.path,
+      fileName: 'game_data_$timeString.json',
+      type: FileType.custom,
+      allowedExtensions: [".json"],
+    );
+    if (targetFilePath == null) return null;
+
+    final file = File(targetFilePath);
     await file.writeAsString(jsonEncode(dto.toJson()));
     return file;
   }

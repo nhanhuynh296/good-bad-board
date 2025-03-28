@@ -1,7 +1,9 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/view/game_maker_page.dart';
 import 'package:good_bad_board/view/sign_in_page.dart';
+import 'package:path_provider/path_provider.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -13,16 +15,36 @@ class LandingPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Flexible(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SignInPage()),
-              );
-            },
-            child: const Card.outlined(
-              child: LandingPageOption(child: Text('Player Sign In')),
-            ),
+          child: Column(
+            spacing: gutter,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SignInPage()),
+                  );
+                },
+                child: const Card.outlined(
+                  child: LandingPageOption(child: Text('Player Sign In')),
+                ),
+              ),
+              GestureDetector(
+                onTap: () async {
+                  final downloadDir = await getDownloadsDirectory();
+                  await FilePicker.platform.pickFiles(
+                    dialogTitle: 'Select saved data file',
+                    initialDirectory: downloadDir?.path,
+                    type: FileType.custom,
+                    allowedExtensions: ['json'],
+                  );
+                },
+                child: const Card.outlined(
+                  child: LandingPageOption(child: Text('Import from file')),
+                ),
+              ),
+            ],
           ),
         ),
         Flexible(
@@ -52,7 +74,7 @@ class LandingPageOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox.square(
-      dimension: MediaQuery.of(context).size.shortestSide / 2.5,
+      dimension: MediaQuery.of(context).size.shortestSide / 3,
       child: Center(child: child),
     );
   }

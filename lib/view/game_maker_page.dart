@@ -19,6 +19,7 @@ class GameMakerPage extends StatelessWidget {
           IconButton(
             onPressed: () async {
               final savedFile = await gameData.saveGame();
+              if (savedFile == null) return;
               final snackBar = SnackBar(
                 content: Text('Game saved at ${savedFile.path}'),
                 showCloseIcon: true,
