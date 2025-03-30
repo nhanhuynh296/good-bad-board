@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
@@ -31,18 +32,18 @@ class GameMakerPage extends StatelessWidget {
         ],
       ),
       body: Column(
-        spacing: gutter,
+        spacing: spaceComponent,
         children: [
           const CountdownTimer(),
           Expanded(
             child: Row(
-              spacing: gutter / 2,
+              spacing: spaceXBetweenChip,
               children: [
                 const Expanded(child: InactivePlayerComponent()),
                 Expanded(
                   flex: 2,
                   child: Column(
-                    spacing: gutter,
+                    spacing: spaceDefault,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
@@ -63,7 +64,10 @@ class GameMakerPage extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: const Padding(
-        padding: EdgeInsets.all(gutter),
+        padding: EdgeInsets.symmetric(
+          vertical: spaceDefault,
+          horizontal: spacePageX,
+        ),
         child: BottomActionBar(),
       ),
       floatingActionButton: FloatingActionButton(
@@ -91,7 +95,7 @@ class BottomActionBar extends StatelessWidget {
     final gameData = Provider.of<GameData>(context, listen: true);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: gutter,
+      spacing: spaceDefault,
       children: [
         Expanded(
           child: FilledButton(

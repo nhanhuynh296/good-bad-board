@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:provider/provider.dart';
 
@@ -36,7 +36,7 @@ class _CountdownTimerState extends State<CountdownTimer>
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: gutter),
+      padding: const EdgeInsets.symmetric(horizontal: spaceComponent),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -55,7 +55,7 @@ class _CountdownTimerState extends State<CountdownTimer>
                   .split(':')
                   .sublist(1)
                   .join(":");
-              return Text('Timer $formatted');
+              return Text('Timer ${formatted.padRight(5)}');
             },
           ),
 

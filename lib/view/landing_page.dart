@@ -1,9 +1,9 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/spacing.dart';
+import 'package:good_bad_board/view/component/reusable.dart';
 import 'package:good_bad_board/view/game_maker_page.dart';
 import 'package:good_bad_board/view/sign_in_page.dart';
-import 'package:path_provider/path_provider.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -12,16 +12,14 @@ class LandingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(appName)),
-      body: Row(
-        spacing: gutter,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Flexible(
-            child: Column(
-              spacing: gutter,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
+      body: Center(
+        child: Padding(
+          padding: pageSpacing,
+          child: Row(
+            spacing: spaceCard,
+            children: [
+              Expanded(
+                child: GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
@@ -30,42 +28,24 @@ class LandingPage extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Card.outlined(
-                    child: LandingPageOption(child: Text('Player Sign In')),
-                  ),
+                  child: const LandingPageOption(label: 'Player Sign In'),
                 ),
-                GestureDetector(
-                  onTap: () async {
-                    final downloadDir = await getDownloadsDirectory();
-                    await FilePicker.platform.pickFiles(
-                      dialogTitle: 'Select saved data file',
-                      initialDirectory: downloadDir?.path,
-                      type: FileType.custom,
-                      allowedExtensions: ['json'],
-                    );
-                  },
-                  child: const Card.outlined(
-                    child: LandingPageOption(child: Text('Import from file')),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Flexible(
-            child: GestureDetector(
-              onTap:
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const GameMakerPage(),
-                    ),
-                  ),
-              child: const Card(
-                child: LandingPageOption(child: Text('Make Game')),
               ),
-            ),
+              Expanded(
+                child: GestureDetector(
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GameMakerPage(),
+                        ),
+                      ),
+                  child: const LandingPageOption(label: 'Make Game'),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -73,14 +53,25 @@ class LandingPage extends StatelessWidget {
 
 class LandingPageOption extends StatelessWidget {
   final Widget? child;
+  final String label;
 
-  const LandingPageOption({super.key, this.child});
+  const LandingPageOption({super.key, this.child, required this.label});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: MediaQuery.of(context).size.shortestSide / 3,
-      child: Center(child: child),
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Card.filled(
+        color: Theme.of(context).colorScheme.primary,
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

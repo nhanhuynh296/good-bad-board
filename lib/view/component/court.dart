@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/player.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +19,7 @@ class CourtComponent extends StatelessWidget {
     }
 
     final sortedPlayer = players.sortedBy((player) => player.elo.index);
+    const spaceXBetweenPlayer = spaceComponent;
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
@@ -26,7 +27,7 @@ class CourtComponent extends StatelessWidget {
           strokeAlign: BorderSide.strokeAlignInside,
         ),
       ),
-      padding: const EdgeInsets.all(gutter),
+      padding: const EdgeInsets.all(spaceDefault),
       child: IntrinsicWidth(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -34,7 +35,7 @@ class CourtComponent extends StatelessWidget {
           children: [
             Flexible(
               child: Row(
-                spacing: gutter,
+                spacing: spaceXBetweenPlayer,
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   Expanded(
@@ -62,14 +63,14 @@ class CourtComponent extends StatelessWidget {
             ),
             const Divider(
               thickness: 5,
-              height: gutter,
+              height: spaceDefault,
               color: Colors.black,
-              indent: gutter,
-              endIndent: gutter,
+              indent: spaceDefault,
+              endIndent: spaceDefault,
             ),
             Flexible(
               child: Row(
-                spacing: gutter,
+                spacing: spaceXBetweenPlayer,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Expanded(

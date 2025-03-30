@@ -30,79 +30,79 @@ class GameData extends ChangeNotifier {
     Player(name: "Victor", elo: Elo.a1),
     Player(name: "Daniel", elo: Elo.a2),
     Player(name: "Nathan", elo: Elo.a1),
-
-    // Mock player
-    // C2 Tier (Newbie)
-    Player(name: "Alice", elo: Elo.c2),
-    Player(name: "Bob", elo: Elo.c2),
-    Player(name: "Cathy", elo: Elo.c2),
-    Player(name: "David", elo: Elo.c2),
-    Player(name: "Ella", elo: Elo.c2),
-    Player(name: "Finn", elo: Elo.c2),
-    Player(name: "Gina", elo: Elo.c2),
-
-    // C1 Tier
-    Player(name: "Henry", elo: Elo.c1),
-    Player(name: "Ivy", elo: Elo.c1),
-    Player(name: "Jack", elo: Elo.c1),
-    Player(name: "Katie", elo: Elo.c1),
-    Player(name: "Leo", elo: Elo.c1),
-    Player(name: "Mia", elo: Elo.c1),
-    Player(name: "Nina", elo: Elo.c1),
-
-    // B2 Tier
-    Player(name: "Oscar", elo: Elo.b2),
-    Player(name: "Paul", elo: Elo.b2),
-    Player(name: "Quinn", elo: Elo.b2),
-    Player(name: "Rachel", elo: Elo.b2),
-    Player(name: "Sam", elo: Elo.b2),
-    Player(name: "Tina", elo: Elo.b2),
-    Player(name: "Uma", elo: Elo.b2),
-
-    // B1 Tier
-    Player(name: "Vince", elo: Elo.b1),
-    Player(name: "Wendy", elo: Elo.b1),
-    Player(name: "Xander", elo: Elo.b1),
-    Player(name: "Yara", elo: Elo.b1),
-    Player(name: "Zack", elo: Elo.b1),
-    Player(name: "Ava", elo: Elo.b1),
-    Player(name: "Ben", elo: Elo.b1),
-
-    // A2 Tier
-    Player(name: "Cindy", elo: Elo.a2),
-    Player(name: "Daniel", elo: Elo.a2),
-    Player(name: "Eva", elo: Elo.a2),
-    Player(name: "Frank", elo: Elo.a2),
-    Player(name: "Grace", elo: Elo.a2),
-    Player(name: "Hank", elo: Elo.a2),
-    Player(name: "Iris", elo: Elo.a2),
-
-    // A1 Tier
-    Player(name: "Jake", elo: Elo.a1),
-    Player(name: "Kara", elo: Elo.a1),
-    Player(name: "Liam", elo: Elo.a1),
-    Player(name: "Mason", elo: Elo.a1),
-    Player(name: "Noah", elo: Elo.a1),
-    Player(name: "Olivia", elo: Elo.a1),
-    Player(name: "Parker", elo: Elo.a1),
-
-    // S2 Tier
-    Player(name: "Quincy", elo: Elo.s2),
-    Player(name: "Riley", elo: Elo.s2),
-    Player(name: "Sophia", elo: Elo.s2),
-    Player(name: "Taylor", elo: Elo.s2),
-    Player(name: "Ulysses", elo: Elo.s2),
-    Player(name: "Victoria", elo: Elo.s2),
-    Player(name: "Wyatt", elo: Elo.s2),
-
-    // S1 Tier (Highest)
-    Player(name: "Xena", elo: Elo.s1),
-    Player(name: "Yvonne", elo: Elo.s1),
-    Player(name: "Zane", elo: Elo.s1),
-    Player(name: "Alex", elo: Elo.s1),
-    Player(name: "Bella", elo: Elo.s1),
-    Player(name: "Cody", elo: Elo.s1),
-    Player(name: "Diana", elo: Elo.s1),
+    //
+    // // Mock player
+    // // C2 Tier (Newbie)
+    // Player(name: "Alice", elo: Elo.c2),
+    // Player(name: "Bob", elo: Elo.c2),
+    // Player(name: "Cathy", elo: Elo.c2),
+    // Player(name: "David", elo: Elo.c2),
+    // Player(name: "Ella", elo: Elo.c2),
+    // Player(name: "Finn", elo: Elo.c2),
+    // Player(name: "Gina", elo: Elo.c2),
+    //
+    // // C1 Tier
+    // Player(name: "Henry", elo: Elo.c1),
+    // Player(name: "Ivy", elo: Elo.c1),
+    // Player(name: "Jack", elo: Elo.c1),
+    // Player(name: "Katie", elo: Elo.c1),
+    // Player(name: "Leo", elo: Elo.c1),
+    // Player(name: "Mia", elo: Elo.c1),
+    // Player(name: "Nina", elo: Elo.c1),
+    //
+    // // B2 Tier
+    // Player(name: "Oscar", elo: Elo.b2),
+    // Player(name: "Paul", elo: Elo.b2),
+    // Player(name: "Quinn", elo: Elo.b2),
+    // Player(name: "Rachel", elo: Elo.b2),
+    // Player(name: "Sam", elo: Elo.b2),
+    // Player(name: "Tina", elo: Elo.b2),
+    // Player(name: "Uma", elo: Elo.b2),
+    //
+    // // B1 Tier
+    // Player(name: "Vince", elo: Elo.b1),
+    // Player(name: "Wendy", elo: Elo.b1),
+    // Player(name: "Xander", elo: Elo.b1),
+    // Player(name: "Yara", elo: Elo.b1),
+    // Player(name: "Zack", elo: Elo.b1),
+    // Player(name: "Ava", elo: Elo.b1),
+    // Player(name: "Ben", elo: Elo.b1),
+    //
+    // // A2 Tier
+    // Player(name: "Cindy", elo: Elo.a2),
+    // Player(name: "Daniel", elo: Elo.a2),
+    // Player(name: "Eva", elo: Elo.a2),
+    // Player(name: "Frank", elo: Elo.a2),
+    // Player(name: "Grace", elo: Elo.a2),
+    // Player(name: "Hank", elo: Elo.a2),
+    // Player(name: "Iris", elo: Elo.a2),
+    //
+    // // A1 Tier
+    // Player(name: "Jake", elo: Elo.a1),
+    // Player(name: "Kara", elo: Elo.a1),
+    // Player(name: "Liam", elo: Elo.a1),
+    // Player(name: "Mason", elo: Elo.a1),
+    // Player(name: "Noah", elo: Elo.a1),
+    // Player(name: "Olivia", elo: Elo.a1),
+    // Player(name: "Parker", elo: Elo.a1),
+    //
+    // // S2 Tier
+    // Player(name: "Quincy", elo: Elo.s2),
+    // Player(name: "Riley", elo: Elo.s2),
+    // Player(name: "Sophia", elo: Elo.s2),
+    // Player(name: "Taylor", elo: Elo.s2),
+    // Player(name: "Ulysses", elo: Elo.s2),
+    // Player(name: "Victoria", elo: Elo.s2),
+    // Player(name: "Wyatt", elo: Elo.s2),
+    //
+    // // S1 Tier (Highest)
+    // Player(name: "Xena", elo: Elo.s1),
+    // Player(name: "Yvonne", elo: Elo.s1),
+    // Player(name: "Zane", elo: Elo.s1),
+    // Player(name: "Alex", elo: Elo.s1),
+    // Player(name: "Bella", elo: Elo.s1),
+    // Player(name: "Cody", elo: Elo.s1),
+    // Player(name: "Diana", elo: Elo.s1),
   };
 
   Set<Player> get player => Set.unmodifiable(_players);
@@ -318,6 +318,27 @@ class GameData extends ChangeNotifier {
     await file.writeAsString(jsonEncode(dto.toJson()));
     return file;
   }
+}
+
+Future<File?> pickJsonFile() async {
+  final downloadDir = await getDownloadsDirectory();
+  final pickerResult = await FilePicker.platform.pickFiles(
+    dialogTitle: 'Select saved data file',
+    initialDirectory: downloadDir?.path,
+    type: FileType.custom,
+    allowedExtensions: ['json'],
+  );
+  return (pickerResult?.files.firstOrNull?.path != null)
+      ? File(pickerResult!.files.firstOrNull!.path!)
+      : null;
+}
+
+Future<List<Player>> loadPlayersFromFile() async {
+  final selectedFile = await pickJsonFile();
+  if (selectedFile == null) return [];
+  final json = await selectedFile.readAsString();
+  final dto = SessionDto.fromJson(jsonDecode(json));
+  return dto.players.toList();
 }
 
 Iterable<Player> getPlayerFromGames(List<Game> games) =>

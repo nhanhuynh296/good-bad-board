@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:provider/provider.dart';
 
@@ -16,6 +16,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
 
   late String name;
   late Elo elo;
+  late String signInId;
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +25,11 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
       content: Form(
         key: _formKey,
         child: Column(
-          spacing: gutter,
+          spacing: spaceDefault,
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
+              decoration: const InputDecoration(labelText: 'Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter name';
@@ -37,6 +39,8 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               },
             ),
             DropdownButtonFormField(
+              decoration: const InputDecoration(labelText: 'Elo'),
+
               items: Elo.values
                   .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
                   .toList(growable: false),
@@ -44,6 +48,9 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
                 if (value == null) return;
                 elo = value;
               },
+            ),
+            TextFormField(
+              decoration: const InputDecoration(labelText: 'Sign In ID'),
             ),
           ],
         ),
