@@ -8,6 +8,8 @@ Good badminton board organizer
 - [ ] Export game
 - [ ] Paying tracker
 - [ ] Persistent setting
+- [ ] Click to move, highlight
+- [ ] Add all players
 
 
 # Feature Request
