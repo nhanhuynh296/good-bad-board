@@ -50,7 +50,7 @@ class DraggablePlayerComponent extends StatelessWidget {
                   isInvalidDragHovering
                       ? null
                       : () {
-                        print("Pressed ${data.name}");
+                        debugPrint("Pressed ${data.name}");
                       },
               child: _PlayerComponent(data: data),
             ),

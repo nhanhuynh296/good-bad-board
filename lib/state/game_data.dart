@@ -6,7 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/core/random.dart';
-import 'package:good_bad_board/dto/players.dart';
+import 'package:good_bad_board/dto/session.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:intl/intl.dart';
@@ -150,9 +150,11 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removePlayer(Player player) {
-    _players.remove(player);
-    _fractionalAverageGamePlayer.remove(player);
+  void removePlayer(Player player, {bool byId = false}) {
+    final playerToRemove =
+        byId ? _players.firstWhere((p) => p.id == player.id) : player;
+    _players.remove(playerToRemove);
+    _fractionalAverageGamePlayer.remove(playerToRemove);
     notifyListeners();
   }
 
@@ -168,7 +170,7 @@ class GameData extends ChangeNotifier {
     assert(stagingMatches.isNotEmpty);
     _improveEloSpread();
     _currentView = stagingMatches;
-    print('Match elo spread: ${eloSpread()}');
+    debugPrint('Match elo spread: ${eloSpread()}');
     notifyListeners();
   }
 
@@ -184,6 +186,7 @@ class GameData extends ChangeNotifier {
   }
 
   Iterable<Player> _choosePlayer() {
+    final numberOfCourt = _players.length ~/ 4;
     final playerHistory = getCurrentPlayersHistory();
     final averageMatchPlayed = getCurrentPlayerAverageMatchPlayed();
 
@@ -235,10 +238,17 @@ class GameData extends ChangeNotifier {
   }
 
   void _improveEloSpread({int targetSpread = 1}) {
+    if (stagingMatches.length < 2) {
+      debugPrint('Only 1 court, no optimization needed');
+      return;
+    }
     // If the current spread is too high, try to swap players with other groups
     int currentSpread = eloSpread();
     debugPrint('current spread $currentSpread');
-    if (currentSpread < targetSpread) return;
+    if (currentSpread < targetSpread) {
+      debugPrint('Current spread is already satisfied');
+      return;
+    }
     final combinations = Combinations(2, stagingMatches);
     for (final [match1, match2] in combinations()) {
       for (final [i, j] in Amalgams(2, List.generate(4, (k) => k))()) {
@@ -318,27 +328,6 @@ class GameData extends ChangeNotifier {
     await file.writeAsString(jsonEncode(dto.toJson()));
     return file;
   }
-}
-
-Future<File?> pickJsonFile() async {
-  final downloadDir = await getDownloadsDirectory();
-  final pickerResult = await FilePicker.platform.pickFiles(
-    dialogTitle: 'Select saved data file',
-    initialDirectory: downloadDir?.path,
-    type: FileType.custom,
-    allowedExtensions: ['json'],
-  );
-  return (pickerResult?.files.firstOrNull?.path != null)
-      ? File(pickerResult!.files.firstOrNull!.path!)
-      : null;
-}
-
-Future<List<Player>> loadPlayersFromFile() async {
-  final selectedFile = await pickJsonFile();
-  if (selectedFile == null) return [];
-  final json = await selectedFile.readAsString();
-  final dto = SessionDto.fromJson(jsonDecode(json));
-  return dto.players.toList();
 }
 
 Iterable<Player> getPlayerFromGames(List<Game> games) =>

@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/dto/serializer.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
@@ -7,7 +8,6 @@ import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/dialog/add_player.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
 import 'package:good_bad_board/view/component/reusable.dart';
-import 'package:good_bad_board/view/landing_page.dart';
 import 'package:provider/provider.dart';
 
 class SignInPage extends StatefulWidget {
@@ -18,8 +18,6 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
-  List<Player> players = [];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,18 +29,21 @@ class _SignInPageState extends State<SignInPage> {
           spacing: spaceCard,
           children: [
             Expanded(
-              child:
-                  (players.isEmpty)
-                      ? GestureDetector(
-                        onTap: () async {
-                          final loadedPlayers = await loadPlayersFromFile();
-                          setState(() {
-                            players = loadedPlayers;
-                          });
-                        },
-                        child: const LandingPageOption(label: 'Load players'),
-                      )
-                      : PlayerList(players: players),
+              child: FutureBuilder<List<Player>>(
+                future: Serializer.instance.loadPlayers(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return PlayerList(players: snapshot.requireData);
+                  }
+                  if (snapshot.hasError) {
+                    return const Text('Error loading players');
+                  }
+                  return const AspectRatio(
+                    aspectRatio: 1,
+                    child: CircularProgressIndicator(),
+                  );
+                },
+              ),
             ),
             const Expanded(child: AddPlayerDialog()),
           ],
@@ -86,6 +87,9 @@ class _PlayerListState extends State<PlayerList> {
             )
             .sortedBy((player) => player.name)
             .toList();
+    final gameData = Provider.of<GameData>(context);
+    final playerById = gameData.player.map((player) => player.id).toSet();
+
     return Column(
       spacing: spaceDefault,
       children: [
@@ -116,6 +120,7 @@ class _PlayerListState extends State<PlayerList> {
               .map(
                 (elo) => FilterChip(
                   label: Text(elo.toDisplayName()),
+                  showCheckmark: false,
                   selected: this.eloFilters.contains(elo),
                   onSelected: (selected) {
                     setState(() {
@@ -134,23 +139,23 @@ class _PlayerListState extends State<PlayerList> {
             ? Expanded(
               child: ListRenderer(
                 itemBuilder: (BuildContext context, int index) {
-                  final gameData = Provider.of<GameData>(
-                    context,
-                    listen: false,
+                  final isAlreadyInGame = playerById.contains(
+                    filteredPlayers[index].id,
                   );
+                  final player = filteredPlayers[index];
                   return Row(
                     children: [
                       Expanded(
                         child: FilledButton(
                           onPressed: () {},
-                          child: Text(filteredPlayers[index].toDisplayString()),
+                          child: Text(player.toDisplayString()),
                         ),
                       ),
-                      (gameData.player.contains(filteredPlayers[index]))
+                      (isAlreadyInGame)
                           ? IconButton(
                             onPressed: () {
                               setState(() {
-                                gameData.removePlayer(filteredPlayers[index]);
+                                gameData.removePlayer(player, byId: true);
                               });
                             },
                             icon: const Icon(Icons.delete),
@@ -158,9 +163,7 @@ class _PlayerListState extends State<PlayerList> {
                           : IconButton(
                             onPressed: () {
                               setState(() {
-                                gameData.addFullPricedPlayer(
-                                  filteredPlayers[index],
-                                );
+                                gameData.addFullPricedPlayer(player);
                               });
                             },
                             icon: const Icon(Icons.add),

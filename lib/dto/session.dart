@@ -2,7 +2,7 @@ import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'players.g.dart';
+part 'session.g.dart';
 
 @JsonSerializable()
 class SessionDto {

@@ -11,7 +11,7 @@ extension Picker<E> on List<E> {
     assert(count >= 0);
     if (!replace) {
       assert(
-        count < length,
+        count <= length,
         'Can not pick number of elements more than a list, maximum of $length.',
       );
     }
