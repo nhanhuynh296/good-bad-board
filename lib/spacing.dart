@@ -1,11 +1,9 @@
 const double space8 = 8;
 const double space16 = 16;
-const double space24 = 24;
 const double space32 = 32;
-const double space48 = 48;
 const double space64 = 64;
 
-const double spacePageX = space24;
+const double spacePageX = space16;
 const double spacePageY = space32;
 
 const double spaceCard = 12;

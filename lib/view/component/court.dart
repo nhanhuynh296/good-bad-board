@@ -19,82 +19,77 @@ class CourtComponent extends StatelessWidget {
     }
 
     final sortedPlayer = players.sortedBy((player) => player.elo.index);
-    const spaceXBetweenPlayer = spaceComponent;
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary,
-          strokeAlign: BorderSide.strokeAlignInside,
+    const spaceXBetweenPlayer = space32;
+    return Stack(
+      children: [
+        Image.asset('asset/image/court_small.webp'),
+        Positioned.fill(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: space32),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    spacing: spaceXBetweenPlayer,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(
+                        child: DraggablePlayerComponent(
+                          data: sortedPlayer.first,
+                          onDragToTarget:
+                              (draggedToPlayer) => onDragToTarget(
+                                sortedPlayer.first,
+                                draggedToPlayer,
+                              ),
+                        ),
+                      ),
+                      Expanded(
+                        child: DraggablePlayerComponent(
+                          data: sortedPlayer[2],
+                          onDragToTarget:
+                              (draggedToPlayer) => onDragToTarget(
+                                sortedPlayer[2],
+                                draggedToPlayer,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    spacing: spaceXBetweenPlayer,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Expanded(
+                        child: DraggablePlayerComponent(
+                          data: sortedPlayer.last,
+                          onDragToTarget:
+                              (draggedToPlayer) => onDragToTarget(
+                                sortedPlayer.last,
+                                draggedToPlayer,
+                              ),
+                        ),
+                      ),
+
+                      Expanded(
+                        child: DraggablePlayerComponent(
+                          data: sortedPlayer[1],
+                          onDragToTarget:
+                              (draggedToPlayer) => onDragToTarget(
+                                sortedPlayer[1],
+                                draggedToPlayer,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-      padding: const EdgeInsets.all(spaceDefault),
-      child: IntrinsicWidth(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Flexible(
-              child: Row(
-                spacing: spaceXBetweenPlayer,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Expanded(
-                    child: DraggablePlayerComponent(
-                      data: sortedPlayer.first,
-                      onDragToTarget:
-                          (draggedToPlayer) => onDragToTarget(
-                            sortedPlayer.first,
-                            draggedToPlayer,
-                          ),
-                    ),
-                  ),
-                  Expanded(
-                    child: DraggablePlayerComponent(
-                      data: sortedPlayer.last,
-                      onDragToTarget:
-                          (draggedToPlayer) => onDragToTarget(
-                            sortedPlayer.last,
-                            draggedToPlayer,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(
-              thickness: 5,
-              height: spaceDefault,
-              color: Colors.black,
-              indent: spaceDefault,
-              endIndent: spaceDefault,
-            ),
-            Flexible(
-              child: Row(
-                spacing: spaceXBetweenPlayer,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Expanded(
-                    child: DraggablePlayerComponent(
-                      data: sortedPlayer[2],
-                      onDragToTarget:
-                          (draggedToPlayer) =>
-                              onDragToTarget(sortedPlayer[2], draggedToPlayer),
-                    ),
-                  ),
-                  Expanded(
-                    child: DraggablePlayerComponent(
-                      data: sortedPlayer[1],
-                      onDragToTarget:
-                          (draggedToPlayer) =>
-                              onDragToTarget(sortedPlayer[1], draggedToPlayer),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
