@@ -8,11 +8,14 @@ Good badminton board organizer
 - [ ] Export game
 - [ ] Paying tracker
 - [ ] Persistent setting
+- [ ] Click to move, highlight
+- [ ] Add all players
 
 
 # Feature Request
 - [ ] About
 - [ ] Game based
+- [ ] Parallelizing or moving to thread
 
 ## Player Administration
 - [ ] PLayer sign-in

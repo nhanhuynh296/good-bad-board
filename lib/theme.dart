@@ -14,7 +14,7 @@ abstract class AppColors {
   static const Color grey = Color(0xFF9E9E9E); // Neutral Grey
 }
 
-const String? fontFamily = 'Gotham';
+const String fontFamily = 'Gotham';
 
 ThemeData get lightTheme {
   return ThemeData(

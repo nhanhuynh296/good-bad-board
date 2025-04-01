@@ -1,10 +1,16 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/core/random.dart';
+import 'package:good_bad_board/dto/session.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
 
 class GameData extends ChangeNotifier {
@@ -24,79 +30,79 @@ class GameData extends ChangeNotifier {
     Player(name: "Victor", elo: Elo.a1),
     Player(name: "Daniel", elo: Elo.a2),
     Player(name: "Nathan", elo: Elo.a1),
-
-    // Mock player
-    // C2 Tier (Newbie)
-    Player(name: "Alice", elo: Elo.c2),
-    Player(name: "Bob", elo: Elo.c2),
-    Player(name: "Cathy", elo: Elo.c2),
-    Player(name: "David", elo: Elo.c2),
-    Player(name: "Ella", elo: Elo.c2),
-    Player(name: "Finn", elo: Elo.c2),
-    Player(name: "Gina", elo: Elo.c2),
-
-    // C1 Tier
-    Player(name: "Henry", elo: Elo.c1),
-    Player(name: "Ivy", elo: Elo.c1),
-    Player(name: "Jack", elo: Elo.c1),
-    Player(name: "Katie", elo: Elo.c1),
-    Player(name: "Leo", elo: Elo.c1),
-    Player(name: "Mia", elo: Elo.c1),
-    Player(name: "Nina", elo: Elo.c1),
-
-    // B2 Tier
-    Player(name: "Oscar", elo: Elo.b2),
-    Player(name: "Paul", elo: Elo.b2),
-    Player(name: "Quinn", elo: Elo.b2),
-    Player(name: "Rachel", elo: Elo.b2),
-    Player(name: "Sam", elo: Elo.b2),
-    Player(name: "Tina", elo: Elo.b2),
-    Player(name: "Uma", elo: Elo.b2),
-
-    // B1 Tier
-    Player(name: "Vince", elo: Elo.b1),
-    Player(name: "Wendy", elo: Elo.b1),
-    Player(name: "Xander", elo: Elo.b1),
-    Player(name: "Yara", elo: Elo.b1),
-    Player(name: "Zack", elo: Elo.b1),
-    Player(name: "Ava", elo: Elo.b1),
-    Player(name: "Ben", elo: Elo.b1),
-
-    // A2 Tier
-    Player(name: "Cindy", elo: Elo.a2),
-    Player(name: "Daniel", elo: Elo.a2),
-    Player(name: "Eva", elo: Elo.a2),
-    Player(name: "Frank", elo: Elo.a2),
-    Player(name: "Grace", elo: Elo.a2),
-    Player(name: "Hank", elo: Elo.a2),
-    Player(name: "Iris", elo: Elo.a2),
-
-    // A1 Tier
-    Player(name: "Jake", elo: Elo.a1),
-    Player(name: "Kara", elo: Elo.a1),
-    Player(name: "Liam", elo: Elo.a1),
-    Player(name: "Mason", elo: Elo.a1),
-    Player(name: "Noah", elo: Elo.a1),
-    Player(name: "Olivia", elo: Elo.a1),
-    Player(name: "Parker", elo: Elo.a1),
-
-    // S2 Tier
-    Player(name: "Quincy", elo: Elo.s2),
-    Player(name: "Riley", elo: Elo.s2),
-    Player(name: "Sophia", elo: Elo.s2),
-    Player(name: "Taylor", elo: Elo.s2),
-    Player(name: "Ulysses", elo: Elo.s2),
-    Player(name: "Victoria", elo: Elo.s2),
-    Player(name: "Wyatt", elo: Elo.s2),
-
-    // S1 Tier (Highest)
-    Player(name: "Xena", elo: Elo.s1),
-    Player(name: "Yvonne", elo: Elo.s1),
-    Player(name: "Zane", elo: Elo.s1),
-    Player(name: "Alex", elo: Elo.s1),
-    Player(name: "Bella", elo: Elo.s1),
-    Player(name: "Cody", elo: Elo.s1),
-    Player(name: "Diana", elo: Elo.s1),
+    //
+    // // Mock player
+    // // C2 Tier (Newbie)
+    // Player(name: "Alice", elo: Elo.c2),
+    // Player(name: "Bob", elo: Elo.c2),
+    // Player(name: "Cathy", elo: Elo.c2),
+    // Player(name: "David", elo: Elo.c2),
+    // Player(name: "Ella", elo: Elo.c2),
+    // Player(name: "Finn", elo: Elo.c2),
+    // Player(name: "Gina", elo: Elo.c2),
+    //
+    // // C1 Tier
+    // Player(name: "Henry", elo: Elo.c1),
+    // Player(name: "Ivy", elo: Elo.c1),
+    // Player(name: "Jack", elo: Elo.c1),
+    // Player(name: "Katie", elo: Elo.c1),
+    // Player(name: "Leo", elo: Elo.c1),
+    // Player(name: "Mia", elo: Elo.c1),
+    // Player(name: "Nina", elo: Elo.c1),
+    //
+    // // B2 Tier
+    // Player(name: "Oscar", elo: Elo.b2),
+    // Player(name: "Paul", elo: Elo.b2),
+    // Player(name: "Quinn", elo: Elo.b2),
+    // Player(name: "Rachel", elo: Elo.b2),
+    // Player(name: "Sam", elo: Elo.b2),
+    // Player(name: "Tina", elo: Elo.b2),
+    // Player(name: "Uma", elo: Elo.b2),
+    //
+    // // B1 Tier
+    // Player(name: "Vince", elo: Elo.b1),
+    // Player(name: "Wendy", elo: Elo.b1),
+    // Player(name: "Xander", elo: Elo.b1),
+    // Player(name: "Yara", elo: Elo.b1),
+    // Player(name: "Zack", elo: Elo.b1),
+    // Player(name: "Ava", elo: Elo.b1),
+    // Player(name: "Ben", elo: Elo.b1),
+    //
+    // // A2 Tier
+    // Player(name: "Cindy", elo: Elo.a2),
+    // Player(name: "Daniel", elo: Elo.a2),
+    // Player(name: "Eva", elo: Elo.a2),
+    // Player(name: "Frank", elo: Elo.a2),
+    // Player(name: "Grace", elo: Elo.a2),
+    // Player(name: "Hank", elo: Elo.a2),
+    // Player(name: "Iris", elo: Elo.a2),
+    //
+    // // A1 Tier
+    // Player(name: "Jake", elo: Elo.a1),
+    // Player(name: "Kara", elo: Elo.a1),
+    // Player(name: "Liam", elo: Elo.a1),
+    // Player(name: "Mason", elo: Elo.a1),
+    // Player(name: "Noah", elo: Elo.a1),
+    // Player(name: "Olivia", elo: Elo.a1),
+    // Player(name: "Parker", elo: Elo.a1),
+    //
+    // // S2 Tier
+    // Player(name: "Quincy", elo: Elo.s2),
+    // Player(name: "Riley", elo: Elo.s2),
+    // Player(name: "Sophia", elo: Elo.s2),
+    // Player(name: "Taylor", elo: Elo.s2),
+    // Player(name: "Ulysses", elo: Elo.s2),
+    // Player(name: "Victoria", elo: Elo.s2),
+    // Player(name: "Wyatt", elo: Elo.s2),
+    //
+    // // S1 Tier (Highest)
+    // Player(name: "Xena", elo: Elo.s1),
+    // Player(name: "Yvonne", elo: Elo.s1),
+    // Player(name: "Zane", elo: Elo.s1),
+    // Player(name: "Alex", elo: Elo.s1),
+    // Player(name: "Bella", elo: Elo.s1),
+    // Player(name: "Cody", elo: Elo.s1),
+    // Player(name: "Diana", elo: Elo.s1),
   };
 
   Set<Player> get player => Set.unmodifiable(_players);
@@ -144,9 +150,11 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removePlayer(Player player) {
-    _players.remove(player);
-    _fractionalAverageGamePlayer.remove(player);
+  void removePlayer(Player player, {bool byId = false}) {
+    final playerToRemove =
+        byId ? _players.firstWhere((p) => p.id == player.id) : player;
+    _players.remove(playerToRemove);
+    _fractionalAverageGamePlayer.remove(playerToRemove);
     notifyListeners();
   }
 
@@ -162,7 +170,7 @@ class GameData extends ChangeNotifier {
     assert(stagingMatches.isNotEmpty);
     _improveEloSpread();
     _currentView = stagingMatches;
-    print('Match elo spread: ${eloSpread()}');
+    debugPrint('Match elo spread: ${eloSpread()}');
     notifyListeners();
   }
 
@@ -178,6 +186,7 @@ class GameData extends ChangeNotifier {
   }
 
   Iterable<Player> _choosePlayer() {
+    final numberOfCourt = _players.length ~/ 4;
     final playerHistory = getCurrentPlayersHistory();
     final averageMatchPlayed = getCurrentPlayerAverageMatchPlayed();
 
@@ -229,10 +238,17 @@ class GameData extends ChangeNotifier {
   }
 
   void _improveEloSpread({int targetSpread = 1}) {
+    if (stagingMatches.length < 2) {
+      debugPrint('Only 1 court, no optimization needed');
+      return;
+    }
     // If the current spread is too high, try to swap players with other groups
     int currentSpread = eloSpread();
     debugPrint('current spread $currentSpread');
-    if (currentSpread < targetSpread) return;
+    if (currentSpread < targetSpread) {
+      debugPrint('Current spread is already satisfied');
+      return;
+    }
     final combinations = Combinations(2, stagingMatches);
     for (final [match1, match2] in combinations()) {
       for (final [i, j] in Amalgams(2, List.generate(4, (k) => k))()) {
@@ -292,6 +308,25 @@ class GameData extends ChangeNotifier {
           playerToBeReplaced;
     }
     notifyListeners();
+  }
+
+  Future<File?> saveGame() async {
+    final Directory? downloadsDir = await getDownloadsDirectory();
+    final dto = SessionDto(players: _players, games: history);
+
+    final timeString = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
+    String? targetFilePath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Please select an output file:',
+      initialDirectory: downloadsDir?.path,
+      fileName: 'game_data_$timeString.json',
+      type: FileType.custom,
+      allowedExtensions: [".json"],
+    );
+    if (targetFilePath == null) return null;
+
+    final file = File(targetFilePath);
+    await file.writeAsString(jsonEncode(dto.toJson()));
+    return file;
   }
 }
 

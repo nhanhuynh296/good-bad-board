@@ -34,7 +34,6 @@ linter:
     - depend_on_referenced_packages
     - empty_catches
     - file_names
-    - hash_and_equals
     - implicit_call_tearoffs
     - library_annotations
     - no_duplicate_case_values

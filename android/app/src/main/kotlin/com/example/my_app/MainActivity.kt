@@ -1,4 +1,4 @@
-package com.example.my_app
+package nz.nathan_huynh.good_bad_board
 
 import io.flutter.embedding.android.FlutterActivity
 
