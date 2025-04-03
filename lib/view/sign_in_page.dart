@@ -173,10 +173,16 @@ class _PlayerListState extends State<PlayerList> {
                     children: [
                       Expanded(
                         key: ObjectKey(player),
-                        child: FilledButton(
-                          onPressed: () {},
-                          child: Text(player.toDisplayString()),
-                        ),
+                        child:
+                            (isAlreadyInGame)
+                                ? FilledButton(
+                                  onPressed: () {},
+                                  child: Text(player.toDisplayString()),
+                                )
+                                : FilledButton.tonal(
+                                  onPressed: () {},
+                                  child: Text(player.toDisplayString()),
+                                ),
                       ),
 
                       (isAlreadyInGame)
