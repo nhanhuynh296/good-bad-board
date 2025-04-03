@@ -82,12 +82,20 @@ class PlayerList extends StatefulWidget {
 }
 
 class _PlayerListState extends State<PlayerList> {
-  String query = '';
+  String get query => textController.text.toUpperCase();
   Set<Elo> eloFilters = {};
+  late final TextEditingController textController;
 
   @override
   void initState() {
     super.initState();
+    textController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
   }
 
   @override
@@ -115,20 +123,19 @@ class _PlayerListState extends State<PlayerList> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: spaceComponent),
           child: SearchBar(
+            controller: textController,
             hintText: 'Search for name, elo...',
             leading: query.isEmpty ? const Icon(Icons.search) : null,
-            onChanged: (i) {
-              setState(() {
-                query = i.toUpperCase();
-              });
-            },
+            onChanged:
+                (i) => setState(() {
+                  /* The query changed. */
+                }),
             trailing: [
               IconButton(
                 onPressed: () {
-                  query = '';
+                  textController.clear();
                 },
                 icon: const Icon(Icons.clear),
-                tooltip: 'Discard file',
               ),
             ],
           ),
@@ -165,11 +172,13 @@ class _PlayerListState extends State<PlayerList> {
                   return Row(
                     children: [
                       Expanded(
+                        key: ObjectKey(player),
                         child: FilledButton(
                           onPressed: () {},
                           child: Text(player.toDisplayString()),
                         ),
                       ),
+
                       (isAlreadyInGame)
                           ? IconButton(
                             onPressed: () {
@@ -177,7 +186,7 @@ class _PlayerListState extends State<PlayerList> {
                                 gameData.removePlayer(player, byId: true);
                               });
                             },
-                            icon: const Icon(Icons.delete),
+                            icon: const Icon(Icons.close),
                           )
                           : IconButton(
                             onPressed: () {
