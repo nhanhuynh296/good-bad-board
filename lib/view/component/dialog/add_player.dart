@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
-import 'package:good_bad_board/state/game_data.dart';
-import 'package:provider/provider.dart';
 
 class AddPlayerDialog extends StatefulWidget {
-  const AddPlayerDialog({super.key});
+  final ValueChanged<Player>? onSubmit;
+
+  const AddPlayerDialog({super.key, this.onSubmit});
 
   @override
   State<AddPlayerDialog> createState() => _AddPlayerDialogState();
@@ -16,7 +16,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
 
   late String name;
   late Elo elo;
-  late String signInId;
+  late String? signInId;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,11 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             ),
             DropdownButtonFormField(
               decoration: const InputDecoration(labelText: 'Elo'),
-
+              validator: (value) {
+                print(value == null);
+                if (value != null) return null;
+                return 'Please select elo';
+              },
               items: Elo.values
                   .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
                   .toList(growable: false),
@@ -51,6 +55,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             ),
             TextFormField(
               decoration: const InputDecoration(labelText: 'Sign In ID'),
+              validator: (value) {
+                signInId = value;
+                return null;
+              },
             ),
           ],
         ),
@@ -68,11 +76,9 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             if (!_formKey.currentState!.validate()) {
               return;
             }
-            Provider.of<GameData>(
-              context,
-              listen: false,
-            ).addFullPricedPlayer(Player(name: name, elo: elo));
-            Navigator.of(context).pop();
+            widget.onSubmit?.call(
+              Player(name: name, elo: elo, signInId: signInId),
+            );
           },
           child: const Text('Add'),
         ),

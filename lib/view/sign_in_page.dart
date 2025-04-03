@@ -18,6 +18,16 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
+  late List<Player> players = [];
+
+  Future<List<Player>> loadPlayersFromJson() async {
+    final loadedPlayer = await Serializer.instance.loadPlayers();
+    setState(() {
+      players = loadedPlayer;
+    });
+    return loadedPlayer;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,22 +40,31 @@ class _SignInPageState extends State<SignInPage> {
           children: [
             Expanded(
               child: FutureBuilder<List<Player>>(
-                future: Serializer.instance.loadPlayers(),
+                future: loadPlayersFromJson(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
-                    return PlayerList(players: snapshot.requireData);
+                    setState(() {
+                      players = snapshot.requireData;
+                    });
                   }
                   if (snapshot.hasError) {
                     return const Text('Error loading players');
                   }
-                  return const AspectRatio(
-                    aspectRatio: 1,
-                    child: CircularProgressIndicator(),
-                  );
+                  return PlayerList(players: players);
                 },
               ),
             ),
-            const Expanded(child: AddPlayerDialog()),
+            Expanded(
+              child: AddPlayerDialog(
+                onSubmit: (player) {
+                  setState(() {
+                    players.add(player);
+                  });
+
+                  Serializer.instance.savePlayers(players);
+                },
+              ),
+            ),
           ],
         ),
       ),
