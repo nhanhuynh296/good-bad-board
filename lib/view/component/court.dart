@@ -19,68 +19,55 @@ class CourtComponent extends StatelessWidget {
     }
 
     final sortedPlayer = players.sortedBy((player) => player.elo.index);
-    const spaceXBetweenPlayer = space32;
     return Stack(
       children: [
         Image.asset('asset/image/court_small.webp'),
         Positioned.fill(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: space32),
-            child: Column(
+            child: Row(
               children: [
                 Expanded(
-                  child: Row(
-                    spacing: spaceXBetweenPlayer,
-                    mainAxisSize: MainAxisSize.max,
+                  child: _CourtSide(
                     children: [
-                      Expanded(
-                        child: DraggablePlayerComponent(
-                          data: sortedPlayer.first,
-                          onDragToTarget:
-                              (draggedToPlayer) => onDragToTarget(
-                                sortedPlayer.first,
-                                draggedToPlayer,
-                              ),
-                        ),
+                      DraggablePlayerComponent(
+                        data: sortedPlayer.first,
+                        onDragToTarget:
+                            (draggedToPlayer) => onDragToTarget(
+                              sortedPlayer.first,
+                              draggedToPlayer,
+                            ),
                       ),
-                      Expanded(
-                        child: DraggablePlayerComponent(
-                          data: sortedPlayer[2],
-                          onDragToTarget:
-                              (draggedToPlayer) => onDragToTarget(
-                                sortedPlayer[2],
-                                draggedToPlayer,
-                              ),
-                        ),
+                      DraggablePlayerComponent(
+                        data: sortedPlayer.last,
+                        onDragToTarget:
+                            (draggedToPlayer) => onDragToTarget(
+                              sortedPlayer.last,
+                              draggedToPlayer,
+                            ),
                       ),
                     ],
                   ),
                 ),
                 Expanded(
-                  child: Row(
-                    spacing: spaceXBetweenPlayer,
-                    mainAxisSize: MainAxisSize.min,
+                  child: _CourtSide(
                     children: [
-                      Expanded(
-                        child: DraggablePlayerComponent(
-                          data: sortedPlayer.last,
-                          onDragToTarget:
-                              (draggedToPlayer) => onDragToTarget(
-                                sortedPlayer.last,
-                                draggedToPlayer,
-                              ),
-                        ),
+                      DraggablePlayerComponent(
+                        data: sortedPlayer[2],
+                        onDragToTarget:
+                            (draggedToPlayer) => onDragToTarget(
+                              sortedPlayer[2],
+                              draggedToPlayer,
+                            ),
                       ),
 
-                      Expanded(
-                        child: DraggablePlayerComponent(
-                          data: sortedPlayer[1],
-                          onDragToTarget:
-                              (draggedToPlayer) => onDragToTarget(
-                                sortedPlayer[1],
-                                draggedToPlayer,
-                              ),
-                        ),
+                      DraggablePlayerComponent(
+                        data: sortedPlayer[1],
+                        onDragToTarget:
+                            (draggedToPlayer) => onDragToTarget(
+                              sortedPlayer[1],
+                              draggedToPlayer,
+                            ),
                       ),
                     ],
                   ),
@@ -90,6 +77,22 @@ class CourtComponent extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CourtSide extends StatelessWidget {
+  final List<Widget> children;
+
+  const _CourtSide({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      spacing: space16,
+      children: children,
     );
   }
 }
