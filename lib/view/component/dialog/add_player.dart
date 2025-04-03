@@ -41,7 +41,6 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             DropdownButtonFormField(
               decoration: const InputDecoration(labelText: 'Elo'),
               validator: (value) {
-                print(value == null);
                 if (value != null) return null;
                 return 'Please select elo';
               },
