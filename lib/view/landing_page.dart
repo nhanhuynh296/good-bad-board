@@ -19,20 +19,20 @@ class LandingPage extends StatelessWidget {
             spacing: spaceCard,
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SignInPage(),
+                child: LandingPageOption(
+                  label: 'Player Sign In',
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignInPage(),
+                        ),
                       ),
-                    );
-                  },
-                  child: const LandingPageOption(label: 'Player Sign In'),
                 ),
               ),
               Expanded(
-                child: GestureDetector(
+                child: LandingPageOption(
+                  label: 'Make Game',
                   onTap:
                       () => Navigator.push(
                         context,
@@ -40,7 +40,6 @@ class LandingPage extends StatelessWidget {
                           builder: (context) => const GameMakerPage(),
                         ),
                       ),
-                  child: const LandingPageOption(label: 'Make Game'),
                 ),
               ),
             ],
@@ -54,20 +53,29 @@ class LandingPage extends StatelessWidget {
 class LandingPageOption extends StatelessWidget {
   final Widget? child;
   final String label;
+  final VoidCallback? onTap;
 
-  const LandingPageOption({super.key, this.child, required this.label});
+  const LandingPageOption({
+    super.key,
+    this.child,
+    required this.label,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: Card.filled(
-        color: Theme.of(context).colorScheme.primary,
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.inversePrimary,
+    return InkWell(
+      onTap: onTap,
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: Card.filled(
+          color: Theme.of(context).colorScheme.primary,
+          child: Center(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
             ),
           ),
         ),
