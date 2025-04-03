@@ -29,7 +29,7 @@ class Serializer {
   }
 
   Future<void> savePlayers(List<Player> players) async {
-    final selectedFile = File(appDir.path + playerFilename);
+    final selectedFile = File('${appDir.path}/$playerFilename');
     final dto = PlayerDto(players: players);
     await selectedFile.writeAsString(jsonEncode(dto.toJson()));
   }
