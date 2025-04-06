@@ -1,12 +1,13 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/dto/serializer.dart';
+import 'package:good_bad_board/dto/player.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/dialog/add_player.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
+import 'package:good_bad_board/view/component/player.dart';
 import 'package:good_bad_board/view/component/reusable.dart';
 import 'package:provider/provider.dart';
 
@@ -18,18 +19,10 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
-  late List<Player> players = [];
-
-  Future<List<Player>> loadPlayersFromJson() async {
-    final loadedPlayer = await Serializer.instance.loadPlayers();
-    setState(() {
-      players = loadedPlayer;
-    });
-    return loadedPlayer;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final players = PlayerRepository.instance.getAllPlayers();
+
     return Scaffold(
       appBar: AppBar(title: const Text(appName)),
       body: Padding(
@@ -38,22 +31,7 @@ class _SignInPageState extends State<SignInPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           spacing: spaceCard,
           children: [
-            Expanded(
-              child: FutureBuilder<List<Player>>(
-                future: loadPlayersFromJson(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    setState(() {
-                      players = snapshot.requireData;
-                    });
-                  }
-                  if (snapshot.hasError) {
-                    return const Text('Error loading players');
-                  }
-                  return PlayerList(players: players);
-                },
-              ),
-            ),
+            const Expanded(child: PlayerList()),
             Expanded(
               child: AddPlayerDialog(
                 onSubmit: (player) {
@@ -61,7 +39,7 @@ class _SignInPageState extends State<SignInPage> {
                     players.add(player);
                   });
 
-                  Serializer.instance.savePlayers(players);
+                  PlayerRepository.instance.createPlayer(player);
                 },
               ),
             ),
@@ -73,9 +51,7 @@ class _SignInPageState extends State<SignInPage> {
 }
 
 class PlayerList extends StatefulWidget {
-  final List<Player> players;
-
-  const PlayerList({super.key, required this.players});
+  const PlayerList({super.key});
 
   @override
   State<PlayerList> createState() => _PlayerListState();
@@ -100,10 +76,11 @@ class _PlayerListState extends State<PlayerList> {
 
   @override
   Widget build(BuildContext context) {
+    final players = PlayerRepository.instance.getAllPlayers();
     // if none is selected, show all of them
     final eloFilters = (this.eloFilters.isEmpty) ? Elo.values : this.eloFilters;
     final filteredPlayers =
-        widget.players
+        players
             .where(
               (player) =>
                   eloFilters.contains(player.elo) &&
@@ -173,16 +150,10 @@ class _PlayerListState extends State<PlayerList> {
                     children: [
                       Expanded(
                         key: ObjectKey(player),
-                        child:
-                            (isAlreadyInGame)
-                                ? FilledButton(
-                                  onPressed: () {},
-                                  child: Text(player.toDisplayString()),
-                                )
-                                : FilledButton.tonal(
-                                  onPressed: () {},
-                                  child: Text(player.toDisplayString()),
-                                ),
+                        child: ClickablePlayerComponent(
+                          data: player,
+                          tonal: isAlreadyInGame,
+                        ),
                       ),
 
                       (isAlreadyInGame)

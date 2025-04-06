@@ -32,6 +32,15 @@ class Player {
 
   String toDisplayString() => '$name (${elo.name.toUpperCase()})';
 
+  Player copyWith({String? name, Elo? elo, String? signInId}) {
+    return Player._jsonConstructor(
+      name ?? this.name,
+      elo ?? this.elo,
+      id,
+      signInId ?? this.signInId,
+    );
+  }
+
   // Json Serialization
   Player._jsonConstructor(this.name, this.elo, this.id, this.signInId);
 

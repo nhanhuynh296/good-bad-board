@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/dto/serializer.dart';
+import 'package:good_bad_board/dto/player.dart';
+import 'package:good_bad_board/dto/repository_service.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/theme.dart';
@@ -29,7 +30,10 @@ Future<void> main() async {
 }
 
 Future<void> loading() async {
-  await Serializer.instance.initialize();
+  await RepositoryService.instance.initialize();
+
+  Future.wait([PlayerRepository.instance.initialize()]);
+
   return;
 }
 

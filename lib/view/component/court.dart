@@ -26,6 +26,7 @@ class CourtComponent extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: space32),
             child: Row(
+              spacing: space32,
               children: [
                 Expanded(
                   child: _CourtSide(
@@ -91,6 +92,7 @@ class _CourtSide extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: space16,
       children: children,
     );

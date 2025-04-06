@@ -14,9 +14,9 @@ class AddPlayerDialog extends StatefulWidget {
 class _AddPlayerDialogState extends State<AddPlayerDialog> {
   final _formKey = GlobalKey<FormState>();
 
-  late String name;
-  late Elo elo;
-  late String? signInId;
+  String? name;
+  Elo? elo;
+  String? signInId;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +29,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
+              initialValue: name,
               decoration: const InputDecoration(labelText: 'Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -39,13 +40,19 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               },
             ),
             DropdownButtonFormField(
+              value: elo,
               decoration: const InputDecoration(labelText: 'Elo'),
               validator: (value) {
                 if (value != null) return null;
                 return 'Please select elo';
               },
               items: Elo.values
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(e.name.toUpperCase()),
+                    ),
+                  )
                   .toList(growable: false),
               onChanged: (Elo? value) {
                 if (value == null) return;
@@ -53,6 +60,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               },
             ),
             TextFormField(
+              initialValue: signInId,
               decoration: const InputDecoration(labelText: 'Sign In ID'),
               validator: (value) {
                 signInId = value;
@@ -75,8 +83,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             if (!_formKey.currentState!.validate()) {
               return;
             }
+            Navigator.of(context).pop();
+
             widget.onSubmit?.call(
-              Player(name: name, elo: elo, signInId: signInId),
+              Player(name: name!, elo: elo!, signInId: signInId),
             );
           },
           child: const Text('Add'),

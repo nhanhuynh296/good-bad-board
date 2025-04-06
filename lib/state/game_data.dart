@@ -16,6 +16,12 @@ import 'package:trotter/trotter.dart';
 class GameData extends ChangeNotifier {
   int numberOfCourt = 2;
 
+  void setNumberOfCourt(int value) {
+    if (value <= 0) return;
+    numberOfCourt = value;
+    notifyListeners();
+  }
+
   final Set<Player> _players = {
     Player(name: "Howard", elo: Elo.b1),
     Player(name: "Yong", elo: Elo.b2),
@@ -150,6 +156,13 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
+  void onUpdatePlayer(Player newPlayer) {
+    final playerToRemove = _players.firstWhere((p) => p.id == newPlayer.id);
+    _players.remove(playerToRemove);
+    _players.add(newPlayer);
+    notifyListeners();
+  }
+
   void removePlayer(Player player, {bool byId = false}) {
     final playerToRemove =
         byId ? _players.firstWhere((p) => p.id == player.id) : player;
@@ -158,11 +171,16 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  void makeGame() {
-    if (_players.isEmpty || numberOfCourt <= 0) return;
+  String? makeGame() {
+    if (numberOfCourt <= 0) return 'There are no court available';
+    if (_players.isEmpty) return 'There are no player';
+    if (_players.length < Game.playerPerCourt) {
+      return 'Not enough players, need at least ${Game.playerPerCourt}, got ${_players.length}';
+    }
     final candidatePlayer = _choosePlayer().shuffled();
     assert(
-      candidatePlayer.isNotEmpty && candidatePlayer.length % 4 == 0,
+      candidatePlayer.isNotEmpty &&
+          candidatePlayer.length % Game.playerPerCourt == 0,
       'Candidate player is empty or not a multiple of 4, ${candidatePlayer.length}',
     );
     stagingMatches =
@@ -172,6 +190,7 @@ class GameData extends ChangeNotifier {
     _currentView = stagingMatches;
     debugPrint('Match elo spread: ${eloSpread()}');
     notifyListeners();
+    return null;
   }
 
   void saveCurrentGame() {
@@ -186,7 +205,7 @@ class GameData extends ChangeNotifier {
   }
 
   Iterable<Player> _choosePlayer() {
-    final numberOfCourt = _players.length ~/ 4;
+    final numberOfCourt = min(_players.length ~/ 4, this.numberOfCourt);
     final playerHistory = getCurrentPlayersHistory();
     final averageMatchPlayed = getCurrentPlayerAverageMatchPlayed();
 

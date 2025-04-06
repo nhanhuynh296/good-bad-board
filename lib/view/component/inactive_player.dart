@@ -73,7 +73,6 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
         (inactivePlayers.isNotEmpty)
             ? Expanded(
               child: ListRenderer(
-                key: ValueKey([gameData.currentView, query]),
                 items: inactivePlayers,
                 itemBuilder:
                     (BuildContext context, int index) =>

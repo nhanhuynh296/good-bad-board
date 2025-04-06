@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
 import 'package:good_bad_board/view/component/timer.dart';
@@ -46,10 +47,7 @@ class GameMakerPage extends StatelessWidget {
                     spacing: spaceDefault,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '${gameData.numberOfCourt} Court(s)',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
+                      const CourtModifier(),
                       Expanded(
                         child: CurrentGameView(
                           key: ValueKey(gameData.stagingMatches.isEmpty),
@@ -87,6 +85,42 @@ class GameMakerPage extends StatelessWidget {
   }
 }
 
+class CourtModifier extends StatelessWidget {
+  const CourtModifier({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final gameData = Provider.of<GameData>(context);
+    final StringBuffer buffer = StringBuffer('${gameData.numberOfCourt} Court');
+    if (gameData.numberOfCourt > 1) {
+      buffer.write('s');
+    }
+    final textStyle = Theme.of(context).textTheme.headlineSmall;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      spacing: space8,
+      children: [
+        IconButton(
+          onPressed:
+              () => gameData.setNumberOfCourt(gameData.numberOfCourt - 1),
+          icon: const Icon(Icons.remove),
+          iconSize: textStyle?.fontSize,
+        ),
+        Text(
+          buffer.toString(),
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        IconButton(
+          onPressed:
+              () => gameData.setNumberOfCourt(gameData.numberOfCourt + 1),
+          icon: const Icon(Icons.add),
+          iconSize: textStyle?.fontSize,
+        ),
+      ],
+    );
+  }
+}
+
 class BottomActionBar extends StatelessWidget {
   const BottomActionBar({super.key});
 
@@ -100,7 +134,11 @@ class BottomActionBar extends StatelessWidget {
         Expanded(
           child: FilledButton(
             onPressed: () {
-              gameData.makeGame();
+              final error = gameData.makeGame();
+              if (error != null) {
+                showErrorToast(context, error);
+                return;
+              }
             },
             child: Text(
               gameData.stagingMatches.isEmpty

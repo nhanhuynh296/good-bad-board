@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/dto/player.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/dialog/edit_player.dart';
+import 'package:provider/provider.dart';
 
 class _PlayerComponent extends StatelessWidget {
   final Player data;
 
-  const _PlayerComponent({required this.data});
+  const _PlayerComponent({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -15,14 +19,50 @@ class _PlayerComponent extends StatelessWidget {
   }
 }
 
-class DraggablePlayerComponent extends StatelessWidget {
-  final Player data;
+class ClickablePlayerComponent extends _PlayerComponent {
+  final bool tonal;
+
+  const ClickablePlayerComponent({
+    super.key,
+    required super.data,
+    this.tonal = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    void onPressed() {
+      debugPrint("Pressed ${data.name}");
+      showAdaptiveDialog(
+        context: context,
+        builder:
+            (_) => EditPlayerDialog(
+              player: data,
+              onSubmit: (newPlayer) {
+                PlayerRepository.instance.updatePlayer(newPlayer);
+                Provider.of<GameData>(
+                  context,
+                  listen: false,
+                ).onUpdatePlayer(newPlayer);
+                debugPrint("Updated ${newPlayer.name}");
+              },
+            ),
+      );
+    }
+
+    final child = _PlayerComponent(data: data);
+    return tonal
+        ? FilledButton.tonal(onPressed: onPressed, child: child)
+        : FilledButton(onPressed: onPressed, child: child);
+  }
+}
+
+class DraggablePlayerComponent extends _PlayerComponent {
   final DragTargetAccept<Player>? onDragToTarget;
   final DragTargetWillAccept<Player>? shouldAcceptIncomingDragPlayer;
 
   const DraggablePlayerComponent({
     super.key,
-    required this.data,
+    required super.data,
     this.onDragToTarget,
     this.shouldAcceptIncomingDragPlayer,
   });
@@ -51,6 +91,23 @@ class DraggablePlayerComponent extends StatelessWidget {
                       ? null
                       : () {
                         debugPrint("Pressed ${data.name}");
+                        showAdaptiveDialog(
+                          context: context,
+                          builder:
+                              (_) => EditPlayerDialog(
+                                player: data,
+                                onSubmit: (newPlayer) {
+                                  PlayerRepository.instance.updatePlayer(
+                                    newPlayer,
+                                  );
+                                  Provider.of<GameData>(
+                                    context,
+                                    listen: false,
+                                  ).onUpdatePlayer(newPlayer);
+                                  debugPrint("Updated ${newPlayer.name}");
+                                },
+                              ),
+                        );
                       },
               child: _PlayerComponent(data: data),
             ),
@@ -61,10 +118,8 @@ class DraggablePlayerComponent extends StatelessWidget {
   }
 }
 
-class _DraggingPlayerComponent extends StatelessWidget {
-  final Player data;
-
-  const _DraggingPlayerComponent({required this.data});
+class _DraggingPlayerComponent extends _PlayerComponent {
+  const _DraggingPlayerComponent({required super.data});
 
   @override
   Widget build(BuildContext context) {
