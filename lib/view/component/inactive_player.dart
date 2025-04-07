@@ -4,9 +4,9 @@ import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/court.dart';
-import 'package:good_bad_board/view/component/dialog/add_player.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
 import 'package:good_bad_board/view/component/player.dart';
+import 'package:good_bad_board/view/sign_in_page.dart';
 import 'package:provider/provider.dart';
 
 class InactivePlayerComponent extends StatefulWidget {
@@ -59,10 +59,9 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
             trailing: [
               IconButton(
                 onPressed: () {
-                  showAdaptiveDialog(
-                    context: context,
-                    builder: (_) => const AddPlayerDialog(),
-                  );
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => const SignInPage()));
                 },
                 icon: const Icon(Icons.person_add),
                 tooltip: 'Add New Player',
@@ -105,9 +104,24 @@ class StagingGameComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListRenderer(
       itemBuilder:
-          (BuildContext context, int index) =>
+          (BuildContext context, int index) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                padding: const EdgeInsets.all(spaceComponent),
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Court ${index + 1}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                  textAlign: TextAlign.start,
+                ),
+              ),
               CourtComponent(players: games[index].players),
+            ],
+          ),
       items: games,
+      separatorExtent: space32,
     );
   }
 }

@@ -3,12 +3,14 @@ import 'package:good_bad_board/spacing.dart';
 
 class ListRenderer<T> extends StatelessWidget {
   final IndexedWidgetBuilder itemBuilder;
+  final double separatorExtent;
   final List<T> items;
 
   const ListRenderer({
     super.key,
     required this.itemBuilder,
     required this.items,
+    this.separatorExtent = spaceDefault,
   });
 
   @override
@@ -22,7 +24,7 @@ class ListRenderer<T> extends StatelessWidget {
       itemBuilder: itemBuilder,
       separatorBuilder:
           (BuildContext context, int index) =>
-              const SizedBox(height: spaceDefault),
+              SizedBox(height: separatorExtent),
     );
   }
 }

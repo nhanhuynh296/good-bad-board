@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/core/duration_extention.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:provider/provider.dart';
@@ -37,46 +38,42 @@ class _CountdownTimerState extends State<CountdownTimer>
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: spaceComponent),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedBuilder(
-            animation: _controller,
-            builder: (BuildContext context, _) {
-              if (_controller.isCompleted) {
-                widget.onExpired?.call();
-              }
-              final timeElapsed =
-                  _controller.duration! * (1 - _controller.value);
-              final formatted = timeElapsed
-                  .toString()
-                  .split('.')
-                  .first
-                  .split(':')
-                  .sublist(1)
-                  .join(":");
-              return Text('Timer ${formatted.padRight(5)}');
-            },
-          ),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (BuildContext context, _) {
+          if (_controller.isCompleted) {
+            widget.onExpired?.call();
+          }
+          final timeElapsed = _controller.duration! * (1 - _controller.value);
 
-          Flexible(
-            child: TextButton(
-              onPressed: () {
-                if (!_controller.isAnimating) {
-                  _controller.repeat();
-                } else {
-                  _controller.stop(canceled: false);
-                }
-              },
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder:
-                    (BuildContext context, Widget? child) =>
-                        LinearProgressIndicator(value: _controller.value),
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Text(
+                  'Time Remaining',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
-            ),
-          ),
-        ],
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    if (!_controller.isAnimating) {
+                      _controller.repeat();
+                    } else {
+                      _controller.stop(canceled: false);
+                    }
+                  },
+                  child: Text(
+                    timeElapsed.toDisplayString(),
+                    style: Theme.of(context).textTheme.displayLarge,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

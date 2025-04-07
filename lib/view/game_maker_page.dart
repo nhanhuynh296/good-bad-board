@@ -32,28 +32,28 @@ class GameMakerPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        spacing: spaceComponent,
+      body: Row(
+        spacing: spaceXBetweenChip,
         children: [
-          const CountdownTimer(),
-          Expanded(
-            child: Row(
-              spacing: spaceXBetweenChip,
+          const Expanded(
+            child: Column(
+              spacing: spaceComponent,
               children: [
-                const Expanded(child: InactivePlayerComponent()),
+                CountdownTimer(),
+                Expanded(child: InactivePlayerComponent()),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Column(
+              spacing: spaceDefault,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CourtModifier(),
                 Expanded(
-                  flex: 2,
-                  child: Column(
-                    spacing: spaceDefault,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CourtModifier(),
-                      Expanded(
-                        child: CurrentGameView(
-                          key: ValueKey(gameData.stagingMatches.isEmpty),
-                        ),
-                      ),
-                    ],
+                  child: CurrentGameView(
+                    key: ValueKey(gameData.stagingMatches.isEmpty),
                   ),
                 ),
               ],
