@@ -26,6 +26,9 @@ class _CountdownTimerState extends State<CountdownTimer>
       vsync: this,
       duration: timerData.duration,
     );
+    _controller.addStatusListener((status) {
+      if (status.isCompleted) widget.onExpired?.call();
+    });
   }
 
   @override
@@ -38,42 +41,30 @@ class _CountdownTimerState extends State<CountdownTimer>
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: spaceComponent),
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (BuildContext context, _) {
-          if (_controller.isCompleted) {
-            widget.onExpired?.call();
-          }
-          final timeElapsed = _controller.duration! * (1 - _controller.value);
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(
+      child: Column(
+        children: [
+          Text('Time Remaining', style: Theme.of(context).textTheme.titleLarge),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (BuildContext context, _) {
+              final timeElapsed =
+                  _controller.duration! * (1 - _controller.value);
+              return TextButton(
+                onPressed: () {
+                  if (!_controller.isAnimating) {
+                    _controller.repeat();
+                  } else {
+                    _controller.stop(canceled: false);
+                  }
+                },
                 child: Text(
-                  'Time Remaining',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  timeElapsed.toDisplayString(),
+                  style: Theme.of(context).textTheme.displayLarge,
                 ),
-              ),
-              Expanded(
-                child: TextButton(
-                  onPressed: () {
-                    if (!_controller.isAnimating) {
-                      _controller.repeat();
-                    } else {
-                      _controller.stop(canceled: false);
-                    }
-                  },
-                  child: Text(
-                    timeElapsed.toDisplayString(),
-                    style: Theme.of(context).textTheme.displayLarge,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+              );
+            },
+          ),
+        ],
       ),
     );
   }

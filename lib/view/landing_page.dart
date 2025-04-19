@@ -12,6 +12,7 @@ class LandingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(appName)),
+      drawer: const LandingPageDrawer(),
       body: Center(
         child: Padding(
           padding: pageSpacing,
@@ -79,6 +80,38 @@ class LandingPageOption extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class LandingPageDrawer extends StatelessWidget {
+  const LandingPageDrawer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
+    final width = MediaQuery.sizeOf(context).width * 0.5;
+    return Drawer(
+      width: width,
+      child: Column(
+        children: [
+          AboutListTile(
+            applicationName: appName,
+            aboutBoxChildren: [
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'https://github.com/nhanhuynh296',
+                      style: textStyle,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

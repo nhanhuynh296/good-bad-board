@@ -40,6 +40,7 @@ class GameMakerPage extends StatelessWidget {
               spacing: spaceComponent,
               children: [
                 CountdownTimer(),
+                Divider(),
                 Expanded(child: InactivePlayerComponent()),
               ],
             ),
