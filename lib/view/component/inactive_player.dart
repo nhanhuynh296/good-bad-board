@@ -24,7 +24,7 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
     final playingPlayers = Set.unmodifiable(
-      getPlayerFromGames(gameData.currentView),
+      getPlayerFromGames(gameData.stagingMatches),
     );
     final inactivePlayers = gameData.player
         .difference(playingPlayers)

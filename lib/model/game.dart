@@ -10,7 +10,7 @@ class Game {
 
   final List<Player> players;
 
-  Game(this.players) : assert(players.length == playerPerCourt);
+  Game(this.players);
 
   int eloGap() {
     final sortedPlayers = players.sortedBy((player) => player.elo.index);
@@ -25,4 +25,14 @@ class Game {
 
   static List<String> gameSerializer(Game game) =>
       game.players.map(Player.jsonReferencedPlayer).toList(growable: false);
+}
+
+class PlaceholderGame extends Game {
+  PlaceholderGame(super.players);
+
+  @override
+  int eloGap() {
+    if (players.length < 2) return 0;
+    return super.eloGap();
+  }
 }

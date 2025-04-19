@@ -115,23 +115,6 @@ class GameData extends ChangeNotifier {
 
   final List<List<Game>> history = [];
 
-  int gameNumber = 0;
-
-  void nextGame() {
-    gameNumber++;
-    notifyListeners();
-  }
-
-  /// Current view of the game
-  List<Game> _currentView = [];
-
-  List<Game> get currentView => _currentView;
-
-  void setCurrentView(List<Game> newView) {
-    _currentView = newView;
-    notifyListeners();
-  }
-
   /// Candidate to be added to history
   List<Game> stagingMatches = [];
 
@@ -187,8 +170,12 @@ class GameData extends ChangeNotifier {
         candidatePlayer.slices(4).map((players) => Game(players)).toList();
     assert(stagingMatches.isNotEmpty);
     _improveEloSpread();
-    _currentView = stagingMatches;
     debugPrint('Match elo spread: ${eloSpread()}');
+    if (stagingMatches.length < numberOfCourt) {
+      stagingMatches.addAll(
+        List.filled(numberOfCourt - stagingMatches.length, PlaceholderGame([])),
+      );
+    }
     notifyListeners();
     return null;
   }
@@ -196,7 +183,6 @@ class GameData extends ChangeNotifier {
   void saveCurrentGame() {
     if (stagingMatches.isEmpty) return;
     history.add(stagingMatches);
-    _currentView = history.last;
     stagingMatches = [];
     notifyListeners();
     debugPrint(
@@ -297,9 +283,9 @@ class GameData extends ChangeNotifier {
 
   Map<Player, List<int>> getPlayerIndexOfCurrentView() {
     final Map<Player, List<int>> out = {};
-    for (var i = 0; i < currentView.length; i++) {
-      for (var j = 0; j < currentView[i].players.length; j++) {
-        out[currentView[i].players[j]] = [i, j];
+    for (var i = 0; i < stagingMatches.length; i++) {
+      for (var j = 0; j < stagingMatches[i].players.length; j++) {
+        out[stagingMatches[i].players[j]] = [i, j];
       }
     }
     return out;
@@ -316,16 +302,31 @@ class GameData extends ChangeNotifier {
     final [playerToBeReplaced, otherPlayer] =
         indices.containsKey(player1) ? [player1, player2] : [player2, player1];
 
-    currentView[indices[playerToBeReplaced]![0]]
+    stagingMatches[indices[playerToBeReplaced]![0]]
             .players[indices[playerToBeReplaced]![1]] =
         otherPlayer;
 
     // If the other player is also in the current view, swap them too.
     // But if not, they are inactive player, so do nothing
     if (indices.containsKey(otherPlayer)) {
-      currentView[indices[otherPlayer]![0]].players[indices[otherPlayer]![1]] =
+      stagingMatches[indices[otherPlayer]![0]]
+              .players[indices[otherPlayer]![1]] =
           playerToBeReplaced;
     }
+    notifyListeners();
+  }
+
+  /// Add a player to the court. If player is already in the court, remove them
+  void addPlayerToCourt(Player player, List<Player> courtPtr) {
+    final indices = getPlayerIndexOfCurrentView();
+    final isStagingPlayer = indices.containsKey(player);
+    if (isStagingPlayer) {
+      final oldGame = stagingMatches[indices[player]![0]];
+      final newPlayers = List.of(oldGame.players.whereNot((p) => p == player));
+      stagingMatches[indices[player]![0]] = Game(newPlayers);
+    }
+    courtPtr.add(player);
+
     notifyListeners();
   }
 

@@ -101,7 +101,7 @@ class CourtModifier extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       spacing: space8,
       children: [
-        IconButton(
+        IconButton.outlined(
           onPressed:
               () => gameData.setNumberOfCourt(gameData.numberOfCourt - 1),
           icon: const Icon(Icons.remove),
@@ -111,7 +111,7 @@ class CourtModifier extends StatelessWidget {
           buffer.toString(),
           style: Theme.of(context).textTheme.headlineSmall,
         ),
-        IconButton(
+        IconButton.outlined(
           onPressed:
               () => gameData.setNumberOfCourt(gameData.numberOfCourt + 1),
           icon: const Icon(Icons.add),
