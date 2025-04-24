@@ -152,7 +152,21 @@ class BottomActionBar extends StatelessWidget {
           Expanded(
             child: FilledButton(
               onPressed: () {
-                gameData.saveCurrentGame();
+                final invalidGames = gameData.stagingMatches.where(
+                  (match) => match.players.isNotEmpty && !match.isPlayable(),
+                );
+                if (invalidGames.isNotEmpty) {
+                  showErrorToast(
+                    context,
+                    'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
+                  );
+                  return;
+                }
+                final errorOrNull = gameData.saveCurrentGame();
+                if (errorOrNull != null) {
+                  showErrorToast(context, errorOrNull);
+                  return;
+                }
               },
               child: const Text('Save'),
             ),

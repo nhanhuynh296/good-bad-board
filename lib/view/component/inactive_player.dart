@@ -1,10 +1,12 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/game.dart';
+import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/court.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
+import 'package:good_bad_board/view/component/overlay.dart';
 import 'package:good_bad_board/view/component/player.dart';
 import 'package:good_bad_board/view/sign_in_page.dart';
 import 'package:provider/provider.dart';
@@ -37,60 +39,92 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
 
     const spaceX = spaceDefault;
 
-    return Column(
-      spacing: spaceComponent,
-      children: [
-        if (query.isEmpty)
-          Text(
-            'Inactive Players',
-            style: Theme.of(context).textTheme.headlineSmall,
-            textAlign: TextAlign.center,
+    return _InactivePlayerDraggable(
+      child: Column(
+        spacing: spaceComponent,
+        children: [
+          if (query.isEmpty)
+            Text(
+              'Inactive Players',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: spaceX),
+            child: SearchBar(
+              hintText: 'Search for name, elo...',
+              leading: query.isEmpty ? const Icon(Icons.search) : null,
+              onChanged: (i) {
+                setState(() {
+                  query = i;
+                });
+              },
+              trailing: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SignInPage()),
+                    );
+                  },
+                  icon: const Icon(Icons.person_add),
+                  tooltip: 'Add New Player',
+                ),
+              ],
+            ),
           ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: spaceX),
-          child: SearchBar(
-            hintText: 'Search for name, elo...',
-            leading: query.isEmpty ? const Icon(Icons.search) : null,
-            onChanged: (i) {
-              setState(() {
-                query = i;
-              });
-            },
-            trailing: [
-              IconButton(
-                onPressed: () {
-                  Navigator.of(
-                    context,
-                  ).push(MaterialPageRoute(builder: (_) => const SignInPage()));
-                },
-                icon: const Icon(Icons.person_add),
-                tooltip: 'Add New Player',
+          (inactivePlayers.isNotEmpty)
+              ? Expanded(
+                child: ListRenderer(
+                  items: inactivePlayers,
+                  itemBuilder:
+                      (BuildContext context, int index) =>
+                          DraggablePlayerComponent(
+                            data: inactivePlayers[index],
+                            shouldAcceptIncomingDragPlayer:
+                                // Disallow dragging to other inactive player
+                                (player) => !inactivePlayers.contains(player),
+                            onDragToTarget: (player) {
+                              gameData.swapPlayer(
+                                player,
+                                inactivePlayers[index],
+                              );
+                            },
+                          ),
+                ),
+              )
+              : Text(
+                'No player with that name, or elo',
+                style: Theme.of(context).textTheme.bodySmall,
               ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InactivePlayerDraggable extends StatelessWidget {
+  final Widget child;
+
+  const _InactivePlayerDraggable({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final gameData = Provider.of<GameData>(context);
+    final playingPlayers = Set.unmodifiable(
+      getPlayerFromGames(gameData.stagingMatches),
+    );
+    return DragTarget<Player>(
+      onWillAcceptWithDetails: (details) {
+        final player = details.data;
+        return playingPlayers.contains(player);
+      },
+      builder:
+          (context, candidateItems, rejectedItems) => Stack(
+            children: [
+              child,
+              if (rejectedItems.isNotEmpty) const InvalidDropTargetOverlay(),
             ],
           ),
-        ),
-        (inactivePlayers.isNotEmpty)
-            ? Expanded(
-              child: ListRenderer(
-                items: inactivePlayers,
-                itemBuilder:
-                    (BuildContext context, int index) =>
-                        DraggablePlayerComponent(
-                          data: inactivePlayers[index],
-                          shouldAcceptIncomingDragPlayer:
-                              // Disallow dragging to other inactive player
-                              (player) => !inactivePlayers.contains(player),
-                          onDragToTarget: (player) {
-                            gameData.swapPlayer(player, inactivePlayers[index]);
-                          },
-                        ),
-              ),
-            )
-            : Text(
-              'No player with that name, or elo',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-      ],
     );
   }
 }

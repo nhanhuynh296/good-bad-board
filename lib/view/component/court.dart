@@ -4,6 +4,7 @@ import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/overlay.dart';
 import 'package:good_bad_board/view/component/player.dart';
 import 'package:provider/provider.dart';
 
@@ -38,13 +39,7 @@ class CourtComponent extends StatelessWidget {
             Image.asset('asset/image/court_small.webp'),
 
             Positioned.fill(
-              child: Container(
-                foregroundDecoration:
-                    (isInvalidDragHovering)
-                        ? BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.3),
-                        )
-                        : null,
+              child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: space32),
                 child:
                     (players.length == Game.playerPerCourt)
@@ -121,8 +116,7 @@ class CourtComponent extends StatelessWidget {
                         : const SizedBox(),
               ),
             ),
-            if (isInvalidDragHovering)
-              const Positioned.fill(child: Placeholder()),
+            if (isInvalidDragHovering) const InvalidDropTargetOverlay(),
           ],
         );
       },

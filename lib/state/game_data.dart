@@ -180,14 +180,21 @@ class GameData extends ChangeNotifier {
     return null;
   }
 
-  void saveCurrentGame() {
-    if (stagingMatches.isEmpty) return;
+  String? saveCurrentGame() {
+    if (stagingMatches.isEmpty) return "No game to save";
+    final invalidGames = stagingMatches.where(
+      (match) => match.players.isNotEmpty && !match.isPlayable(),
+    );
+    if (invalidGames.isNotEmpty) {
+      return 'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}';
+    }
     history.add(stagingMatches);
     stagingMatches = [];
     notifyListeners();
     debugPrint(
       'Average match every should have played: ${getCurrentPlayerAverageMatchPlayed().toStringAsFixed(2)}',
     );
+    return null;
   }
 
   Iterable<Player> _choosePlayer() {

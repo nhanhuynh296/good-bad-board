@@ -7,6 +7,7 @@ part 'game.g.dart';
 @JsonSerializable(explicitToJson: true)
 class Game {
   static const int playerPerCourt = 4;
+  static const int singlePlayerPerCourt = 2;
 
   final List<Player> players;
 
@@ -16,6 +17,10 @@ class Game {
     final sortedPlayers = players.sortedBy((player) => player.elo.index);
     return (sortedPlayers.last.elo.index - sortedPlayers.first.elo.index).abs();
   }
+
+  bool isPlayable() =>
+      players.length == playerPerCourt ||
+      players.length == singlePlayerPerCourt;
 
   // Json Serialization
 
