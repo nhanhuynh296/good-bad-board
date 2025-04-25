@@ -50,7 +50,6 @@ ThemeData get lightTheme {
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       titleTextStyle: TextStyle(
-        fontWeight: FontWeight.w600,
         fontFamily: fontFamily,
         color: AppColors.stAndrewsBlue,
       ),
@@ -82,45 +81,18 @@ ThemeData get lightTheme {
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.bold,
       ),
-      headlineLarge: TextStyle(
-        color: AppColors.stAndrewsBlue,
-        fontWeight: FontWeight.w600,
-      ),
-      headlineMedium: TextStyle(
-        color: AppColors.stAndrewsBlue,
-        fontWeight: FontWeight.w600,
-      ),
-      headlineSmall: TextStyle(
-        color: AppColors.stAndrewsBlue,
-        fontWeight: FontWeight.w600,
-      ),
-      titleLarge: TextStyle(
-        color: AppColors.stAndrewsBlue,
-        fontWeight: FontWeight.w600,
-      ),
-      titleMedium: TextStyle(
-        color: AppColors.stAndrewsBlue,
-        fontWeight: FontWeight.w500,
-      ),
-      titleSmall: TextStyle(
-        color: AppColors.stAndrewsBlue,
-        fontWeight: FontWeight.w500,
-      ),
+      headlineLarge: TextStyle(color: AppColors.stAndrewsBlue),
+      headlineMedium: TextStyle(color: AppColors.stAndrewsBlue),
+      headlineSmall: TextStyle(color: AppColors.stAndrewsBlue),
+      titleLarge: TextStyle(color: AppColors.stAndrewsBlue),
+      titleMedium: TextStyle(color: AppColors.stAndrewsBlue),
+      titleSmall: TextStyle(color: AppColors.stAndrewsBlue),
       bodyLarge: TextStyle(color: AppColors.black),
       bodyMedium: TextStyle(color: AppColors.black),
       bodySmall: TextStyle(color: AppColors.black),
-      labelLarge: TextStyle(
-        color: AppColors.stAndrewsBlue,
-        fontWeight: FontWeight.w600,
-      ),
-      labelMedium: TextStyle(
-        color: AppColors.stAndrewsBlue,
-        fontWeight: FontWeight.w500,
-      ),
-      labelSmall: TextStyle(
-        color: AppColors.stAndrewsBlue,
-        fontWeight: FontWeight.w500,
-      ),
+      labelLarge: TextStyle(color: AppColors.stAndrewsBlue),
+      labelMedium: TextStyle(color: AppColors.stAndrewsBlue),
+      labelSmall: TextStyle(color: AppColors.stAndrewsBlue),
     ),
     dialogTheme: const DialogThemeData(shape: lightOutlinedBorder),
     inputDecorationTheme: InputDecorationTheme(
@@ -203,9 +175,7 @@ ThemeData get darkTheme {
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       titleTextStyle: TextStyle(
-        fontWeight: FontWeight.w600,
         fontFamily: fontFamily,
-
         color: AppColors.goldRush,
       ),
       elevation: 0,
@@ -236,45 +206,18 @@ ThemeData get darkTheme {
         color: AppColors.goldRush,
         fontWeight: FontWeight.bold,
       ),
-      headlineLarge: TextStyle(
-        color: AppColors.goldRush,
-        fontWeight: FontWeight.w600,
-      ),
-      headlineMedium: TextStyle(
-        color: AppColors.goldRush,
-        fontWeight: FontWeight.w600,
-      ),
-      headlineSmall: TextStyle(
-        color: AppColors.goldRush,
-        fontWeight: FontWeight.w600,
-      ),
-      titleLarge: TextStyle(
-        color: AppColors.goldRush,
-        fontWeight: FontWeight.w600,
-      ),
-      titleMedium: TextStyle(
-        color: AppColors.goldRush,
-        fontWeight: FontWeight.w500,
-      ),
-      titleSmall: TextStyle(
-        color: AppColors.goldRush,
-        fontWeight: FontWeight.w500,
-      ),
+      headlineLarge: TextStyle(color: AppColors.goldRush),
+      headlineMedium: TextStyle(color: AppColors.goldRush),
+      headlineSmall: TextStyle(color: AppColors.goldRush),
+      titleLarge: TextStyle(color: AppColors.goldRush),
+      titleMedium: TextStyle(color: AppColors.goldRush),
+      titleSmall: TextStyle(color: AppColors.goldRush),
       bodyLarge: TextStyle(color: AppColors.white),
       bodyMedium: TextStyle(color: AppColors.white),
       bodySmall: TextStyle(color: AppColors.white),
-      labelLarge: TextStyle(
-        color: AppColors.goldRush,
-        fontWeight: FontWeight.w600,
-      ),
-      labelMedium: TextStyle(
-        color: AppColors.goldRush,
-        fontWeight: FontWeight.w500,
-      ),
-      labelSmall: TextStyle(
-        color: AppColors.goldRush,
-        fontWeight: FontWeight.w500,
-      ),
+      labelLarge: TextStyle(color: AppColors.goldRush),
+      labelMedium: TextStyle(color: AppColors.goldRush),
+      labelSmall: TextStyle(color: AppColors.goldRush),
     ),
     dialogTheme: DialogThemeData(shape: darkOutlinedBorder),
     inputDecorationTheme: InputDecorationTheme(
