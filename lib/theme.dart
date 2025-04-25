@@ -180,6 +180,7 @@ ThemeData get lightTheme {
     searchBarTheme: const SearchBarThemeData(
       shape: WidgetStatePropertyAll(lightOutlinedBorder),
     ),
+    chipTheme: const ChipThemeData(shape: lightOutlinedBorder),
   );
 }
 
@@ -341,5 +342,6 @@ ThemeData get darkTheme {
     searchBarTheme: SearchBarThemeData(
       shape: WidgetStatePropertyAll(darkOutlinedBorder),
     ),
+    chipTheme: ChipThemeData(shape: darkOutlinedBorder),
   );
 }
