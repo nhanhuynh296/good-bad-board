@@ -4,6 +4,7 @@ import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/court.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
 import 'package:good_bad_board/view/component/overlay.dart';
@@ -140,24 +141,38 @@ class StagingGameComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.titleLarge;
     return ListRenderer(
-      itemBuilder:
-          (BuildContext context, int index) => Column(
+      itemBuilder: (BuildContext context, int index) {
+        return ShadedContainer(
+          // shaded: false,
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 color: Theme.of(context).colorScheme.secondaryContainer,
-                padding: const EdgeInsets.all(spaceComponent),
+                padding: const EdgeInsets.symmetric(
+                  vertical: spaceComponent,
+                  horizontal: spaceDefault,
+                ),
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Court ${index + 1}',
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.start,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  spacing: space64,
+                  children: [
+                    Text('COURT ${index + 1}', style: textStyle),
+                    Text(
+                      'SKILL GAP ${games[index].eloGap()}',
+                      style: textStyle,
+                    ),
+                  ],
                 ),
               ),
               CourtComponent(players: games[index].players),
             ],
           ),
+        );
+      },
       items: games,
       separatorExtent: space32,
     );

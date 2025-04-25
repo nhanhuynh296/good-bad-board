@@ -132,6 +132,10 @@ ThemeData get lightTheme {
         borderSide: outlinedBorderSide.copyWith(color: AppColors.grey),
         borderRadius: outlinedBorderRadius,
       ),
+      disabledBorder: OutlineInputBorder(
+        borderSide: outlinedBorderSide.copyWith(color: AppColors.grey),
+        borderRadius: outlinedBorderRadius,
+      ),
       focusedBorder: OutlineInputBorder(
         borderSide: outlinedBorderSide.copyWith(color: AppColors.stAndrewsBlue),
         borderRadius: outlinedBorderRadius,
@@ -166,6 +170,9 @@ ThemeData get lightTheme {
     ),
     iconButtonTheme: const IconButtonThemeData(style: commonButtonTheme),
     filledButtonTheme: const FilledButtonThemeData(style: commonButtonTheme),
+    searchBarTheme: const SearchBarThemeData(
+      shape: WidgetStatePropertyAll(outlinedBorder),
+    ),
   );
 }
 
@@ -206,7 +213,7 @@ ThemeData get darkTheme {
       color: AppColors.darkBlue,
       shadowColor: AppColors.grey.withValues(alpha: 0.25),
       elevation: 2,
-      shape: outlinedBorder,
+      shape: darkOutlinedBorder,
     ),
     textTheme: const TextTheme(
       displayLarge: TextStyle(
@@ -261,9 +268,13 @@ ThemeData get darkTheme {
         fontWeight: FontWeight.w500,
       ),
     ),
-    dialogTheme: const DialogThemeData(shape: outlinedBorder),
+    dialogTheme: DialogThemeData(shape: darkOutlinedBorder),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
+        borderSide: outlinedBorderSide.copyWith(color: AppColors.grey),
+        borderRadius: outlinedBorderRadius,
+      ),
+      disabledBorder: OutlineInputBorder(
         borderSide: outlinedBorderSide.copyWith(color: AppColors.grey),
         borderRadius: outlinedBorderRadius,
       ),
@@ -272,7 +283,9 @@ ThemeData get darkTheme {
         borderRadius: outlinedBorderRadius,
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: outlinedBorderSide.copyWith(color: AppColors.goldRush),
+        borderSide: outlinedBorderSide
+            .scale(1.5)
+            .copyWith(color: AppColors.goldRush),
         borderRadius: outlinedBorderRadius,
       ),
       errorBorder: OutlineInputBorder(
@@ -289,7 +302,7 @@ ThemeData get darkTheme {
       style: commonButtonTheme.copyWith(
         backgroundColor: const WidgetStatePropertyAll(AppColors.goldRush),
         foregroundColor: const WidgetStatePropertyAll(AppColors.black),
-        shape: const WidgetStatePropertyAll(outlinedBorder),
+        shape: WidgetStatePropertyAll(darkOutlinedBorder),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
