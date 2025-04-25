@@ -100,23 +100,20 @@ class CourtModifier extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme.headlineSmall;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: space8,
+      spacing: spaceDefault,
       children: [
-        IconButton.outlined(
+        Button(
+          type: ButtonType.outlined,
           onPressed:
               () => gameData.setNumberOfCourt(gameData.numberOfCourt - 1),
-          icon: const Icon(Icons.remove),
-          iconSize: textStyle?.fontSize,
+          icon: Icon(Icons.remove, size: textStyle?.fontSize),
         ),
-        Text(
-          buffer.toString(),
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        IconButton.outlined(
+        Text(buffer.toString(), style: textStyle),
+        Button(
+          type: ButtonType.outlined,
           onPressed:
               () => gameData.setNumberOfCourt(gameData.numberOfCourt + 1),
-          icon: const Icon(Icons.add),
-          iconSize: textStyle?.fontSize,
+          icon: Icon(Icons.add, size: textStyle?.fontSize),
         ),
       ],
     );

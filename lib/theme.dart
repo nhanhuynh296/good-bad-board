@@ -15,14 +15,26 @@ abstract class AppColors {
 }
 
 const String fontFamily = 'Gotham';
+
+const outlinedBorderSide = BorderSide(width: 2);
+const outlinedBorderRadius = BorderRadius.all(Radius.circular(5));
+const outlinedBorder = RoundedRectangleBorder(
+  side: outlinedBorderSide,
+  borderRadius: outlinedBorderRadius,
+);
+
+final darkOutlinedBorder = outlinedBorder.copyWith(
+  side: outlinedBorderSide.copyWith(color: AppColors.white),
+);
+
 const commonButtonTheme = ButtonStyle(
-  shape: WidgetStatePropertyAll(RoundedRectangleBorder()),
+  shape: WidgetStatePropertyAll(outlinedBorder),
 );
 
 ThemeData get lightTheme {
   return ThemeData(
     useMaterial3: true,
-    colorScheme: ColorScheme.light(
+    colorScheme: const ColorScheme.light(
       primary: AppColors.stAndrewsBlue,
       onPrimary: AppColors.white,
       secondary: AppColors.goldRush,
@@ -55,7 +67,7 @@ ThemeData get lightTheme {
       color: AppColors.white,
       shadowColor: AppColors.grey.withValues(alpha: 0.25),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: outlinedBorder,
     ),
     textTheme: const TextTheme(
       displayLarge: TextStyle(
@@ -110,36 +122,35 @@ ThemeData get lightTheme {
         fontWeight: FontWeight.w500,
       ),
     ),
+    dialogTheme: const DialogThemeData(shape: outlinedBorder),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
-        borderSide: const BorderSide(color: AppColors.grey),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: AppColors.grey),
+        borderRadius: outlinedBorderRadius,
       ),
       enabledBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: AppColors.grey),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: AppColors.grey),
+        borderRadius: outlinedBorderRadius,
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: AppColors.stAndrewsBlue),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: AppColors.stAndrewsBlue),
+        borderRadius: outlinedBorderRadius,
       ),
       errorBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.red),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: Colors.red),
+        borderRadius: outlinedBorderRadius,
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.red),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: Colors.red),
+        borderRadius: outlinedBorderRadius,
       ),
       floatingLabelStyle: const TextStyle(color: AppColors.stAndrewsBlue),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: commonButtonTheme.copyWith(
-        backgroundColor: WidgetStateProperty.all(AppColors.stAndrewsBlue),
-        foregroundColor: WidgetStateProperty.all(AppColors.white),
-        shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+        backgroundColor: const WidgetStatePropertyAll(AppColors.stAndrewsBlue),
+        foregroundColor: const WidgetStatePropertyAll(AppColors.white),
+        shape: WidgetStateProperty.all(outlinedBorder),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -150,9 +161,10 @@ ThemeData get lightTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: commonButtonTheme.copyWith(
         backgroundColor: const WidgetStatePropertyAll(AppColors.white),
-        side: const WidgetStatePropertyAll(BorderSide(width: 2)),
+        side: const WidgetStatePropertyAll(outlinedBorderSide),
       ),
     ),
+    iconButtonTheme: const IconButtonThemeData(style: commonButtonTheme),
     filledButtonTheme: const FilledButtonThemeData(style: commonButtonTheme),
   );
 }
@@ -194,7 +206,7 @@ ThemeData get darkTheme {
       color: AppColors.darkBlue,
       shadowColor: AppColors.grey.withValues(alpha: 0.25),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: outlinedBorder,
     ),
     textTheme: const TextTheme(
       displayLarge: TextStyle(
@@ -249,48 +261,52 @@ ThemeData get darkTheme {
         fontWeight: FontWeight.w500,
       ),
     ),
+    dialogTheme: const DialogThemeData(shape: outlinedBorder),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
-        borderSide: const BorderSide(color: AppColors.grey),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: AppColors.grey),
+        borderRadius: outlinedBorderRadius,
       ),
       enabledBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: AppColors.grey),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: AppColors.grey),
+        borderRadius: outlinedBorderRadius,
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: AppColors.goldRush),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: AppColors.goldRush),
+        borderRadius: outlinedBorderRadius,
       ),
       errorBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.red),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: Colors.red),
+        borderRadius: outlinedBorderRadius,
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.red),
-        borderRadius: BorderRadius.circular(8.0),
+        borderSide: outlinedBorderSide.copyWith(color: Colors.red),
+        borderRadius: outlinedBorderRadius,
       ),
       floatingLabelStyle: const TextStyle(color: AppColors.goldRush),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: commonButtonTheme.copyWith(
-        backgroundColor: WidgetStateProperty.all(AppColors.goldRush),
-        foregroundColor: WidgetStateProperty.all(AppColors.black),
-        shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+        backgroundColor: const WidgetStatePropertyAll(AppColors.goldRush),
+        foregroundColor: const WidgetStatePropertyAll(AppColors.black),
+        shape: const WidgetStatePropertyAll(outlinedBorder),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: commonButtonTheme.copyWith(
-        foregroundColor: WidgetStateProperty.all(AppColors.goldRush),
+        foregroundColor: const WidgetStatePropertyAll(AppColors.goldRush),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: commonButtonTheme.copyWith(
         backgroundColor: const WidgetStatePropertyAll(AppColors.black),
+        shape: WidgetStatePropertyAll(darkOutlinedBorder),
       ),
     ),
+    iconButtonTheme: const IconButtonThemeData(style: commonButtonTheme),
     filledButtonTheme: const FilledButtonThemeData(style: commonButtonTheme),
+    searchBarTheme: SearchBarThemeData(
+      shape: WidgetStatePropertyAll(darkOutlinedBorder),
+    ),
   );
 }
