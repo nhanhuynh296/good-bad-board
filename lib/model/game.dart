@@ -4,23 +4,24 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'game.g.dart';
 
+typedef PlayerContainer = Set<Player>;
+
 @JsonSerializable(explicitToJson: true)
 class Game {
   static const int playerPerCourt = 4;
   static const int singlePlayerPerCourt = 2;
+  static const acceptablePlayerNumber = [playerPerCourt, singlePlayerPerCourt];
 
-  final List<Player> players;
+  final PlayerContainer players;
 
-  Game(this.players);
+  Game(Iterable<Player> players) : players = players.toSet();
 
   int eloGap() {
     final sortedPlayers = players.sortedBy((player) => player.elo.index);
     return (sortedPlayers.last.elo.index - sortedPlayers.first.elo.index).abs();
   }
 
-  bool isPlayable() =>
-      players.length == playerPerCourt ||
-      players.length == singlePlayerPerCourt;
+  bool isPlayable() => acceptablePlayerNumber.contains(players.length);
 
   // Json Serialization
 

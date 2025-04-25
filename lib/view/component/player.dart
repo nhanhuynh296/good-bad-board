@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/dto/player.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/dialog/edit_player.dart';
 import 'package:provider/provider.dart';
 
@@ -13,24 +14,28 @@ class _PlayerComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      '${data.name} (${data.elo.name.toUpperCase()})',
+      '${data.name.toUpperCase()} (${data.elo.name.toUpperCase()})',
       textAlign: TextAlign.center,
     );
   }
 }
 
 class ClickablePlayerComponent extends _PlayerComponent {
-  final bool tonal;
+  final bool filled;
+  final VoidCallback? onTap;
+  final bool disabled;
 
   const ClickablePlayerComponent({
     super.key,
     required super.data,
-    this.tonal = false,
+    this.filled = false,
+    this.disabled = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    void onPressed() {
+    void onSecondaryAction() {
       debugPrint("Pressed ${data.name}");
       showAdaptiveDialog(
         context: context,
@@ -50,9 +55,13 @@ class ClickablePlayerComponent extends _PlayerComponent {
     }
 
     final child = _PlayerComponent(data: data);
-    return tonal
-        ? FilledButton.tonal(onPressed: onPressed, child: child)
-        : FilledButton(onPressed: onPressed, child: child);
+    return Button(
+      type: filled ? ButtonType.filled : ButtonType.outlined,
+      onPressed: onTap,
+      onLongPress: onSecondaryAction,
+      disabled: disabled,
+      child: child,
+    );
   }
 }
 
@@ -85,31 +94,10 @@ class DraggablePlayerComponent extends _PlayerComponent {
           feedback: _DraggingPlayerComponent(data: data),
           child: Transform.scale(
             scale: isValidDragHovering ? 1.2 : 1.0,
-            child: FilledButton(
-              onPressed:
-                  isInvalidDragHovering
-                      ? null
-                      : () {
-                        debugPrint("Pressed ${data.name}");
-                        showAdaptiveDialog(
-                          context: context,
-                          builder:
-                              (_) => EditPlayerDialog(
-                                player: data,
-                                onSubmit: (newPlayer) {
-                                  PlayerRepository.instance.updatePlayer(
-                                    newPlayer,
-                                  );
-                                  Provider.of<GameData>(
-                                    context,
-                                    listen: false,
-                                  ).onUpdatePlayer(newPlayer);
-                                  debugPrint("Updated ${newPlayer.name}");
-                                },
-                              ),
-                        );
-                      },
-              child: _PlayerComponent(data: data),
+            child: ClickablePlayerComponent(
+              data: data,
+              filled: true,
+              disabled: isInvalidDragHovering,
             ),
           ),
         );

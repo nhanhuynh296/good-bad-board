@@ -15,11 +15,14 @@ abstract class AppColors {
 }
 
 const String fontFamily = 'Gotham';
+const commonButtonTheme = ButtonStyle(
+  shape: WidgetStatePropertyAll(RoundedRectangleBorder()),
+);
 
 ThemeData get lightTheme {
   return ThemeData(
     useMaterial3: true,
-    colorScheme: const ColorScheme.light(
+    colorScheme: ColorScheme.light(
       primary: AppColors.stAndrewsBlue,
       onPrimary: AppColors.white,
       secondary: AppColors.goldRush,
@@ -37,7 +40,6 @@ ThemeData get lightTheme {
       titleTextStyle: TextStyle(
         fontWeight: FontWeight.w600,
         fontFamily: fontFamily,
-        fontSize: 20,
         color: AppColors.stAndrewsBlue,
       ),
       elevation: 0,
@@ -59,65 +61,53 @@ ThemeData get lightTheme {
       displayLarge: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.bold,
-        fontSize: 32,
       ),
       displayMedium: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.bold,
-        fontSize: 28,
       ),
       displaySmall: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.bold,
-        fontSize: 24,
       ),
       headlineLarge: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.w600,
-        fontSize: 20,
       ),
       headlineMedium: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.w600,
-        fontSize: 18,
       ),
       headlineSmall: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.w600,
-        fontSize: 16,
       ),
       titleLarge: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.w600,
-        fontSize: 16,
       ),
       titleMedium: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.w500,
-        fontSize: 14,
       ),
       titleSmall: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.w500,
-        fontSize: 12,
       ),
-      bodyLarge: TextStyle(color: AppColors.black, fontSize: 16),
-      bodyMedium: TextStyle(color: AppColors.black, fontSize: 14),
-      bodySmall: TextStyle(color: AppColors.black, fontSize: 12),
+      bodyLarge: TextStyle(color: AppColors.black),
+      bodyMedium: TextStyle(color: AppColors.black),
+      bodySmall: TextStyle(color: AppColors.black),
       labelLarge: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.w600,
-        fontSize: 14,
       ),
       labelMedium: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.w500,
-        fontSize: 12,
       ),
       labelSmall: TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.w500,
-        fontSize: 10,
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -144,7 +134,7 @@ ThemeData get lightTheme {
       floatingLabelStyle: const TextStyle(color: AppColors.stAndrewsBlue),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ButtonStyle(
+      style: commonButtonTheme.copyWith(
         backgroundColor: WidgetStateProperty.all(AppColors.stAndrewsBlue),
         foregroundColor: WidgetStateProperty.all(AppColors.white),
         shape: WidgetStateProperty.all(
@@ -153,10 +143,17 @@ ThemeData get lightTheme {
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: ButtonStyle(
+      style: commonButtonTheme.copyWith(
         foregroundColor: WidgetStateProperty.all(AppColors.stAndrewsBlue),
       ),
     ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: commonButtonTheme.copyWith(
+        backgroundColor: const WidgetStatePropertyAll(AppColors.white),
+        side: const WidgetStatePropertyAll(BorderSide(width: 2)),
+      ),
+    ),
+    filledButtonTheme: const FilledButtonThemeData(style: commonButtonTheme),
   );
 }
 
@@ -181,7 +178,7 @@ ThemeData get darkTheme {
       titleTextStyle: TextStyle(
         fontWeight: FontWeight.w600,
         fontFamily: fontFamily,
-        fontSize: 20,
+
         color: AppColors.goldRush,
       ),
       elevation: 0,
@@ -203,65 +200,53 @@ ThemeData get darkTheme {
       displayLarge: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.bold,
-        fontSize: 32,
       ),
       displayMedium: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.bold,
-        fontSize: 28,
       ),
       displaySmall: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.bold,
-        fontSize: 24,
       ),
       headlineLarge: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.w600,
-        fontSize: 20,
       ),
       headlineMedium: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.w600,
-        fontSize: 18,
       ),
       headlineSmall: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.w600,
-        fontSize: 16,
       ),
       titleLarge: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.w600,
-        fontSize: 16,
       ),
       titleMedium: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.w500,
-        fontSize: 14,
       ),
       titleSmall: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.w500,
-        fontSize: 12,
       ),
-      bodyLarge: TextStyle(color: AppColors.white, fontSize: 16),
-      bodyMedium: TextStyle(color: AppColors.white, fontSize: 14),
-      bodySmall: TextStyle(color: AppColors.white, fontSize: 12),
+      bodyLarge: TextStyle(color: AppColors.white),
+      bodyMedium: TextStyle(color: AppColors.white),
+      bodySmall: TextStyle(color: AppColors.white),
       labelLarge: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.w600,
-        fontSize: 14,
       ),
       labelMedium: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.w500,
-        fontSize: 12,
       ),
       labelSmall: TextStyle(
         color: AppColors.goldRush,
         fontWeight: FontWeight.w500,
-        fontSize: 10,
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -288,7 +273,7 @@ ThemeData get darkTheme {
       floatingLabelStyle: const TextStyle(color: AppColors.goldRush),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ButtonStyle(
+      style: commonButtonTheme.copyWith(
         backgroundColor: WidgetStateProperty.all(AppColors.goldRush),
         foregroundColor: WidgetStateProperty.all(AppColors.black),
         shape: WidgetStateProperty.all(
@@ -297,9 +282,15 @@ ThemeData get darkTheme {
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: ButtonStyle(
+      style: commonButtonTheme.copyWith(
         foregroundColor: WidgetStateProperty.all(AppColors.goldRush),
       ),
     ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: commonButtonTheme.copyWith(
+        backgroundColor: const WidgetStatePropertyAll(AppColors.black),
+      ),
+    ),
+    filledButtonTheme: const FilledButtonThemeData(style: commonButtonTheme),
   );
 }

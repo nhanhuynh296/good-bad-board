@@ -9,7 +9,7 @@ import 'package:good_bad_board/view/component/player.dart';
 import 'package:provider/provider.dart';
 
 class CourtComponent extends StatelessWidget {
-  final List<Player> players;
+  final PlayerContainer players;
 
   const CourtComponent({super.key, required this.players});
 
@@ -37,6 +37,7 @@ class CourtComponent extends StatelessWidget {
         return Stack(
           children: [
             Image.asset('asset/image/court_small.webp'),
+            if (isInvalidDragHovering) const InvalidDropTargetOverlay(),
 
             Positioned.fill(
               child: Padding(
@@ -116,7 +117,6 @@ class CourtComponent extends StatelessWidget {
                         : const SizedBox(),
               ),
             ),
-            if (isInvalidDragHovering) const InvalidDropTargetOverlay(),
           ],
         );
       },

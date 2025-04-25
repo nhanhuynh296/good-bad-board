@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
+import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/reusable.dart';
 import 'package:good_bad_board/view/game_maker_page.dart';
 import 'package:good_bad_board/view/sign_in_page.dart';
@@ -21,7 +22,7 @@ class LandingPage extends StatelessWidget {
             children: [
               Expanded(
                 child: LandingPageOption(
-                  label: 'Player Sign In',
+                  label: 'Register',
                   onTap:
                       () => Navigator.push(
                         context,
@@ -65,21 +66,14 @@ class LandingPageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
+    return Button(
+      type: ButtonType.filled,
+      textStyle: Theme.of(context).textTheme.displayMedium,
+
+      onPressed: onTap,
       child: AspectRatio(
         aspectRatio: 1,
-        child: Card.filled(
-          color: Theme.of(context).colorScheme.primary,
-          child: Center(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                color: Theme.of(context).colorScheme.inversePrimary,
-              ),
-            ),
-          ),
-        ),
+        child: Center(child: Text(label, textAlign: TextAlign.center)),
       ),
     );
   }

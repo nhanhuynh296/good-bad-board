@@ -152,27 +152,20 @@ class _PlayerListState extends State<PlayerList> {
                         key: ObjectKey(player),
                         child: ClickablePlayerComponent(
                           data: player,
-                          tonal: isAlreadyInGame,
-                        ),
-                      ),
-
-                      (isAlreadyInGame)
-                          ? IconButton(
-                            onPressed: () {
+                          filled: isAlreadyInGame,
+                          onTap: () {
+                            if (isAlreadyInGame) {
                               setState(() {
-                                gameData.removePlayer(player, byId: true);
+                                gameData.removePlayer(player);
                               });
-                            },
-                            icon: const Icon(Icons.close),
-                          )
-                          : IconButton(
-                            onPressed: () {
+                            } else {
                               setState(() {
                                 gameData.addFullPricedPlayer(player);
                               });
-                            },
-                            icon: const Icon(Icons.add),
-                          ),
+                            }
+                          },
+                        ),
+                      ),
                     ],
                   );
                 },

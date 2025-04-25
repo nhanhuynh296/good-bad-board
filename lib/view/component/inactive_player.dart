@@ -118,6 +118,10 @@ class _InactivePlayerDraggable extends StatelessWidget {
         final player = details.data;
         return playingPlayers.contains(player);
       },
+      onAcceptWithDetails: (details) {
+        print(details);
+        gameData.removePlayerFromCourt(details.data);
+      },
       builder:
           (context, candidateItems, rejectedItems) => Stack(
             children: [

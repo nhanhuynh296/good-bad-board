@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
+import 'package:good_bad_board/view/component/button.dart';
 
 class EditPlayerDialog extends StatefulWidget {
   final Player player;
@@ -86,13 +87,14 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
         ),
       ),
       actions: <Widget>[
-        TextButton(
+        Button(
           child: const Text('Cancel'),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
-        ElevatedButton(
+        Button(
+          type: ButtonType.filled,
           onPressed: () {
             // Validate returns true if the form is valid, or false otherwise.
             if (!_formKey.currentState!.validate()) {

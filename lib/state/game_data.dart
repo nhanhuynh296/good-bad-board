@@ -263,11 +263,21 @@ class GameData extends ChangeNotifier {
     }
     final combinations = Combinations(2, stagingMatches);
     for (final [match1, match2] in combinations()) {
-      for (final [i, j] in Amalgams(2, List.generate(4, (k) => k))()) {
-        var temp = match1.players[i];
-        match1.players[i] = match2.players[j];
-        match2.players[j] = temp;
-        debugPrint('${match1.players[i].name} <-> ${match2.players[j].name}');
+      print(
+        'match ${stagingMatches.indexOf(match1)}, ${stagingMatches.indexOf(match2)}',
+      );
+      for (final (match1Player, match2Player) in product(
+        PlayerContainer.of(match1.players),
+        PlayerContainer.of(match2.players),
+      )) {
+        match1.players
+          ..remove(match1Player)
+          ..add(match2Player);
+        match2.players
+          ..remove(match2Player)
+          ..add(match1Player);
+
+        debugPrint('${match1Player.name} <-> ${match2Player.name}');
         final newSpread = eloSpread();
         debugPrint('\tnew spread $newSpread');
         if (newSpread < targetSpread) {
@@ -278,63 +288,56 @@ class GameData extends ChangeNotifier {
         if (newSpread < currentSpread) {
           currentSpread = newSpread;
           debugPrint('\tgood swap, next');
-          continue;
+          break;
         }
         debugPrint('\tnah, swap back');
-        temp = match1.players[i];
-        match1.players[i] = match2.players[j];
-        match2.players[j] = temp;
+        match1.players
+          ..remove(match2Player)
+          ..add(match1Player);
+        match2.players
+          ..remove(match1Player)
+          ..add(match2Player);
       }
     }
   }
 
-  Map<Player, List<int>> getPlayerIndexOfCurrentView() {
-    final Map<Player, List<int>> out = {};
-    for (var i = 0; i < stagingMatches.length; i++) {
-      for (var j = 0; j < stagingMatches[i].players.length; j++) {
-        out[stagingMatches[i].players[j]] = [i, j];
-      }
-    }
-    return out;
-  }
-
-  void swapPlayer(Player player1, Player player2) {
-    final indices = getPlayerIndexOfCurrentView();
-    // At least one player has to be from the current view
-    assert(
-      indices.containsKey(player1) || indices.containsKey(player2),
-      "This should not be happen, can not swap between inactive players",
+  Game? gameContainingPlayer(Player player) {
+    return stagingMatches.firstWhereOrNull(
+      (game) => game.players.contains(player),
     );
+  }
 
-    final [playerToBeReplaced, otherPlayer] =
-        indices.containsKey(player1) ? [player1, player2] : [player2, player1];
+  String? swapPlayer(Player player1, Player player2) {
+    final game1 = gameContainingPlayer(player1);
+    final game2 = gameContainingPlayer(player2);
+    // At least one player has to be from the current view
+    if (game1 == null || game2 == null) "CAN NOT SWAP BETWEEN INACTIVE PLAYERS";
 
-    stagingMatches[indices[playerToBeReplaced]![0]]
-            .players[indices[playerToBeReplaced]![1]] =
-        otherPlayer;
+    if (game1 != null) {
+      game1.players
+        ..remove(player1)
+        ..add(player2);
+    }
 
-    // If the other player is also in the current view, swap them too.
-    // But if not, they are inactive player, so do nothing
-    if (indices.containsKey(otherPlayer)) {
-      stagingMatches[indices[otherPlayer]![0]]
-              .players[indices[otherPlayer]![1]] =
-          playerToBeReplaced;
+    if (game2 != null) {
+      game2.players
+        ..remove(player1)
+        ..add(player2);
     }
     notifyListeners();
+    return null;
   }
 
   /// Add a player to the court. If player is already in the court, remove them
-  void addPlayerToCourt(Player player, List<Player> courtPtr) {
-    final indices = getPlayerIndexOfCurrentView();
-    final isStagingPlayer = indices.containsKey(player);
-    if (isStagingPlayer) {
-      final oldGame = stagingMatches[indices[player]![0]];
-      final newPlayers = List.of(oldGame.players.whereNot((p) => p == player));
-      stagingMatches[indices[player]![0]] = Game(newPlayers);
-    }
+  void addPlayerToCourt(Player player, PlayerContainer courtPtr) {
     courtPtr.add(player);
-
     notifyListeners();
+  }
+
+  void removePlayerFromCourt(Player player, {updateListener = true}) {
+    final game = gameContainingPlayer(player);
+    game?.players.remove(player);
+    if (updateListener) notifyListeners();
   }
 
   Future<File?> saveGame() async {
@@ -359,3 +362,11 @@ class GameData extends ChangeNotifier {
 
 Iterable<Player> getPlayerFromGames(List<Game> games) =>
     games.expand((game) => game.players);
+
+Iterable<(T, U)> product<T, U>(Iterable<T> a, Iterable<U> b) sync* {
+  for (final x in (a)) {
+    for (final y in b) {
+      yield (x, y);
+    }
+  }
+}

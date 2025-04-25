@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
@@ -128,12 +129,14 @@ class BottomActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context, listen: true);
+    final generateActive = gameData.stagingMatches.isNotEmpty;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       spacing: spaceDefault,
       children: [
         Expanded(
-          child: FilledButton(
+          child: Button(
+            type: generateActive ? ButtonType.outlined : ButtonType.filled,
             onPressed: () {
               final error = gameData.makeGame();
               if (error != null) {
@@ -141,16 +144,13 @@ class BottomActionBar extends StatelessWidget {
                 return;
               }
             },
-            child: Text(
-              gameData.stagingMatches.isEmpty
-                  ? 'Generate Game'
-                  : 'Re-Generate Game',
-            ),
+            child: Text(generateActive ? 'Generate Game' : 'Re-Generate Game'),
           ),
         ),
-        if (gameData.stagingMatches.isNotEmpty)
+        if (generateActive)
           Expanded(
-            child: FilledButton(
+            child: Button(
+              type: ButtonType.filled,
               onPressed: () {
                 final invalidGames = gameData.stagingMatches.where(
                   (match) => match.players.isNotEmpty && !match.isPlayable(),
