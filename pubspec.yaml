@@ -70,9 +70,7 @@ flutter:
   fonts:
     - family: Gotham
       fonts:
-        - asset: asset/font/Gotham-Book.otf
-        - asset: asset/font/Gotham-BookItalic.otf
-          style: italic
+        - asset: asset/font/tabular_gotham_book.ttf
 
   assets:
     - asset/image/
