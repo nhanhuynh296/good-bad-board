@@ -18,17 +18,17 @@ const String fontFamily = 'Gotham';
 
 const outlinedBorderSide = BorderSide(width: 2);
 const outlinedBorderRadius = BorderRadius.all(Radius.circular(5));
-const outlinedBorder = RoundedRectangleBorder(
+const lightOutlinedBorder = RoundedRectangleBorder(
   side: outlinedBorderSide,
   borderRadius: outlinedBorderRadius,
 );
 
-final darkOutlinedBorder = outlinedBorder.copyWith(
+final darkOutlinedBorder = lightOutlinedBorder.copyWith(
   side: outlinedBorderSide.copyWith(color: AppColors.white),
 );
 
 const commonButtonTheme = ButtonStyle(
-  shape: WidgetStatePropertyAll(outlinedBorder),
+  shape: WidgetStatePropertyAll(lightOutlinedBorder),
 );
 
 ThemeData get lightTheme {
@@ -67,7 +67,7 @@ ThemeData get lightTheme {
       color: AppColors.white,
       shadowColor: AppColors.grey.withValues(alpha: 0.25),
       elevation: 2,
-      shape: outlinedBorder,
+      shape: lightOutlinedBorder,
     ),
     textTheme: const TextTheme(
       displayLarge: TextStyle(
@@ -122,7 +122,7 @@ ThemeData get lightTheme {
         fontWeight: FontWeight.w500,
       ),
     ),
-    dialogTheme: const DialogThemeData(shape: outlinedBorder),
+    dialogTheme: const DialogThemeData(shape: lightOutlinedBorder),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderSide: outlinedBorderSide.copyWith(color: AppColors.grey),
@@ -150,28 +150,35 @@ ThemeData get lightTheme {
       ),
       floatingLabelStyle: const TextStyle(color: AppColors.stAndrewsBlue),
     ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: commonButtonTheme.copyWith(
-        backgroundColor: const WidgetStatePropertyAll(AppColors.stAndrewsBlue),
-        foregroundColor: const WidgetStatePropertyAll(AppColors.white),
-        shape: WidgetStateProperty.all(outlinedBorder),
+    elevatedButtonTheme: const ElevatedButtonThemeData(
+      style: ButtonStyle(
+        backgroundColor: WidgetStatePropertyAll(AppColors.stAndrewsBlue),
+        foregroundColor: WidgetStatePropertyAll(AppColors.white),
+        shape: WidgetStatePropertyAll(lightOutlinedBorder),
       ),
     ),
-    textButtonTheme: TextButtonThemeData(
-      style: commonButtonTheme.copyWith(
-        foregroundColor: WidgetStateProperty.all(AppColors.stAndrewsBlue),
+    textButtonTheme: const TextButtonThemeData(
+      style: ButtonStyle(
+        shape: WidgetStatePropertyAll(lightOutlinedBorder),
+        foregroundColor: WidgetStatePropertyAll(AppColors.stAndrewsBlue),
       ),
     ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: commonButtonTheme.copyWith(
-        backgroundColor: const WidgetStatePropertyAll(AppColors.white),
-        side: const WidgetStatePropertyAll(outlinedBorderSide),
+    outlinedButtonTheme: const OutlinedButtonThemeData(
+      style: ButtonStyle(
+        shape: WidgetStatePropertyAll(lightOutlinedBorder),
+        backgroundColor: WidgetStatePropertyAll(AppColors.white),
       ),
     ),
-    iconButtonTheme: const IconButtonThemeData(style: commonButtonTheme),
+    iconButtonTheme: const IconButtonThemeData(
+      style: ButtonStyle(
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: outlinedBorderRadius),
+        ),
+      ),
+    ),
     filledButtonTheme: const FilledButtonThemeData(style: commonButtonTheme),
     searchBarTheme: const SearchBarThemeData(
-      shape: WidgetStatePropertyAll(outlinedBorder),
+      shape: WidgetStatePropertyAll(lightOutlinedBorder),
     ),
   );
 }
@@ -299,25 +306,38 @@ ThemeData get darkTheme {
       floatingLabelStyle: const TextStyle(color: AppColors.goldRush),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: commonButtonTheme.copyWith(
+      style: ButtonStyle(
         backgroundColor: const WidgetStatePropertyAll(AppColors.goldRush),
         foregroundColor: const WidgetStatePropertyAll(AppColors.black),
         shape: WidgetStatePropertyAll(darkOutlinedBorder),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: commonButtonTheme.copyWith(
+      style: ButtonStyle(
+        shape: WidgetStatePropertyAll(darkOutlinedBorder),
         foregroundColor: const WidgetStatePropertyAll(AppColors.goldRush),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: commonButtonTheme.copyWith(
+      style: ButtonStyle(
         backgroundColor: const WidgetStatePropertyAll(AppColors.black),
         shape: WidgetStatePropertyAll(darkOutlinedBorder),
       ),
     ),
-    iconButtonTheme: const IconButtonThemeData(style: commonButtonTheme),
-    filledButtonTheme: const FilledButtonThemeData(style: commonButtonTheme),
+    filledButtonTheme: const FilledButtonThemeData(
+      style: ButtonStyle(
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: outlinedBorderRadius),
+        ),
+      ),
+    ),
+    iconButtonTheme: const IconButtonThemeData(
+      style: ButtonStyle(
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: outlinedBorderRadius),
+        ),
+      ),
+    ),
     searchBarTheme: SearchBarThemeData(
       shape: WidgetStatePropertyAll(darkOutlinedBorder),
     ),
