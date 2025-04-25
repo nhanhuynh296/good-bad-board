@@ -119,6 +119,7 @@ class _PlayerListState extends State<PlayerList> {
         ),
         Wrap(
           spacing: spaceXBetweenChip,
+          runSpacing: spaceXBetweenChip,
           children: Elo.values
               .map(
                 (elo) => FilterChip(
