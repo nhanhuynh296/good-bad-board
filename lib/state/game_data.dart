@@ -331,8 +331,8 @@ class GameData extends ChangeNotifier {
 
     if (game2 != null) {
       game2.players
-        ..remove(player1)
-        ..add(player2);
+        ..remove(player2)
+        ..add(player1);
     }
     notifyListeners();
     return null;
