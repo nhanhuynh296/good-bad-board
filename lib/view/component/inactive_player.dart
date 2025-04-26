@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
@@ -135,7 +134,7 @@ class _InactivePlayerDraggable extends StatelessWidget {
 }
 
 class StagingGameComponent extends StatelessWidget {
-  final List<Game> games;
+  final GameContainer games;
 
   const StagingGameComponent(this.games, {super.key});
 

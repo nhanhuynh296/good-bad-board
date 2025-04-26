@@ -155,15 +155,13 @@ class _PlayerListState extends State<PlayerList> {
                           data: player,
                           filled: isAlreadyInGame,
                           onTap: () {
-                            if (isAlreadyInGame) {
-                              setState(() {
+                            setState(() {
+                              if (isAlreadyInGame) {
                                 gameData.removePlayer(player);
-                              });
-                            } else {
-                              setState(() {
+                              } else {
                                 gameData.addFullPricedPlayer(player);
-                              });
-                            }
+                              }
+                            });
                           },
                         ),
                       ),
@@ -174,7 +172,7 @@ class _PlayerListState extends State<PlayerList> {
               ),
             )
             : Text(
-              'No player with that name, or elo',
+              'No player ${query.isEmpty ? 'added yet' : 'with that name, or elo'}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
       ],

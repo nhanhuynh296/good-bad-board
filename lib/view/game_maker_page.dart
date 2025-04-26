@@ -134,10 +134,10 @@ class BottomActionBar extends StatelessWidget {
         Expanded(
           child: Button(
             type: generateActive ? ButtonType.outlined : ButtonType.filled,
-            onPressed: () {
-              final error = gameData.makeGame();
+            onPressed: () async {
+              final error = await gameData.makeGame();
               if (error != null) {
-                showErrorToast(context, error);
+                context.showErrorToast(error);
                 return;
               }
             },
@@ -153,15 +153,14 @@ class BottomActionBar extends StatelessWidget {
                   (match) => match.players.isNotEmpty && !match.isPlayable(),
                 );
                 if (invalidGames.isNotEmpty) {
-                  showErrorToast(
-                    context,
+                  context.showErrorToast(
                     'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
                   );
                   return;
                 }
                 final errorOrNull = gameData.saveCurrentGame();
                 if (errorOrNull != null) {
-                  showErrorToast(context, errorOrNull);
+                  context.showErrorToast(errorOrNull);
                   return;
                 }
               },

@@ -4,14 +4,17 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:good_bad_board/core/random.dart';
+import 'package:good_bad_board/dto/player.dart';
 import 'package:good_bad_board/dto/session.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
+
+typedef GameContainer = List<Game>;
 
 class GameData extends ChangeNotifier {
   int numberOfCourt = 2;
@@ -113,10 +116,10 @@ class GameData extends ChangeNotifier {
 
   Set<Player> get player => Set.unmodifiable(_players);
 
-  final List<List<Game>> history = [];
+  final List<GameContainer> history = [];
 
   /// Candidate to be added to history
-  List<Game> stagingMatches = [];
+  GameContainer stagingMatches = [];
 
   /// When a player came after the late and paid a fractional price.
   /// Use a average count of all player, multiply by total game to represent the
@@ -143,18 +146,18 @@ class GameData extends ChangeNotifier {
     final playerToRemove = _players.firstWhere((p) => p.id == newPlayer.id);
     _players.remove(playerToRemove);
     _players.add(newPlayer);
+    PlayerRepository.instance.updatePlayer(newPlayer);
     notifyListeners();
   }
 
   void removePlayer(Player player, {bool byId = false}) {
-    final playerToRemove =
-        byId ? _players.firstWhere((p) => p.id == player.id) : player;
+    final playerToRemove = _players.firstWhere((p) => p.id == player.id);
     _players.remove(playerToRemove);
     _fractionalAverageGamePlayer.remove(playerToRemove);
     notifyListeners();
   }
 
-  String? makeGame() {
+  Future<String?> makeGame() async {
     if (numberOfCourt <= 0) return 'There are no court available';
     if (_players.isEmpty) return 'There are no player';
     if (_players.length < Game.playerPerCourt) {
@@ -169,13 +172,18 @@ class GameData extends ChangeNotifier {
     stagingMatches =
         candidatePlayer.slices(4).map((players) => Game(players)).toList();
     assert(stagingMatches.isNotEmpty);
-    _improveEloSpread();
-    debugPrint('Match elo spread: ${eloSpread()}');
+    stagingMatches = await compute(
+      _improveEloSpread,
+      GameContainer.from(stagingMatches),
+    );
+
+    debugPrint('Match elo spread: ${eloSpread(stagingMatches)}');
     if (stagingMatches.length < numberOfCourt) {
       stagingMatches.addAll(
         List.filled(numberOfCourt - stagingMatches.length, PlaceholderGame([])),
       );
     }
+    stagingMatches = stagingMatches;
     notifyListeners();
     return null;
   }
@@ -245,27 +253,28 @@ class GameData extends ChangeNotifier {
     return playerMatches.average;
   }
 
-  int eloSpread() {
-    return stagingMatches.map((match) => match.eloGap()).max;
+  static int eloSpread(GameContainer games) {
+    return games.map((match) => match.eloGap()).max;
   }
 
-  void _improveEloSpread({int targetSpread = 1}) {
-    if (stagingMatches.length < 2) {
+  static GameContainer _improveEloSpread(
+    GameContainer games, {
+    int targetSpread = 1,
+  }) {
+    if (games.length < 2) {
       debugPrint('Only 1 court, no optimization needed');
-      return;
+      return games;
     }
     // If the current spread is too high, try to swap players with other groups
-    int currentSpread = eloSpread();
+    int currentSpread = GameData.eloSpread(games);
     debugPrint('current spread $currentSpread');
     if (currentSpread < targetSpread) {
       debugPrint('Current spread is already satisfied');
-      return;
+      return games;
     }
-    final combinations = Combinations(2, stagingMatches);
+    final combinations = Combinations(2, games);
     for (final [match1, match2] in combinations()) {
-      print(
-        'match ${stagingMatches.indexOf(match1)}, ${stagingMatches.indexOf(match2)}',
-      );
+      print('match ${games.indexOf(match1)}, ${games.indexOf(match2)}');
       for (final (match1Player, match2Player) in product(
         PlayerContainer.of(match1.players),
         PlayerContainer.of(match2.players),
@@ -278,12 +287,12 @@ class GameData extends ChangeNotifier {
           ..add(match1Player);
 
         debugPrint('${match1Player.name} <-> ${match2Player.name}');
-        final newSpread = eloSpread();
+        final newSpread = GameData.eloSpread(games);
         debugPrint('\tnew spread $newSpread');
         if (newSpread < targetSpread) {
           debugPrint('new spread satisfied, ending');
           //  just enough spread
-          return;
+          return games;
         }
         if (newSpread < currentSpread) {
           currentSpread = newSpread;
@@ -299,6 +308,7 @@ class GameData extends ChangeNotifier {
           ..add(match2Player);
       }
     }
+    return games;
   }
 
   Game? gameContainingPlayer(Player player) {
@@ -334,10 +344,10 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removePlayerFromCourt(Player player, {updateListener = true}) {
+  void removePlayerFromCourt(Player player) {
     final game = gameContainingPlayer(player);
     game?.players.remove(player);
-    if (updateListener) notifyListeners();
+    notifyListeners();
   }
 
   Future<File?> saveGame() async {
@@ -360,7 +370,7 @@ class GameData extends ChangeNotifier {
   }
 }
 
-Iterable<Player> getPlayerFromGames(List<Game> games) =>
+Iterable<Player> getPlayerFromGames(GameContainer games) =>
     games.expand((game) => game.players);
 
 Iterable<(T, U)> product<T, U>(Iterable<T> a, Iterable<U> b) sync* {

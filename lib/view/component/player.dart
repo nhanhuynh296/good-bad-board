@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/dto/player.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
@@ -43,7 +42,6 @@ class ClickablePlayerComponent extends _PlayerComponent {
             (_) => EditPlayerDialog(
               player: data,
               onSubmit: (newPlayer) {
-                PlayerRepository.instance.updatePlayer(newPlayer);
                 Provider.of<GameData>(
                   context,
                   listen: false,

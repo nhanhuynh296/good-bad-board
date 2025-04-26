@@ -14,7 +14,7 @@ class Game {
 
   final PlayerContainer players;
 
-  Game(Iterable<Player> players) : players = players.toSet();
+  Game(Iterable<Player> players) : players = PlayerContainer.of(players);
 
   int eloGap() {
     final sortedPlayers = players.sortedBy((player) => player.elo.index);
