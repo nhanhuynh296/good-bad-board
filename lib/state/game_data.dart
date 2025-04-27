@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
 
 typedef GameContainer = List<Game>;
+typedef PlayerContainer = List<Player>;
 
 class GameData extends ChangeNotifier {
   int numberOfCourt = 2;
@@ -275,18 +276,13 @@ class GameData extends ChangeNotifier {
     final combinations = Combinations(2, games);
     for (final [match1, match2] in combinations()) {
       print('match ${games.indexOf(match1)}, ${games.indexOf(match2)}');
-      for (final (match1Player, match2Player) in product(
-        PlayerContainer.of(match1.players),
-        PlayerContainer.of(match2.players),
-      )) {
-        match1.players
-          ..remove(match1Player)
-          ..add(match2Player);
-        match2.players
-          ..remove(match2Player)
-          ..add(match1Player);
+      for (var [p1, p2]
+          in Amalgams(2, List.generate(Game.playerPerCourt, (k) => k))()) {
+        var temp = match1.players[p1];
+        match1.players[p1] = match2.players[p2];
+        match2.players[p2] = temp;
 
-        debugPrint('${match1Player.name} <-> ${match2Player.name}');
+        debugPrint('${match1.players[p1].name} <-> ${match2.players[p2].name}');
         final newSpread = GameData.eloSpread(games);
         debugPrint('\tnew spread $newSpread');
         if (newSpread < targetSpread) {
@@ -297,15 +293,12 @@ class GameData extends ChangeNotifier {
         if (newSpread < currentSpread) {
           currentSpread = newSpread;
           debugPrint('\tgood swap, next');
-          break;
+          continue;
         }
         debugPrint('\tnah, swap back');
-        match1.players
-          ..remove(match2Player)
-          ..add(match1Player);
-        match2.players
-          ..remove(match1Player)
-          ..add(match2Player);
+        temp = match1.players[p1];
+        match1.players[p1] = match2.players[p2];
+        match2.players[p2] = temp;
       }
     }
     return games;

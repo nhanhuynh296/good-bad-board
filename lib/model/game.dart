@@ -1,10 +1,9 @@
 import 'package:collection/collection.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/state/game_data.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'game.g.dart';
-
-typedef PlayerContainer = Set<Player>;
 
 @JsonSerializable(explicitToJson: true)
 class Game {
