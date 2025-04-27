@@ -15,14 +15,18 @@ from player import Player
 class Match(BaseModel):
     PLAYER_PER_COURT: ClassVar[int] = 4
     players: list[Player] = Field(max_length=4, min_length=4)
-    elo_gap: int = Field(init=False, default=0)
 
     def model_post_init(self, __context: Any):
         self.players = sorted(self.players, key=lambda p: p.elo.value)
-        self.elo_gap = abs(self.players[0].elo - self.players[-1].elo)
+
+    @property
+    def elo_gap(self):
+        sorted_players = sorted(self.players, key=lambda p: p.elo.value)
+        return abs(sorted_players[0].elo - sorted_players[-1].elo)
 
     def __str__(self):
-        return f"[{self.players[0]} {self.players[3]}] vs [{self.players[1]} {self.players[2]}]"
+        sorted_players = sorted(self.players, key=lambda p: p.elo.value)
+        return f"[{sorted_players[0]} {sorted_players[3]}] vs [{sorted_players[1]} {sorted_players[2]}]"
 
     @field_serializer("players")
     def ser_players(self, players: list[Player]):
