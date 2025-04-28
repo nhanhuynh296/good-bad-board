@@ -20,6 +20,10 @@ class Game {
     return (sortedPlayers.last.elo.index - sortedPlayers.first.elo.index).abs();
   }
 
+  Iterable<int> elos() {
+    return players.map((player) => player.elo.index);
+  }
+
   bool isPlayable() => acceptablePlayerNumber.contains(players.length);
 
   // Json Serialization

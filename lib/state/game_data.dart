@@ -17,6 +17,8 @@ import 'package:trotter/trotter.dart';
 typedef GameContainer = List<Game>;
 typedef PlayerContainer = List<Player>;
 
+const int maxIteration = 1000;
+
 class GameData extends ChangeNotifier {
   int numberOfCourt = 2;
 
@@ -178,7 +180,9 @@ class GameData extends ChangeNotifier {
       GameContainer.from(stagingMatches),
     );
 
-    debugPrint('Match elo spread: ${eloSpread(stagingMatches)}');
+    debugPrint(
+      'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
+    );
     if (stagingMatches.length < numberOfCourt) {
       stagingMatches.addAll(
         List.filled(numberOfCourt - stagingMatches.length, PlaceholderGame([])),
@@ -258,49 +262,82 @@ class GameData extends ChangeNotifier {
     return games.map((match) => match.eloGap());
   }
 
+  /// A greedy solution that will ended up with a local minimum. Swap 2 players at a time
   static GameContainer _improveEloSpread(
     GameContainer games, {
-    int targetSpread = 1,
+    int targetSpread = 0,
   }) {
+    Iterable<num> costFunctionInfo() => GameData.eloSpread(games);
+    num costFunction() => costFunctionInfo().average;
+
     if (games.length < 2) {
       debugPrint('Only 1 court, no optimization needed');
       return games;
     }
     // If the current spread is too high, try to swap players with other groups
-    double currentSpread = GameData.eloSpread(games).average;
-    debugPrint('current spread $currentSpread');
+    num currentSpread = costFunction();
+    printGames(games);
+    debugPrint('current spread ${costFunctionInfo()} => $currentSpread');
     if (currentSpread < targetSpread) {
       debugPrint('Current spread is already satisfied');
       return games;
     }
-    final combinations = Combinations(2, games);
-    for (final [match1, match2] in combinations()) {
-      print('match ${games.indexOf(match1)}, ${games.indexOf(match2)}');
-      for (var [p1, p2]
-          in Amalgams(2, List.generate(Game.playerPerCourt, (k) => k))()) {
-        var temp = match1.players[p1];
-        match1.players[p1] = match2.players[p2];
-        match2.players[p2] = temp;
+    final stopwatch = Stopwatch();
+    final List<Duration?> timeElapsed = List.filled(maxIteration, null);
 
-        debugPrint('${match1.players[p1].name} <-> ${match2.players[p2].name}');
-        final newSpread = GameData.eloSpread(games).average;
-        debugPrint('\tnew spread $newSpread');
-        if (newSpread < targetSpread) {
-          debugPrint('new spread satisfied, ending');
-          //  just enough spread
-          return games;
+    bool changed = true;
+    int iteration = 0;
+    while (iteration < maxIteration && changed) {
+      changed = false;
+      stopwatch.start();
+      // =======================================================================
+      for (var [match1Index, match2Index]
+          in Combinations(2, List.generate(games.length, (k) => k))()) {
+        for (var [p1, p2]
+            in Amalgams(2, List.generate(Game.playerPerCourt, (k) => k))()) {
+          final match1 = games[match1Index];
+          final match2 = games[match2Index];
+          var temp = match1.players[p1];
+          match1.players[p1] = match2.players[p2];
+          match2.players[p2] = temp;
+
+          debugPrint(
+            '${match1.players[p1].name} <-> ${match2.players[p2].name}',
+          );
+          final newSpread = costFunction();
+          debugPrint(
+            '\tnew spread ${costFunctionInfo()} => ${newSpread.toStringAsFixed(2)}',
+          );
+          if (newSpread < targetSpread) {
+            debugPrint('new spread satisfied, ending');
+            //  just enough spread
+            break;
+          }
+          if (newSpread < currentSpread) {
+            currentSpread = newSpread;
+            debugPrint('\tgood swap, next');
+            changed = true;
+            continue;
+          }
+          debugPrint('\tnah, swap back');
+          temp = match1.players[p1];
+          match1.players[p1] = match2.players[p2];
+          match2.players[p2] = temp;
         }
-        if (newSpread < currentSpread) {
-          currentSpread = newSpread;
-          debugPrint('\tgood swap, next');
-          continue;
-        }
-        debugPrint('\tnah, swap back');
-        temp = match1.players[p1];
-        match1.players[p1] = match2.players[p2];
-        match2.players[p2] = temp;
       }
+      // =======================================================================
+      stopwatch.stop();
+      timeElapsed[iteration] = stopwatch.elapsed;
+      stopwatch.reset();
+      iteration++;
     }
+
+    debugPrint("OPTIMIZATION DONE, $iteration pass");
+    final timeElapsedInt = timeElapsed.nonNulls.map((e) => e.inMilliseconds);
+    debugPrint(
+      "Time: AVG ${timeElapsedInt.average} ms, total ${Duration(milliseconds: timeElapsedInt.sum)} ms",
+    );
+    printGames(games);
     return games;
   }
 
@@ -327,6 +364,9 @@ class GameData extends ChangeNotifier {
         ..remove(player2)
         ..add(player1);
     }
+    debugPrint(
+      'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
+    );
     notifyListeners();
     return null;
   }
@@ -365,6 +405,14 @@ class GameData extends ChangeNotifier {
 
 Iterable<Player> getPlayerFromGames(GameContainer games) =>
     games.expand((game) => game.players);
+
+void printGames(GameContainer games) {
+  for (var game in games) {
+    debugPrint(
+      'Game ${games.indexOf(game) + 1}: ${game.players.map((p) => "${p.name} ${p.elo.index}".padRight(10)).join(', ')}',
+    );
+  }
+}
 
 Iterable<(T, U)> product<T, U>(Iterable<T> a, Iterable<U> b) sync* {
   for (final x in (a)) {
