@@ -262,7 +262,8 @@ class GameData extends ChangeNotifier {
   /// A greedy solution that will ended up with a local minimum. Swap 2 players at a time
   static _improveEloSpread(GameContainer games, {int targetSpread = 0}) {
     Iterable<num> costFunctionInfo() => GameData.eloSpread(games);
-    num costFunction() => costFunctionInfo().average;
+    num costFunction() =>
+        costFunctionInfo().average * 0.5 + costFunctionInfo().max;
 
     if (games.length < 2) {
       debugPrint('Only 1 court, no optimization needed');
@@ -276,14 +277,13 @@ class GameData extends ChangeNotifier {
       debugPrint('Current spread is already satisfied');
       return games;
     }
-    final stopwatch = Stopwatch();
-    final List<Duration?> timeElapsed = List.filled(maxIteration, null);
+    final stopwatch = Stopwatch()..start();
 
     bool changed = true;
     int iteration = 0;
     while (iteration < maxIteration && changed) {
+      iteration++;
       changed = false;
-      stopwatch.start();
       // =======================================================================
       for (var [match1Index, match2Index]
           in Combinations(2, List.generate(games.length, (k) => k))()) {
@@ -302,6 +302,14 @@ class GameData extends ChangeNotifier {
           debugPrint(
             '\tnew spread ${costFunctionInfo()} => ${newSpread.toStringAsFixed(2)}',
           );
+
+          if (newSpread >= currentSpread) {
+            debugPrint('\tnah, swap back');
+            temp = match1.players[p1];
+            match1.players[p1] = match2.players[p2];
+            match2.players[p2] = temp;
+          }
+
           if (newSpread < targetSpread) {
             debugPrint('new spread satisfied, ending');
             //  just enough spread
@@ -311,25 +319,16 @@ class GameData extends ChangeNotifier {
             currentSpread = newSpread;
             debugPrint('\tgood swap, next');
             changed = true;
-            continue;
+            break;
           }
-          debugPrint('\tnah, swap back');
-          temp = match1.players[p1];
-          match1.players[p1] = match2.players[p2];
-          match2.players[p2] = temp;
         }
       }
-      // =======================================================================
-      stopwatch.stop();
-      timeElapsed[iteration] = stopwatch.elapsed;
-      stopwatch.reset();
-      iteration++;
     }
-
-    debugPrint("OPTIMIZATION DONE, $iteration pass");
-    final timeElapsedInt = timeElapsed.nonNulls.map((e) => e.inMilliseconds);
-    debugPrint(
-      "Time: AVG ${timeElapsedInt.average} ms, total ${Duration(milliseconds: timeElapsedInt.sum)} ms",
+    // =======================================================================
+    stopwatch.stop();
+    final timeElapsed = stopwatch.elapsed;
+    print(
+      "OPTIMIZATION DONE, $iteration pass, total ${timeElapsed.inMilliseconds} ms",
     );
     printGames(games);
     return games;
