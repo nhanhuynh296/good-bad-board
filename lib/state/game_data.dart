@@ -122,7 +122,7 @@ class GameData extends ChangeNotifier {
   final List<GameContainer> history = [];
 
   /// Candidate to be added to history
-  GameContainer stagingMatches = [];
+  GameContainer stagingMatches = GameContainer.empty();
 
   /// When a player came after the late and paid a fractional price.
   /// Use a average count of all player, multiply by total game to represent the
@@ -175,10 +175,7 @@ class GameData extends ChangeNotifier {
     stagingMatches =
         candidatePlayer.slices(4).map((players) => Game(players)).toList();
     assert(stagingMatches.isNotEmpty);
-    stagingMatches = await compute(
-      _improveEloSpread,
-      GameContainer.from(stagingMatches),
-    );
+    await compute(_improveEloSpread, GameContainer.from(stagingMatches));
 
     debugPrint(
       'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
@@ -263,10 +260,7 @@ class GameData extends ChangeNotifier {
   }
 
   /// A greedy solution that will ended up with a local minimum. Swap 2 players at a time
-  static GameContainer _improveEloSpread(
-    GameContainer games, {
-    int targetSpread = 0,
-  }) {
+  static _improveEloSpread(GameContainer games, {int targetSpread = 0}) {
     Iterable<num> costFunctionInfo() => GameData.eloSpread(games);
     num costFunction() => costFunctionInfo().average;
 
