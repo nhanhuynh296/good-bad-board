@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
@@ -119,7 +121,6 @@ class _InactivePlayerDraggable extends StatelessWidget {
         return playingPlayers.contains(player);
       },
       onAcceptWithDetails: (details) {
-        print(details);
         gameData.removePlayerFromCourt(details.data);
       },
       builder:
@@ -141,39 +142,62 @@ class StagingGameComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textStyle = Theme.of(context).textTheme.titleLarge;
-    return ListRenderer(
-      itemBuilder: (BuildContext context, int index) {
-        return ShadedContainer(
-          // shaded: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                color: Theme.of(context).colorScheme.secondaryContainer,
-                padding: const EdgeInsets.symmetric(
-                  vertical: spaceComponent,
-                  horizontal: spaceDefault,
-                ),
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  spacing: space64,
-                  children: [
-                    Text('COURT ${index + 1}', style: textStyle),
-                    Text(
-                      'SKILL GAP ${games[index].eloGap()}',
-                      style: textStyle,
+    const gutter = spaceDefault;
+    const imageRatio = 1587 / 720;
+    final double headerSize =
+        textStyle!.fontSize! * textStyle.height! + space8 * 2;
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final int numberOfColumns = max(1, constraints.maxWidth ~/ 350);
+
+        final heightConstraint =
+            (constraints.maxWidth / (numberOfColumns * imageRatio)) +
+            headerSize;
+
+        return GridView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: spaceDefault),
+          itemCount: games.length,
+          itemBuilder: (BuildContext context, int index) {
+            return ShadedContainer(
+              // shaded: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Expanded(
+                    child: Container(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: spaceComponent,
+                        horizontal: spaceDefault,
+                      ),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        spacing: spaceComponent,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('COURT ${index + 1}', style: textStyle),
+                          Text(
+                            'SKILL GAP ${games[index].eloGap()}',
+                            style: textStyle,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  CourtComponent(players: games[index].players),
+                ],
               ),
-              CourtComponent(players: games[index].players),
-            ],
+            );
+          },
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: numberOfColumns,
+            mainAxisSpacing: gutter,
+            crossAxisSpacing: gutter,
+            mainAxisExtent: heightConstraint,
           ),
         );
       },
-      items: games,
-      separatorExtent: space32,
     );
   }
 }
