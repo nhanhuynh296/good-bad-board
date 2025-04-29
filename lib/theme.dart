@@ -18,6 +18,10 @@ const String fontFamily = 'Gotham';
 
 const outlinedBorderSide = BorderSide(width: 2);
 const outlinedBorderRadius = BorderRadius.all(Radius.circular(5));
+const noOutlinedBorder = RoundedRectangleBorder(
+  borderRadius: outlinedBorderRadius,
+);
+
 const lightOutlinedBorder = RoundedRectangleBorder(
   side: outlinedBorderSide,
   borderRadius: outlinedBorderRadius,
@@ -142,15 +146,13 @@ ThemeData get lightTheme {
       ),
     ),
     iconButtonTheme: const IconButtonThemeData(
-      style: ButtonStyle(
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: outlinedBorderRadius),
-        ),
-      ),
+      style: ButtonStyle(shape: WidgetStatePropertyAll(noOutlinedBorder)),
     ),
-    filledButtonTheme: const FilledButtonThemeData(style: commonButtonTheme),
+    filledButtonTheme: const FilledButtonThemeData(
+      style: ButtonStyle(shape: WidgetStatePropertyAll(noOutlinedBorder)),
+    ),
     searchBarTheme: const SearchBarThemeData(
-      shape: WidgetStatePropertyAll(lightOutlinedBorder),
+      shape: WidgetStatePropertyAll(noOutlinedBorder),
     ),
     chipTheme: const ChipThemeData(shape: lightOutlinedBorder),
   );
@@ -258,7 +260,7 @@ ThemeData get darkTheme {
     ),
     textButtonTheme: TextButtonThemeData(
       style: ButtonStyle(
-        shape: WidgetStatePropertyAll(darkOutlinedBorder),
+        shape: WidgetStatePropertyAll(noOutlinedBorder),
         foregroundColor: const WidgetStatePropertyAll(AppColors.goldRush),
       ),
     ),
@@ -269,18 +271,10 @@ ThemeData get darkTheme {
       ),
     ),
     filledButtonTheme: const FilledButtonThemeData(
-      style: ButtonStyle(
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: outlinedBorderRadius),
-        ),
-      ),
+      style: ButtonStyle(shape: WidgetStatePropertyAll(noOutlinedBorder)),
     ),
     iconButtonTheme: const IconButtonThemeData(
-      style: ButtonStyle(
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: outlinedBorderRadius),
-        ),
-      ),
+      style: ButtonStyle(shape: WidgetStatePropertyAll(noOutlinedBorder)),
     ),
     searchBarTheme: SearchBarThemeData(
       shape: WidgetStatePropertyAll(darkOutlinedBorder),
