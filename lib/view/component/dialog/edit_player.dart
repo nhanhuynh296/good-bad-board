@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/view/component/button.dart';
+import 'package:good_bad_board/view/component/dialog/toasts.dart';
 
 class EditPlayerDialog extends StatefulWidget {
   final Player player;
@@ -31,7 +32,26 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Edit player'),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('Edit player'),
+          Button(
+            onPressed: () async {
+              final bool confirmDelete = await showAdaptiveDialog(
+                context: context,
+                builder: (context) => const ConfirmDeleteDialog(),
+              );
+              if (!context.mounted || !confirmDelete) return;
+              context.showToast("Deleting ${widget.player.name}");
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(Icons.delete),
+            type: ButtonType.filled,
+            backgroundColor: Colors.red,
+          ),
+        ],
+      ),
       content: Form(
         key: _formKey,
         child: Column(
@@ -106,6 +126,34 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
             Navigator.of(context).pop();
           },
           child: const Text('Update'),
+        ),
+      ],
+    );
+  }
+}
+
+class ConfirmDeleteDialog extends StatelessWidget {
+  const ConfirmDeleteDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Delete player'),
+      content: const Text('Are you sure you want to delete this player?'),
+      actions: <Widget>[
+        Button(
+          child: const Text('Cancel'),
+          onPressed: () {
+            Navigator.of(context).pop(false);
+          },
+        ),
+        Button(
+          type: ButtonType.filled,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          onPressed: () {
+            Navigator.of(context).pop(true);
+          },
+          child: const Text('Delete'),
         ),
       ],
     );
