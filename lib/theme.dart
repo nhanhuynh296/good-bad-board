@@ -258,10 +258,10 @@ ThemeData get darkTheme {
         shape: WidgetStatePropertyAll(darkOutlinedBorder),
       ),
     ),
-    textButtonTheme: TextButtonThemeData(
+    textButtonTheme: const TextButtonThemeData(
       style: ButtonStyle(
         shape: WidgetStatePropertyAll(noOutlinedBorder),
-        foregroundColor: const WidgetStatePropertyAll(AppColors.goldRush),
+        foregroundColor: WidgetStatePropertyAll(AppColors.goldRush),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
