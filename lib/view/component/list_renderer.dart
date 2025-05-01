@@ -5,22 +5,28 @@ class ListRenderer<T> extends StatelessWidget {
   final IndexedWidgetBuilder itemBuilder;
   final double separatorExtent;
   final List<T> items;
+  final EdgeInsets? padding;
 
   const ListRenderer({
     super.key,
     required this.itemBuilder,
     required this.items,
     this.separatorExtent = spaceDefault,
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
+    final padding =
+        this.padding ??
+        const EdgeInsets.symmetric(
+          vertical: spaceDefault,
+          horizontal: spacePageX,
+        );
+
     return ListView.separated(
       itemCount: items.length,
-      padding: const EdgeInsets.symmetric(
-        vertical: spaceDefault,
-        horizontal: spacePageX,
-      ),
+      padding: padding,
       itemBuilder: itemBuilder,
       separatorBuilder:
           (BuildContext context, int index) =>
