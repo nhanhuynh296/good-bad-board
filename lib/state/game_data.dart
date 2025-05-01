@@ -175,7 +175,7 @@ class GameData extends ChangeNotifier {
     stagingMatches =
         candidatePlayer.slices(4).map((players) => Game(players)).toList();
     assert(stagingMatches.isNotEmpty);
-    await compute(_improveEloSpread, GameContainer.from(stagingMatches));
+    _improveEloSpread(stagingMatches);
 
     debugPrint(
       'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
@@ -260,14 +260,14 @@ class GameData extends ChangeNotifier {
   }
 
   /// A greedy solution that will ended up with a local minimum. Swap 2 players at a time
-  static _improveEloSpread(GameContainer games, {int targetSpread = 0}) {
+  static void _improveEloSpread(GameContainer games, {int targetSpread = 0}) {
     Iterable<num> costFunctionInfo() => GameData.eloSpread(games);
     num costFunction() =>
-        costFunctionInfo().average * 0.5 + costFunctionInfo().max;
+        costFunctionInfo().average * 0 + costFunctionInfo().max;
 
     if (games.length < 2) {
       debugPrint('Only 1 court, no optimization needed');
-      return games;
+      return;
     }
     // If the current spread is too high, try to swap players with other groups
     num currentSpread = costFunction();
@@ -275,7 +275,7 @@ class GameData extends ChangeNotifier {
     debugPrint('current spread ${costFunctionInfo()} => $currentSpread');
     if (currentSpread < targetSpread) {
       debugPrint('Current spread is already satisfied');
-      return games;
+      return;
     }
     final stopwatch = Stopwatch()..start();
 
@@ -284,6 +284,7 @@ class GameData extends ChangeNotifier {
     while (iteration < maxIteration && changed) {
       iteration++;
       changed = false;
+      print("iteration ${iteration + 1}");
       // =======================================================================
       for (var [match1Index, match2Index]
           in Combinations(2, List.generate(games.length, (k) => k))()) {
@@ -300,7 +301,7 @@ class GameData extends ChangeNotifier {
           );
           final newSpread = costFunction();
           debugPrint(
-            '\tnew spread ${costFunctionInfo()} => ${newSpread.toStringAsFixed(2)}',
+            '\tnew spread ${costFunctionInfo()} => ${newSpread.toStringAsFixed(2)}..current ${currentSpread}',
           );
 
           if (newSpread >= currentSpread) {
@@ -318,6 +319,7 @@ class GameData extends ChangeNotifier {
           if (newSpread < currentSpread) {
             currentSpread = newSpread;
             debugPrint('\tgood swap, next');
+            printGames(games);
             changed = true;
             break;
           }
@@ -331,7 +333,7 @@ class GameData extends ChangeNotifier {
       "OPTIMIZATION DONE, $iteration pass, total ${timeElapsed.inMilliseconds} ms",
     );
     printGames(games);
-    return games;
+    return;
   }
 
   Game? gameContainingPlayer(Player player) {
