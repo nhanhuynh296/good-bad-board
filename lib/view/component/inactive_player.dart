@@ -29,6 +29,7 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
     final playingPlayers = Set.unmodifiable(
       getPlayerFromGames(gameData.stagingMatches),
     );
+    final playerStatistic = gameData.getCurrentPlayersHistory();
     final inactivePlayers = gameData.player
         .difference(playingPlayers)
         .where(
@@ -36,9 +37,13 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
             query.toLowerCase(),
           ),
         )
-        .sortedBy((player) => player.name);
-
-    const spaceX = spaceDefault;
+        .sorted((player1, player2) {
+          if (playerStatistic[player1] != playerStatistic[player2]) {
+            return playerStatistic[player1]!.toInt() -
+                playerStatistic[player2]!.toInt();
+          }
+          return player1.name.compareTo(player2.name);
+        });
 
     return _InactivePlayerDraggable(
       child: Column(
@@ -51,7 +56,7 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
               textAlign: TextAlign.center,
             ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: spaceX),
+            padding: const EdgeInsets.symmetric(horizontal: 0),
             child: SearchBar(
               hintText: 'Search for name, elo...',
               leading: query.isEmpty ? const Icon(Icons.search) : null,
@@ -76,6 +81,12 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
           (inactivePlayers.isNotEmpty)
               ? Expanded(
                 child: ListRenderer(
+                  padding: const EdgeInsets.fromLTRB(
+                    0,
+                    spaceDefault,
+                    space32,
+                    spaceDefault,
+                  ),
                   items: inactivePlayers,
                   itemBuilder:
                       (BuildContext context, int index) =>
