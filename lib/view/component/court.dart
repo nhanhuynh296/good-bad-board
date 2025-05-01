@@ -8,6 +8,8 @@ import 'package:good_bad_board/view/component/overlay.dart';
 import 'package:good_bad_board/view/component/player.dart';
 import 'package:provider/provider.dart';
 
+const _spaceAll = space32;
+
 class CourtComponent extends StatelessWidget {
   final PlayerContainer players;
 
@@ -41,11 +43,11 @@ class CourtComponent extends StatelessWidget {
 
             Positioned.fill(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: space32),
+                padding: const EdgeInsets.all(_spaceAll),
                 child:
                     (players.length == Game.playerPerCourt)
                         ? Row(
-                          spacing: space32,
+                          spacing: _spaceAll,
                           children: [
                             Expanded(
                               child: _CourtSide(
@@ -97,7 +99,7 @@ class CourtComponent extends StatelessWidget {
                         : (players.isNotEmpty &&
                             players.length != Game.playerPerCourt)
                         ? Column(
-                          spacing: space32,
+                          spacing: _spaceAll,
                           mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,8 +137,10 @@ class _CourtSide extends StatelessWidget {
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: space16,
-      children: children,
+      spacing: _spaceAll,
+      children: children
+          .map((child) => Expanded(child: child))
+          .toList(growable: false),
     );
   }
 }

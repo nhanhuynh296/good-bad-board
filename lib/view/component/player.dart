@@ -7,14 +7,20 @@ import 'package:provider/provider.dart';
 
 class _PlayerComponent extends StatelessWidget {
   final Player data;
+  final Size? size;
 
-  const _PlayerComponent({super.key, required this.data});
+  const _PlayerComponent({super.key, required this.data, this.size});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      '${data.name.toUpperCase()} (${data.elo.name.toUpperCase()})',
-      textAlign: TextAlign.center,
+    return Container(
+      width: size?.width,
+      height: size?.height,
+      alignment: Alignment.center,
+      child: Text(
+        '${data.name.toUpperCase()} (${data.elo.name.toUpperCase()})',
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }
@@ -26,6 +32,7 @@ class ClickablePlayerComponent extends _PlayerComponent {
 
   const ClickablePlayerComponent({
     super.key,
+    super.size,
     required super.data,
     this.filled = false,
     this.disabled = false,
@@ -52,13 +59,12 @@ class ClickablePlayerComponent extends _PlayerComponent {
       );
     }
 
-    final child = _PlayerComponent(data: data);
     return Button(
       type: filled ? ButtonType.filled : ButtonType.outlined,
       onPressed: onTap,
       onLongPress: onSecondaryAction,
       disabled: disabled,
-      child: child,
+      child: super.build(context),
     );
   }
 }
@@ -69,6 +75,7 @@ class DraggablePlayerComponent extends _PlayerComponent {
 
   const DraggablePlayerComponent({
     super.key,
+    super.size,
     required super.data,
     this.onDragToTarget,
     this.shouldAcceptIncomingDragPlayer,
@@ -96,6 +103,7 @@ class DraggablePlayerComponent extends _PlayerComponent {
               data: data,
               filled: true,
               disabled: isInvalidDragHovering,
+              size: size,
             ),
           ),
         );

@@ -40,42 +40,39 @@ class _CountdownTimerState extends State<CountdownTimer>
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: spaceComponent),
-      child: Button(
-        type: ButtonType.outlined,
-        onPressed: () {
-          if (!_controller.isAnimating) {
-            _controller.repeat();
-          } else {
-            _controller.stop(canceled: false);
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: spaceComponent),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: spaceComponent,
-            children: [
-              Text(
-                'Time Remaining',
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (BuildContext context, _) {
-                  final timeElapsed =
-                      _controller.duration! * (1 - _controller.value);
-                  return Text(
-                    timeElapsed.toDisplayString(),
-                    style: Theme.of(context).textTheme.displaySmall,
-                    textAlign: TextAlign.center,
-                  );
-                },
-              ),
-            ],
-          ),
+    return Button(
+      type: ButtonType.outlined,
+      onPressed: () {
+        if (!_controller.isAnimating) {
+          _controller.repeat();
+        } else {
+          _controller.stop(canceled: false);
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: spaceComponent),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: spaceComponent,
+          children: [
+            Text(
+              'Time Remaining',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (BuildContext context, _) {
+                final timeElapsed =
+                    _controller.duration! * (1 - _controller.value);
+                return Text(
+                  timeElapsed.toDisplayString(),
+                  style: Theme.of(context).textTheme.displaySmall,
+                  textAlign: TextAlign.center,
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

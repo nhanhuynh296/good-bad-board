@@ -15,6 +15,10 @@ class GameMakerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
+    const pagePadding = EdgeInsets.symmetric(
+      vertical: spaceDefault,
+      horizontal: spacePageX,
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text(appName),
@@ -33,41 +37,41 @@ class GameMakerPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Row(
-        spacing: spaceXBetweenChip,
-        children: [
-          const Expanded(
-            child: Column(
-              spacing: spaceComponent,
-              children: [
-                CountdownTimer(),
-                Divider(),
-                Expanded(child: InactivePlayerComponent()),
-              ],
+      body: Padding(
+        padding: pagePadding,
+        child: Row(
+          spacing: spaceXBetweenChip,
+          children: [
+            const Expanded(
+              child: Column(
+                spacing: spaceComponent,
+                children: [
+                  CountdownTimer(),
+                  Divider(),
+                  Expanded(child: InactivePlayerComponent()),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Column(
-              spacing: spaceDefault,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CourtModifier(),
-                Expanded(
-                  child: CurrentGameView(
-                    key: ValueKey(gameData.stagingMatches.isEmpty),
+            Expanded(
+              flex: 2,
+              child: Column(
+                spacing: spaceDefault,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CourtModifier(),
+                  Expanded(
+                    child: CurrentGameView(
+                      key: ValueKey(gameData.stagingMatches.isEmpty),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: const Padding(
-        padding: EdgeInsets.symmetric(
-          vertical: spaceDefault,
-          horizontal: spacePageX,
-        ),
+        padding: pagePadding,
         child: BottomActionBar(),
       ),
       floatingActionButton: FloatingActionButton(
