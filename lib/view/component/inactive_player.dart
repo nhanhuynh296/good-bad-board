@@ -1,7 +1,6 @@
-import 'dart:math';
-
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
@@ -139,62 +138,84 @@ class StagingGameComponent extends StatelessWidget {
 
   const StagingGameComponent(this.games, {super.key});
 
+  int getIdealNumberOfColumn(BoxConstraints constraints, double gutter) {
+    const minWidth = 450;
+    final maxNumberOfColumns = (constraints.maxWidth ~/ minWidth);
+
+    double maxArea = 0;
+
+    int idealNumberOfColumns = maxNumberOfColumns;
+
+    for (int column = 1; column <= maxNumberOfColumns; column++) {
+      final row = (games.length / column).ceil();
+      final itemWidth = (constraints.maxWidth - gutter * (column - 1)) / column;
+      final itemHeight = itemWidth / goldenRatio;
+
+      final heightTaken = row * itemHeight + (row - 1) * gutter;
+
+      if (heightTaken > constraints.maxHeight) {
+        continue;
+      }
+
+      final double area = itemWidth * itemHeight;
+      if (area > maxArea) {
+        maxArea = area;
+        idealNumberOfColumns = column;
+      }
+    }
+    return idealNumberOfColumns;
+  }
+
   @override
   Widget build(BuildContext context) {
     final textStyle = Theme.of(context).textTheme.titleLarge;
     const gutter = spaceDefault;
-    const imageRatio = 1587 / 720;
-    final double headerSize =
-        textStyle!.fontSize! * textStyle.height! + space8 * 2;
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final int numberOfColumns = max(1, constraints.maxWidth ~/ 350);
-
-        final heightConstraint =
-            (constraints.maxWidth / (numberOfColumns * imageRatio)) +
-            headerSize;
-
-        return GridView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: spaceDefault),
-          itemCount: games.length,
-          itemBuilder: (BuildContext context, int index) {
-            return ShadedContainer(
-              // shaded: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Expanded(
-                    child: Container(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: spaceComponent,
-                        horizontal: spaceDefault,
-                      ),
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        spacing: spaceComponent,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('COURT ${index + 1}', style: textStyle),
-                          Text(
-                            'SKILL GAP ${games[index].eloGap()}',
-                            style: textStyle,
-                          ),
-                        ],
+        return Center(
+          child: GridView.builder(
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(horizontal: spaceDefault),
+            itemCount: games.length,
+            itemBuilder: (BuildContext context, int index) {
+              return ShadedContainer(
+                // shaded: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: Container(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: spaceComponent,
+                          horizontal: spaceDefault,
+                        ),
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          spacing: spaceComponent,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('COURT ${index + 1}', style: textStyle),
+                            Text(
+                              'SKILL GAP ${games[index].eloGap()}',
+                              style: textStyle,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  CourtComponent(players: games[index].players),
-                ],
-              ),
-            );
-          },
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: numberOfColumns,
-            mainAxisSpacing: gutter,
-            crossAxisSpacing: gutter,
-            mainAxisExtent: heightConstraint,
+                    CourtComponent(players: games[index].players),
+                  ],
+                ),
+              );
+            },
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: getIdealNumberOfColumn(constraints, gutter),
+              mainAxisSpacing: gutter,
+              crossAxisSpacing: gutter,
+              childAspectRatio: goldenRatio,
+            ),
           ),
         );
       },
