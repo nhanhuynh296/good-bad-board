@@ -135,7 +135,7 @@ ThemeData get lightTheme {
     ),
     textButtonTheme: const TextButtonThemeData(
       style: ButtonStyle(
-        shape: WidgetStatePropertyAll(lightOutlinedBorder),
+        shape: WidgetStatePropertyAll(noOutlinedBorder),
         foregroundColor: WidgetStatePropertyAll(AppColors.stAndrewsBlue),
       ),
     ),
