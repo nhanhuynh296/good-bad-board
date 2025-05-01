@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:good_bad_board/spacing.dart';
 
 abstract class AppColors {
   // Primary Colors
@@ -155,6 +156,12 @@ ThemeData get lightTheme {
       shape: WidgetStatePropertyAll(noOutlinedBorder),
     ),
     chipTheme: const ChipThemeData(shape: lightOutlinedBorder),
+    scrollbarTheme: const ScrollbarThemeData(
+      thickness: WidgetStatePropertyAll(space8),
+      thumbColor: WidgetStatePropertyAll(AppColors.black),
+      minThumbLength: space64,
+      mainAxisMargin: -space8,
+    ),
   );
 }
 
@@ -280,5 +287,11 @@ ThemeData get darkTheme {
       shape: WidgetStatePropertyAll(darkOutlinedBorder),
     ),
     chipTheme: ChipThemeData(shape: darkOutlinedBorder),
+    scrollbarTheme: const ScrollbarThemeData(
+      thickness: WidgetStatePropertyAll(space8),
+      thumbColor: WidgetStatePropertyAll(AppColors.white),
+      minThumbLength: space64,
+      // crossAxisMargin: -space8,
+    ),
   );
 }
