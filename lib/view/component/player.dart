@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/dialog/edit_player.dart';
@@ -83,6 +84,8 @@ class DraggablePlayerComponent extends _PlayerComponent {
 
   @override
   Widget build(BuildContext context) {
+    final gameData = Provider.of<GameData>(context);
+    final matchPlayed = gameData.getCurrentPlayersHistory()[data]!;
     return DragTarget<Player>(
       onWillAcceptWithDetails:
           (detail) =>
@@ -99,11 +102,16 @@ class DraggablePlayerComponent extends _PlayerComponent {
           feedback: _DraggingPlayerComponent(data: data),
           child: Transform.scale(
             scale: isValidDragHovering ? 1.2 : 1.0,
-            child: ClickablePlayerComponent(
-              data: data,
-              filled: true,
-              disabled: isInvalidDragHovering,
-              size: size,
+            child: Badge(
+              label: Text(matchPlayed.toStringAsFixed(0)),
+              smallSize: 0,
+              padding: const EdgeInsets.all(space8),
+              child: ClickablePlayerComponent(
+                data: data,
+                filled: true,
+                disabled: isInvalidDragHovering,
+                size: size,
+              ),
             ),
           ),
         );
