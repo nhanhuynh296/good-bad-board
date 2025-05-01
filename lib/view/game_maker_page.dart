@@ -15,10 +15,6 @@ class GameMakerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    const pagePadding = EdgeInsets.symmetric(
-      vertical: spaceDefault,
-      horizontal: spacePageX,
-    );
     return Scaffold(
       appBar: AppBar(
         title: const Text(appName),
@@ -38,9 +34,9 @@ class GameMakerPage extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: pagePadding,
+        padding: const EdgeInsets.symmetric(horizontal: spacePageX),
         child: Row(
-          spacing: spaceXBetweenChip,
+          spacing: spaceDefault,
           children: [
             const Expanded(
               child: Column(
@@ -71,9 +67,13 @@ class GameMakerPage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: const Padding(
-        padding: pagePadding,
+        padding: EdgeInsets.symmetric(
+          horizontal: spacePageX,
+          vertical: spaceDefault,
+        ),
         child: BottomActionBar(),
       ),
+
       floatingActionButton: FloatingActionButton(
         mini: true,
         onPressed: () {
