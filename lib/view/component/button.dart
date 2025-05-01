@@ -46,6 +46,10 @@ class Button extends StatelessWidget {
       ),
     );
 
+    final filledButtonStyle = ButtonStyle(
+      backgroundColor: WidgetStatePropertyAll(backgroundColor),
+    );
+
     return switch (type) {
       ButtonType.filled => Container(
         decoration: BoxDecoration(
@@ -58,9 +62,13 @@ class Button extends StatelessWidget {
         ),
         child:
             onlyIcon
-                ? IconButton.filled(onPressed: onPressed, icon: icon!)
+                ? IconButton.filled(
+                  style: filledButtonStyle,
+                  onPressed: onPressed,
+                  icon: icon!,
+                )
                 : FilledButton(
-                  style: ButtonStyle(textStyle: allStateTextStyle),
+                  style: filledButtonStyle,
                   onPressed: onTapLogic,
                   onLongPress: onSecondaryTapLogic,
                   child: child,
