@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
@@ -158,7 +160,7 @@ class StagingGameComponent extends StatelessWidget {
     final constraintMaxWidth = constraints.maxWidth - padding.horizontal;
     final constrainMaxHeight = constraints.maxHeight - padding.vertical;
     const itemMinWidth = 450;
-    final maxNumberOfColumns = (constraintMaxWidth ~/ itemMinWidth);
+    final maxNumberOfColumns = max(1, constraintMaxWidth ~/ itemMinWidth);
 
     double maxArea = 0;
 

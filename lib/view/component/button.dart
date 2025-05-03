@@ -48,6 +48,7 @@ class Button extends StatelessWidget {
 
     final filledButtonStyle = ButtonStyle(
       backgroundColor: WidgetStatePropertyAll(backgroundColor),
+      textStyle: WidgetStatePropertyAll(textStyle),
     );
 
     return switch (type) {
