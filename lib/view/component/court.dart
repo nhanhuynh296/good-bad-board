@@ -38,7 +38,7 @@ class CourtComponent extends StatelessWidget {
 
         return Stack(
           children: [
-            Image.asset('asset/image/court_small.webp'),
+            Image.asset('asset/image/badminton.webp'),
             if (isInvalidDragHovering) const InvalidDropTargetOverlay(),
 
             Positioned.fill(
