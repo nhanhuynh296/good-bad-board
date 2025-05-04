@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
@@ -82,10 +83,18 @@ class DraggablePlayerComponent extends _PlayerComponent {
     this.shouldAcceptIncomingDragPlayer,
   });
 
+  static const matchGapColor = {
+    0: Colors.green,
+    1: Colors.deepOrangeAccent,
+    3: Colors.red,
+  };
+
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    final matchPlayed = gameData.getCurrentPlayersHistory()[data]!;
+    final playersHistory = gameData.getCurrentPlayersHistory();
+    final matchPlayed = gameData.getCurrentPlayersHistory()[data] ?? 0;
+    final maxMatchPlayed = playersHistory.values.max;
     return DragTarget<Player>(
       onWillAcceptWithDetails:
           (detail) =>
@@ -105,6 +114,9 @@ class DraggablePlayerComponent extends _PlayerComponent {
             child: Badge(
               label: Text(matchPlayed.toStringAsFixed(0)),
               smallSize: 0,
+              backgroundColor:
+                  matchGapColor[maxMatchPlayed - matchPlayed] ??
+                  matchGapColor[matchGapColor.keys.max],
               padding: const EdgeInsets.all(space8),
               child: ClickablePlayerComponent(
                 data: data,
