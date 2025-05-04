@@ -271,6 +271,7 @@ class GameData extends ChangeNotifier {
     Iterable<num> costFunctionInfo() => GameData.eloSpread(games);
     num costFunction() =>
         costFunctionInfo().average * 0.1 + costFunctionInfo().max;
+    if (kReleaseMode) print(Object object) => debugPrint(object.toString());
 
     if (games.length < 2) {
       debugPrint('Only 1 court, no optimization needed');
