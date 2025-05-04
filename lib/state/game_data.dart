@@ -153,8 +153,15 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deletePlayer(Player player) async {
+    removePlayer(player);
+    await PlayerRepository.instance.deletePlayer(player.id);
+    notifyListeners();
+  }
+
   void removePlayer(Player player, {bool byId = false}) {
-    final playerToRemove = _players.firstWhere((p) => p.id == player.id);
+    final playerToRemove =
+        (byId) ? _players.firstWhere((p) => p.id == player.id) : player;
     _players.remove(playerToRemove);
     _fractionalAverageGamePlayer.remove(playerToRemove);
     notifyListeners();

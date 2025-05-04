@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
+import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/dialog/toasts.dart';
+import 'package:provider/provider.dart';
 
 class EditPlayerDialog extends StatefulWidget {
   final Player player;
@@ -44,6 +46,11 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
               );
               if (!context.mounted || !confirmDelete) return;
               context.showToast("Deleting ${widget.player.name}");
+              Provider.of<GameData>(
+                context,
+                listen: false,
+              ).deletePlayer(widget.player);
+
               Navigator.of(context).pop();
             },
             icon: const Icon(Icons.delete),

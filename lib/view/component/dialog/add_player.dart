@@ -19,6 +19,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
   Elo? elo;
   String? signInId;
 
+  void resetForm() {
+    _formKey.currentState?.reset();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -76,7 +80,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
           type: ButtonType.text,
           child: const Text('Cancel'),
           onPressed: () {
-            Navigator.of(context).pop();
+            resetForm();
           },
         ),
         Button(
@@ -86,11 +90,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             if (!_formKey.currentState!.validate()) {
               return;
             }
-            Navigator.of(context).pop();
-
             widget.onSubmit?.call(
               Player(name: name!, elo: elo!, signInId: signInId),
             );
+            resetForm();
           },
           child: const Text('Add'),
         ),
