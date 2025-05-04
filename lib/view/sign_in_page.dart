@@ -1,10 +1,12 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/core/importer.dart';
 import 'package:good_bad_board/dto/player.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/dialog/add_player.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
 import 'package:good_bad_board/view/component/player.dart';
@@ -22,6 +24,7 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     final players = PlayerRepository.instance.getAllPlayers();
+    final gameData = Provider.of<GameData>(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text(appName)),
@@ -31,16 +34,50 @@ class _SignInPageState extends State<SignInPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           spacing: spaceCard,
           children: [
-            const Expanded(child: PlayerList()),
+            Expanded(child: PlayerList()),
             Expanded(
-              child: AddPlayerDialog(
-                onSubmit: (player) {
-                  setState(() {
-                    players.add(player);
-                  });
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AddPlayerDialog(
+                    onSubmit: (player) {
+                      setState(() {
+                        players.add(player);
+                        PlayerRepository.instance.createPlayer(player);
+                      });
+                    },
+                  ),
+                  Button(
+                    type: ButtonType.filled,
+                    onPressed: () async {
+                      final parsedName = await importFromCsv();
+                      final existingPlayersName = {
+                        for (final player in gameData.player)
+                          player.name: player,
+                      };
+                      // Name should also be unique (kinda, but deal with it later)
+                      assert(
+                        existingPlayersName.length == gameData.player.length,
+                      );
+                      for (var playerName in parsedName) {
+                        if (existingPlayersName.containsKey(playerName)) return;
+                        final newPlayer = Player(name: playerName, elo: Elo.c2);
+                        PlayerRepository.instance.createPlayer(newPlayer);
 
-                  PlayerRepository.instance.createPlayer(player);
-                },
+                        gameData.addFullPricedPlayer(newPlayer);
+                        print('${newPlayer.name} added');
+                      }
+                    },
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      spacing: space8,
+                      children: [
+                        Icon(Icons.upload_file),
+                        Text("Import from CSV"),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
