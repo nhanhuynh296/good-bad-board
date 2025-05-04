@@ -10,6 +10,7 @@ Good badminton board organizer
 - [ ] Persistent setting
 - [ ] Click to move, highlight
 - [ ] Add all players
+- [ ] Remove player (marking unavailable)
 
 
 # Feature Request
