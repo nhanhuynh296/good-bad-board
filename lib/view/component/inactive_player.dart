@@ -159,7 +159,7 @@ class StagingGameComponent extends StatelessWidget {
   ) {
     final constraintMaxWidth = constraints.maxWidth - padding.horizontal;
     final constrainMaxHeight = constraints.maxHeight - padding.vertical;
-    const itemMinWidth = 450;
+    const itemMinWidth = 420;
     final maxNumberOfColumns = max(1, constraintMaxWidth ~/ itemMinWidth);
 
     double maxArea = 0;

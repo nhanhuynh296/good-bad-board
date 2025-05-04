@@ -34,7 +34,7 @@ class _SignInPageState extends State<SignInPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           spacing: spaceCard,
           children: [
-            Expanded(child: PlayerList()),
+            const Expanded(child: PlayerList()),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
