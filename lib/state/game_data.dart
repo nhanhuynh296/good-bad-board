@@ -270,7 +270,7 @@ class GameData extends ChangeNotifier {
   static void _improveEloSpread(GameContainer games, {int targetSpread = 0}) {
     Iterable<num> costFunctionInfo() => GameData.eloSpread(games);
     num costFunction() =>
-        costFunctionInfo().average * 0 + costFunctionInfo().max;
+        costFunctionInfo().average * 0.1 + costFunctionInfo().max;
 
     if (games.length < 2) {
       debugPrint('Only 1 court, no optimization needed');
