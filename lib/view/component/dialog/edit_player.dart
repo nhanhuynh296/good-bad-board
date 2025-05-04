@@ -45,7 +45,7 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
                 builder: (context) => const ConfirmDeleteDialog(),
               );
               if (!context.mounted || !confirmDelete) return;
-              context.showToast("Deleting ${widget.player.name}");
+              context.showToast("Player ${widget.player.name} deleted");
               Provider.of<GameData>(
                 context,
                 listen: false,
@@ -146,7 +146,14 @@ class ConfirmDeleteDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Delete player'),
-      content: const Text('Are you sure you want to delete this player?'),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Are you sure you want to delete this player?'),
+          Text("This action can not be undone!"),
+        ],
+      ),
       actions: <Widget>[
         Button(
           child: const Text('Cancel'),
