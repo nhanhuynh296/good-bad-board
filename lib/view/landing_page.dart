@@ -1,8 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/view/component/button.dart';
-import 'package:good_bad_board/view/component/reusable.dart';
 import 'package:good_bad_board/view/game_maker_page.dart';
 import 'package:good_bad_board/view/sign_in_page.dart';
 
@@ -11,41 +12,41 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final children = [
+      LandingPageOption(
+        label: 'Register',
+        onTap:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SignInPage()),
+            ),
+      ),
+      LandingPageOption(
+        label: 'Make Game',
+        onTap:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const GameMakerPage()),
+            ),
+      ),
+    ];
     return Scaffold(
       appBar: AppBar(title: const Text(appName)),
       drawer: const LandingPageDrawer(),
       body: Center(
-        child: Padding(
-          padding: pageSpacing,
-          child: Row(
-            spacing: spaceCard,
-            children: [
-              Expanded(
-                child: LandingPageOption(
-                  label: 'Register',
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignInPage(),
-                        ),
-                      ),
-                ),
-              ),
-              Expanded(
-                child: LandingPageOption(
-                  label: 'Make Game',
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const GameMakerPage(),
-                        ),
-                      ),
-                ),
-              ),
-            ],
+        child: GridView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(
+            horizontal: spacePageX,
+            vertical: spacePageY,
           ),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: sqrt(children.length).ceil(),
+            mainAxisSpacing: spaceCard,
+            crossAxisSpacing: spaceCard,
+            mainAxisExtent: 450,
+          ),
+          children: children,
         ),
       ),
     );
@@ -66,13 +67,12 @@ class LandingPageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      type: ButtonType.filled,
-      textStyle: Theme.of(context).textTheme.displayMedium,
-
-      onPressed: onTap,
-      child: AspectRatio(
-        aspectRatio: 1,
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Button(
+        type: ButtonType.filled,
+        textStyle: Theme.of(context).textTheme.displayMedium,
+        onPressed: onTap,
         child: Center(child: Text(label, textAlign: TextAlign.center)),
       ),
     );
