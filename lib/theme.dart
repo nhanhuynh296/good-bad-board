@@ -162,6 +162,10 @@ ThemeData get lightTheme {
       minThumbLength: space64,
       mainAxisMargin: -space8,
     ),
+    badgeTheme: const BadgeThemeData(
+      padding: EdgeInsets.all(space8),
+      smallSize: 0,
+    ),
   );
 }
 
@@ -292,6 +296,10 @@ ThemeData get darkTheme {
       thumbColor: WidgetStatePropertyAll(AppColors.white),
       minThumbLength: space64,
       // crossAxisMargin: -space8,
+    ),
+    badgeTheme: const BadgeThemeData(
+      padding: EdgeInsets.all(space8),
+      smallSize: 0,
     ),
   );
 }
