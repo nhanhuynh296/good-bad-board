@@ -75,6 +75,7 @@ class _SignInPageState extends State<SignInPage> {
                         context.showErrorToast(
                           "Conflict name with existing player: ${duplicateNames.join(', ')}",
                         );
+                        return;
                       }
 
                       final parsedPlayer = parsedName
@@ -85,15 +86,16 @@ class _SignInPageState extends State<SignInPage> {
                                 Player(name: playerName, elo: Elo.c2),
                           );
 
-                      final bool confirmedSelection = await showAdaptiveDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        builder:
-                            (_) => PlayerBulkEdit(
-                              players: parsedPlayer.toList(growable: false),
-                            ),
-                      );
-                      if (!confirmedSelection) return;
+                      final bool? confirmedSelection =
+                          await showAdaptiveDialog<bool?>(
+                            context: context,
+                            barrierDismissible: true,
+                            builder:
+                                (_) => PlayerBulkEdit(
+                                  players: parsedPlayer.toList(growable: false),
+                                ),
+                          );
+                      if (confirmedSelection != true) return;
 
                       for (final newPlayer in parsedPlayer) {
                         PlayerRepository.instance.createPlayer(newPlayer);

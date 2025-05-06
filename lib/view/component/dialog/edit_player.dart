@@ -265,12 +265,12 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
                           style: TextStyle(fontStyle: FontStyle.italic),
                         ),
                       ),
-                      DataColumn(
-                        label: Text(
-                          'Sign in ID',
-                          style: TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                      ),
+                      // DataColumn(
+                      //   label: Text(
+                      //     'Sign in ID',
+                      //     style: TextStyle(fontStyle: FontStyle.italic),
+                      //   ),
+                      // ),
                     ],
                     rows: widget.players
                         .mapIndexed(
@@ -280,10 +280,18 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
                             cells: [
                               DataCell(Text(player.name)),
                               DataCell(Text(player.elo.name.toUpperCase())),
-                              DataCell(
-                                Text(player.signInId ?? 'Edit'),
-                                showEditIcon: true,
-                              ),
+                              // DataCell(
+                              //   (editingIndex == index)
+                              //       ? TextFormField(
+                              //         // initialValue: name,
+                              //       )
+                              //       : Text(player.signInId ?? '--'),
+                              //   showEditIcon: true,
+                              //   onTap:
+                              //       () => setState(() {
+                              //         editingIndex = index;
+                              //       }),
+                              // ),
                             ],
                             onSelectChanged:
                                 (value) => setState(() {
