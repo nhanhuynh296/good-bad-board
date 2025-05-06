@@ -17,7 +17,10 @@ extension ShowToast on BuildContext {
     final snackBar = SnackBar(
       content: Row(
         spacing: space8,
-        children: [Icon(Icons.error, color: colorScheme.error), Text(message)],
+        children: [
+          Icon(Icons.error, color: colorScheme.error),
+          Expanded(child: Text(message, overflow: TextOverflow.ellipsis)),
+        ],
       ),
     );
     showSnackBar(snackBar);
