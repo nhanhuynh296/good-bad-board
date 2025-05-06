@@ -9,7 +9,7 @@ Good badminton board organizer
 - [ ] Paying tracker
 - [ ] Persistent setting
 - [ ] Click to move, highlight
-- [ ] Add all players
+- [x] Add all players
 - [ ] Remove player (marking unavailable)
 
 

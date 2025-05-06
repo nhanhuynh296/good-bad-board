@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/view/component/button.dart';
+import 'package:good_bad_board/view/component/setting.dart';
 import 'package:good_bad_board/view/game_maker_page.dart';
 import 'package:good_bad_board/view/sign_in_page.dart';
 
@@ -84,26 +85,29 @@ class LandingPageDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.bodyMedium;
     final width = MediaQuery.sizeOf(context).width * 0.5;
     return Drawer(
       width: width,
       child: Column(
         children: [
-          AboutListTile(
-            applicationName: appName,
-            aboutBoxChildren: [
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'https://github.com/nhanhuynh296',
-                      style: textStyle,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          ListTile(
+            title: const Text("Settings"),
+            onTap: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingPage()));
+            },
+            trailing: Icon(Icons.adaptive.arrow_forward),
+          ),
+          ListTile(
+            title: const Text("Abouts"),
+            onTap: () {
+              showLicensePage(
+                context: context,
+                applicationName: '$appName - Nathan Huynh',
+              );
+            },
+            trailing: Icon(Icons.adaptive.arrow_forward),
           ),
         ],
       ),
