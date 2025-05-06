@@ -8,6 +8,8 @@ import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/dialog/add_player.dart';
+import 'package:good_bad_board/view/component/dialog/edit_player.dart';
+import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
 import 'package:good_bad_board/view/component/player.dart';
 import 'package:good_bad_board/view/component/reusable.dart';
@@ -51,21 +53,53 @@ class _SignInPageState extends State<SignInPage> {
                     type: ButtonType.filled,
                     onPressed: () async {
                       final parsedName = await importFromCsv();
+                      if (!context.mounted) return;
+
                       final existingPlayersName = {
                         for (final player in gameData.player)
                           player.name: player,
                       };
-                      // Name should also be unique (kinda, but deal with it later)
-                      assert(
-                        existingPlayersName.length == gameData.player.length,
+
+                      // Name in file should be unique
+                      final uniqueParsedNames = parsedName.toSet();
+                      if (uniqueParsedNames.length != parsedName.length) {
+                        context.showErrorToast('Duplicate name found in file');
+                        return;
+                      }
+
+                      // Name should not have conflict, might need to rename or something
+                      final duplicateNames = existingPlayersName.keys
+                          .toSet()
+                          .difference(uniqueParsedNames);
+                      if (duplicateNames.isNotEmpty) {
+                        context.showErrorToast(
+                          "Conflict name with existing player: ${duplicateNames.join(', ')}",
+                        );
+                      }
+
+                      final parsedPlayer = parsedName
+                          .whereNot(existingPlayersName.containsKey)
+                          .sorted()
+                          .map(
+                            (playerName) =>
+                                Player(name: playerName, elo: Elo.c2),
+                          );
+
+                      final bool confirmedSelection = await showAdaptiveDialog(
+                        context: context,
+                        barrierDismissible: true,
+                        builder:
+                            (_) => PlayerBulkEdit(
+                              players: parsedPlayer.toList(growable: false),
+                            ),
                       );
-                      for (var playerName in parsedName) {
-                        if (existingPlayersName.containsKey(playerName)) return;
-                        final newPlayer = Player(name: playerName, elo: Elo.c2);
+                      if (!confirmedSelection) return;
+
+                      for (final newPlayer in parsedPlayer) {
                         PlayerRepository.instance.createPlayer(newPlayer);
 
                         gameData.addFullPricedPlayer(newPlayer);
-                        print('${newPlayer.name} added');
+                        debugPrint('${newPlayer.name} added');
                       }
                     },
                     child: const Row(
