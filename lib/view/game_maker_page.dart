@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/button.dart';
+import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
 import 'package:good_bad_board/view/component/timer.dart';
@@ -20,56 +22,59 @@ class GameMakerPage extends StatelessWidget {
           IconButton(
             onPressed: () async {
               final savedFile = await gameData.saveGame();
+              if (!context.mounted) return;
               if (savedFile == null) return;
               final snackBar = SnackBar(
                 content: Text('Game saved at ${savedFile.path}'),
                 showCloseIcon: true,
               );
-              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              context.showSnackBar(snackBar);
             },
             icon: const Icon(Icons.save),
           ),
         ],
       ),
-      body: Column(
-        spacing: spaceComponent,
-        children: [
-          const CountdownTimer(),
-          Expanded(
-            child: Row(
-              spacing: spaceXBetweenChip,
-              children: [
-                const Expanded(child: InactivePlayerComponent()),
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    spacing: spaceDefault,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${gameData.numberOfCourt} Court(s)',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      Expanded(
-                        child: CurrentGameView(
-                          key: ValueKey(gameData.stagingMatches.isEmpty),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: spacePageX),
+        child: Row(
+          spacing: spaceDefault,
+          children: [
+            const Expanded(
+              child: Column(
+                spacing: spaceComponent,
+                children: [
+                  CountdownTimer(),
+                  Divider(),
+                  Expanded(child: InactivePlayerComponent()),
+                ],
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              flex: 2,
+              child: Column(
+                spacing: spaceDefault,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CourtModifier(),
+                  Expanded(
+                    child: CurrentGameView(
+                      key: ValueKey(gameData.stagingMatches.isEmpty),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: const Padding(
         padding: EdgeInsets.symmetric(
-          vertical: spaceDefault,
           horizontal: spacePageX,
+          vertical: spaceDefault,
         ),
         child: BottomActionBar(),
       ),
+
       floatingActionButton: FloatingActionButton(
         mini: true,
         onPressed: () {
@@ -87,33 +92,83 @@ class GameMakerPage extends StatelessWidget {
   }
 }
 
+class CourtModifier extends StatelessWidget {
+  const CourtModifier({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final gameData = Provider.of<GameData>(context);
+    final StringBuffer buffer = StringBuffer('${gameData.numberOfCourt} Court');
+    if (gameData.numberOfCourt > 1) {
+      buffer.write('s');
+    }
+    final textStyle = Theme.of(context).textTheme.headlineSmall;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      spacing: spaceDefault,
+      children: [
+        Button(
+          type: ButtonType.outlined,
+          onPressed:
+              () => gameData.setNumberOfCourt(gameData.numberOfCourt - 1),
+          icon: Icon(Icons.remove, size: textStyle?.fontSize),
+        ),
+        Text(buffer.toString(), style: textStyle),
+        Button(
+          type: ButtonType.outlined,
+          onPressed:
+              () => gameData.setNumberOfCourt(gameData.numberOfCourt + 1),
+          icon: Icon(Icons.add, size: textStyle?.fontSize),
+        ),
+      ],
+    );
+  }
+}
+
 class BottomActionBar extends StatelessWidget {
   const BottomActionBar({super.key});
 
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context, listen: true);
+    final generateActive = gameData.stagingMatches.isNotEmpty;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       spacing: spaceDefault,
       children: [
         Expanded(
-          child: FilledButton(
-            onPressed: () {
-              gameData.makeGame();
+          child: Button(
+            type: generateActive ? ButtonType.outlined : ButtonType.filled,
+            onPressed: () async {
+              final error = await gameData.makeGame();
+              if (!context.mounted) return;
+              if (error != null) {
+                context.showErrorToast(error);
+                return;
+              }
             },
-            child: Text(
-              gameData.stagingMatches.isEmpty
-                  ? 'Generate Game'
-                  : 'Re-Generate Game',
-            ),
+            child: Text(generateActive ? 'Generate Game' : 'Re-Generate Game'),
           ),
         ),
-        if (gameData.stagingMatches.isNotEmpty)
+        if (generateActive)
           Expanded(
-            child: FilledButton(
+            child: Button(
+              type: ButtonType.filled,
               onPressed: () {
-                gameData.saveCurrentGame();
+                final invalidGames = gameData.stagingMatches.where(
+                  (match) => match.players.isNotEmpty && !match.isPlayable(),
+                );
+                if (invalidGames.isNotEmpty) {
+                  context.showErrorToast(
+                    'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
+                  );
+                  return;
+                }
+                final errorOrNull = gameData.saveCurrentGame();
+                if (errorOrNull != null) {
+                  context.showErrorToast(errorOrNull);
+                  return;
+                }
               },
               child: const Text('Save'),
             ),

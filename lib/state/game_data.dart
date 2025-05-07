@@ -1,11 +1,13 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
-import 'dart:math';
+import 'dart:math' hide log;
 
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:good_bad_board/core/random.dart';
+import 'package:good_bad_board/dto/player.dart';
 import 'package:good_bad_board/dto/session.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
@@ -13,8 +15,19 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
 
+typedef GameContainer = List<Game>;
+typedef PlayerContainer = List<Player>;
+
+const int maxIteration = 1000;
+
 class GameData extends ChangeNotifier {
   int numberOfCourt = 2;
+
+  void setNumberOfCourt(int value) {
+    if (value <= 0) return;
+    numberOfCourt = value;
+    notifyListeners();
+  }
 
   final Set<Player> _players = {
     Player(name: "Howard", elo: Elo.b1),
@@ -32,102 +45,85 @@ class GameData extends ChangeNotifier {
     Player(name: "Nathan", elo: Elo.a1),
     //
     // // Mock player
-    // // C2 Tier (Newbie)
-    // Player(name: "Alice", elo: Elo.c2),
-    // Player(name: "Bob", elo: Elo.c2),
-    // Player(name: "Cathy", elo: Elo.c2),
-    // Player(name: "David", elo: Elo.c2),
-    // Player(name: "Ella", elo: Elo.c2),
-    // Player(name: "Finn", elo: Elo.c2),
-    // Player(name: "Gina", elo: Elo.c2),
-    //
-    // // C1 Tier
-    // Player(name: "Henry", elo: Elo.c1),
-    // Player(name: "Ivy", elo: Elo.c1),
-    // Player(name: "Jack", elo: Elo.c1),
-    // Player(name: "Katie", elo: Elo.c1),
-    // Player(name: "Leo", elo: Elo.c1),
-    // Player(name: "Mia", elo: Elo.c1),
-    // Player(name: "Nina", elo: Elo.c1),
-    //
-    // // B2 Tier
-    // Player(name: "Oscar", elo: Elo.b2),
-    // Player(name: "Paul", elo: Elo.b2),
-    // Player(name: "Quinn", elo: Elo.b2),
-    // Player(name: "Rachel", elo: Elo.b2),
-    // Player(name: "Sam", elo: Elo.b2),
-    // Player(name: "Tina", elo: Elo.b2),
-    // Player(name: "Uma", elo: Elo.b2),
-    //
-    // // B1 Tier
-    // Player(name: "Vince", elo: Elo.b1),
-    // Player(name: "Wendy", elo: Elo.b1),
-    // Player(name: "Xander", elo: Elo.b1),
-    // Player(name: "Yara", elo: Elo.b1),
-    // Player(name: "Zack", elo: Elo.b1),
-    // Player(name: "Ava", elo: Elo.b1),
-    // Player(name: "Ben", elo: Elo.b1),
-    //
-    // // A2 Tier
-    // Player(name: "Cindy", elo: Elo.a2),
-    // Player(name: "Daniel", elo: Elo.a2),
-    // Player(name: "Eva", elo: Elo.a2),
-    // Player(name: "Frank", elo: Elo.a2),
-    // Player(name: "Grace", elo: Elo.a2),
-    // Player(name: "Hank", elo: Elo.a2),
-    // Player(name: "Iris", elo: Elo.a2),
-    //
-    // // A1 Tier
-    // Player(name: "Jake", elo: Elo.a1),
-    // Player(name: "Kara", elo: Elo.a1),
-    // Player(name: "Liam", elo: Elo.a1),
-    // Player(name: "Mason", elo: Elo.a1),
-    // Player(name: "Noah", elo: Elo.a1),
-    // Player(name: "Olivia", elo: Elo.a1),
-    // Player(name: "Parker", elo: Elo.a1),
-    //
-    // // S2 Tier
-    // Player(name: "Quincy", elo: Elo.s2),
-    // Player(name: "Riley", elo: Elo.s2),
-    // Player(name: "Sophia", elo: Elo.s2),
-    // Player(name: "Taylor", elo: Elo.s2),
-    // Player(name: "Ulysses", elo: Elo.s2),
-    // Player(name: "Victoria", elo: Elo.s2),
-    // Player(name: "Wyatt", elo: Elo.s2),
-    //
-    // // S1 Tier (Highest)
-    // Player(name: "Xena", elo: Elo.s1),
-    // Player(name: "Yvonne", elo: Elo.s1),
-    // Player(name: "Zane", elo: Elo.s1),
-    // Player(name: "Alex", elo: Elo.s1),
-    // Player(name: "Bella", elo: Elo.s1),
-    // Player(name: "Cody", elo: Elo.s1),
-    // Player(name: "Diana", elo: Elo.s1),
+    // C2 Tier (Newbie)
+    Player(name: "Alice", elo: Elo.c2),
+    Player(name: "Bob", elo: Elo.c2),
+    Player(name: "Cathy", elo: Elo.c2),
+    Player(name: "David", elo: Elo.c2),
+    Player(name: "Ella", elo: Elo.c2),
+    Player(name: "Finn", elo: Elo.c2),
+    Player(name: "Gina", elo: Elo.c2),
+
+    // C1 Tier
+    Player(name: "Henry", elo: Elo.c1),
+    Player(name: "Ivy", elo: Elo.c1),
+    Player(name: "Jack", elo: Elo.c1),
+    Player(name: "Katie", elo: Elo.c1),
+    Player(name: "Leo", elo: Elo.c1),
+    Player(name: "Mia", elo: Elo.c1),
+    Player(name: "Nina", elo: Elo.c1),
+
+    // B2 Tier
+    Player(name: "Oscar", elo: Elo.b2),
+    Player(name: "Paul", elo: Elo.b2),
+    Player(name: "Quinn", elo: Elo.b2),
+    Player(name: "Rachel", elo: Elo.b2),
+    Player(name: "Sam", elo: Elo.b2),
+    Player(name: "Tina", elo: Elo.b2),
+    Player(name: "Uma", elo: Elo.b2),
+
+    // B1 Tier
+    Player(name: "Vince", elo: Elo.b1),
+    Player(name: "Wendy", elo: Elo.b1),
+    Player(name: "Xander", elo: Elo.b1),
+    Player(name: "Yara", elo: Elo.b1),
+    Player(name: "Zack", elo: Elo.b1),
+    Player(name: "Ava", elo: Elo.b1),
+    Player(name: "Ben", elo: Elo.b1),
+
+    // A2 Tier
+    Player(name: "Cindy", elo: Elo.a2),
+    Player(name: "Daniel", elo: Elo.a2),
+    Player(name: "Eva", elo: Elo.a2),
+    Player(name: "Frank", elo: Elo.a2),
+    Player(name: "Grace", elo: Elo.a2),
+    Player(name: "Hank", elo: Elo.a2),
+    Player(name: "Iris", elo: Elo.a2),
+
+    // A1 Tier
+    Player(name: "Jake", elo: Elo.a1),
+    Player(name: "Kara", elo: Elo.a1),
+    Player(name: "Liam", elo: Elo.a1),
+    Player(name: "Mason", elo: Elo.a1),
+    Player(name: "Noah", elo: Elo.a1),
+    Player(name: "Olivia", elo: Elo.a1),
+    Player(name: "Parker", elo: Elo.a1),
+
+    // S2 Tier
+    Player(name: "Quincy", elo: Elo.s2),
+    Player(name: "Riley", elo: Elo.s2),
+    Player(name: "Sophia", elo: Elo.s2),
+    Player(name: "Taylor", elo: Elo.s2),
+    Player(name: "Ulysses", elo: Elo.s2),
+    Player(name: "Victoria", elo: Elo.s2),
+    Player(name: "Wyatt", elo: Elo.s2),
+
+    // S1 Tier (Highest)
+    Player(name: "Xena", elo: Elo.s1),
+    Player(name: "Yvonne", elo: Elo.s1),
+    Player(name: "Zane", elo: Elo.s1),
+    Player(name: "Alex", elo: Elo.s1),
+    Player(name: "Bella", elo: Elo.s1),
+    Player(name: "Cody", elo: Elo.s1),
+    Player(name: "Diana", elo: Elo.s1),
   };
 
   Set<Player> get player => Set.unmodifiable(_players);
 
-  final List<List<Game>> history = [];
-
-  int gameNumber = 0;
-
-  void nextGame() {
-    gameNumber++;
-    notifyListeners();
-  }
-
-  /// Current view of the game
-  List<Game> _currentView = [];
-
-  List<Game> get currentView => _currentView;
-
-  void setCurrentView(List<Game> newView) {
-    _currentView = newView;
-    notifyListeners();
-  }
+  final List<GameContainer> history = [];
 
   /// Candidate to be added to history
-  List<Game> stagingMatches = [];
+  GameContainer stagingMatches = GameContainer.empty();
 
   /// When a player came after the late and paid a fractional price.
   /// Use a average count of all player, multiply by total game to represent the
@@ -150,43 +146,77 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
+  void onUpdatePlayer(Player newPlayer) {
+    final playerToRemove = _players.firstWhere((p) => p.id == newPlayer.id);
+    _players.remove(playerToRemove);
+    _players.add(newPlayer);
+    PlayerRepository.instance.updatePlayer(newPlayer);
+    notifyListeners();
+  }
+
+  Future<void> deletePlayer(Player player) async {
+    removePlayer(player);
+    await PlayerRepository.instance.deletePlayer(player.id);
+    notifyListeners();
+  }
+
   void removePlayer(Player player, {bool byId = false}) {
     final playerToRemove =
-        byId ? _players.firstWhere((p) => p.id == player.id) : player;
+        (byId) ? _players.firstWhere((p) => p.id == player.id) : player;
     _players.remove(playerToRemove);
     _fractionalAverageGamePlayer.remove(playerToRemove);
     notifyListeners();
   }
 
-  void makeGame() {
-    if (_players.isEmpty || numberOfCourt <= 0) return;
+  Future<String?> makeGame() async {
+    if (numberOfCourt <= 0) return 'There are no court available';
+    if (_players.isEmpty) return 'There are no player';
+    if (_players.length < Game.playerPerCourt) {
+      return 'Not enough players, need at least ${Game.playerPerCourt}, got ${_players.length}';
+    }
     final candidatePlayer = _choosePlayer().shuffled();
     assert(
-      candidatePlayer.isNotEmpty && candidatePlayer.length % 4 == 0,
+      candidatePlayer.isNotEmpty &&
+          candidatePlayer.length % Game.playerPerCourt == 0,
       'Candidate player is empty or not a multiple of 4, ${candidatePlayer.length}',
     );
     stagingMatches =
         candidatePlayer.slices(4).map((players) => Game(players)).toList();
     assert(stagingMatches.isNotEmpty);
-    _improveEloSpread();
-    _currentView = stagingMatches;
-    debugPrint('Match elo spread: ${eloSpread()}');
+    _improveEloSpread(stagingMatches);
+
+    debugPrint(
+      'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
+    );
+    if (stagingMatches.length < numberOfCourt) {
+      stagingMatches.addAll(
+        List.filled(numberOfCourt - stagingMatches.length, PlaceholderGame([])),
+      );
+    }
+    stagingMatches = stagingMatches;
     notifyListeners();
+    return null;
   }
 
-  void saveCurrentGame() {
-    if (stagingMatches.isEmpty) return;
+  String? saveCurrentGame() {
+    if (stagingMatches.isEmpty) return "No game to save";
+    final invalidGames = stagingMatches.where(
+      (match) => match.players.isNotEmpty && !match.isPlayable(),
+    );
+    if (invalidGames.isNotEmpty) {
+      return 'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}';
+    }
     history.add(stagingMatches);
-    _currentView = history.last;
     stagingMatches = [];
     notifyListeners();
     debugPrint(
       'Average match every should have played: ${getCurrentPlayerAverageMatchPlayed().toStringAsFixed(2)}',
     );
+    return null;
   }
 
   Iterable<Player> _choosePlayer() {
-    final numberOfCourt = _players.length ~/ 4;
+    final numberOfCourt = min(_players.length ~/ 4, this.numberOfCourt);
     final playerHistory = getCurrentPlayersHistory();
     final averageMatchPlayed = getCurrentPlayerAverageMatchPlayed();
 
@@ -233,80 +263,124 @@ class GameData extends ChangeNotifier {
     return playerMatches.average;
   }
 
-  int eloSpread() {
-    return stagingMatches.map((match) => match.eloGap()).max;
+  static Iterable<int> eloSpread(GameContainer games) {
+    return games.map((match) => match.eloGap());
   }
 
-  void _improveEloSpread({int targetSpread = 1}) {
-    if (stagingMatches.length < 2) {
-      debugPrint('Only 1 court, no optimization needed');
+  /// A greedy solution that will ended up with a local minimum. Swap 2 players at a time
+  static void _improveEloSpread(GameContainer games, {int targetSpread = 0}) {
+    Iterable<num> costFunctionInfo() => GameData.eloSpread(games);
+    num costFunction() =>
+        costFunctionInfo().average * 0.1 + costFunctionInfo().max;
+
+    if (games.length < 2) {
+      log('Only 1 court, no optimization needed');
       return;
     }
     // If the current spread is too high, try to swap players with other groups
-    int currentSpread = eloSpread();
-    debugPrint('current spread $currentSpread');
+    num currentSpread = costFunction();
+    printGames(games);
+    log('current spread ${costFunctionInfo()} => $currentSpread');
     if (currentSpread < targetSpread) {
-      debugPrint('Current spread is already satisfied');
+      log('Current spread is already satisfied');
       return;
     }
-    final combinations = Combinations(2, stagingMatches);
-    for (final [match1, match2] in combinations()) {
-      for (final [i, j] in Amalgams(2, List.generate(4, (k) => k))()) {
-        var temp = match1.players[i];
-        match1.players[i] = match2.players[j];
-        match2.players[j] = temp;
-        debugPrint('${match1.players[i].name} <-> ${match2.players[j].name}');
-        final newSpread = eloSpread();
-        debugPrint('\tnew spread $newSpread');
-        if (newSpread < targetSpread) {
-          debugPrint('new spread satisfied, ending');
-          //  just enough spread
-          return;
+    final stopwatch = Stopwatch()..start();
+
+    bool changed = true;
+    int iteration = 0;
+    while (iteration < maxIteration && changed) {
+      iteration++;
+      changed = false;
+      log("iteration $iteration");
+      // =======================================================================
+      for (var [match1Index, match2Index]
+          in Combinations(2, List.generate(games.length, (k) => k))()) {
+        for (var [p1, p2]
+            in Amalgams(2, List.generate(Game.playerPerCourt, (k) => k))()) {
+          final match1 = games[match1Index];
+          final match2 = games[match2Index];
+          var temp = match1.players[p1];
+          match1.players[p1] = match2.players[p2];
+          match2.players[p2] = temp;
+
+          log('${match1.players[p1].name} <-> ${match2.players[p2].name}');
+          final newSpread = costFunction();
+          log(
+            '\tnew spread ${costFunctionInfo()} => ${newSpread.toStringAsFixed(2)}..current $currentSpread',
+          );
+
+          if (newSpread >= currentSpread) {
+            log('\tnah, swap back');
+            temp = match1.players[p1];
+            match1.players[p1] = match2.players[p2];
+            match2.players[p2] = temp;
+          }
+
+          if (newSpread < targetSpread) {
+            log('new spread satisfied, ending');
+            //  just enough spread
+            break;
+          }
+          if (newSpread < currentSpread) {
+            currentSpread = newSpread;
+            log('\tgood swap, next');
+            printGames(games);
+            changed = true;
+            break;
+          }
         }
-        if (newSpread < currentSpread) {
-          currentSpread = newSpread;
-          debugPrint('\tgood swap, next');
-          continue;
-        }
-        debugPrint('\tnah, swap back');
-        temp = match1.players[i];
-        match1.players[i] = match2.players[j];
-        match2.players[j] = temp;
       }
     }
-  }
-
-  Map<Player, List<int>> getPlayerIndexOfCurrentView() {
-    final Map<Player, List<int>> out = {};
-    for (var i = 0; i < currentView.length; i++) {
-      for (var j = 0; j < currentView[i].players.length; j++) {
-        out[currentView[i].players[j]] = [i, j];
-      }
-    }
-    return out;
-  }
-
-  void swapPlayer(Player player1, Player player2) {
-    final indices = getPlayerIndexOfCurrentView();
-    // At least one player has to be from the current view
-    assert(
-      indices.containsKey(player1) || indices.containsKey(player2),
-      "This should not be happen, can not swap between inactive players",
+    // =======================================================================
+    stopwatch.stop();
+    final timeElapsed = stopwatch.elapsed;
+    log(
+      "OPTIMIZATION DONE, $iteration pass, total ${timeElapsed.inMilliseconds} ms",
     );
+    printGames(games);
+    return;
+  }
 
-    final [playerToBeReplaced, otherPlayer] =
-        indices.containsKey(player1) ? [player1, player2] : [player2, player1];
+  Game? gameContainingPlayer(Player player) {
+    return stagingMatches.firstWhereOrNull(
+      (game) => game.players.contains(player),
+    );
+  }
 
-    currentView[indices[playerToBeReplaced]![0]]
-            .players[indices[playerToBeReplaced]![1]] =
-        otherPlayer;
+  String? swapPlayer(Player player1, Player player2) {
+    final game1 = gameContainingPlayer(player1);
+    final game2 = gameContainingPlayer(player2);
+    // At least one player has to be from the current view
+    if (game1 == null || game2 == null) "CAN NOT SWAP BETWEEN INACTIVE PLAYERS";
 
-    // If the other player is also in the current view, swap them too.
-    // But if not, they are inactive player, so do nothing
-    if (indices.containsKey(otherPlayer)) {
-      currentView[indices[otherPlayer]![0]].players[indices[otherPlayer]![1]] =
-          playerToBeReplaced;
+    if (game1 != null) {
+      game1.players
+        ..remove(player1)
+        ..add(player2);
     }
+
+    if (game2 != null) {
+      game2.players
+        ..remove(player2)
+        ..add(player1);
+    }
+    log(
+      'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
+    );
+    notifyListeners();
+    return null;
+  }
+
+  /// Add a player to the court. If player is already in the court, remove them
+  void addPlayerToCourt(Player player, PlayerContainer courtPtr) {
+    courtPtr.add(player);
+    notifyListeners();
+  }
+
+  void removePlayerFromCourt(Player player) {
+    final game = gameContainingPlayer(player);
+    game?.players.remove(player);
     notifyListeners();
   }
 
@@ -330,5 +404,21 @@ class GameData extends ChangeNotifier {
   }
 }
 
-Iterable<Player> getPlayerFromGames(List<Game> games) =>
+Iterable<Player> getPlayerFromGames(GameContainer games) =>
     games.expand((game) => game.players);
+
+void printGames(GameContainer games) {
+  for (var game in games) {
+    log(
+      'Game ${games.indexOf(game) + 1}: ${game.players.map((p) => "${p.name} ${p.elo.index}".padRight(10)).join(', ')}',
+    );
+  }
+}
+
+Iterable<(T, U)> product<T, U>(Iterable<T> a, Iterable<U> b) sync* {
+  for (final x in (a)) {
+    for (final y in b) {
+      yield (x, y);
+    }
+  }
+}

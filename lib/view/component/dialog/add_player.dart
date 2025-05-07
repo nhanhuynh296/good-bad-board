@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
-import 'package:good_bad_board/state/game_data.dart';
-import 'package:provider/provider.dart';
+import 'package:good_bad_board/view/component/button.dart';
 
 class AddPlayerDialog extends StatefulWidget {
-  const AddPlayerDialog({super.key});
+  final ValueChanged<Player>? onSubmit;
+
+  const AddPlayerDialog({super.key, this.onSubmit});
 
   @override
   State<AddPlayerDialog> createState() => _AddPlayerDialogState();
@@ -14,9 +15,13 @@ class AddPlayerDialog extends StatefulWidget {
 class _AddPlayerDialogState extends State<AddPlayerDialog> {
   final _formKey = GlobalKey<FormState>();
 
-  late String name;
-  late Elo elo;
-  late String signInId;
+  String? name;
+  Elo? elo;
+  String? signInId;
+
+  void resetForm() {
+    _formKey.currentState?.reset();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +34,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
+              initialValue: name,
               decoration: const InputDecoration(labelText: 'Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -39,10 +45,19 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               },
             ),
             DropdownButtonFormField(
+              value: elo,
               decoration: const InputDecoration(labelText: 'Elo'),
-
+              validator: (value) {
+                if (value != null) return null;
+                return 'Please select elo';
+              },
               items: Elo.values
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(e.name.toUpperCase()),
+                    ),
+                  )
                   .toList(growable: false),
               onChanged: (Elo? value) {
                 if (value == null) return;
@@ -50,29 +65,35 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               },
             ),
             TextFormField(
+              initialValue: signInId,
               decoration: const InputDecoration(labelText: 'Sign In ID'),
+              validator: (value) {
+                signInId = value;
+                return null;
+              },
             ),
           ],
         ),
       ),
       actions: <Widget>[
-        TextButton(
+        Button(
+          type: ButtonType.text,
           child: const Text('Cancel'),
           onPressed: () {
-            Navigator.of(context).pop();
+            resetForm();
           },
         ),
-        ElevatedButton(
+        Button(
+          type: ButtonType.filled,
           onPressed: () {
             // Validate returns true if the form is valid, or false otherwise.
             if (!_formKey.currentState!.validate()) {
               return;
             }
-            Provider.of<GameData>(
-              context,
-              listen: false,
-            ).addFullPricedPlayer(Player(name: name, elo: elo));
-            Navigator.of(context).pop();
+            widget.onSubmit?.call(
+              Player(name: name!, elo: elo!, signInId: signInId),
+            );
+            resetForm();
           },
           child: const Text('Add'),
         ),
