@@ -1,0 +1,9 @@
+default:
+    just --choose
+
+generate:
+    flutter pub get
+    dart run build_runner build --delete-conflicting-outputs --verbose --track-performance
+
+lint:
+    flutter analyze --fatal-infos --no-pub
