@@ -8,8 +8,6 @@ name: Building artifact
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   artifact:
@@ -26,6 +24,11 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
       - name: Building artifact
         run: flutter build windows
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - uses: actions/upload-artifact@v4
         with:
