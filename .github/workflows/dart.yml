@@ -12,12 +12,14 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  code_analysis:
     runs-on: ubuntu-latest
 
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -38,3 +40,8 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
