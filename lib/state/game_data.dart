@@ -1,6 +1,7 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
-import 'dart:math';
+import 'dart:math' hide log;
 
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
@@ -271,18 +272,17 @@ class GameData extends ChangeNotifier {
     Iterable<num> costFunctionInfo() => GameData.eloSpread(games);
     num costFunction() =>
         costFunctionInfo().average * 0.1 + costFunctionInfo().max;
-    if (kReleaseMode) print(Object object) => debugPrint(object.toString());
 
     if (games.length < 2) {
-      debugPrint('Only 1 court, no optimization needed');
+      log('Only 1 court, no optimization needed');
       return;
     }
     // If the current spread is too high, try to swap players with other groups
     num currentSpread = costFunction();
     printGames(games);
-    debugPrint('current spread ${costFunctionInfo()} => $currentSpread');
+    log('current spread ${costFunctionInfo()} => $currentSpread');
     if (currentSpread < targetSpread) {
-      debugPrint('Current spread is already satisfied');
+      log('Current spread is already satisfied');
       return;
     }
     final stopwatch = Stopwatch()..start();
@@ -292,7 +292,7 @@ class GameData extends ChangeNotifier {
     while (iteration < maxIteration && changed) {
       iteration++;
       changed = false;
-      print("iteration ${iteration + 1}");
+      log("iteration $iteration");
       // =======================================================================
       for (var [match1Index, match2Index]
           in Combinations(2, List.generate(games.length, (k) => k))()) {
@@ -304,29 +304,27 @@ class GameData extends ChangeNotifier {
           match1.players[p1] = match2.players[p2];
           match2.players[p2] = temp;
 
-          debugPrint(
-            '${match1.players[p1].name} <-> ${match2.players[p2].name}',
-          );
+          log('${match1.players[p1].name} <-> ${match2.players[p2].name}');
           final newSpread = costFunction();
-          debugPrint(
-            '\tnew spread ${costFunctionInfo()} => ${newSpread.toStringAsFixed(2)}..current ${currentSpread}',
+          log(
+            '\tnew spread ${costFunctionInfo()} => ${newSpread.toStringAsFixed(2)}..current $currentSpread',
           );
 
           if (newSpread >= currentSpread) {
-            debugPrint('\tnah, swap back');
+            log('\tnah, swap back');
             temp = match1.players[p1];
             match1.players[p1] = match2.players[p2];
             match2.players[p2] = temp;
           }
 
           if (newSpread < targetSpread) {
-            debugPrint('new spread satisfied, ending');
+            log('new spread satisfied, ending');
             //  just enough spread
             break;
           }
           if (newSpread < currentSpread) {
             currentSpread = newSpread;
-            debugPrint('\tgood swap, next');
+            log('\tgood swap, next');
             printGames(games);
             changed = true;
             break;
@@ -337,7 +335,7 @@ class GameData extends ChangeNotifier {
     // =======================================================================
     stopwatch.stop();
     final timeElapsed = stopwatch.elapsed;
-    print(
+    log(
       "OPTIMIZATION DONE, $iteration pass, total ${timeElapsed.inMilliseconds} ms",
     );
     printGames(games);
@@ -367,7 +365,7 @@ class GameData extends ChangeNotifier {
         ..remove(player2)
         ..add(player1);
     }
-    debugPrint(
+    log(
       'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
     );
     notifyListeners();
@@ -411,7 +409,7 @@ Iterable<Player> getPlayerFromGames(GameContainer games) =>
 
 void printGames(GameContainer games) {
   for (var game in games) {
-    debugPrint(
+    log(
       'Game ${games.indexOf(game) + 1}: ${game.players.map((p) => "${p.name} ${p.elo.index}".padRight(10)).join(', ')}',
     );
   }

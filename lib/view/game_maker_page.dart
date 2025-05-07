@@ -22,12 +22,13 @@ class GameMakerPage extends StatelessWidget {
           IconButton(
             onPressed: () async {
               final savedFile = await gameData.saveGame();
+              if (!context.mounted) return;
               if (savedFile == null) return;
               final snackBar = SnackBar(
                 content: Text('Game saved at ${savedFile.path}'),
                 showCloseIcon: true,
               );
-              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              context.showSnackBar(snackBar);
             },
             icon: const Icon(Icons.save),
           ),
@@ -140,6 +141,7 @@ class BottomActionBar extends StatelessWidget {
             type: generateActive ? ButtonType.outlined : ButtonType.filled,
             onPressed: () async {
               final error = await gameData.makeGame();
+              if (!context.mounted) return;
               if (error != null) {
                 context.showErrorToast(error);
                 return;
