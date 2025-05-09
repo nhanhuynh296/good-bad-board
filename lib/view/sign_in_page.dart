@@ -52,25 +52,29 @@ class _SignInPageState extends State<SignInPage> {
                   Button(
                     type: ButtonType.filled,
                     onPressed: () async {
-                      final parsedName = await importFromCsv();
+                      final records = await importFromCsv();
                       if (!context.mounted) return;
 
                       final existingPlayersName = {
                         for (final player in gameData.player)
-                          player.name: player,
+                          player.name(): player,
                       };
 
+                      // Todo ability to delete player row
                       // Name in file should be unique
-                      final uniqueParsedNames = parsedName.toSet();
-                      if (uniqueParsedNames.length != parsedName.length) {
+                      final parsedNames = {
+                        for (final parsedName in records)
+                          parsedName.name: parsedName,
+                      };
+                      if (parsedNames.length != records.length) {
                         context.showErrorToast('Duplicate name found in file');
                         return;
                       }
 
                       // Name should not have conflict, might need to rename or something
-                      final duplicateNames = existingPlayersName.keys
-                          .toSet()
-                          .difference(uniqueParsedNames);
+                      final duplicateNames = parsedNames.keys.toSet().intersection(
+                        existingPlayersName.keys.toSet(),
+                      );
                       if (duplicateNames.isNotEmpty) {
                         context.showErrorToast(
                           "Conflict name with existing player: ${duplicateNames.join(', ')}",
@@ -78,12 +82,15 @@ class _SignInPageState extends State<SignInPage> {
                         return;
                       }
 
-                      final parsedPlayer = parsedName
-                          .whereNot(existingPlayersName.containsKey)
-                          .sorted()
+                      // Player whose name not already are in the system
+                      final uniqueParsedPlayers = parsedNames.keys
+                          .whereNot(duplicateNames.contains)
                           .map(
-                            (playerName) =>
-                                Player(name: playerName, elo: Elo.c2),
+                            (playerName) => Player(
+                              firstName: parsedNames[playerName]!.firstName,
+                              lastName: parsedNames[playerName]!.lastName,
+                              elo: Elo.c2,
+                            ),
                           );
 
                       final bool? confirmedSelection =
@@ -92,12 +99,14 @@ class _SignInPageState extends State<SignInPage> {
                             barrierDismissible: true,
                             builder:
                                 (_) => PlayerBulkEdit(
-                                  players: parsedPlayer.toList(growable: false),
+                                  players: uniqueParsedPlayers.toList(
+                                    growable: false,
+                                  ),
                                 ),
                           );
                       if (confirmedSelection != true) return;
 
-                      for (final newPlayer in parsedPlayer) {
+                      for (final newPlayer in uniqueParsedPlayers) {
                         PlayerRepository.instance.createPlayer(newPlayer);
 
                         gameData.addFullPricedPlayer(newPlayer);
@@ -157,12 +166,12 @@ class _PlayerListState extends State<PlayerList> {
             .where(
               (player) =>
                   eloFilters.contains(player.elo) &&
-                  (player.name.toUpperCase().contains(query) ||
+                  (player.name().toUpperCase().contains(query) ||
                       player.elo.name.toUpperCase().contains(query) ||
                       (player.signInId?.toUpperCase().contains(query) ??
                           false)),
             )
-            .sortedBy((player) => player.name)
+            .sortedBy((player) => player.name())
             .toList();
     final gameData = Provider.of<GameData>(context);
     final playerById = gameData.player.map((player) => player.id).toSet();

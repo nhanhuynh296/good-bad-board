@@ -15,7 +15,8 @@ class AddPlayerDialog extends StatefulWidget {
 class _AddPlayerDialogState extends State<AddPlayerDialog> {
   final _formKey = GlobalKey<FormState>();
 
-  String? name;
+  String? firstName;
+  String? lastName;
   Elo? elo;
   String? signInId;
 
@@ -34,13 +35,24 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
-              initialValue: name,
-              decoration: const InputDecoration(labelText: 'Name'),
+              initialValue: firstName,
+              decoration: const InputDecoration(labelText: 'First Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter name';
+                  return 'Please enter first name';
                 }
-                name = value;
+                firstName = value;
+                return null;
+              },
+            ),
+            TextFormField(
+              initialValue: lastName,
+              decoration: const InputDecoration(labelText: 'Last Name'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter last name';
+                }
+                lastName = value;
                 return null;
               },
             ),
@@ -91,7 +103,12 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               return;
             }
             widget.onSubmit?.call(
-              Player(name: name!, elo: elo!, signInId: signInId),
+              Player(
+                firstName: firstName!,
+                lastName: lastName!,
+                elo: elo!,
+                signInId: signInId,
+              ),
             );
             resetForm();
           },

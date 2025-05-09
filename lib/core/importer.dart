@@ -4,9 +4,19 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 
-final columnNames = RegExp(r'^(?:N|n)ame$');
+final firstNameColumn = RegExp(r'^first\s*name$');
+final lastNameColumn = RegExp(r'^last\s*name$');
 
-Future<Iterable<String>> importFromCsv() async {
+class NameRecord {
+  final String firstName;
+  final String lastName;
+
+  String get name => '$firstName $lastName';
+
+  NameRecord({required this.firstName, required this.lastName});
+}
+
+Future<Iterable<NameRecord>> importFromCsv() async {
   final pickerResult = await FilePicker.platform.pickFiles(
     dialogTitle: 'Select import data file',
     type: FileType.custom,
@@ -22,10 +32,25 @@ Future<Iterable<String>> importFromCsv() async {
   List<List<dynamic>> rowsAsListOfValues =
       await content.transform(utf8.decoder).transform(converter).toList();
   final headers = rowsAsListOfValues.removeAt(0);
-  final nameIndex = headers.indexWhere(
-    (header) => columnNames.hasMatch(header),
+  final firstNameColumnIndex = headers.indexWhere(
+    (header) => firstNameColumn.hasMatch(header),
   );
+  final lastNameColumnIndex = headers.indexWhere(
+    (header) => lastNameColumn.hasMatch(header),
+  );
+  assert(
+    !lastNameColumnIndex.isNegative && !firstNameColumnIndex.isNegative,
+    "Can not find first name and last name column",
+  );
+
   final parsedName =
-      rowsAsListOfValues.map((row) => row[nameIndex].toString()).toSet();
+      rowsAsListOfValues
+          .map(
+            (row) => NameRecord(
+              firstName: row[firstNameColumnIndex],
+              lastName: row[lastNameColumnIndex],
+            ),
+          )
+          .toSet();
   return parsedName;
 }

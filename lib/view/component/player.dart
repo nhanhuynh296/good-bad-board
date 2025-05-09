@@ -19,7 +19,7 @@ class _PlayerComponent extends StatelessWidget {
       height: size?.height,
       alignment: Alignment.center,
       child: Text(
-        '${data.name.toUpperCase()} (${data.elo.name.toUpperCase()})',
+        '${data.name().toUpperCase()} (${data.elo.name.toUpperCase()})',
         textAlign: TextAlign.center,
       ),
     );

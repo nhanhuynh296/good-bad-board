@@ -20,14 +20,16 @@ class EditPlayerDialog extends StatefulWidget {
 class _EditPlayerDialogState extends State<EditPlayerDialog> {
   final _formKey = GlobalKey<FormState>();
 
-  late String name;
+  late String firstName;
+  late String lastName;
   late Elo elo;
   late String? signInId;
 
   @override
   void initState() {
     super.initState();
-    name = widget.player.name;
+    firstName = widget.player.firstName;
+    lastName = widget.player.lastName;
     elo = widget.player.elo;
     signInId = widget.player.signInId;
   }
@@ -67,13 +69,24 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
-              initialValue: name,
-              decoration: const InputDecoration(labelText: 'Name'),
+              initialValue: firstName,
+              decoration: const InputDecoration(labelText: 'First name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter name';
                 }
-                name = value;
+                firstName = value;
+                return null;
+              },
+            ),
+            TextFormField(
+              initialValue: lastName,
+              decoration: const InputDecoration(labelText: 'Last name'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter name';
+                }
+                lastName = value;
                 return null;
               },
             ),
@@ -129,7 +142,12 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
               return;
             }
             widget.onSubmit?.call(
-              widget.player.copyWith(name: name, elo: elo, signInId: signInId),
+              widget.player.copyWith(
+                firstName: firstName,
+                lastName: lastName,
+                elo: elo,
+                signInId: signInId,
+              ),
             );
             Navigator.of(context).pop();
           },
@@ -278,7 +296,7 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
                             key: ObjectKey(player),
                             selected: selected[index],
                             cells: [
-                              DataCell(Text(player.name)),
+                              DataCell(Text(player.name())),
                               DataCell(Text(player.elo.name.toUpperCase())),
                               // DataCell(
                               //   (editingIndex == index)

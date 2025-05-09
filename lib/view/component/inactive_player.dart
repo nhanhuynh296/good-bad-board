@@ -6,6 +6,7 @@ import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/court.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
@@ -44,7 +45,7 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
             return playerStatistic[player1]!.toInt() -
                 playerStatistic[player2]!.toInt();
           }
-          return player1.name.compareTo(player2.name);
+          return player1.name().compareTo(player2.name());
         });
 
     return _InactivePlayerDraggable(
@@ -216,9 +217,17 @@ class StagingGameComponent extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('COURT ${index + 1}', style: textStyle),
+                          const Spacer(),
                           Text(
                             'SKILL GAP ${games[index].eloGap()}',
                             style: textStyle,
+                          ),
+                          Button(
+                            icon: const Icon(
+                              Icons.play_arrow_sharp,
+                              color: Colors.green,
+                            ),
+                            onPressed: () {},
                           ),
                         ],
                       ),
