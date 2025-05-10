@@ -7,3 +7,4 @@ generate:
 
 lint:
     flutter analyze --fatal-infos --no-pub
+    dart format --output=none --set-exit-if-changed .

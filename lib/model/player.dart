@@ -22,19 +22,33 @@ enum Elo {
   createPerFieldToJson: true,
 )
 class Player {
-  final String name;
+  final String firstName;
+  final String lastName;
   final Elo elo;
   final String id;
   final String? signInId;
 
-  Player({required this.name, required this.elo, this.signInId})
-    : id = const Uuid().v4();
+  Player({
+    required this.firstName,
+    required this.lastName,
+    required this.elo,
+    this.signInId,
+  }) : id = const Uuid().v4();
 
-  String toDisplayString() => '$name (${elo.name.toUpperCase()})';
+  String toDisplayString() =>
+      '$firstName $lastName (${elo.name.toUpperCase()})';
 
-  Player copyWith({String? name, Elo? elo, String? signInId}) {
+  String name() => '$firstName $lastName';
+
+  Player copyWith({
+    String? firstName,
+    String? lastName,
+    Elo? elo,
+    String? signInId,
+  }) {
     return Player._jsonConstructor(
-      name ?? this.name,
+      firstName ?? this.firstName,
+      lastName ?? this.lastName,
       elo ?? this.elo,
       id,
       signInId ?? this.signInId,
@@ -42,7 +56,13 @@ class Player {
   }
 
   // Json Serialization
-  Player._jsonConstructor(this.name, this.elo, this.id, this.signInId);
+  Player._jsonConstructor(
+    this.firstName,
+    this.lastName,
+    this.elo,
+    this.id,
+    this.signInId,
+  );
 
   factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
 
