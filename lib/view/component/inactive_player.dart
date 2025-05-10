@@ -36,7 +36,7 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
     final inactivePlayers = gameData.player
         .difference(playingPlayers)
         .where(
-          (player) => '${player.name}${player.elo}'.toLowerCase().contains(
+          (player) => '${player.name()}${player.elo}'.toLowerCase().contains(
             query.toLowerCase(),
           ),
         )

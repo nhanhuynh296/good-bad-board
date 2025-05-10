@@ -48,7 +48,7 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
                 builder: (context) => const ConfirmDeleteDialog(),
               );
               if (!context.mounted || !confirmDelete) return;
-              context.showToast("Player ${widget.player.name} deleted");
+              context.showToast("Player ${widget.player.name()} deleted");
               Provider.of<GameData>(
                 context,
                 listen: false,

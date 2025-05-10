@@ -11,7 +11,7 @@ class NameRecord {
   final String firstName;
   final String lastName;
 
-  String get name => '$firstName $lastName';
+  String name() => '$firstName $lastName';
 
   NameRecord({required this.firstName, required this.lastName});
 }

@@ -43,7 +43,7 @@ class ClickablePlayerComponent extends _PlayerComponent {
   @override
   Widget build(BuildContext context) {
     void onSecondaryAction() {
-      debugPrint("Pressed ${data.name}");
+      debugPrint("Pressed ${data.name()}");
       showAdaptiveDialog(
         context: context,
         builder:
@@ -54,7 +54,7 @@ class ClickablePlayerComponent extends _PlayerComponent {
                   context,
                   listen: false,
                 ).onUpdatePlayer(newPlayer);
-                debugPrint("Updated ${newPlayer.name}");
+                debugPrint("Updated ${newPlayer.name()}");
               },
             ),
       );

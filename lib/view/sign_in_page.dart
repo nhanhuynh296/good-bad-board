@@ -64,7 +64,7 @@ class _SignInPageState extends State<SignInPage> {
                       // Name in file should be unique
                       final parsedNames = {
                         for (final parsedName in records)
-                          parsedName.name: parsedName,
+                          parsedName.name(): parsedName,
                       };
                       if (parsedNames.length != records.length) {
                         context.showErrorToast('Duplicate name found in file');
@@ -110,7 +110,7 @@ class _SignInPageState extends State<SignInPage> {
                         PlayerRepository.instance.createPlayer(newPlayer);
 
                         gameData.addFullPricedPlayer(newPlayer);
-                        debugPrint('${newPlayer.name} added');
+                        debugPrint('${newPlayer.name()} added');
                       }
                     },
                     child: const Row(

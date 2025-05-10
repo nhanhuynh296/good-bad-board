@@ -410,7 +410,7 @@ Iterable<Player> getPlayerFromGames(GameContainer games) =>
 void printGames(GameContainer games) {
   for (var game in games) {
     log(
-      'Game ${games.indexOf(game) + 1}: ${game.players.map((p) => "${p.name} ${p.elo.index}".padRight(10)).join(', ')}',
+      'Game ${games.indexOf(game) + 1}: ${game.players.map((p) => "${p.name()} ${p.elo.index}".padRight(10)).join(', ')}',
     );
   }
 }
