@@ -72,9 +72,9 @@ class _SignInPageState extends State<SignInPage> {
                       }
 
                       // Name should not have conflict, might need to rename or something
-                      final duplicateNames = parsedNames.keys.toSet().intersection(
-                        existingPlayersName.keys.toSet(),
-                      );
+                      final duplicateNames = parsedNames.keys
+                          .toSet()
+                          .intersection(existingPlayersName.keys.toSet());
                       if (duplicateNames.isNotEmpty) {
                         context.showErrorToast(
                           "Conflict name with existing player: ${duplicateNames.join(', ')}",
