@@ -43,6 +43,7 @@ dependencies:
   intl: ^0.20.2
   file_picker: ^9.2.2
   csv: ^6.0.0
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
