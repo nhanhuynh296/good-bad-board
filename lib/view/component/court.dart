@@ -4,6 +4,7 @@ import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/view/component/overlay.dart';
 import 'package:good_bad_board/view/component/player.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +39,7 @@ class CourtComponent extends StatelessWidget {
 
         return Stack(
           children: [
-            Image.asset('asset/image/badminton.webp'),
+            Image.asset(PersistentSetting.instance.getBackground()),
             if (isInvalidDragHovering) const InvalidDropTargetOverlay(),
 
             Positioned.fill(

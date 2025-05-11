@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extention.dart';
 import 'package:good_bad_board/spacing.dart';
+import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/view/component/container.dart';
 
 class SettingPage extends StatelessWidget {
@@ -54,6 +55,7 @@ class _CourtSettingState extends State<CourtSetting> {
             onTap:
                 () => setState(() {
                   chosen = choice;
+                  PersistentSetting.instance.setCourtBackground(choice);
                 }),
             child: child,
           ),
