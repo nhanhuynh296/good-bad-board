@@ -71,7 +71,7 @@ flutter:
   fonts:
     - family: Gotham
       fonts:
-        - asset: asset/font/tabular_gotham_book.ttf
+        - asset: asset/font/NotoSans-VariableFont_wdth,wght.ttf
 
   assets:
     - asset/image/
