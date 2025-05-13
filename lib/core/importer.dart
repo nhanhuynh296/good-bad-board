@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 
-final firstNameColumn = RegExp(r'^first\s*name$');
-final lastNameColumn = RegExp(r'^last\s*name$');
+final firstNameColumn = RegExp(r'^first\s*name$', caseSensitive: false);
+final lastNameColumn = RegExp(r'^last\s*name$', caseSensitive: false);
 
 class NameRecord {
   final String firstName;
