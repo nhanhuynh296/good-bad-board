@@ -116,6 +116,7 @@ class DraggablePlayerComponent extends _PlayerComponent {
                   matchGapColor[maxMatchPlayed - matchPlayed] ??
                   matchGapColor[matchGapColor.keys.max],
               child: ClickablePlayerComponent(
+                key: ValueKey(data.id),
                 data: data,
                 filled: true,
                 disabled: isInvalidDragHovering,

@@ -118,7 +118,7 @@ class GameData extends ChangeNotifier {
     Player(firstName: "Diana", lastName: "", elo: Elo.s1),
   };
 
-  Set<Player> get player => Set.unmodifiable(_players);
+  Set<Player> get player => _players;
 
   final List<GameContainer> history = [];
 
@@ -147,9 +147,13 @@ class GameData extends ChangeNotifier {
   }
 
   void onUpdatePlayer(Player newPlayer) {
-    final playerToRemove = _players.firstWhere((p) => p.id == newPlayer.id);
-    _players.remove(playerToRemove);
-    _players.add(newPlayer);
+    final playerToRemove = _players.firstWhereOrNull(
+      (p) => p.id == newPlayer.id,
+    );
+    if (playerToRemove != null) {
+      _players.remove(playerToRemove);
+      _players.add(newPlayer);
+    }
     PlayerRepository.instance.updatePlayer(newPlayer);
     notifyListeners();
   }
@@ -160,11 +164,11 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Remove a playing who is currently in a session
   void removePlayer(Player player, {bool byId = false}) {
     final playerToRemove =
         (byId) ? _players.firstWhere((p) => p.id == player.id) : player;
     _players.remove(playerToRemove);
-    _fractionalAverageGamePlayer.remove(playerToRemove);
     notifyListeners();
   }
 

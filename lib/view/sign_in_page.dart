@@ -108,8 +108,6 @@ class _SignInPageState extends State<SignInPage> {
 
                       for (final newPlayer in uniqueParsedPlayers) {
                         PlayerRepository.instance.createPlayer(newPlayer);
-
-                        gameData.addFullPricedPlayer(newPlayer);
                         debugPrint('${newPlayer.name()} added');
                       }
                     },
