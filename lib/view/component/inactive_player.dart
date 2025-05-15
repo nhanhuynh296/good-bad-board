@@ -6,7 +6,6 @@ import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
-import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/court.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
@@ -222,13 +221,13 @@ class StagingGameComponent extends StatelessWidget {
                             'SKILL GAP ${games[index].eloGap()}',
                             style: textStyle,
                           ),
-                          Button(
-                            icon: const Icon(
-                              Icons.play_arrow_sharp,
-                              color: Colors.green,
-                            ),
-                            onPressed: () {},
-                          ),
+                          // Button(
+                          //   icon: const Icon(
+                          //     Icons.play_arrow_sharp,
+                          //     color: Colors.green,
+                          //   ),
+                          //   onPressed: () {},
+                          // ),
                         ],
                       ),
                     ),

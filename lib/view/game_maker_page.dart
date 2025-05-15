@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/core/build_context_extention.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
@@ -17,7 +17,10 @@ class GameMakerPage extends StatelessWidget {
     final gameData = Provider.of<GameData>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text(appName),
+        title: Text(
+          "GAME ${gameData.history.length + 1}",
+          style: context.textTheme.titleLarge,
+        ),
         actions: [
           IconButton(
             onPressed: () async {
@@ -147,7 +150,7 @@ class BottomActionBar extends StatelessWidget {
                 return;
               }
             },
-            child: Text(generateActive ? 'Generate Game' : 'Re-Generate Game'),
+            child: Text(generateActive ? 'Re-Generate Game' : 'Generate Game'),
           ),
         ),
         if (generateActive)
