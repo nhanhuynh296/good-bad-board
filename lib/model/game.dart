@@ -16,6 +16,7 @@ class Game {
   Game(Iterable<Player> players) : players = PlayerContainer.of(players);
 
   int eloGap() {
+    if (players.isEmpty) return 0;
     final sortedPlayers = players.sortedBy((player) => player.elo.index);
     return (sortedPlayers.last.elo.index - sortedPlayers.first.elo.index).abs();
   }

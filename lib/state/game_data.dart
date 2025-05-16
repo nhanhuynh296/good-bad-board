@@ -379,6 +379,7 @@ class GameData extends ChangeNotifier {
 
   /// Add a player to the court. If player is already in the court, remove them
   void addPlayerToCourt(Player player, PlayerContainer courtPtr) {
+    removePlayerFromCourt(player);
     courtPtr.add(player);
     notifyListeners();
   }
