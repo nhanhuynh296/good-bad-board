@@ -9,9 +9,7 @@ class CurrentGameView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    if (gameData.stagingMatches.isEmpty) {
-      return const _BlankGame();
-    }
+    if (gameData.stagingMatches.isEmpty) return const _BlankGame();
 
     return StagingGameComponent(gameData.stagingMatches);
   }

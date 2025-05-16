@@ -169,6 +169,7 @@ class GameData extends ChangeNotifier {
     final playerToRemove =
         (byId) ? _players.firstWhere((p) => p.id == player.id) : player;
     _players.remove(playerToRemove);
+    gameContainingPlayer(playerToRemove)?.players.remove(playerToRemove);
     notifyListeners();
   }
 
@@ -378,6 +379,7 @@ class GameData extends ChangeNotifier {
 
   /// Add a player to the court. If player is already in the court, remove them
   void addPlayerToCourt(Player player, PlayerContainer courtPtr) {
+    removePlayerFromCourt(player);
     courtPtr.add(player);
     notifyListeners();
   }
