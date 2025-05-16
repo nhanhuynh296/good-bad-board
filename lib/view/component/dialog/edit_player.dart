@@ -12,7 +12,15 @@ class EditPlayerDialog extends StatefulWidget {
   final Player player;
   final ValueChanged<Player>? onSubmit;
 
-  const EditPlayerDialog({super.key, this.onSubmit, required this.player});
+  /// Whether to pop after removing the player from the session
+  final bool persistAfterInactive;
+
+  const EditPlayerDialog({
+    super.key,
+    this.onSubmit,
+    required this.player,
+    this.persistAfterInactive = false,
+  });
 
   @override
   State<EditPlayerDialog> createState() => _EditPlayerDialogState();
@@ -52,7 +60,7 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
                 ),
                 onPressed: () {
                   gameData.removePlayer(widget.player);
-                  Navigator.of(context).pop();
+                  if (!widget.persistAfterInactive) Navigator.of(context).pop();
                 },
                 type: ButtonType.filled,
                 backgroundColor: context.colorScheme.onSurfaceVariant,
