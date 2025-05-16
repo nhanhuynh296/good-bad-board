@@ -30,6 +30,7 @@ class ClickablePlayerComponent extends _PlayerComponent {
   final bool filled;
   final VoidCallback? onTap;
   final bool disabled;
+  final bool inMatch;
 
   const ClickablePlayerComponent({
     super.key,
@@ -37,6 +38,7 @@ class ClickablePlayerComponent extends _PlayerComponent {
     required super.data,
     this.filled = false,
     this.disabled = false,
+    this.inMatch = false,
     this.onTap,
   });
 
@@ -46,9 +48,11 @@ class ClickablePlayerComponent extends _PlayerComponent {
       debugPrint("Pressed ${data.name()}");
       showAdaptiveDialog(
         context: context,
+        barrierDismissible: true,
         builder:
             (_) => EditPlayerDialog(
               player: data,
+              persistAfterInactive: !inMatch,
               onSubmit: (newPlayer) {
                 Provider.of<GameData>(
                   context,
@@ -116,6 +120,7 @@ class DraggablePlayerComponent extends _PlayerComponent {
                   matchGapColor[maxMatchPlayed - matchPlayed] ??
                   matchGapColor[matchGapColor.keys.max],
               child: ClickablePlayerComponent(
+                inMatch: true,
                 key: ValueKey(data.id),
                 data: data,
                 filled: true,

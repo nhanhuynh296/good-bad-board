@@ -232,6 +232,7 @@ class _PlayerListState extends State<PlayerList> {
                       Expanded(
                         key: ObjectKey(player),
                         child: ClickablePlayerComponent(
+                          inMatch: false,
                           data: player,
                           filled: isAlreadyInGame,
                           onTap: () {
