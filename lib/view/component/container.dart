@@ -13,7 +13,7 @@ class ShadedContainer extends StatelessWidget {
     final shadedDecoration = BoxDecoration(
       borderRadius: outlinedBorderRadius,
       boxShadow: [
-        Button.buttonBoxShadow.copyWith(
+        OutlinedButtonWidget.buttonBoxShadow.copyWith(
           color: Theme.of(context).colorScheme.inverseSurface,
         ),
       ],
