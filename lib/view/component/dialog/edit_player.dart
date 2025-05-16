@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/core/build_context_extention.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
@@ -36,30 +37,46 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final gameData = Provider.of<GameData>(context);
     return AlertDialog(
       title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        spacing: spaceComponent,
         children: [
-          const Text('Edit player'),
-          Button(
-            onPressed: () async {
-              final bool confirmDelete = await showAdaptiveDialog(
-                context: context,
-                builder: (context) => const ConfirmDeleteDialog(),
-              );
-              if (!context.mounted || !confirmDelete) return;
-              context.showToast("Player ${widget.player.name()} deleted");
-              Provider.of<GameData>(
-                context,
-                listen: false,
-              ).deletePlayer(widget.player);
+          Text('Edit player', style: context.textTheme.headlineMedium),
+          const Spacer(),
+          gameData.player.contains(widget.player)
+              ? Button(
+                icon: Icon(
+                  Icons.no_accounts,
+                  color: context.colorScheme.surface,
+                ),
+                onPressed: () {
+                  gameData.removePlayer(widget.player);
+                  Navigator.of(context).pop();
+                },
+                type: ButtonType.filled,
+                backgroundColor: context.colorScheme.onSurfaceVariant,
+                child: const Text("Break"),
+              )
+              : Button(
+                onPressed: () async {
+                  final bool confirmDelete = await showAdaptiveDialog(
+                    context: context,
+                    builder: (context) => const ConfirmDeleteDialog(),
+                  );
+                  if (!context.mounted || !confirmDelete) return;
+                  context.showToast("Player ${widget.player.name()} deleted");
+                  Provider.of<GameData>(
+                    context,
+                    listen: false,
+                  ).deletePlayer(widget.player);
 
-              Navigator.of(context).pop();
-            },
-            icon: const Icon(Icons.delete),
-            type: ButtonType.filled,
-            backgroundColor: Colors.red,
-          ),
+                  Navigator.of(context).pop();
+                },
+                icon: const Icon(Icons.delete),
+                type: ButtonType.filled,
+                backgroundColor: context.colorScheme.errorContainer,
+              ),
         ],
       ),
       content: Form(

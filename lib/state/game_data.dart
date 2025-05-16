@@ -169,6 +169,7 @@ class GameData extends ChangeNotifier {
     final playerToRemove =
         (byId) ? _players.firstWhere((p) => p.id == player.id) : player;
     _players.remove(playerToRemove);
+    gameContainingPlayer(playerToRemove)?.players.remove(playerToRemove);
     notifyListeners();
   }
 
