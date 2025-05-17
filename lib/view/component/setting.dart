@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/build_context_extention.dart';
+import 'package:good_bad_board/core/duration_extention.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
+import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/container.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
@@ -18,7 +23,10 @@ class SettingPage extends StatelessWidget {
           horizontal: spacePageX,
           vertical: spacePageY,
         ),
-        child: const Column(children: [Flexible(child: CourtSetting())]),
+        child: const Column(
+          spacing: spaceCard,
+          children: [CourtSetting(), TimerSetting()],
+        ),
       ),
     );
   }
@@ -42,13 +50,20 @@ class _CourtSettingState extends State<CourtSetting> {
   @override
   Widget build(BuildContext context) {
     final children = choices.map((choice) {
-      final name = choice.split("/").last.replaceFirst('.webp', '');
+      final name =
+          choice
+              .split("/")
+              .last
+              .replaceFirst('.webp', '')
+              .replaceAll('_', ' ')
+              .toUpperCase();
       Widget child = Image.asset(choice);
 
       if (choice == chosen) {
         child = ShadedContainer(child: child);
       }
       child = Column(
+        mainAxisSize: MainAxisSize.min,
         spacing: spaceCard,
         children: [
           GestureDetector(
@@ -71,6 +86,137 @@ class _CourtSettingState extends State<CourtSetting> {
       children: [
         Text("Court", style: context.textTheme.titleLarge),
         Row(spacing: spaceDefault, children: children.toList(growable: false)),
+      ],
+    );
+  }
+}
+
+class TimePicker extends StatefulWidget {
+  final Duration initialDuration;
+  final void Function(Duration) onChanged;
+
+  const TimePicker({
+    super.key,
+    required this.initialDuration,
+    required this.onChanged,
+  });
+
+  @override
+  State<TimePicker> createState() => _TimePickerState();
+}
+
+class _TimePickerState extends State<TimePicker> {
+  late final TextEditingController minuteTextController;
+  late final TextEditingController secondTextController;
+
+  final numberFormat = NumberFormat('00');
+
+  @override
+  void initState() {
+    super.initState();
+    minuteTextController = TextEditingController(
+      text: numberFormat.format(widget.initialDuration.inDisplayMinutes),
+    );
+    secondTextController = TextEditingController(
+      text: numberFormat.format(widget.initialDuration.inDisplaySeconds),
+    );
+  }
+
+  @override
+  void dispose() {
+    minuteTextController.dispose();
+    secondTextController.dispose();
+    super.dispose();
+  }
+
+  void _onChange() {
+    final m = (int.tryParse(minuteTextController.text) ?? 0);
+    final s = (int.tryParse(secondTextController.text) ?? 0);
+    if (m > Duration.minutesPerHour) {
+      minuteTextController.text = numberFormat.format(0);
+    }
+    if (s > Duration.secondsPerMinute) {
+      secondTextController.text = numberFormat.format(0);
+    }
+  }
+
+  void _onLosingFocus() {
+    final m = (int.tryParse(minuteTextController.text) ?? 0);
+    final s = (int.tryParse(secondTextController.text) ?? 0);
+    minuteTextController.text = numberFormat.format(m);
+    secondTextController.text = numberFormat.format(s);
+    widget.onChanged(Duration(minutes: m, seconds: s));
+  }
+
+  Widget _buildField({
+    required TextEditingController controller,
+    required String label,
+  }) {
+    final textStyle = context.textTheme.displayLarge;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label),
+        SizedBox(
+          width: 3 * textStyle!.fontSize!,
+          child: Focus(
+            child: TextField(
+              controller: controller,
+              textAlign: TextAlign.center,
+              style: textStyle,
+              keyboardType: TextInputType.number,
+
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onTap:
+                  () =>
+                      controller.selection = TextSelection(
+                        baseOffset: 0,
+                        extentOffset: controller.text.length,
+                      ),
+
+              onTapOutside: (_) => _onLosingFocus(),
+              onChanged: (_) => _onChange(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildField(controller: minuteTextController, label: "min"),
+        Text(":", style: context.textTheme.displayLarge),
+        _buildField(controller: secondTextController, label: "sec"),
+      ],
+    );
+  }
+}
+
+class TimerSetting extends StatelessWidget {
+  const TimerSetting({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final timerData = context.watch<TimerData>();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      spacing: spaceCard,
+      children: [
+        Text("Game Duration", style: context.textTheme.titleLarge),
+        TimePicker(
+          initialDuration: timerData.duration,
+          onChanged: (duration) {
+            Provider.of<TimerData>(
+              context,
+              listen: false,
+            ).setDuration(duration);
+          },
+        ),
       ],
     );
   }
