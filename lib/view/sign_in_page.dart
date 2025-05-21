@@ -89,7 +89,7 @@ class _SignInPageState extends State<SignInPage> {
                             (playerName) => Player(
                               firstName: parsedNames[playerName]!.firstName,
                               lastName: parsedNames[playerName]!.lastName,
-                              elo: Elo.c2,
+                              elo: parsedNames[playerName]!.elo ?? Elo.c2,
                             ),
                           );
 
