@@ -36,7 +36,7 @@ class _SignInPageState extends State<SignInPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           spacing: spaceCard,
           children: [
-            const Expanded(child: PlayerList()),
+            Expanded(child: PlayerList(key: ValueKey(players.length))),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -44,7 +44,6 @@ class _SignInPageState extends State<SignInPage> {
                   AddPlayerDialog(
                     onSubmit: (player) {
                       setState(() {
-                        players.add(player);
                         PlayerRepository.instance.createPlayer(player);
                       });
                     },
@@ -89,7 +88,7 @@ class _SignInPageState extends State<SignInPage> {
                             (playerName) => Player(
                               firstName: parsedNames[playerName]!.firstName,
                               lastName: parsedNames[playerName]!.lastName,
-                              elo: Elo.c2,
+                              elo: parsedNames[playerName]!.elo ?? Elo.c2,
                             ),
                           );
 
@@ -106,10 +105,12 @@ class _SignInPageState extends State<SignInPage> {
                           );
                       if (confirmedSelection != true) return;
 
-                      for (final newPlayer in uniqueParsedPlayers) {
-                        PlayerRepository.instance.createPlayer(newPlayer);
-                        debugPrint('${newPlayer.name()} added');
-                      }
+                      setState(() {
+                        for (final newPlayer in uniqueParsedPlayers) {
+                          PlayerRepository.instance.createPlayer(newPlayer);
+                          debugPrint('${newPlayer.name()} added');
+                        }
+                      });
                     },
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,

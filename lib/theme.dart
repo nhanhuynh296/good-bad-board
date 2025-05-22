@@ -67,7 +67,7 @@ ThemeData get lightTheme {
       ),
     ),
     scaffoldBackgroundColor: AppColors.white,
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppColors.white,
       shadowColor: AppColors.grey.withValues(alpha: 0.25),
       elevation: 2,
@@ -200,7 +200,7 @@ ThemeData get darkTheme {
       ),
     ),
     scaffoldBackgroundColor: AppColors.black,
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppColors.darkBlue,
       shadowColor: AppColors.grey.withValues(alpha: 0.25),
       elevation: 2,
