@@ -28,5 +28,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: good_bad_board_window
-          path: build/windows/x64/runner/Release/my_app.exe
+          path: build/windows/x64/runner/Release/
           if-no-files-found: error
