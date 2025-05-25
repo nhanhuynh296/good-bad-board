@@ -73,6 +73,9 @@ class PlayerRepository {
       '${RepositoryService.instance.rootPath}/$playerFilename',
     );
     final dto = PlayerDto(players: players);
-    await selectedFile.writeAsString(jsonEncode(dto.toJson()), mode: FileMode.writeOnly);
+    await selectedFile.writeAsString(
+      jsonEncode(dto.toJson()),
+      mode: FileMode.writeOnly,
+    );
   }
 }
