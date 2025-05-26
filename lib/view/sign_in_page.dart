@@ -142,6 +142,7 @@ class _PlayerListState extends State<PlayerList> {
   String get query => textController.text.toUpperCase();
   Set<Elo> eloFilters = {};
   late final TextEditingController textController;
+  late final searchFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -153,6 +154,13 @@ class _PlayerListState extends State<PlayerList> {
   void dispose() {
     textController.dispose();
     super.dispose();
+  }
+
+  void selectSearchText() {
+    textController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: textController.text.length,
+    );
   }
 
   @override
@@ -180,22 +188,44 @@ class _PlayerListState extends State<PlayerList> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: spaceComponent),
-          child: SearchBar(
-            controller: textController,
-            hintText: 'Search for name, elo...',
-            leading: query.isEmpty ? const Icon(Icons.search) : null,
-            onChanged:
-                (i) => setState(() {
-                  /* The query changed. */
-                }),
-            trailing: [
-              IconButton(
-                onPressed: () {
-                  textController.clear();
-                },
-                icon: const Icon(Icons.clear),
-              ),
-            ],
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              if (!hasFocus) return;
+              selectSearchText();
+            },
+            child: SearchBar(
+              controller: textController,
+              focusNode: searchFocusNode,
+              hintText: 'Search for name, elo...',
+              leading: query.isEmpty ? const Icon(Icons.search) : null,
+              onChanged:
+                  (i) => setState(() {
+                    /* The query changed. */
+                  }),
+              onSubmitted: (_) {
+                final player = filteredPlayers.singleOrNull;
+                if (player == null) {
+                  searchFocusNode.requestFocus();
+                  return;
+                }
+                if (playerById.contains(player.id)) {
+                  gameData.removePlayer(player);
+                } else {
+                  gameData.addFullPricedPlayer(player);
+                }
+                searchFocusNode.requestFocus();
+              },
+              trailing: [
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      textController.clear();
+                    });
+                  },
+                  icon: const Icon(Icons.clear),
+                ),
+              ],
+            ),
           ),
         ),
         Wrap(
@@ -223,6 +253,7 @@ class _PlayerListState extends State<PlayerList> {
         (filteredPlayers.isNotEmpty)
             ? Expanded(
               child: ListRenderer(
+                key: ValueKey(query),
                 itemBuilder: (BuildContext context, int index) {
                   final isAlreadyInGame = playerById.contains(
                     filteredPlayers[index].id,
@@ -231,7 +262,7 @@ class _PlayerListState extends State<PlayerList> {
                   return Row(
                     children: [
                       Expanded(
-                        key: ObjectKey(player),
+                        key: ValueKey(player.id),
                         child: ClickablePlayerComponent(
                           inMatch: false,
                           data: player,
