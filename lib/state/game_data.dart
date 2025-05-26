@@ -30,92 +30,48 @@ class GameData extends ChangeNotifier {
   }
 
   final Set<Player> _players = {
-    Player(firstName: "Howard", lastName: "", elo: Elo.b1),
-    Player(firstName: "Yong", lastName: "", elo: Elo.b2),
-    Player(firstName: "Ryan", lastName: "", elo: Elo.b2),
-    Player(firstName: "Ethan", lastName: "", elo: Elo.b2),
-    Player(firstName: "Sherry", lastName: "", elo: Elo.c1),
-    Player(firstName: "Wei", lastName: "", elo: Elo.b1),
-    Player(firstName: "Jordan", lastName: "", elo: Elo.a2),
-    Player(firstName: "Justin", lastName: "", elo: Elo.a1),
-    Player(firstName: "Trinity", lastName: "", elo: Elo.c1),
-    Player(firstName: "Lizzy", lastName: "", elo: Elo.c1),
-    Player(firstName: "Victor", lastName: "", elo: Elo.a1),
-    Player(firstName: "Daniel", lastName: "", elo: Elo.a2),
-    Player(firstName: "Nathan", lastName: "", elo: Elo.a1),
-    //
-    // // Mock player
-    // C2 Tier (Newbie)
-    Player(firstName: "Alice", lastName: "", elo: Elo.c2),
-    Player(firstName: "Bob", lastName: "", elo: Elo.c2),
-    Player(firstName: "Cathy", lastName: "", elo: Elo.c2),
-    Player(firstName: "David", lastName: "", elo: Elo.c2),
-    Player(firstName: "Ella", lastName: "", elo: Elo.c2),
-    Player(firstName: "Finn", lastName: "", elo: Elo.c2),
-    Player(firstName: "Gina", lastName: "", elo: Elo.c2),
+    if (kDebugMode) ...[
+      Player(firstName: "Howard", lastName: "", elo: Elo.b1),
+      Player(firstName: "Yong", lastName: "", elo: Elo.b2),
+      Player(firstName: "Ryan", lastName: "", elo: Elo.b2),
+      Player(firstName: "Ethan", lastName: "", elo: Elo.b2),
+      Player(firstName: "Sherry", lastName: "", elo: Elo.c1),
+      Player(firstName: "Wei", lastName: "", elo: Elo.b1),
+      Player(firstName: "Jordan", lastName: "", elo: Elo.a2),
+      Player(firstName: "Justin", lastName: "", elo: Elo.a1),
+      Player(firstName: "Trinity", lastName: "", elo: Elo.c1),
+      Player(firstName: "Lizzy", lastName: "", elo: Elo.c1),
+      Player(firstName: "Victor", lastName: "", elo: Elo.a1),
+      Player(firstName: "Daniel", lastName: "", elo: Elo.a2),
+      Player(firstName: "Nathan", lastName: "", elo: Elo.a1),
 
-    // C1 Tier
-    Player(firstName: "Henry", lastName: "", elo: Elo.c1),
-    Player(firstName: "Ivy", lastName: "", elo: Elo.c1),
-    Player(firstName: "Jack", lastName: "", elo: Elo.c1),
-    Player(firstName: "Katie", lastName: "", elo: Elo.c1),
-    Player(firstName: "Leo", lastName: "", elo: Elo.c1),
-    Player(firstName: "Mia", lastName: "", elo: Elo.c1),
-    Player(firstName: "Nina", lastName: "", elo: Elo.c1),
+      // A1 Tier
+      Player(firstName: "Jake", lastName: "", elo: Elo.a1),
+      Player(firstName: "Kara", lastName: "", elo: Elo.a1),
+      Player(firstName: "Liam", lastName: "", elo: Elo.a1),
+      Player(firstName: "Mason", lastName: "", elo: Elo.a1),
+      Player(firstName: "Noah", lastName: "", elo: Elo.a1),
+      Player(firstName: "Olivia", lastName: "", elo: Elo.a1),
+      Player(firstName: "Parker", lastName: "", elo: Elo.a1),
 
-    // B2 Tier
-    Player(firstName: "Oscar", lastName: "", elo: Elo.b2),
-    Player(firstName: "Paul", lastName: "", elo: Elo.b2),
-    Player(firstName: "Quinn", lastName: "", elo: Elo.b2),
-    Player(firstName: "Rachel", lastName: "", elo: Elo.b2),
-    Player(firstName: "Sam", lastName: "", elo: Elo.b2),
-    Player(firstName: "Tina", lastName: "", elo: Elo.b2),
-    Player(firstName: "Uma", lastName: "", elo: Elo.b2),
+      // S2 Tier
+      Player(firstName: "Quincy", lastName: "", elo: Elo.s2),
+      Player(firstName: "Riley", lastName: "", elo: Elo.s2),
+      Player(firstName: "Sophia", lastName: "", elo: Elo.s2),
+      Player(firstName: "Taylor", lastName: "", elo: Elo.s2),
+      Player(firstName: "Ulysses", lastName: "", elo: Elo.s2),
+      Player(firstName: "Victoria", lastName: "", elo: Elo.s2),
+      Player(firstName: "Wyatt", lastName: "", elo: Elo.s2),
 
-    // B1 Tier
-    Player(firstName: "Vince", lastName: "", elo: Elo.b1),
-    Player(firstName: "Wendy", lastName: "", elo: Elo.b1),
-    Player(firstName: "Xander", lastName: "", elo: Elo.b1),
-    Player(firstName: "Yara", lastName: "", elo: Elo.b1),
-    Player(firstName: "Zack", lastName: "", elo: Elo.b1),
-    Player(firstName: "Ava", lastName: "", elo: Elo.b1),
-    Player(firstName: "Ben", lastName: "", elo: Elo.b1),
-
-    // A2 Tier
-    Player(firstName: "Cindy", lastName: "", elo: Elo.a2),
-    Player(firstName: "Daniel", lastName: "", elo: Elo.a2),
-    Player(firstName: "Eva", lastName: "", elo: Elo.a2),
-    Player(firstName: "Frank", lastName: "", elo: Elo.a2),
-    Player(firstName: "Grace", lastName: "", elo: Elo.a2),
-    Player(firstName: "Hank", lastName: "", elo: Elo.a2),
-    Player(firstName: "Iris", lastName: "", elo: Elo.a2),
-
-    // A1 Tier
-    Player(firstName: "Jake", lastName: "", elo: Elo.a1),
-    Player(firstName: "Kara", lastName: "", elo: Elo.a1),
-    Player(firstName: "Liam", lastName: "", elo: Elo.a1),
-    Player(firstName: "Mason", lastName: "", elo: Elo.a1),
-    Player(firstName: "Noah", lastName: "", elo: Elo.a1),
-    Player(firstName: "Olivia", lastName: "", elo: Elo.a1),
-    Player(firstName: "Parker", lastName: "", elo: Elo.a1),
-
-    // S2 Tier
-    Player(firstName: "Quincy", lastName: "", elo: Elo.s2),
-    Player(firstName: "Riley", lastName: "", elo: Elo.s2),
-    Player(firstName: "Sophia", lastName: "", elo: Elo.s2),
-    Player(firstName: "Taylor", lastName: "", elo: Elo.s2),
-    Player(firstName: "Ulysses", lastName: "", elo: Elo.s2),
-    Player(firstName: "Victoria", lastName: "", elo: Elo.s2),
-    Player(firstName: "Wyatt", lastName: "", elo: Elo.s2),
-
-    // S1 Tier (Highest)
-    Player(firstName: "Xena", lastName: "", elo: Elo.s1),
-    Player(firstName: "Yvonne", lastName: "", elo: Elo.s1),
-    Player(firstName: "Zane", lastName: "", elo: Elo.s1),
-    Player(firstName: "Alex", lastName: "", elo: Elo.s1),
-    Player(firstName: "Bella", lastName: "", elo: Elo.s1),
-    Player(firstName: "Cody", lastName: "", elo: Elo.s1),
-    Player(firstName: "Diana", lastName: "", elo: Elo.s1),
+      // S1 Tier (Highest)
+      Player(firstName: "Xena", lastName: "", elo: Elo.s1),
+      Player(firstName: "Yvonne", lastName: "", elo: Elo.s1),
+      Player(firstName: "Zane", lastName: "", elo: Elo.s1),
+      Player(firstName: "Alex", lastName: "", elo: Elo.s1),
+      Player(firstName: "Bella", lastName: "", elo: Elo.s1),
+      Player(firstName: "Cody", lastName: "", elo: Elo.s1),
+      Player(firstName: "Diana", lastName: "", elo: Elo.s1),
+    ],
   };
 
   Set<Player> get player => _players;
