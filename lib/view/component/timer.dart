@@ -49,6 +49,9 @@ class _CountdownTimerState extends State<CountdownTimer>
           _controller.stop(canceled: false);
         }
       },
+      onLongPress: () {
+        _controller.reset();
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: spaceComponent),
         child: Column(
