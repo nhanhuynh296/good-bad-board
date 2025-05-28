@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/core/build_context_extention.dart';
 import 'package:good_bad_board/core/duration_extention.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/timer_data.dart';
@@ -23,13 +24,18 @@ class _CountdownTimerState extends State<CountdownTimer>
   void initState() {
     super.initState();
     final timerData = Provider.of<TimerData>(context, listen: false);
-    _controller = AnimationController(
-      vsync: this,
-      duration: timerData.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: timerData.duration)
+      ..value =
+          timerData.elapsed.inMilliseconds / timerData.duration.inMilliseconds;
     _controller.addStatusListener((status) {
       if (status.isCompleted) widget.onExpired?.call();
     });
+  }
+
+  @override
+  void deactivate() {
+    context.read<TimerData>().saveTimeElapsed(timeElapsed);
+    super.deactivate();
   }
 
   @override
@@ -38,8 +44,11 @@ class _CountdownTimerState extends State<CountdownTimer>
     super.dispose();
   }
 
+  Duration get timeElapsed => _controller.duration! * _controller.value;
+
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return Button(
       type: ButtonType.outlined,
       onPressed: () {
@@ -50,33 +59,47 @@ class _CountdownTimerState extends State<CountdownTimer>
         }
       },
       onLongPress: () {
-        _controller.reset();
+        _controller.animateBack(0, duration: Durations.short3);
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: spaceComponent),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: spaceComponent,
-          children: [
-            Text(
-              'Time Remaining',
-              style: Theme.of(context).textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            AnimatedBuilder(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: AnimatedBuilder(
               animation: _controller,
-              builder: (BuildContext context, _) {
-                final timeElapsed =
-                    _controller.duration! * (1 - _controller.value);
-                return Text(
-                  timeElapsed.toDisplayString(),
-                  style: Theme.of(context).textTheme.displaySmall,
-                  textAlign: TextAlign.center,
+              builder: (context, _) {
+                return LinearProgressIndicator(
+                  value: _controller.value,
+                  backgroundColor: Colors.transparent,
+                  color: context.colorScheme.secondary,
                 );
               },
             ),
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: spaceComponent),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: spaceComponent,
+              children: [
+                Text(
+                  'Time Remaining',
+                  style: textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (BuildContext context, _) {
+                    return Text(
+                      (_controller.duration! - timeElapsed).toDisplayString(),
+                      style: textTheme.displaySmall,
+                      textAlign: TextAlign.center,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
