@@ -6,6 +6,7 @@ import 'dart:math' hide log;
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/core/random.dart';
 import 'package:good_bad_board/dto/player.dart';
 import 'package:good_bad_board/dto/session.dart';
@@ -135,6 +136,7 @@ class GameData extends ChangeNotifier {
     if (_players.length < Game.playerPerCourt) {
       return 'Not enough players, need at least ${Game.playerPerCourt}, got ${_players.length}';
     }
+    stagingMatches = List.empty();
     final candidatePlayer = _choosePlayer().shuffled();
     assert(
       candidatePlayer.isNotEmpty &&
@@ -159,6 +161,24 @@ class GameData extends ChangeNotifier {
     return null;
   }
 
+  /// Refresh one single court with new players.
+  String? makeSingleCourt(int courtIndex) {
+    if (courtIndex >= numberOfCourt || courtIndex < 0) {
+      return 'Invalid court index';
+    }
+    final playerAvailable =
+        _players.length - getPlayerFromGames(stagingMatches).length;
+    if (playerAvailable < Game.playerPerCourt) {
+      return 'Not enough players, need at least ${Game.playerPerCourt}, got $playerAvailable';
+    }
+    stagingMatches[courtIndex] = Game(List.empty());
+    stagingMatches[courtIndex] = Game(
+      _choosePlayer(Game.playerPerCourt).toFixedLengthList(),
+    );
+    notifyListeners();
+    return null;
+  }
+
   String? saveCurrentGame() {
     if (stagingMatches.isEmpty) return "No game to save";
     final invalidGames = stagingMatches.where(
@@ -176,21 +196,25 @@ class GameData extends ChangeNotifier {
     return null;
   }
 
-  Iterable<Player> _choosePlayer() {
-    final numberOfCourt = min(_players.length ~/ 4, this.numberOfCourt);
+  Iterable<Player> _choosePlayer([int? n]) {
+    final numberOfPlayers =
+        n ?? min(_players.length ~/ 4, numberOfCourt) * Game.playerPerCourt;
     final playerHistory = getCurrentPlayersHistory();
     final averageMatchPlayed = getCurrentPlayerAverageMatchPlayed();
 
-    final weights = _players
-        .map((player) {
+    final onCourtPlayers = getPlayerFromGames(stagingMatches).toSet();
+    final playerOffCourt = _players.difference(onCourtPlayers);
+
+    final weights =
+        playerOffCourt.map((player) {
           final modifier =
               1 / exp(2 * ((playerHistory[player]! - averageMatchPlayed)));
           return modifier / _players.length;
-        })
-        .toList(growable: false);
-    return playerHistory.keys
-        .toList(growable: false)
-        .choices(weights, count: numberOfCourt * Game.playerPerCourt);
+        }).toUnmodifiableList();
+    return playerOffCourt.toUnmodifiableList().choices(
+      weights,
+      count: numberOfPlayers,
+    );
   }
 
   /// Only using the currently active player to calculate the average.
