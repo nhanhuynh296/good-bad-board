@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/core/build_context_extention.dart';
-import 'package:good_bad_board/core/duration_extention.dart';
+import 'package:good_bad_board/core/build_context_extension.dart';
+import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
