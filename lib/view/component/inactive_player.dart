@@ -3,11 +3,14 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/court.dart';
+import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
 import 'package:good_bad_board/view/component/overlay.dart';
 import 'package:good_bad_board/view/component/player.dart';
@@ -217,17 +220,38 @@ class StagingGameComponent extends StatelessWidget {
                         children: [
                           Text('COURT ${index + 1}', style: textStyle),
                           const Spacer(),
+
                           Text(
                             'SKILL GAP ${games[index].eloGap()}',
                             style: textStyle,
                           ),
-                          // Button(
-                          //   icon: const Icon(
-                          //     Icons.play_arrow_sharp,
-                          //     color: Colors.green,
-                          //   ),
-                          //   onPressed: () {},
-                          // ),
+                          Button(
+                            icon: const Icon(Icons.sync),
+                            onPressed: () {
+                              final gameData = Provider.of<GameData>(
+                                context,
+                                listen: false,
+                              );
+                              if (games[index].players.isEmpty &&
+                                  gameData.player.length -
+                                          games
+                                              .expand((game) => game.players)
+                                              .length <
+                                      Game.playerPerCourt) {
+                                context.showErrorToast(
+                                  'Not enough players to make a court',
+                                );
+                                return;
+                              }
+                              final error = Provider.of<GameData>(
+                                context,
+                                listen: false,
+                              ).makeSingleCourt(index);
+                              if (error != null) {
+                                context.showErrorToast(error);
+                              }
+                            },
+                          ),
                         ],
                       ),
                     ),
