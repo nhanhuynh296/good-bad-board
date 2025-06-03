@@ -12,6 +12,7 @@ class Button extends StatelessWidget {
   final VoidCallback? onLongPress;
   final TextStyle? textStyle;
   final Color? backgroundColor;
+  final EdgeInsets? padding;
 
   const Button({
     super.key,
@@ -23,6 +24,7 @@ class Button extends StatelessWidget {
     this.onLongPress,
     this.textStyle,
     this.backgroundColor,
+    this.padding,
   }) : assert(icon != null || child != null, 'icon or child must be provided');
 
   @override
@@ -35,6 +37,7 @@ class Button extends StatelessWidget {
         onLongPress: onLongPress,
         textStyle: textStyle,
         backgroundColor: backgroundColor,
+        padding: padding,
         child: child,
       ),
       ButtonType.outlined => OutlinedButtonWidget(
@@ -44,6 +47,7 @@ class Button extends StatelessWidget {
         onLongPress: onLongPress,
         textStyle: textStyle,
         backgroundColor: backgroundColor,
+        padding: padding,
         child: child,
       ),
       ButtonType.text => TextButtonWidget(
@@ -52,6 +56,7 @@ class Button extends StatelessWidget {
         onPressed: onPressed,
         onLongPress: onLongPress,
         textStyle: textStyle,
+        padding: padding,
         child: child,
       ),
     };
@@ -66,6 +71,7 @@ class FilledButtonWidget extends StatelessWidget {
   final VoidCallback? onLongPress;
   final TextStyle? textStyle;
   final Color? backgroundColor;
+  final EdgeInsets? padding;
 
   const FilledButtonWidget({
     super.key,
@@ -76,6 +82,7 @@ class FilledButtonWidget extends StatelessWidget {
     this.onLongPress,
     this.textStyle,
     this.backgroundColor,
+    this.padding,
   }) : assert(icon != null || child != null, 'icon or child must be provided');
 
   static const buttonBoxShadow = BoxShadow(offset: Offset(4, 4));
@@ -90,6 +97,7 @@ class FilledButtonWidget extends StatelessWidget {
     final filledButtonStyle = ButtonStyle(
       backgroundColor: WidgetStatePropertyAll(backgroundColor),
       textStyle: WidgetStatePropertyAll(textStyle),
+      padding: WidgetStatePropertyAll(padding),
     );
 
     return Container(
@@ -134,6 +142,7 @@ class OutlinedButtonWidget extends StatelessWidget {
   final VoidCallback? onLongPress;
   final TextStyle? textStyle;
   final Color? backgroundColor;
+  final EdgeInsets? padding;
 
   const OutlinedButtonWidget({
     super.key,
@@ -144,6 +153,7 @@ class OutlinedButtonWidget extends StatelessWidget {
     this.onLongPress,
     this.textStyle,
     this.backgroundColor,
+    this.padding,
   }) : assert(icon != null || child != null, 'icon or child must be provided');
 
   static const buttonBoxShadow = BoxShadow(offset: Offset(4, 4));
@@ -154,10 +164,10 @@ class OutlinedButtonWidget extends StatelessWidget {
     final hasBoth = icon != null && child != null;
     final onTapLogic = disabled ? null : onPressed ?? () {};
     final onSecondaryTapLogic = disabled ? null : onLongPress;
-    final allStateTextStyle = WidgetStatePropertyAll(textStyle);
 
     final outlinedButtonStyle = ButtonStyle(
-      textStyle: allStateTextStyle,
+      textStyle: WidgetStatePropertyAll(textStyle),
+      padding: WidgetStatePropertyAll(padding),
       backgroundColor: WidgetStatePropertyAll(
         backgroundColor ?? Theme.of(context).colorScheme.surface,
       ),
@@ -209,6 +219,7 @@ class TextButtonWidget extends StatelessWidget {
   final VoidCallback? onPressed;
   final VoidCallback? onLongPress;
   final TextStyle? textStyle;
+  final EdgeInsets? padding;
 
   const TextButtonWidget({
     super.key,
@@ -218,6 +229,7 @@ class TextButtonWidget extends StatelessWidget {
     this.onPressed,
     this.onLongPress,
     this.textStyle,
+    this.padding,
   }) : assert(icon != null || child != null, 'icon or child must be provided');
 
   @override
@@ -226,20 +238,24 @@ class TextButtonWidget extends StatelessWidget {
     final hasBoth = icon != null && child != null;
     final onTapLogic = disabled ? null : onPressed ?? () {};
     final onSecondaryTapLogic = disabled ? null : onLongPress;
-    final allStateTextStyle = WidgetStatePropertyAll(textStyle);
+
+    final buttonStyle = ButtonStyle(
+      textStyle: WidgetStatePropertyAll(textStyle),
+      padding: WidgetStatePropertyAll(padding),
+    );
 
     return onlyIcon
-        ? IconButton(onPressed: onPressed, icon: icon!)
+        ? IconButton(onPressed: onPressed, icon: icon!, style: buttonStyle)
         : hasBoth
         ? TextButton.icon(
-          style: ButtonStyle(textStyle: allStateTextStyle),
+          style: buttonStyle,
           onPressed: onTapLogic,
           onLongPress: onSecondaryTapLogic,
           icon: icon!,
           label: child!,
         )
         : TextButton(
-          style: ButtonStyle(textStyle: allStateTextStyle),
+          style: buttonStyle,
           onPressed: onTapLogic,
           onLongPress: onSecondaryTapLogic,
           child: child!,

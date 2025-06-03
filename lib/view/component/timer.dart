@@ -51,6 +51,7 @@ class _CountdownTimerState extends State<CountdownTimer>
     final textTheme = context.textTheme;
     return Button(
       type: ButtonType.outlined,
+      padding: EdgeInsets.zero,
       onPressed: () {
         if (!_controller.isAnimating) {
           _controller.repeat();
