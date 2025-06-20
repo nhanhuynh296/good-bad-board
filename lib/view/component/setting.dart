@@ -50,13 +50,12 @@ class _CourtSettingState extends State<CourtSetting> {
   @override
   Widget build(BuildContext context) {
     final children = choices.map((choice) {
-      final name =
-          choice
-              .split("/")
-              .last
-              .replaceFirst('.webp', '')
-              .replaceAll('_', ' ')
-              .toUpperCase();
+      final name = choice
+          .split("/")
+          .last
+          .replaceFirst('.webp', '')
+          .replaceAll('_', ' ')
+          .toUpperCase();
       Widget child = Image.asset(choice);
 
       if (choice == chosen) {
@@ -67,11 +66,10 @@ class _CourtSettingState extends State<CourtSetting> {
         spacing: spaceCard,
         children: [
           GestureDetector(
-            onTap:
-                () => setState(() {
-                  chosen = choice;
-                  PersistentSetting.instance.setCourtBackground(choice);
-                }),
+            onTap: () => setState(() {
+              chosen = choice;
+              PersistentSetting.instance.setCourtBackground(choice);
+            }),
             child: child,
           ),
           Text(name, style: context.textTheme.titleMedium),
@@ -167,12 +165,10 @@ class _TimePickerState extends State<TimePicker> {
               keyboardType: TextInputType.number,
 
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onTap:
-                  () =>
-                      controller.selection = TextSelection(
-                        baseOffset: 0,
-                        extentOffset: controller.text.length,
-                      ),
+              onTap: () => controller.selection = TextSelection(
+                baseOffset: 0,
+                extentOffset: controller.text.length,
+              ),
 
               onTapOutside: (_) => _onLosingFocus(),
               onChanged: (_) => _onChange(),

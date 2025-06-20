@@ -1,9 +1,9 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/importer.dart';
-import 'package:good_bad_board/dto/player.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
@@ -25,7 +25,6 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
-    final players = PlayerRepository.instance.getAllPlayers();
     final gameData = Provider.of<GameData>(context);
 
     return Scaffold(
@@ -36,7 +35,7 @@ class _SignInPageState extends State<SignInPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           spacing: spaceCard,
           children: [
-            Expanded(child: PlayerList(key: ValueKey(players.length))),
+            const Expanded(child: PlayerList()),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -44,7 +43,7 @@ class _SignInPageState extends State<SignInPage> {
                   AddPlayerDialog(
                     onSubmit: (player) {
                       setState(() {
-                        PlayerRepository.instance.createPlayer(player);
+                        PlayerRepository.instance.add(player);
                       });
                     },
                   ),
@@ -85,7 +84,7 @@ class _SignInPageState extends State<SignInPage> {
                       final uniqueParsedPlayers = parsedNames.keys
                           .whereNot(duplicateNames.contains)
                           .map(
-                            (playerName) => Player(
+                            (playerName) => Player.create(
                               firstName: parsedNames[playerName]!.firstName,
                               lastName: parsedNames[playerName]!.lastName,
                               elo: parsedNames[playerName]!.elo ?? Elo.c2,
@@ -96,20 +95,16 @@ class _SignInPageState extends State<SignInPage> {
                           await showAdaptiveDialog<bool?>(
                             context: context,
                             barrierDismissible: true,
-                            builder:
-                                (_) => PlayerBulkEdit(
-                                  players: uniqueParsedPlayers.toList(
-                                    growable: false,
-                                  ),
-                                ),
+                            builder: (_) => PlayerBulkEdit(
+                              players: uniqueParsedPlayers.toList(
+                                growable: false,
+                              ),
+                            ),
                           );
                       if (confirmedSelection != true) return;
 
                       setState(() {
-                        for (final newPlayer in uniqueParsedPlayers) {
-                          PlayerRepository.instance.createPlayer(newPlayer);
-                          debugPrint('${newPlayer.name()} added');
-                        }
+                        PlayerRepository.instance.addAll(uniqueParsedPlayers);
                       });
                     },
                     child: const Row(
@@ -165,21 +160,19 @@ class _PlayerListState extends State<PlayerList> {
 
   @override
   Widget build(BuildContext context) {
-    final players = PlayerRepository.instance.getAllPlayers();
+    final players = PlayerRepository.instance.getAllCachedPlayers();
     // if none is selected, show all of them
     final eloFilters = (this.eloFilters.isEmpty) ? Elo.values : this.eloFilters;
-    final filteredPlayers =
-        players
-            .where(
-              (player) =>
-                  eloFilters.contains(player.elo) &&
-                  (player.name().toUpperCase().contains(query) ||
-                      player.elo.name.toUpperCase().contains(query) ||
-                      (player.signInId?.toUpperCase().contains(query) ??
-                          false)),
-            )
-            .sortedBy((player) => player.name())
-            .toList();
+    final filteredPlayers = players
+        .where(
+          (player) =>
+              eloFilters.contains(player.elo) &&
+              (player.name().toUpperCase().contains(query) ||
+                  player.elo.name.toUpperCase().contains(query) ||
+                  (player.signInId?.toUpperCase().contains(query) ?? false)),
+        )
+        .sortedBy((player) => player.name())
+        .toList();
     final gameData = Provider.of<GameData>(context);
     final playerById = gameData.player.map((player) => player.id).toSet();
 
@@ -198,10 +191,9 @@ class _PlayerListState extends State<PlayerList> {
               focusNode: searchFocusNode,
               hintText: 'Search for name, elo...',
               leading: query.isEmpty ? const Icon(Icons.search) : null,
-              onChanged:
-                  (i) => setState(() {
-                    /* The query changed. */
-                  }),
+              onChanged: (i) => setState(() {
+                /* The query changed. */
+              }),
               onSubmitted: (_) {
                 final player = filteredPlayers.singleOrNull;
                 if (player == null) {
@@ -252,42 +244,42 @@ class _PlayerListState extends State<PlayerList> {
         ),
         (filteredPlayers.isNotEmpty)
             ? Expanded(
-              child: ListRenderer(
-                key: ValueKey(query),
-                itemBuilder: (BuildContext context, int index) {
-                  final isAlreadyInGame = playerById.contains(
-                    filteredPlayers[index].id,
-                  );
-                  final player = filteredPlayers[index];
-                  return Row(
-                    children: [
-                      Expanded(
-                        key: ValueKey(player.id),
-                        child: ClickablePlayerComponent(
-                          inMatch: false,
-                          data: player,
-                          filled: isAlreadyInGame,
-                          onTap: () {
-                            setState(() {
-                              if (isAlreadyInGame) {
-                                gameData.removePlayer(player);
-                              } else {
-                                gameData.addFullPricedPlayer(player);
-                              }
-                            });
-                          },
+                child: ListRenderer(
+                  key: ValueKey(query),
+                  itemBuilder: (BuildContext context, int index) {
+                    final isAlreadyInGame = playerById.contains(
+                      filteredPlayers[index].id,
+                    );
+                    final player = filteredPlayers[index];
+                    return Row(
+                      children: [
+                        Expanded(
+                          key: ValueKey(player.id),
+                          child: ClickablePlayerComponent(
+                            inMatch: false,
+                            data: player,
+                            filled: isAlreadyInGame,
+                            onTap: () {
+                              setState(() {
+                                if (isAlreadyInGame) {
+                                  gameData.removePlayer(player);
+                                } else {
+                                  gameData.addFullPricedPlayer(player);
+                                }
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
-                items: filteredPlayers,
-              ),
-            )
+                      ],
+                    );
+                  },
+                  items: filteredPlayers,
+                ),
+              )
             : Text(
-              'No player ${query.isEmpty ? 'added yet' : 'with that name, or elo'}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+                'No player ${query.isEmpty ? 'added yet' : 'with that name, or elo'}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
       ],
     );
   }

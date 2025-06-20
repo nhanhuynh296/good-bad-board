@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/dto/player.dart';
-import 'package:good_bad_board/dto/repository_service.dart';
 import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/repository/game_repository.dart';
+import 'package:good_bad_board/repository/player_repository.dart';
+import 'package:good_bad_board/repository/repository_service.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
@@ -33,8 +34,9 @@ Future<void> main() async {
 Future<void> loading() async {
   await RepositoryService.instance.initialize();
 
-  Future.wait([
+  await Future.wait([
     PlayerRepository.instance.initialize(),
+    GameRepository.instance.initialize(),
     PersistentSetting.instance.initialize(),
   ]);
 

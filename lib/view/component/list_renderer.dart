@@ -28,9 +28,8 @@ class ListRenderer<T> extends StatelessWidget {
       itemCount: items.length,
       padding: padding,
       itemBuilder: itemBuilder,
-      separatorBuilder:
-          (BuildContext context, int index) =>
-              SizedBox(height: separatorExtent),
+      separatorBuilder: (BuildContext context, int index) =>
+          SizedBox(height: separatorExtent),
     );
   }
 }

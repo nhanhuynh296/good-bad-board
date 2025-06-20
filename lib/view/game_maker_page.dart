@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
+import 'package:good_bad_board/repository/game_repository.dart';
+import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
@@ -21,21 +23,7 @@ class GameMakerPage extends StatelessWidget {
           "GAME ${gameData.history.length + 1}",
           style: context.textTheme.titleLarge,
         ),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              final savedFile = await gameData.saveGame();
-              if (!context.mounted) return;
-              if (savedFile == null) return;
-              final snackBar = SnackBar(
-                content: Text('Game saved at ${savedFile.path}'),
-                showCloseIcon: true,
-              );
-              context.showSnackBar(snackBar);
-            },
-            icon: const Icon(Icons.save),
-          ),
-        ],
+        actions: const [SaveDataIconButton()],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: spacePageX),
@@ -95,6 +83,50 @@ class GameMakerPage extends StatelessWidget {
   }
 }
 
+class SaveDataIconButton extends StatefulWidget {
+  const SaveDataIconButton({super.key});
+
+  @override
+  State<SaveDataIconButton> createState() => _SaveDataIconButtonState();
+}
+
+class _SaveDataIconButtonState extends State<SaveDataIconButton> {
+  bool isSaving = false;
+
+  void onPressed() async {
+    setState(() {
+      isSaving = true;
+    });
+    Stopwatch stopwatch = Stopwatch()..start();
+    await Future.wait([
+      GameRepository.instance.save(),
+      PlayerRepository.instance.save(),
+    ]);
+    stopwatch.stop();
+    setState(() {
+      isSaving = false;
+    });
+    if (!mounted) return;
+
+    context.showSnackBar(
+      SnackBar(
+        content: Text(
+          'Data saved (took ${stopwatch.elapsed.inMilliseconds} milliseconds)',
+        ),
+        showCloseIcon: true,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: isSaving ? null : onPressed,
+      icon: const Icon(Icons.save),
+    );
+  }
+}
+
 class CourtModifier extends StatelessWidget {
   const CourtModifier({super.key});
 
@@ -112,15 +144,15 @@ class CourtModifier extends StatelessWidget {
       children: [
         Button(
           type: ButtonType.outlined,
-          onPressed:
-              () => gameData.setNumberOfCourt(gameData.numberOfCourt - 1),
+          onPressed: () =>
+              gameData.setNumberOfCourt(gameData.numberOfCourt - 1),
           icon: Icon(Icons.remove, size: textStyle?.fontSize),
         ),
         Text(buffer.toString(), style: textStyle),
         Button(
           type: ButtonType.outlined,
-          onPressed:
-              () => gameData.setNumberOfCourt(gameData.numberOfCourt + 1),
+          onPressed: () =>
+              gameData.setNumberOfCourt(gameData.numberOfCourt + 1),
           icon: Icon(Icons.add, size: textStyle?.fontSize),
         ),
       ],

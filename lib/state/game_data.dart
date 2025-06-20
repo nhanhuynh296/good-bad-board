@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' hide log;
@@ -8,10 +7,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/core/random.dart';
-import 'package:good_bad_board/dto/player.dart';
-import 'package:good_bad_board/dto/session.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/repository/game_repository.dart';
+import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
@@ -32,46 +31,46 @@ class GameData extends ChangeNotifier {
 
   final Set<Player> _players = {
     if (kDebugMode) ...[
-      Player(firstName: "Howard", lastName: "", elo: Elo.b1),
-      Player(firstName: "Yong", lastName: "", elo: Elo.b2),
-      Player(firstName: "Ryan", lastName: "", elo: Elo.b2),
-      Player(firstName: "Ethan", lastName: "", elo: Elo.b2),
-      Player(firstName: "Sherry", lastName: "", elo: Elo.c1),
-      Player(firstName: "Wei", lastName: "", elo: Elo.b1),
-      Player(firstName: "Jordan", lastName: "", elo: Elo.a2),
-      Player(firstName: "Justin", lastName: "", elo: Elo.a1),
-      Player(firstName: "Trinity", lastName: "", elo: Elo.c1),
-      Player(firstName: "Lizzy", lastName: "", elo: Elo.c1),
-      Player(firstName: "Victor", lastName: "", elo: Elo.a1),
-      Player(firstName: "Daniel", lastName: "", elo: Elo.a2),
-      Player(firstName: "Nathan", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Howard", lastName: "", elo: Elo.b1),
+      Player.create(firstName: "Yong", lastName: "", elo: Elo.b2),
+      Player.create(firstName: "Ryan", lastName: "", elo: Elo.b2),
+      Player.create(firstName: "Ethan", lastName: "", elo: Elo.b2),
+      Player.create(firstName: "Sherry", lastName: "", elo: Elo.c1),
+      Player.create(firstName: "Wei", lastName: "", elo: Elo.b1),
+      Player.create(firstName: "Jordan", lastName: "", elo: Elo.a2),
+      Player.create(firstName: "Justin", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Trinity", lastName: "", elo: Elo.c1),
+      Player.create(firstName: "Lizzy", lastName: "", elo: Elo.c1),
+      Player.create(firstName: "Victor", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Daniel", lastName: "", elo: Elo.a2),
+      Player.create(firstName: "Nathan", lastName: "", elo: Elo.a1),
 
       // A1 Tier
-      Player(firstName: "Jake", lastName: "", elo: Elo.a1),
-      Player(firstName: "Kara", lastName: "", elo: Elo.a1),
-      Player(firstName: "Liam", lastName: "", elo: Elo.a1),
-      Player(firstName: "Mason", lastName: "", elo: Elo.a1),
-      Player(firstName: "Noah", lastName: "", elo: Elo.a1),
-      Player(firstName: "Olivia", lastName: "", elo: Elo.a1),
-      Player(firstName: "Parker", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Jake", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Kara", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Liam", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Mason", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Noah", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Olivia", lastName: "", elo: Elo.a1),
+      Player.create(firstName: "Parker", lastName: "", elo: Elo.a1),
 
       // S2 Tier
-      Player(firstName: "Quincy", lastName: "", elo: Elo.s2),
-      Player(firstName: "Riley", lastName: "", elo: Elo.s2),
-      Player(firstName: "Sophia", lastName: "", elo: Elo.s2),
-      Player(firstName: "Taylor", lastName: "", elo: Elo.s2),
-      Player(firstName: "Ulysses", lastName: "", elo: Elo.s2),
-      Player(firstName: "Victoria", lastName: "", elo: Elo.s2),
-      Player(firstName: "Wyatt", lastName: "", elo: Elo.s2),
+      Player.create(firstName: "Quincy", lastName: "", elo: Elo.s2),
+      Player.create(firstName: "Riley", lastName: "", elo: Elo.s2),
+      Player.create(firstName: "Sophia", lastName: "", elo: Elo.s2),
+      Player.create(firstName: "Taylor", lastName: "", elo: Elo.s2),
+      Player.create(firstName: "Ulysses", lastName: "", elo: Elo.s2),
+      Player.create(firstName: "Victoria", lastName: "", elo: Elo.s2),
+      Player.create(firstName: "Wyatt", lastName: "", elo: Elo.s2),
 
       // S1 Tier (Highest)
-      Player(firstName: "Xena", lastName: "", elo: Elo.s1),
-      Player(firstName: "Yvonne", lastName: "", elo: Elo.s1),
-      Player(firstName: "Zane", lastName: "", elo: Elo.s1),
-      Player(firstName: "Alex", lastName: "", elo: Elo.s1),
-      Player(firstName: "Bella", lastName: "", elo: Elo.s1),
-      Player(firstName: "Cody", lastName: "", elo: Elo.s1),
-      Player(firstName: "Diana", lastName: "", elo: Elo.s1),
+      Player.create(firstName: "Xena", lastName: "", elo: Elo.s1),
+      Player.create(firstName: "Yvonne", lastName: "", elo: Elo.s1),
+      Player.create(firstName: "Zane", lastName: "", elo: Elo.s1),
+      Player.create(firstName: "Alex", lastName: "", elo: Elo.s1),
+      Player.create(firstName: "Bella", lastName: "", elo: Elo.s1),
+      Player.create(firstName: "Cody", lastName: "", elo: Elo.s1),
+      Player.create(firstName: "Diana", lastName: "", elo: Elo.s1),
     ],
   };
 
@@ -111,20 +110,21 @@ class GameData extends ChangeNotifier {
       _players.remove(playerToRemove);
       _players.add(newPlayer);
     }
-    PlayerRepository.instance.updatePlayer(newPlayer);
+    PlayerRepository.instance.update(newPlayer.id, newPlayer);
     notifyListeners();
   }
 
   Future<void> deletePlayer(Player player) async {
     removePlayer(player);
-    await PlayerRepository.instance.deletePlayer(player.id);
+    await PlayerRepository.instance.delete(player.id);
     notifyListeners();
   }
 
   /// Remove a playing who is currently in a session
   void removePlayer(Player player, {bool byId = false}) {
-    final playerToRemove =
-        (byId) ? _players.firstWhere((p) => p.id == player.id) : player;
+    final playerToRemove = (byId)
+        ? _players.firstWhere((p) => p.id == player.id)
+        : player;
     _players.remove(playerToRemove);
     gameContainingPlayer(playerToRemove)?.players.remove(playerToRemove);
     notifyListeners();
@@ -143,8 +143,10 @@ class GameData extends ChangeNotifier {
           candidatePlayer.length % Game.playerPerCourt == 0,
       'Candidate player is empty or not a multiple of 4, ${candidatePlayer.length}',
     );
-    stagingMatches =
-        candidatePlayer.slices(4).map((players) => Game(players)).toList();
+    stagingMatches = candidatePlayer
+        .slices(4)
+        .map((players) => Game.create(players))
+        .toList();
     assert(stagingMatches.isNotEmpty);
     _improveEloSpread(stagingMatches);
 
@@ -153,7 +155,7 @@ class GameData extends ChangeNotifier {
     );
     if (stagingMatches.length < numberOfCourt) {
       stagingMatches.addAll(
-        List.filled(numberOfCourt - stagingMatches.length, PlaceholderGame([])),
+        List.filled(numberOfCourt - stagingMatches.length, Game.create([])),
       );
     }
     stagingMatches = stagingMatches;
@@ -171,8 +173,8 @@ class GameData extends ChangeNotifier {
     if (playerAvailable < Game.playerPerCourt) {
       return 'Not enough players, need at least ${Game.playerPerCourt}, got $playerAvailable';
     }
-    stagingMatches[courtIndex] = Game(List.empty());
-    stagingMatches[courtIndex] = Game(
+    stagingMatches[courtIndex] = Game.create(List.empty());
+    stagingMatches[courtIndex] = Game.create(
       _choosePlayer(Game.playerPerCourt).toFixedLengthList(),
     );
     notifyListeners();
@@ -188,6 +190,8 @@ class GameData extends ChangeNotifier {
       return 'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}';
     }
     history.add(stagingMatches);
+    GameRepository.instance.addAll(stagingMatches);
+
     stagingMatches = [];
     notifyListeners();
     debugPrint(
@@ -205,12 +209,11 @@ class GameData extends ChangeNotifier {
     final onCourtPlayers = getPlayerFromGames(stagingMatches).toSet();
     final playerOffCourt = _players.difference(onCourtPlayers);
 
-    final weights =
-        playerOffCourt.map((player) {
-          final modifier =
-              1 / exp(2 * ((playerHistory[player]! - averageMatchPlayed)));
-          return modifier / _players.length;
-        }).toUnmodifiableList();
+    final weights = playerOffCourt.map((player) {
+      final modifier =
+          1 / exp(2 * ((playerHistory[player]! - averageMatchPlayed)));
+      return modifier / _players.length;
+    }).toUnmodifiableList();
     return playerOffCourt.toUnmodifiableList().choices(
       weights,
       count: numberOfPlayers,
@@ -232,11 +235,10 @@ class GameData extends ChangeNotifier {
     }
 
     _fractionalAverageGamePlayer.forEach(
-      (player, nMatchPlayed) =>
-          matchCount[player] = matchCount.update(
-            player,
-            (value) => value + nMatchPlayed,
-          ),
+      (player, nMatchPlayed) => matchCount[player] = matchCount.update(
+        player,
+        (value) => value + nMatchPlayed,
+      ),
     );
     return matchCount;
   }
@@ -279,10 +281,14 @@ class GameData extends ChangeNotifier {
       changed = false;
       log("iteration $iteration");
       // =======================================================================
-      for (var [match1Index, match2Index]
-          in Combinations(2, List.generate(games.length, (k) => k))()) {
-        for (var [p1, p2]
-            in Amalgams(2, List.generate(Game.playerPerCourt, (k) => k))()) {
+      for (var [match1Index, match2Index] in Combinations(
+        2,
+        List.generate(games.length, (k) => k),
+      )()) {
+        for (var [p1, p2] in Amalgams(
+          2,
+          List.generate(Game.playerPerCourt, (k) => k),
+        )()) {
           final match1 = games[match1Index];
           final match2 = games[match2Index];
           var temp = match1.players[p1];
@@ -372,7 +378,6 @@ class GameData extends ChangeNotifier {
 
   Future<File?> saveGame() async {
     final Directory? downloadsDir = await getDownloadsDirectory();
-    final dto = SessionDto(players: _players, games: history);
 
     final timeString = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
     String? targetFilePath = await FilePicker.platform.saveFile(
@@ -385,7 +390,6 @@ class GameData extends ChangeNotifier {
     if (targetFilePath == null) return null;
 
     final file = File(targetFilePath);
-    await file.writeAsString(jsonEncode(dto.toJson()));
     return file;
   }
 }

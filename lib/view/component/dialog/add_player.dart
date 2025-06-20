@@ -103,7 +103,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               return;
             }
             widget.onSubmit?.call(
-              Player(
+              Player.create(
                 firstName: firstName!,
                 lastName: lastName!,
                 elo: elo!,

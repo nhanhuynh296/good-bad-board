@@ -109,27 +109,26 @@ class FilledButtonWidget extends StatelessWidget {
           ),
         ],
       ),
-      child:
-          onlyIcon
-              ? IconButton.filled(
-                style: filledButtonStyle,
-                onPressed: onPressed,
-                icon: icon!,
-              )
-              : hasBoth
-              ? FilledButton.icon(
-                style: filledButtonStyle,
-                onPressed: onTapLogic,
-                onLongPress: onSecondaryTapLogic,
-                icon: icon!,
-                label: child!,
-              )
-              : FilledButton(
-                style: filledButtonStyle,
-                onPressed: onTapLogic,
-                onLongPress: onSecondaryTapLogic,
-                child: child,
-              ),
+      child: onlyIcon
+          ? IconButton.filled(
+              style: filledButtonStyle,
+              onPressed: onPressed,
+              icon: icon!,
+            )
+          : hasBoth
+          ? FilledButton.icon(
+              style: filledButtonStyle,
+              onPressed: onTapLogic,
+              onLongPress: onSecondaryTapLogic,
+              icon: icon!,
+              label: child!,
+            )
+          : FilledButton(
+              style: filledButtonStyle,
+              onPressed: onTapLogic,
+              onLongPress: onSecondaryTapLogic,
+              child: child,
+            ),
     );
   }
 }
@@ -187,27 +186,26 @@ class OutlinedButtonWidget extends StatelessWidget {
           ),
         ],
       ),
-      child:
-          onlyIcon
-              ? IconButton.outlined(
-                onPressed: onPressed,
-                icon: icon!,
-                style: outlinedButtonStyle,
-              )
-              : hasBoth
-              ? OutlinedButton.icon(
-                style: outlinedButtonStyle,
-                onPressed: onTapLogic,
-                onLongPress: onSecondaryTapLogic,
-                icon: icon!,
-                label: child!,
-              )
-              : OutlinedButton(
-                style: outlinedButtonStyle,
-                onPressed: onTapLogic,
-                onLongPress: onSecondaryTapLogic,
-                child: child,
-              ),
+      child: onlyIcon
+          ? IconButton.outlined(
+              onPressed: onPressed,
+              icon: icon!,
+              style: outlinedButtonStyle,
+            )
+          : hasBoth
+          ? OutlinedButton.icon(
+              style: outlinedButtonStyle,
+              onPressed: onTapLogic,
+              onLongPress: onSecondaryTapLogic,
+              icon: icon!,
+              label: child!,
+            )
+          : OutlinedButton(
+              style: outlinedButtonStyle,
+              onPressed: onTapLogic,
+              onLongPress: onSecondaryTapLogic,
+              child: child,
+            ),
     );
   }
 }
@@ -248,17 +246,17 @@ class TextButtonWidget extends StatelessWidget {
         ? IconButton(onPressed: onPressed, icon: icon!, style: buttonStyle)
         : hasBoth
         ? TextButton.icon(
-          style: buttonStyle,
-          onPressed: onTapLogic,
-          onLongPress: onSecondaryTapLogic,
-          icon: icon!,
-          label: child!,
-        )
+            style: buttonStyle,
+            onPressed: onTapLogic,
+            onLongPress: onSecondaryTapLogic,
+            icon: icon!,
+            label: child!,
+          )
         : TextButton(
-          style: buttonStyle,
-          onPressed: onTapLogic,
-          onLongPress: onSecondaryTapLogic,
-          child: child!,
-        );
+            style: buttonStyle,
+            onPressed: onTapLogic,
+            onLongPress: onSecondaryTapLogic,
+            child: child!,
+          );
   }
 }
