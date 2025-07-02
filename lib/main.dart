@@ -35,9 +35,10 @@ Future<void> loading() async {
 
   await Future.wait([
     PlayerRepository.instance.initialize(),
-    GameRepository.instance.initialize(),
     PersistentSetting.instance.initialize(),
   ]);
+
+  await GameRepository.instance.initialize();
 
   return;
 }
