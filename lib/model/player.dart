@@ -1,6 +1,7 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:uuid/uuid.dart';
 
+part 'player.freezed.dart';
 part 'player.g.dart';
 
 enum Elo {
@@ -16,57 +17,37 @@ enum Elo {
   String toDisplayName() => name.toUpperCase();
 }
 
-@JsonSerializable(
-  includeIfNull: true,
-  constructor: '_jsonConstructor',
-  createPerFieldToJson: true,
-)
-class Player {
-  final String firstName;
-  final String lastName;
-  final Elo elo;
-  final String id;
-  final String? signInId;
+@freezed
+abstract class Player with _$Player {
+  const Player._();
 
-  Player({
-    required this.firstName,
-    required this.lastName,
-    required this.elo,
-    this.signInId,
-  }) : id = const Uuid().v4();
+  factory Player({
+    required String firstName,
+    required String lastName,
+    required Elo elo,
+    required String id,
+    String? signInId,
+  }) = _Player;
+
+  factory Player.create({
+    required String firstName,
+    required String lastName,
+    required Elo elo,
+    String? signInId,
+  }) => Player(
+    firstName: firstName,
+    lastName: lastName,
+    elo: elo,
+    signInId: signInId,
+    id: const Uuid().v4(),
+  );
+
+  factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
+
+  static String jsonReferencedPlayer(Player player) => player.id;
 
   String toDisplayString() =>
       '$firstName $lastName (${elo.name.toUpperCase()})';
 
   String name() => '$firstName $lastName';
-
-  Player copyWith({
-    String? firstName,
-    String? lastName,
-    Elo? elo,
-    String? signInId,
-  }) {
-    return Player._jsonConstructor(
-      firstName ?? this.firstName,
-      lastName ?? this.lastName,
-      elo ?? this.elo,
-      id,
-      signInId ?? this.signInId,
-    );
-  }
-
-  // Json Serialization
-  Player._jsonConstructor(
-    this.firstName,
-    this.lastName,
-    this.elo,
-    this.id,
-    this.signInId,
-  );
-
-  factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
-
-  Map<String, dynamic> toJson() => _$PlayerToJson(this);
-
-  static String jsonReferencedPlayer(Player player) => player.id;
 }

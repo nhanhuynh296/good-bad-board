@@ -85,35 +85,31 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
           ),
           (inactivePlayers.isNotEmpty)
               ? Expanded(
-                child: ListRenderer(
-                  padding: const EdgeInsets.fromLTRB(
-                    0,
-                    spaceDefault,
-                    space32,
-                    spaceDefault,
+                  child: ListRenderer(
+                    padding: const EdgeInsets.fromLTRB(
+                      0,
+                      spaceDefault,
+                      space32,
+                      spaceDefault,
+                    ),
+                    items: inactivePlayers,
+                    itemBuilder: (BuildContext context, int index) =>
+                        DraggablePlayerComponent(
+                          data: inactivePlayers[index],
+                          size: const Size.fromHeight(50),
+                          shouldAcceptIncomingDragPlayer:
+                              // Disallow dragging to other inactive player
+                              (player) => !inactivePlayers.contains(player),
+                          onDragToTarget: (player) {
+                            gameData.swapPlayer(player, inactivePlayers[index]);
+                          },
+                        ),
                   ),
-                  items: inactivePlayers,
-                  itemBuilder:
-                      (BuildContext context, int index) =>
-                          DraggablePlayerComponent(
-                            data: inactivePlayers[index],
-                            size: const Size.fromHeight(50),
-                            shouldAcceptIncomingDragPlayer:
-                                // Disallow dragging to other inactive player
-                                (player) => !inactivePlayers.contains(player),
-                            onDragToTarget: (player) {
-                              gameData.swapPlayer(
-                                player,
-                                inactivePlayers[index],
-                              );
-                            },
-                          ),
-                ),
-              )
+                )
               : Text(
-                'No player with that name, or elo',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+                  'No player with that name, or elo',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
         ],
       ),
     );
@@ -139,13 +135,12 @@ class _InactivePlayerDraggable extends StatelessWidget {
       onAcceptWithDetails: (details) {
         gameData.removePlayerFromCourt(details.data);
       },
-      builder:
-          (context, candidateItems, rejectedItems) => Stack(
-            children: [
-              child,
-              if (rejectedItems.isNotEmpty) const InvalidDropTargetOverlay(),
-            ],
-          ),
+      builder: (context, candidateItems, rejectedItems) => Stack(
+        children: [
+          child,
+          if (rejectedItems.isNotEmpty) const InvalidDropTargetOverlay(),
+        ],
+      ),
     );
   }
 }

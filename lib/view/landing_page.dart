@@ -16,19 +16,17 @@ class LandingPage extends StatelessWidget {
     final children = [
       LandingPageOption(
         label: 'Register',
-        onTap:
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SignInPage()),
-            ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SignInPage()),
+        ),
       ),
       LandingPageOption(
         label: 'Make Game',
-        onTap:
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const GameMakerPage()),
-            ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const GameMakerPage()),
+        ),
       ),
     ];
     return Scaffold(

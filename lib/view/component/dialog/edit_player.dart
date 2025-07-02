@@ -54,37 +54,39 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
           const Spacer(),
           gameData.player.contains(widget.player)
               ? Button(
-                icon: Icon(
-                  Icons.no_accounts,
-                  color: context.colorScheme.surface,
-                ),
-                onPressed: () {
-                  gameData.removePlayer(widget.player);
-                  if (!widget.persistAfterInactive) Navigator.of(context).pop();
-                },
-                type: ButtonType.filled,
-                backgroundColor: context.colorScheme.onSurfaceVariant,
-                child: const Text("Break"),
-              )
+                  icon: Icon(
+                    Icons.no_accounts,
+                    color: context.colorScheme.surface,
+                  ),
+                  onPressed: () {
+                    gameData.removePlayer(widget.player);
+                    if (!widget.persistAfterInactive) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  type: ButtonType.filled,
+                  backgroundColor: context.colorScheme.onSurfaceVariant,
+                  child: const Text("Break"),
+                )
               : Button(
-                onPressed: () async {
-                  final bool confirmDelete = await showAdaptiveDialog(
-                    context: context,
-                    builder: (context) => const ConfirmDeleteDialog(),
-                  );
-                  if (!context.mounted || !confirmDelete) return;
-                  context.showToast("Player ${widget.player.name()} deleted");
-                  Provider.of<GameData>(
-                    context,
-                    listen: false,
-                  ).deletePlayer(widget.player);
+                  onPressed: () async {
+                    final bool confirmDelete = await showAdaptiveDialog(
+                      context: context,
+                      builder: (context) => const ConfirmDeleteDialog(),
+                    );
+                    if (!context.mounted || !confirmDelete) return;
+                    context.showToast("Player ${widget.player.name()} deleted");
+                    Provider.of<GameData>(
+                      context,
+                      listen: false,
+                    ).deletePlayer(widget.player);
 
-                  Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.delete),
-                type: ButtonType.filled,
-                backgroundColor: context.colorScheme.errorContainer,
-              ),
+                    Navigator.of(context).pop();
+                  },
+                  icon: const Icon(Icons.delete),
+                  type: ButtonType.filled,
+                  backgroundColor: context.colorScheme.errorContainer,
+                ),
         ],
       ),
       content: Form(
@@ -336,10 +338,9 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
                               //       }),
                               // ),
                             ],
-                            onSelectChanged:
-                                (value) => setState(() {
-                                  selected[index] = value!;
-                                }),
+                            onSelectChanged: (value) => setState(() {
+                              selected[index] = value!;
+                            }),
                           ),
                         )
                         .toList(growable: false),

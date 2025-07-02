@@ -49,18 +49,17 @@ class ClickablePlayerComponent extends _PlayerComponent {
       showAdaptiveDialog(
         context: context,
         barrierDismissible: true,
-        builder:
-            (_) => EditPlayerDialog(
-              player: data,
-              persistAfterInactive: !inMatch,
-              onSubmit: (newPlayer) {
-                Provider.of<GameData>(
-                  context,
-                  listen: false,
-                ).onUpdatePlayer(newPlayer);
-                debugPrint("Updated ${newPlayer.name()}");
-              },
-            ),
+        builder: (_) => EditPlayerDialog(
+          player: data,
+          persistAfterInactive: !inMatch,
+          onSubmit: (newPlayer) {
+            Provider.of<GameData>(
+              context,
+              listen: false,
+            ).onUpdatePlayer(newPlayer);
+            debugPrint("Updated ${newPlayer.name()}");
+          },
+        ),
       );
     }
 
@@ -99,10 +98,9 @@ class DraggablePlayerComponent extends _PlayerComponent {
     final matchPlayed = gameData.getCurrentPlayersHistory()[data] ?? 0;
     final maxMatchPlayed = playersHistory.values.max;
     return DragTarget<Player>(
-      onWillAcceptWithDetails:
-          (detail) =>
-              detail.data != data &&
-              (shouldAcceptIncomingDragPlayer?.call(detail.data) ?? true),
+      onWillAcceptWithDetails: (detail) =>
+          detail.data != data &&
+          (shouldAcceptIncomingDragPlayer?.call(detail.data) ?? true),
       onAcceptWithDetails: (detail) => onDragToTarget?.call(detail.data),
       builder: (context, candidateItems, rejectedItems) {
         final bool isValidDragHovering = candidateItems.isNotEmpty;

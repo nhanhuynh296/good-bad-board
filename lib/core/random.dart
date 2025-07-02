@@ -23,10 +23,9 @@ extension Picker<E> on List<E> {
 
     final availableElements = List<E>.from(this);
     for (var i = 0; i < count; i++) {
-      final normalizedWeights =
-          availableWeights
-              .map((weight) => weight / availableWeights.sum)
-              .toList();
+      final normalizedWeights = availableWeights
+          .map((weight) => weight / availableWeights.sum)
+          .toList();
 
       final randomValue = random.nextDouble();
       double cumulativeWeight = 0.0;

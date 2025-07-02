@@ -56,19 +56,17 @@ class CourtComponent extends StatelessWidget {
                         children: [
                           DraggablePlayerComponent(
                             data: sortedPlayer.first,
-                            onDragToTarget:
-                                (draggedToPlayer) => onDragToTarget(
-                                  sortedPlayer.first,
-                                  draggedToPlayer,
-                                ),
+                            onDragToTarget: (draggedToPlayer) => onDragToTarget(
+                              sortedPlayer.first,
+                              draggedToPlayer,
+                            ),
                           ),
                           DraggablePlayerComponent(
                             data: sortedPlayer.last,
-                            onDragToTarget:
-                                (draggedToPlayer) => onDragToTarget(
-                                  sortedPlayer.last,
-                                  draggedToPlayer,
-                                ),
+                            onDragToTarget: (draggedToPlayer) => onDragToTarget(
+                              sortedPlayer.last,
+                              draggedToPlayer,
+                            ),
                           ),
                         ],
                       ),
@@ -76,19 +74,17 @@ class CourtComponent extends StatelessWidget {
                         children: [
                           DraggablePlayerComponent(
                             data: sortedPlayer[2],
-                            onDragToTarget:
-                                (draggedToPlayer) => onDragToTarget(
-                                  sortedPlayer[2],
-                                  draggedToPlayer,
-                                ),
+                            onDragToTarget: (draggedToPlayer) => onDragToTarget(
+                              sortedPlayer[2],
+                              draggedToPlayer,
+                            ),
                           ),
                           DraggablePlayerComponent(
                             data: sortedPlayer[1],
-                            onDragToTarget:
-                                (draggedToPlayer) => onDragToTarget(
-                                  sortedPlayer[1],
-                                  draggedToPlayer,
-                                ),
+                            onDragToTarget: (draggedToPlayer) => onDragToTarget(
+                              sortedPlayer[1],
+                              draggedToPlayer,
+                            ),
                           ),
                         ],
                       ),
@@ -99,9 +95,8 @@ class CourtComponent extends StatelessWidget {
                         .map(
                           (player) => DraggablePlayerComponent(
                             data: player,
-                            onDragToTarget:
-                                (draggedToPlayer) =>
-                                    onDragToTarget(player, draggedToPlayer),
+                            onDragToTarget: (draggedToPlayer) =>
+                                onDragToTarget(player, draggedToPlayer),
                           ),
                         )
                         .toList(growable: false),
@@ -112,9 +107,8 @@ class CourtComponent extends StatelessWidget {
                       const SizedBox(),
                       DraggablePlayerComponent(
                         data: players.first,
-                        onDragToTarget:
-                            (draggedToPlayer) =>
-                                onDragToTarget(players.first, draggedToPlayer),
+                        onDragToTarget: (draggedToPlayer) =>
+                            onDragToTarget(players.first, draggedToPlayer),
                       ),
                     ],
                   ),
@@ -123,9 +117,8 @@ class CourtComponent extends StatelessWidget {
                         .map(
                           (player) => DraggablePlayerComponent(
                             data: player,
-                            onDragToTarget:
-                                (draggedToPlayer) =>
-                                    onDragToTarget(player, draggedToPlayer),
+                            onDragToTarget: (draggedToPlayer) =>
+                                onDragToTarget(player, draggedToPlayer),
                           ),
                         )
                         .toList(growable: false),
