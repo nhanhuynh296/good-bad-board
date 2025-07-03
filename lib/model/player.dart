@@ -27,6 +27,7 @@ abstract class Player with _$Player {
     required Elo elo,
     required String id,
     String? signInId,
+    DateTime? createdDate,
   }) = _Player;
 
   factory Player.create({
@@ -40,6 +41,7 @@ abstract class Player with _$Player {
     elo: elo,
     signInId: signInId,
     id: const Uuid().v4(),
+    createdDate: DateTime.now(),
   );
 
   factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);

@@ -228,7 +228,7 @@ class GameData extends ChangeNotifier {
       for (var player in _players) player: 0,
     };
     final currentPlayerHistory = history.expand(
-      (games) => games.expand((game) => game.players).where(_players.contains),
+      (games) => getPlayerFromGames(games).where(_players.contains),
     );
     for (final player in currentPlayerHistory) {
       matchCount[player] = matchCount.update(player, (value) => value + 1);
@@ -394,7 +394,7 @@ class GameData extends ChangeNotifier {
   }
 }
 
-Iterable<Player> getPlayerFromGames(GameContainer games) =>
+Iterable<Player> getPlayerFromGames(Iterable<Game> games) =>
     games.expand((game) => game.players);
 
 void printGames(GameContainer games) {

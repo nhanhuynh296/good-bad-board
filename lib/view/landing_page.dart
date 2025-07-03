@@ -14,10 +14,14 @@ class LandingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final children = [
       LandingPageOption(
-        label: 'Register',
+        label: 'Player Register',
         onTap: () => context.go('/register'),
       ),
       LandingPageOption(label: 'Make Game', onTap: () => context.go('/game')),
+      LandingPageOption(
+        label: 'Player Statistic',
+        onTap: () => context.go('/stats'),
+      ),
     ];
     return Scaffold(
       appBar: AppBar(title: const Text(appName)),
