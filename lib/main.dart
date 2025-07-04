@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/repository_service.dart';
+import 'package:good_bad_board/routes.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/theme.dart';
-import 'package:good_bad_board/view/landing_page.dart';
 import 'package:provider/provider.dart';
 
 Future<void> main() async {
@@ -49,13 +48,12 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: router,
       title: 'Flutter Demo',
-      navigatorKey: navigatorKey,
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
-      home: const LandingPage(),
     );
   }
 }
