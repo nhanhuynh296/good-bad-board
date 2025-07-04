@@ -1,12 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/setting.dart';
-import 'package:good_bad_board/view/game_maker_page.dart';
-import 'package:good_bad_board/view/sign_in_page.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -16,18 +15,9 @@ class LandingPage extends StatelessWidget {
     final children = [
       LandingPageOption(
         label: 'Register',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const SignInPage()),
-        ),
+        onTap: () => context.go('/register'),
       ),
-      LandingPageOption(
-        label: 'Make Game',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const GameMakerPage()),
-        ),
-      ),
+      LandingPageOption(label: 'Make Game', onTap: () => context.go('/game')),
     ];
     return Scaffold(
       appBar: AppBar(title: const Text(appName)),
