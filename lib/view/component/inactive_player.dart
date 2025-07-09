@@ -229,9 +229,7 @@ class StagingGameComponent extends StatelessWidget {
                               );
                               if (games[index].players.isEmpty &&
                                   gameData.player.length -
-                                          games
-                                              .expand((game) => game.players)
-                                              .length <
+                                          getPlayerFromGames(games).length <
                                       Game.playerPerCourt) {
                                 context.showErrorToast(
                                   'Not enough players to make a court',

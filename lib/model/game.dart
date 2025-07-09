@@ -20,10 +20,17 @@ abstract class Game with _$Game {
 
   const Game._();
 
-  factory Game({required PlayerContainer players, required String id}) = _Game;
+  factory Game({
+    required PlayerContainer players,
+    required String id,
+    required DateTime createdDate,
+  }) = _Game;
 
-  factory Game.create(PlayerContainer players) =>
-      Game(players: players, id: const Uuid().v4());
+  factory Game.create(PlayerContainer players) => Game(
+    players: players,
+    id: const Uuid().v4(),
+    createdDate: DateTime.now(),
+  );
 
   int eloGap() {
     if (players.length < 2) return 0;

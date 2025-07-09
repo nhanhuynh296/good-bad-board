@@ -14,13 +14,20 @@ part 'game_repository.g.dart';
 
 @freezed
 abstract class GameDto with _$GameDto {
-  const factory GameDto(Iterable<PlayerDto> playerDto, String id) = _GameDto;
+  const factory GameDto(
+    Iterable<PlayerDto> playerDto,
+    String id,
+    DateTime createdDate,
+  ) = _GameDto;
 
   factory GameDto.fromJson(Map<String, dynamic> json) =>
       _$GameDtoFromJson(json);
 
-  factory GameDto.fromGame(Game game) =>
-      GameDto(game.players.map(PlayerDto.fromPlayer), game.id);
+  factory GameDto.fromGame(Game game) => GameDto(
+    game.players.map(PlayerDto.fromPlayer),
+    game.id,
+    game.createdDate,
+  );
 }
 
 @freezed
@@ -62,6 +69,7 @@ class GameRepository extends InMemoryRepository<Game> {
         return Game(
           players: maybePlayers.nonNulls.toFixedLengthList(),
           id: gameDto.id,
+          createdDate: gameDto.createdDate,
         );
       }),
     );
