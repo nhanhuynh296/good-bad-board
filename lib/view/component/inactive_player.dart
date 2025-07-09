@@ -197,7 +197,6 @@ class StagingGameComponent extends StatelessWidget {
           padding: padding,
           itemBuilder: (BuildContext context, int index) {
             return ShadedContainer(
-              // shaded: false,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

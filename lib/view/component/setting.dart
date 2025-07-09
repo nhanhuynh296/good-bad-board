@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
+import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
@@ -24,9 +25,46 @@ class SettingPage extends StatelessWidget {
           vertical: spacePageY,
         ),
         child: const Column(
-          spacing: spaceCard,
-          children: [CourtSetting(), TimerSetting()],
+          spacing: space32,
+          children: [CourtSetting(), TimerSetting(), GameTypeSetting()],
         ),
+      ),
+    );
+  }
+}
+
+class SettingMultipleChoice extends StatelessWidget {
+  final Widget child;
+  final bool selected;
+  final Color? backgroundColor;
+  final VoidCallback? onPressed;
+
+  const SettingMultipleChoice({
+    super.key,
+    required this.child,
+    this.selected = false,
+    this.backgroundColor,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ShadedContainer(
+      child: Stack(
+        alignment: AlignmentDirectional.center,
+        children: [
+          InkWell(onTap: onPressed, child: child),
+          if (selected)
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: Colors.black.withAlpha(50)),
+                child: const Icon(
+                  Icons.check_circle_sharp,
+                  color: Colors.green,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -56,11 +94,11 @@ class _CourtSettingState extends State<CourtSetting> {
           .replaceFirst('.webp', '')
           .replaceAll('_', ' ')
           .toUpperCase();
-      Widget child = Image.asset(choice);
+      Widget child = SettingMultipleChoice(
+        selected: choice == chosen,
+        child: Image.asset(choice),
+      );
 
-      if (choice == chosen) {
-        child = ShadedContainer(child: child);
-      }
       child = Column(
         mainAxisSize: MainAxisSize.min,
         spacing: spaceCard,
@@ -82,7 +120,7 @@ class _CourtSettingState extends State<CourtSetting> {
       mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
-        Text("Court", style: context.textTheme.titleLarge),
+        Text("Court Theme", style: context.textTheme.titleLarge),
         Row(spacing: spaceDefault, children: children.toList(growable: false)),
       ],
     );
@@ -212,6 +250,49 @@ class TimerSetting extends StatelessWidget {
               listen: false,
             ).setDuration(duration);
           },
+        ),
+      ],
+    );
+  }
+}
+
+class GameTypeSetting extends StatefulWidget {
+  const GameTypeSetting({super.key});
+
+  static const options = ["TIME BASED", "GAME BASED"];
+
+  @override
+  State<GameTypeSetting> createState() => _GameTypeSettingState();
+}
+
+class _GameTypeSettingState extends State<GameTypeSetting> {
+  String chosen = GameTypeSetting.options.first;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      spacing: spaceCard,
+      children: [
+        Text("Game Type", style: context.textTheme.titleLarge),
+        SizedBox(
+          height: 50,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: spaceCard,
+            children: GameTypeSetting.options
+                .map(
+                  (e) => Expanded(
+                    child: SettingMultipleChoice(
+                      onPressed: () => setState(() {
+                        chosen = e;
+                      }),
+                      selected: chosen == e,
+                      child: Center(child: Text(e)),
+                    ),
+                  ),
+                )
+                .toUnmodifiableList(),
+          ),
         ),
       ],
     );
