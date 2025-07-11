@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/core/iterable_extension.dart';
+import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/container.dart';
+import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -49,22 +51,17 @@ class SettingMultipleChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShadedContainer(
-      child: Stack(
-        alignment: AlignmentDirectional.center,
-        children: [
-          InkWell(onTap: onPressed, child: child),
-          if (selected)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(color: Colors.black.withAlpha(50)),
-                child: const Icon(
-                  Icons.check_circle_sharp,
-                  color: Colors.green,
-                ),
-              ),
-            ),
-        ],
+    return AspectRatio(
+      aspectRatio: goldenRatio,
+      child: ShadedContainer(
+        backgroundColor: selected ? Colors.green : null,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.all(spaceCard),
+            child: Center(child: child),
+          ),
+        ),
       ),
     );
   }
@@ -274,25 +271,34 @@ class _GameTypeSettingState extends State<GameTypeSetting> {
       spacing: spaceCard,
       children: [
         Text("Game Type", style: context.textTheme.titleLarge),
-        SizedBox(
-          height: 50,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: spaceCard,
-            children: GameTypeSetting.options
-                .map(
-                  (e) => Expanded(
-                    child: SettingMultipleChoice(
-                      onPressed: () => setState(() {
+        Row(
+          spacing: spaceCard,
+          children: GameTypeSetting.options
+              .map(
+                (e) => Expanded(
+                  child: SettingMultipleChoice(
+                    onPressed: () {
+                      setState(() {
                         chosen = e;
-                      }),
-                      selected: chosen == e,
-                      child: Center(child: Text(e)),
-                    ),
+                      });
+                      final timeBased = GameTypeSetting.options.first;
+                      if (chosen != timeBased) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          context.showToast(
+                            "$chosen is being developed, stay tuned!",
+                          );
+                          setState(() {
+                            chosen = timeBased;
+                          });
+                        });
+                      }
+                    },
+                    selected: chosen == e,
+                    child: Text(e),
                   ),
-                )
-                .toUnmodifiableList(),
-          ),
+                ),
+              )
+              .toUnmodifiableList(),
         ),
       ],
     );

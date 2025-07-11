@@ -26,6 +26,7 @@ class ShadedContainer extends StatelessWidget {
     const baseDecoration = BoxDecoration(borderRadius: outlinedBorderRadius);
 
     final borderedDecoration = baseDecoration.copyWith(
+      color: Colors.transparent,
       border: bordered
           ? BoxBorder.fromBorderSide(
               outlinedBorderSide.copyWith(
