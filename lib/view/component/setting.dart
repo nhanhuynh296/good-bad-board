@@ -54,7 +54,9 @@ class SettingMultipleChoice extends StatelessWidget {
     return AspectRatio(
       aspectRatio: goldenRatio,
       child: ShadedContainer(
-        backgroundColor: selected ? Colors.green : null,
+        backgroundColor: selected
+            ? context.colorScheme.secondaryContainer
+            : null,
         child: InkWell(
           onTap: onPressed,
           child: Padding(
@@ -263,7 +265,14 @@ class GameTypeSetting extends StatefulWidget {
 }
 
 class _GameTypeSettingState extends State<GameTypeSetting> {
-  String chosen = GameTypeSetting.options.first;
+  GameType chosen = GameType.values.first;
+
+  Future<void> onGameTypeSelected(GameType selected) async {
+    setState(() {
+      chosen = selected;
+      PersistentSetting.instance.setGameType(selected);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -273,28 +282,28 @@ class _GameTypeSettingState extends State<GameTypeSetting> {
         Text("Game Type", style: context.textTheme.titleLarge),
         Row(
           spacing: spaceCard,
-          children: GameTypeSetting.options
+          children: GameType.values
               .map(
-                (e) => Expanded(
+                (gameType) => Expanded(
                   child: SettingMultipleChoice(
                     onPressed: () {
-                      setState(() {
-                        chosen = e;
-                      });
-                      final timeBased = GameTypeSetting.options.first;
-                      if (chosen != timeBased) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          context.showToast(
-                            "$chosen is being developed, stay tuned!",
-                          );
-                          setState(() {
-                            chosen = timeBased;
-                          });
-                        });
+                      onGameTypeSelected(gameType);
+
+                      if (gameType != GameType.timeBased) {
+                        context.showToast(
+                          "${chosen.toDisplayString()} is being developed, stay tuned!",
+                        );
+
+                        onGameTypeSelected(GameType.timeBased);
                       }
                     },
-                    selected: chosen == e,
-                    child: Text(e),
+                    selected: chosen == gameType,
+                    child: Text(
+                      gameType.toDisplayString(),
+                      style: TextStyle(
+                        color: context.colorScheme.onSecondaryContainer,
+                      ),
+                    ),
                   ),
                 ),
               )

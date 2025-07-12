@@ -109,7 +109,8 @@ class GameData extends ChangeNotifier {
     );
     stagingMatches = candidatePlayer
         .slices(4)
-        .map((players) => Game.create(players))
+        // Need to be growable: true as we need to add/remove player
+        .map((players) => Game.create(players.toList()))
         .toList();
     assert(stagingMatches.isNotEmpty);
     _improveEloSpread(stagingMatches);
@@ -122,7 +123,6 @@ class GameData extends ChangeNotifier {
         List.filled(numberOfCourt - stagingMatches.length, Game.create([])),
       );
     }
-    stagingMatches = stagingMatches;
     notifyListeners();
     return null;
   }
@@ -139,7 +139,8 @@ class GameData extends ChangeNotifier {
     }
     stagingMatches[courtIndex] = Game.create(List.empty());
     stagingMatches[courtIndex] = Game.create(
-      _choosePlayer(Game.playerPerCourt).toFixedLengthList(),
+      // Has to be toList(growable: true) as we need to add/remove player
+      _choosePlayer(Game.playerPerCourt).toList(growable: true),
     );
     notifyListeners();
     return null;
@@ -156,7 +157,7 @@ class GameData extends ChangeNotifier {
     history.add(stagingMatches);
     GameRepository.instance.addAll(stagingMatches);
 
-    stagingMatches = [];
+    stagingMatches = List.empty(growable: false);
     notifyListeners();
     debugPrint(
       'Average match every should have played: ${getCurrentPlayerAverageMatchPlayed().toStringAsFixed(2)}',
