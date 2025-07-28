@@ -29,52 +29,9 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  final Set<Player> _players = {
-    if (kDebugMode) ...[
-      Player.create(firstName: "Howard", lastName: "", elo: Elo.b1),
-      Player.create(firstName: "Yong", lastName: "", elo: Elo.b2),
-      Player.create(firstName: "Ryan", lastName: "", elo: Elo.b2),
-      Player.create(firstName: "Ethan", lastName: "", elo: Elo.b2),
-      Player.create(firstName: "Sherry", lastName: "", elo: Elo.c1),
-      Player.create(firstName: "Wei", lastName: "", elo: Elo.b1),
-      Player.create(firstName: "Jordan", lastName: "", elo: Elo.a2),
-      Player.create(firstName: "Justin", lastName: "", elo: Elo.a1),
-      Player.create(firstName: "Trinity", lastName: "", elo: Elo.c1),
-      Player.create(firstName: "Lizzy", lastName: "", elo: Elo.c1),
-      Player.create(firstName: "Victor", lastName: "", elo: Elo.a1),
-      Player.create(firstName: "Daniel", lastName: "", elo: Elo.a2),
-      Player.create(firstName: "Nathan", lastName: "", elo: Elo.a1),
+  final Map<String, Player> _players = {};
 
-      // A1 Tier
-      Player.create(firstName: "Jake", lastName: "", elo: Elo.a1),
-      Player.create(firstName: "Kara", lastName: "", elo: Elo.a1),
-      Player.create(firstName: "Liam", lastName: "", elo: Elo.a1),
-      Player.create(firstName: "Mason", lastName: "", elo: Elo.a1),
-      Player.create(firstName: "Noah", lastName: "", elo: Elo.a1),
-      Player.create(firstName: "Olivia", lastName: "", elo: Elo.a1),
-      Player.create(firstName: "Parker", lastName: "", elo: Elo.a1),
-
-      // S2 Tier
-      Player.create(firstName: "Quincy", lastName: "", elo: Elo.s2),
-      Player.create(firstName: "Riley", lastName: "", elo: Elo.s2),
-      Player.create(firstName: "Sophia", lastName: "", elo: Elo.s2),
-      Player.create(firstName: "Taylor", lastName: "", elo: Elo.s2),
-      Player.create(firstName: "Ulysses", lastName: "", elo: Elo.s2),
-      Player.create(firstName: "Victoria", lastName: "", elo: Elo.s2),
-      Player.create(firstName: "Wyatt", lastName: "", elo: Elo.s2),
-
-      // S1 Tier (Highest)
-      Player.create(firstName: "Xena", lastName: "", elo: Elo.s1),
-      Player.create(firstName: "Yvonne", lastName: "", elo: Elo.s1),
-      Player.create(firstName: "Zane", lastName: "", elo: Elo.s1),
-      Player.create(firstName: "Alex", lastName: "", elo: Elo.s1),
-      Player.create(firstName: "Bella", lastName: "", elo: Elo.s1),
-      Player.create(firstName: "Cody", lastName: "", elo: Elo.s1),
-      Player.create(firstName: "Diana", lastName: "", elo: Elo.s1),
-    ],
-  };
-
-  Set<Player> get player => _players;
+  Set<Player> get player => _players.values.toSet();
 
   final List<GameContainer> history = [];
 
@@ -91,26 +48,36 @@ class GameData extends ChangeNotifier {
   final Map<Player, double> _fractionalAverageGamePlayer = {};
 
   void addFractionalPricedPlayer(Player player) {
-    _players.add(player);
+    _players[player.id] = player;
     _fractionalAverageGamePlayer[player] =
         getCurrentPlayerAverageMatchPlayed() * history.length;
     notifyListeners();
   }
 
   void addFullPricedPlayer(Player player) {
-    _players.add(player);
+    _players[player.id] = player;
     notifyListeners();
   }
 
   void onUpdatePlayer(Player newPlayer) {
-    final playerToRemove = _players.firstWhereOrNull(
-      (p) => p.id == newPlayer.id,
-    );
-    if (playerToRemove != null) {
-      _players.remove(playerToRemove);
-      _players.add(newPlayer);
-    }
+    final oldPlayer = _players[newPlayer.id];
+    if (oldPlayer == null) return;
+    _players[newPlayer.id] = newPlayer;
     PlayerRepository.instance.update(newPlayer.id, newPlayer);
+    for (var game in stagingMatches) {
+      if (game.players.contains(oldPlayer)) {
+        game.players[game.players.indexOf(oldPlayer)] = newPlayer;
+      }
+    }
+
+    for (var games in history) {
+      for (var game in games) {
+        if (game.players.contains(oldPlayer)) {
+          game.players[game.players.indexOf(oldPlayer)] = newPlayer;
+        }
+      }
+    }
+
     notifyListeners();
   }
 
@@ -121,12 +88,9 @@ class GameData extends ChangeNotifier {
   }
 
   /// Remove a playing who is currently in a session
-  void removePlayer(Player player, {bool byId = false}) {
-    final playerToRemove = (byId)
-        ? _players.firstWhere((p) => p.id == player.id)
-        : player;
-    _players.remove(playerToRemove);
-    gameContainingPlayer(playerToRemove)?.players.remove(playerToRemove);
+  void removePlayer(Player player) {
+    _players.remove(player.id);
+    gameContainingPlayer(player)?.players.remove(player);
     notifyListeners();
   }
 
@@ -207,7 +171,7 @@ class GameData extends ChangeNotifier {
     final averageMatchPlayed = getCurrentPlayerAverageMatchPlayed();
 
     final onCourtPlayers = getPlayerFromGames(stagingMatches).toSet();
-    final playerOffCourt = _players.difference(onCourtPlayers);
+    final playerOffCourt = _players.values.toSet().difference(onCourtPlayers);
 
     final weights = playerOffCourt.map((player) {
       final modifier =
@@ -225,10 +189,11 @@ class GameData extends ChangeNotifier {
   /// Prevent scenario where a player leaves and still got chosen to play.
   Map<Player, double> getCurrentPlayersHistory() {
     final Map<Player, double> matchCount = {
-      for (var player in _players) player: 0,
+      for (var player in _players.values) player: 0,
     };
+    final currentPlayers = _players.values.toSet();
     final currentPlayerHistory = history.expand(
-      (games) => getPlayerFromGames(games).where(_players.contains),
+      (games) => getPlayerFromGames(games).where(currentPlayers.contains),
     );
     for (final player in currentPlayerHistory) {
       matchCount[player] = matchCount.update(player, (value) => value + 1);
