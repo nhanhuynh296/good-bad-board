@@ -4,6 +4,7 @@ import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
@@ -19,6 +20,19 @@ class GameMakerPage extends StatelessWidget {
     final gameData = Provider.of<GameData>(context);
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () async {
+            final result = await showAdaptiveDialog(
+              context: context,
+              builder: (_) => const ConfirmExitDialog(),
+            );
+
+            if (result == true && context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
         title: Text(
           "GAME ${gameData.history.length + 1}",
           style: context.textTheme.titleLarge,
@@ -30,13 +44,16 @@ class GameMakerPage extends StatelessWidget {
         child: Row(
           spacing: spaceDefault,
           children: [
-            const Expanded(
+            Expanded(
               child: Column(
                 spacing: spaceComponent,
                 children: [
-                  CountdownTimer(),
-                  Divider(),
-                  Expanded(child: InactivePlayerComponent()),
+                  if (PersistentSetting.instance.getGameType() ==
+                      GameType.timeBased) ...[
+                    const CountdownTimer(),
+                    const Divider(),
+                  ],
+                  const Expanded(child: InactivePlayerComponent()),
                 ],
               ),
             ),
@@ -58,13 +75,7 @@ class GameMakerPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: spacePageX,
-          vertical: spaceDefault,
-        ),
-        child: BottomActionBar(),
-      ),
+      bottomNavigationBar: const BottomActionBar(),
 
       floatingActionButton: FloatingActionButton(
         mini: true,
@@ -167,47 +178,95 @@ class BottomActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context, listen: true);
     final generateActive = gameData.stagingMatches.isNotEmpty;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      spacing: spaceDefault,
-      children: [
-        Expanded(
-          child: Button(
-            type: generateActive ? ButtonType.outlined : ButtonType.filled,
-            onPressed: () async {
-              final error = await gameData.makeGame();
-              if (!context.mounted) return;
-              if (error != null) {
-                context.showErrorToast(error);
-                return;
-              }
-            },
-            child: Text(generateActive ? 'Re-Generate Game' : 'Generate Game'),
-          ),
-        ),
-        if (generateActive)
-          Expanded(
-            child: Button(
-              type: ButtonType.filled,
-              onPressed: () {
-                final invalidGames = gameData.stagingMatches.where(
-                  (match) => match.players.isNotEmpty && !match.isPlayable(),
-                );
-                if (invalidGames.isNotEmpty) {
-                  context.showErrorToast(
-                    'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
-                  );
-                  return;
-                }
-                final errorOrNull = gameData.saveCurrentGame();
-                if (errorOrNull != null) {
-                  context.showErrorToast(errorOrNull);
-                  return;
-                }
-              },
-              child: const Text('Save'),
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: spacePageX,
+        vertical: space16,
+      ),
+      height: space64,
+      child: SizedBox(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: spaceDefault,
+          children: [
+            Expanded(
+              child: Button(
+                type: generateActive ? ButtonType.outlined : ButtonType.filled,
+                onPressed: () async {
+                  final error = await gameData.makeGame();
+                  if (!context.mounted) return;
+                  if (error != null) {
+                    context.showErrorToast(error);
+                    return;
+                  }
+                },
+                child: Text(
+                  generateActive ? 'Re-Generate Game' : 'Generate Game',
+                ),
+              ),
             ),
-          ),
+            if (generateActive)
+              Expanded(
+                flex: 2,
+                child: Button(
+                  type: ButtonType.filled,
+                  onPressed: () {
+                    final invalidGames = gameData.stagingMatches.where(
+                      (match) =>
+                          match.players.isNotEmpty && !match.isPlayable(),
+                    );
+                    if (invalidGames.isNotEmpty) {
+                      context.showErrorToast(
+                        'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
+                      );
+                      return;
+                    }
+                    final errorOrNull = gameData.saveCurrentGame();
+                    if (errorOrNull != null) {
+                      context.showErrorToast(errorOrNull);
+                      return;
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ConfirmExitDialog extends StatelessWidget {
+  const ConfirmExitDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Confirm Exit'),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Exit this screen will stop the timer.'),
+          Text('Are you sure you want to exit?'),
+        ],
+      ),
+      actions: [
+        Button(
+          type: ButtonType.text,
+          child: const Text('Cancel'),
+          onPressed: () {
+            Navigator.of(context).pop(false);
+          },
+        ),
+        Button(
+          type: ButtonType.filled,
+          child: const Text('OK'),
+          onPressed: () {
+            Navigator.of(context).pop(true);
+          },
+        ),
       ],
     );
   }

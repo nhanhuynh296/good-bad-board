@@ -2,15 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
+import 'package:good_bad_board/core/iterable_extension.dart';
+import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/container.dart';
+import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
+
+  static const children = <Widget>[
+    CourtSetting(),
+    TimerSetting(),
+    GameTypeSetting(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +32,44 @@ class SettingPage extends StatelessWidget {
           horizontal: spacePageX,
           vertical: spacePageY,
         ),
-        child: const Column(
-          spacing: spaceCard,
-          children: [CourtSetting(), TimerSetting()],
+        child: ListView.separated(
+          separatorBuilder: (_, _) => const SizedBox(height: space32),
+          itemBuilder: (_, index) => children[index],
+          itemCount: children.length,
+        ),
+      ),
+    );
+  }
+}
+
+class SettingMultipleChoice extends StatelessWidget {
+  final Widget child;
+  final bool selected;
+  final Color? backgroundColor;
+  final VoidCallback? onPressed;
+
+  const SettingMultipleChoice({
+    super.key,
+    required this.child,
+    this.selected = false,
+    this.backgroundColor,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: goldenRatio,
+      child: ShadedContainer(
+        backgroundColor: selected
+            ? context.colorScheme.secondaryContainer
+            : null,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.all(spaceCard),
+            child: Center(child: child),
+          ),
         ),
       ),
     );
@@ -56,11 +100,11 @@ class _CourtSettingState extends State<CourtSetting> {
           .replaceFirst('.webp', '')
           .replaceAll('_', ' ')
           .toUpperCase();
-      Widget child = Image.asset(choice);
+      Widget child = SettingMultipleChoice(
+        selected: choice == chosen,
+        child: Image.asset(choice),
+      );
 
-      if (choice == chosen) {
-        child = ShadedContainer(child: child);
-      }
       child = Column(
         mainAxisSize: MainAxisSize.min,
         spacing: spaceCard,
@@ -82,7 +126,7 @@ class _CourtSettingState extends State<CourtSetting> {
       mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
-        Text("Court", style: context.textTheme.titleLarge),
+        Text("Court Theme", style: context.textTheme.titleLarge),
         Row(spacing: spaceDefault, children: children.toList(growable: false)),
       ],
     );
@@ -212,6 +256,65 @@ class TimerSetting extends StatelessWidget {
               listen: false,
             ).setDuration(duration);
           },
+        ),
+      ],
+    );
+  }
+}
+
+class GameTypeSetting extends StatefulWidget {
+  const GameTypeSetting({super.key});
+
+  static const options = ["TIME BASED", "GAME BASED"];
+
+  @override
+  State<GameTypeSetting> createState() => _GameTypeSettingState();
+}
+
+class _GameTypeSettingState extends State<GameTypeSetting> {
+  GameType chosen = GameType.values.first;
+
+  Future<void> onGameTypeSelected(GameType selected) async {
+    setState(() {
+      chosen = selected;
+      PersistentSetting.instance.setGameType(selected);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      spacing: spaceCard,
+      children: [
+        Text("Game Type", style: context.textTheme.titleLarge),
+        Row(
+          spacing: spaceCard,
+          children: GameType.values
+              .map(
+                (gameType) => Expanded(
+                  child: SettingMultipleChoice(
+                    onPressed: () {
+                      onGameTypeSelected(gameType);
+
+                      if (gameType != GameType.timeBased) {
+                        context.showToast(
+                          "${chosen.toDisplayString()} is being developed, stay tuned!",
+                        );
+
+                        onGameTypeSelected(GameType.timeBased);
+                      }
+                    },
+                    selected: chosen == gameType,
+                    child: Text(
+                      gameType.toDisplayString(),
+                      style: TextStyle(
+                        color: context.colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+              .toUnmodifiableList(),
         ),
       ],
     );
