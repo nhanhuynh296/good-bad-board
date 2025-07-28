@@ -12,14 +12,22 @@ import 'package:good_bad_board/view/component/inactive_player.dart';
 import 'package:good_bad_board/view/component/timer.dart';
 import 'package:provider/provider.dart';
 
-class GameMakerPage extends StatelessWidget {
+class GameMakerPage extends StatefulWidget {
   const GameMakerPage({super.key});
+
+  @override
+  State<GameMakerPage> createState() => _GameMakerPageState();
+}
+
+class _GameMakerPageState extends State<GameMakerPage> {
+  bool autoMakeGame = false;
 
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () async {
@@ -37,7 +45,14 @@ class GameMakerPage extends StatelessWidget {
           "GAME ${gameData.history.length + 1}",
           style: context.textTheme.titleLarge,
         ),
-        actions: const [SaveDataIconButton()],
+        actions: [
+          AutoMakeNextGameIconButton(
+            onChanged: (newState) => setState(() {
+              autoMakeGame = newState;
+            }),
+          ),
+          const SaveDataIconButton(),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: spacePageX),
@@ -50,7 +65,15 @@ class GameMakerPage extends StatelessWidget {
                 children: [
                   if (PersistentSetting.instance.getGameType() ==
                       GameType.timeBased) ...[
-                    const CountdownTimer(),
+                    CountdownTimer(
+                      onExpired: () {
+                        if (autoMakeGame) {
+                          gameData
+                            ..saveCurrentGame()
+                            ..makeGame();
+                        }
+                      },
+                    ),
                     const Divider(),
                   ],
                   const Expanded(child: InactivePlayerComponent()),
@@ -134,6 +157,42 @@ class _SaveDataIconButtonState extends State<SaveDataIconButton> {
     return IconButton(
       onPressed: isSaving ? null : onPressed,
       icon: const Icon(Icons.save),
+    );
+  }
+}
+
+class AutoMakeNextGameIconButton extends StatefulWidget {
+  final ValueChanged<bool>? onChanged;
+
+  const AutoMakeNextGameIconButton({super.key, this.onChanged});
+
+  @override
+  State<AutoMakeNextGameIconButton> createState() =>
+      _AutoMakeNextGameIconButtonState();
+}
+
+class _AutoMakeNextGameIconButtonState
+    extends State<AutoMakeNextGameIconButton> {
+  bool selected = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      type: selected ? ButtonType.filled : ButtonType.outlined,
+      icon: selected
+          ? Icon(
+              Icons.queue_play_next,
+              color: context.colorScheme.secondaryContainer,
+            )
+          : const Icon(Icons.add_to_queue),
+      child: const Text("Auto Game"),
+      onPressed: () {
+        setState(() {
+          selected = !selected;
+        });
+        widget.onChanged?.call(selected);
+        context.showToast("Auto Make Game is ${selected ? "ON" : "OFF"}");
+      },
     );
   }
 }

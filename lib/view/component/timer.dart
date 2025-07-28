@@ -18,7 +18,6 @@ class CountdownTimer extends StatefulWidget {
 class _CountdownTimerState extends State<CountdownTimer>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  bool paused = true;
 
   @override
   void initState() {
@@ -54,7 +53,9 @@ class _CountdownTimerState extends State<CountdownTimer>
       padding: EdgeInsets.zero,
       onPressed: () {
         if (!_controller.isAnimating) {
-          _controller.repeat();
+          _controller
+            ..reset()
+            ..forward();
         } else {
           _controller.stop(canceled: false);
         }
