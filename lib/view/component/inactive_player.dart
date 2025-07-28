@@ -7,6 +7,7 @@ import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/court.dart';
@@ -201,26 +202,20 @@ class StagingGameComponent extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Expanded(
-                    child: Container(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: spaceComponent,
-                        horizontal: spaceDefault,
+                    child: CourtHeader(
+                      leading: Text('COURT ${index + 1}', style: textStyle),
+                      title: Text(
+                        'SKILL GAP ${games[index].eloGap()}',
+                        style: textStyle,
                       ),
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        spacing: spaceComponent,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('COURT ${index + 1}', style: textStyle),
-                          const Spacer(),
-
-                          Text(
-                            'SKILL GAP ${games[index].eloGap()}',
-                            style: textStyle,
-                          ),
+                      actions: [
+                        if (PersistentSetting.instance.getGameType() ==
+                            GameType.gameBased)
                           Button(
-                            icon: const Icon(Icons.sync),
+                            icon: const Icon(
+                              Icons.play_arrow,
+                              color: Colors.green,
+                            ),
                             onPressed: () {
                               final gameData = Provider.of<GameData>(
                                 context,
@@ -235,17 +230,34 @@ class StagingGameComponent extends StatelessWidget {
                                 );
                                 return;
                               }
-                              final error = Provider.of<GameData>(
-                                context,
-                                listen: false,
-                              ).makeSingleCourt(index);
-                              if (error != null) {
-                                context.showErrorToast(error);
-                              }
+                              context.showErrorToast(
+                                "Game Based not implemented",
+                              );
                             },
                           ),
-                        ],
-                      ),
+                        Button(
+                          icon: const Icon(Icons.sync),
+                          onPressed: () {
+                            final gameData = Provider.of<GameData>(
+                              context,
+                              listen: false,
+                            );
+                            if (games[index].players.isEmpty &&
+                                gameData.player.length -
+                                        getPlayerFromGames(games).length <
+                                    Game.playerPerCourt) {
+                              context.showErrorToast(
+                                'Not enough players to make a court',
+                              );
+                              return;
+                            }
+                            final error = gameData.makeSingleCourt(index);
+                            if (error != null) {
+                              context.showErrorToast(error);
+                            }
+                          },
+                        ),
+                      ],
                     ),
                   ),
                   CourtComponent(players: games[index].players),
@@ -265,6 +277,41 @@ class StagingGameComponent extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class CourtHeader extends StatefulWidget {
+  final Widget? leading;
+  final Widget? title;
+  final List<Widget>? actions;
+
+  const CourtHeader({super.key, this.leading, this.title, this.actions});
+
+  @override
+  State<CourtHeader> createState() => _CourtHeaderState();
+}
+
+class _CourtHeaderState extends State<CourtHeader> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Theme.of(context).colorScheme.secondaryContainer,
+      padding: const EdgeInsets.symmetric(
+        vertical: spaceComponent,
+        horizontal: spaceDefault,
+      ),
+      alignment: Alignment.centerLeft,
+      child: Row(
+        spacing: spaceComponent,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ?widget.leading,
+          const Spacer(),
+          ?widget.title,
+          Row(mainAxisSize: MainAxisSize.min, children: widget.actions ?? []),
+        ],
+      ),
     );
   }
 }
