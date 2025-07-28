@@ -208,6 +208,7 @@ class BottomActionBar extends StatelessWidget {
             ),
             if (generateActive)
               Expanded(
+                flex: 2,
                 child: Button(
                   type: ButtonType.filled,
                   onPressed: () {
@@ -242,7 +243,7 @@ class ConfirmExitDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog.adaptive(
+    return AlertDialog(
       title: const Text('Confirm Exit'),
       content: const Column(
         mainAxisSize: MainAxisSize.min,
