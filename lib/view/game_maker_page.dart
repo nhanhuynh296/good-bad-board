@@ -20,6 +20,19 @@ class GameMakerPage extends StatelessWidget {
     final gameData = Provider.of<GameData>(context);
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () async {
+            final result = await showAdaptiveDialog(
+              context: context,
+              builder: (_) => const ConfirmExitDialog(),
+            );
+
+            if (result == true && context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
         title: Text(
           "GAME ${gameData.history.length + 1}",
           style: context.textTheme.titleLarge,
@@ -220,6 +233,40 @@ class BottomActionBar extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class ConfirmExitDialog extends StatelessWidget {
+  const ConfirmExitDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog.adaptive(
+      title: const Text('Confirm Exit'),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Exit this screen will stop the timer.'),
+          Text('Are you sure you want to exit?'),
+        ],
+      ),
+      actions: [
+        Button(
+          type: ButtonType.text,
+          child: const Text('Cancel'),
+          onPressed: () {
+            Navigator.of(context).pop(false);
+          },
+        ),
+        Button(
+          type: ButtonType.filled,
+          child: const Text('OK'),
+          onPressed: () {
+            Navigator.of(context).pop(true);
+          },
+        ),
+      ],
     );
   }
 }

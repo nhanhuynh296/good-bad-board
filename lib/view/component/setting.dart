@@ -15,6 +15,12 @@ import 'package:provider/provider.dart';
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
 
+  static const children = <Widget>[
+    CourtSetting(),
+    TimerSetting(),
+    GameTypeSetting(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,9 +32,10 @@ class SettingPage extends StatelessWidget {
           horizontal: spacePageX,
           vertical: spacePageY,
         ),
-        child: const Column(
-          spacing: space32,
-          children: [CourtSetting(), TimerSetting(), GameTypeSetting()],
+        child: ListView.separated(
+          separatorBuilder: (_, _) => const SizedBox(height: space32),
+          itemBuilder: (_, index) => children[index],
+          itemCount: children.length,
         ),
       ),
     );
