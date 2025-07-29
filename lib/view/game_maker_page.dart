@@ -6,6 +6,7 @@ import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/view/component/button.dart';
+import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
@@ -177,22 +178,25 @@ class _AutoMakeNextGameIconButtonState
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      type: selected ? ButtonType.filled : ButtonType.outlined,
-      icon: selected
-          ? Icon(
-              Icons.queue_play_next,
-              color: context.colorScheme.secondaryContainer,
-            )
-          : const Icon(Icons.add_to_queue),
-      child: const Text("Auto Game"),
-      onPressed: () {
-        setState(() {
-          selected = !selected;
-        });
-        widget.onChanged?.call(selected);
-        context.showToast("Auto Make Game is ${selected ? "ON" : "OFF"}");
-      },
+    return ShadedContainer(
+      shaded: false,
+      bordered: selected,
+      child: Button(
+        type: ButtonType.text,
+        icon: selected
+            ? const Icon(Icons.queue_play_next)
+            : const Icon(Icons.add_to_queue),
+        child: Opacity(
+          opacity: selected ? 1 : 0.5,
+          child: const Text("Auto Game"),
+        ),
+
+        onPressed: () {
+          setState(() => selected = !selected);
+          widget.onChanged?.call(selected);
+          context.showToast("Auto Make Game is ${selected ? "ON" : "OFF"}");
+        },
+      ),
     );
   }
 }

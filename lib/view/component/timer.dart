@@ -4,6 +4,7 @@ import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
+import 'package:good_bad_board/view/component/container.dart';
 import 'package:provider/provider.dart';
 
 class CountdownTimer extends StatefulWidget {
@@ -48,60 +49,62 @@ class _CountdownTimerState extends State<CountdownTimer>
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
-    return Button(
-      type: ButtonType.outlined,
-      padding: EdgeInsets.zero,
-      onPressed: () {
-        if (!_controller.isAnimating) {
-          _controller
-            ..reset()
-            ..forward();
-        } else {
-          _controller.stop(canceled: false);
-        }
-      },
-      onLongPress: () {
-        _controller.animateBack(0, duration: Durations.short3);
-      },
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                return LinearProgressIndicator(
-                  value: _controller.value,
-                  backgroundColor: Colors.transparent,
-                  color: context.colorScheme.secondary,
-                );
-              },
+    return ShadedContainer(
+      child: Button(
+        type: ButtonType.text,
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          if (!_controller.isAnimating) {
+            _controller
+              ..reset()
+              ..forward();
+          } else {
+            _controller.stop(canceled: false);
+          }
+        },
+        onLongPress: () {
+          _controller.animateBack(0, duration: Durations.short3);
+        },
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, _) {
+                  return LinearProgressIndicator(
+                    value: _controller.value,
+                    backgroundColor: Colors.transparent,
+                    color: context.colorScheme.secondary,
+                  );
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: spaceComponent),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: spaceComponent,
-              children: [
-                Text(
-                  'Time Remaining',
-                  style: textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                ),
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (BuildContext context, _) {
-                    return Text(
-                      (_controller.duration! - timeElapsed).toDisplayString(),
-                      style: textTheme.displaySmall,
-                      textAlign: TextAlign.center,
-                    );
-                  },
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: spaceComponent),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: spaceComponent,
+                children: [
+                  Text(
+                    'Time Remaining',
+                    style: textTheme.titleLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  AnimatedBuilder(
+                    animation: _controller,
+                    builder: (BuildContext context, _) {
+                      return Text(
+                        (_controller.duration! - timeElapsed).toDisplayString(),
+                        style: textTheme.displaySmall,
+                        textAlign: TextAlign.center,
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
