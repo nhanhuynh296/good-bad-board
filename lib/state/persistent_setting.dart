@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum Setting { background, gameType }
@@ -12,7 +13,7 @@ enum GameType {
   };
 }
 
-class PersistentSetting {
+class PersistentSetting extends ChangeNotifier {
   PersistentSetting._init();
 
   static final PersistentSetting instance = PersistentSetting._init();
@@ -27,6 +28,7 @@ class PersistentSetting {
 
   Future<void> setCourtBackground(String image) async {
     await sharedPreference.setString(Setting.background.name, image);
+    notifyListeners();
   }
 
   String getBackground() =>
@@ -35,6 +37,7 @@ class PersistentSetting {
 
   Future<void> setGameType(GameType type) async {
     await sharedPreference.setString(Setting.gameType.name, type.name);
+    notifyListeners();
   }
 
   GameType getGameType() => GameType.values.firstWhere(

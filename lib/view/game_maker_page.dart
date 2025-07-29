@@ -26,6 +26,9 @@ class _GameMakerPageState extends State<GameMakerPage> {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
+    final gameType = context.select(
+      (PersistentSetting setting) => setting.getGameType(),
+    );
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -64,8 +67,7 @@ class _GameMakerPageState extends State<GameMakerPage> {
               child: Column(
                 spacing: spaceComponent,
                 children: [
-                  if (PersistentSetting.instance.getGameType() ==
-                      GameType.timeBased) ...[
+                  if (gameType == GameType.timeBased) ...[
                     CountdownTimer(
                       onExpired: () {
                         if (autoMakeGame) {
@@ -274,7 +276,7 @@ class BottomActionBar extends StatelessWidget {
                 flex: 2,
                 child: Button(
                   type: ButtonType.filled,
-                  onPressed: () {
+                  onPressed: () async {
                     final invalidGames = gameData.stagingMatches.where(
                       (match) =>
                           match.players.isNotEmpty && !match.isPlayable(),
@@ -285,8 +287,8 @@ class BottomActionBar extends StatelessWidget {
                       );
                       return;
                     }
-                    final errorOrNull = gameData.saveCurrentGame();
-                    if (errorOrNull != null) {
+                    final errorOrNull = await gameData.saveCurrentGame();
+                    if (errorOrNull != null && context.mounted) {
                       context.showErrorToast(errorOrNull);
                       return;
                     }

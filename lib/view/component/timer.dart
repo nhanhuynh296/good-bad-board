@@ -53,13 +53,18 @@ class _CountdownTimerState extends State<CountdownTimer>
       child: Button(
         type: ButtonType.text,
         padding: EdgeInsets.zero,
-        onPressed: () {
-          if (!_controller.isAnimating) {
-            _controller
-              ..reset()
-              ..forward();
-          } else {
+        onPressed: () async {
+          // Order of operations is important here.
+          // If the controller is dismissed or completed, we animate back to 0.
+          if (_controller.isDismissed || _controller.isCompleted) {
+            await _controller.animateBack(0, duration: Durations.short3);
+            _controller.forward();
+          } else if (_controller.isAnimating) {
+            // If the controller is animating, we stop it.
             _controller.stop(canceled: false);
+          } else {
+            // If the controller is not animating, we start it.
+            _controller.forward();
           }
         },
         onLongPress: () {

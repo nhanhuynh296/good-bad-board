@@ -5,6 +5,7 @@ import 'dart:math' hide log;
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/core/random.dart';
 import 'package:good_bad_board/model/game.dart';
@@ -132,8 +133,14 @@ class GameData extends ChangeNotifier {
     if (courtIndex >= numberOfCourt || courtIndex < 0) {
       return 'Invalid court index';
     }
+    // available player should exclude the player in the current court itself
+    final numberOfPlayerInTargetCourt =
+        stagingMatches.elementAtOrNull(courtIndex)?.players.length ?? 0;
+    // All player - all player on court + player on current court
     final playerAvailable =
-        _players.length - getPlayerFromGames(stagingMatches).length;
+        _players.length -
+        getPlayerFromGames(stagingMatches).length +
+        numberOfPlayerInTargetCourt;
     if (playerAvailable < Game.playerPerCourt) {
       return 'Not enough players, need at least ${Game.playerPerCourt}, got $playerAvailable';
     }
@@ -146,7 +153,7 @@ class GameData extends ChangeNotifier {
     return null;
   }
 
-  String? saveCurrentGame() {
+  Future<String?> saveCurrentGame() async {
     if (stagingMatches.isEmpty) return "No game to save";
     final invalidGames = stagingMatches.where(
       (match) => match.players.isNotEmpty && !match.isPlayable(),
@@ -155,9 +162,28 @@ class GameData extends ChangeNotifier {
       return 'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}';
     }
     history.add(stagingMatches);
-    GameRepository.instance.addAll(stagingMatches);
+    await GameRepository.instance.addAll(stagingMatches);
 
     stagingMatches = List.empty(growable: false);
+    notifyListeners();
+    debugPrint(
+      'Average match every should have played: ${getCurrentPlayerAverageMatchPlayed().toStringAsFixed(2)}',
+    );
+    return null;
+  }
+
+  /// Save a single game to the history and remove it from the staging matches.
+  /// For use in game based
+  Future<String?> saveSingleGame(Game game) async {
+    if (game.players.isEmpty) return "No game to save";
+    if (!game.isPlayable()) {
+      return 'PLAYER IS NOT BALANCE ON COURT ${stagingMatches.indexOf(game) + 1}';
+    }
+    final currentGameIndex = stagingMatches.indexOf(game);
+    history.add([game]);
+    await GameRepository.instance.add(game);
+    // Remove game, but also add a new empty game to so the court do not jump
+    stagingMatches[currentGameIndex] = Game.create(List<Player>.empty());
     notifyListeners();
     debugPrint(
       'Average match every should have played: ${getCurrentPlayerAverageMatchPlayed().toStringAsFixed(2)}',
