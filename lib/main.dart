@@ -20,6 +20,7 @@ Future<void> main() async {
         }
         return MultiProvider(
           providers: [
+            ChangeNotifierProvider.value(value: PersistentSetting.instance),
             ChangeNotifierProvider(create: (_) => GameData()),
             ChangeNotifierProvider(create: (_) => TimerData()),
           ],

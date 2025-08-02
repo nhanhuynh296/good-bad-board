@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/theme.dart';
+import 'package:good_bad_board/view/component/container.dart';
 
 enum ButtonType { filled, outlined, text }
 
@@ -100,15 +101,10 @@ class FilledButtonWidget extends StatelessWidget {
       padding: WidgetStatePropertyAll(padding),
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: outlinedBorderRadius,
-        boxShadow: [
-          buttonBoxShadow.copyWith(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-          ),
-        ],
-      ),
+    return ShadedContainer(
+      bordered: false,
+      shaded: true,
+      shadedColor: Theme.of(context).colorScheme.secondaryContainer,
       child: onlyIcon
           ? IconButton.filled(
               style: filledButtonStyle,
@@ -177,15 +173,10 @@ class OutlinedButtonWidget extends StatelessWidget {
       ),
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: outlinedBorderRadius,
-        boxShadow: [
-          buttonBoxShadow.copyWith(
-            color: Theme.of(context).colorScheme.inverseSurface,
-          ),
-        ],
-      ),
+    return ShadedContainer(
+      shaded: true,
+      bordered: true,
+      shadedColor: Theme.of(context).colorScheme.inverseSurface,
       child: onlyIcon
           ? IconButton.outlined(
               onPressed: onPressed,

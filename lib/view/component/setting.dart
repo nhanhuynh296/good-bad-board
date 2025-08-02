@@ -8,7 +8,6 @@ import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/container.dart';
-import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -272,7 +271,7 @@ class GameTypeSetting extends StatefulWidget {
 }
 
 class _GameTypeSettingState extends State<GameTypeSetting> {
-  GameType chosen = GameType.values.first;
+  GameType chosen = PersistentSetting.instance.getGameType();
 
   Future<void> onGameTypeSelected(GameType selected) async {
     setState(() {
@@ -295,14 +294,6 @@ class _GameTypeSettingState extends State<GameTypeSetting> {
                   child: SettingMultipleChoice(
                     onPressed: () {
                       onGameTypeSelected(gameType);
-
-                      if (gameType != GameType.timeBased) {
-                        context.showToast(
-                          "${chosen.toDisplayString()} is being developed, stay tuned!",
-                        );
-
-                        onGameTypeSelected(GameType.timeBased);
-                      }
                     },
                     selected: chosen == gameType,
                     child: Text(

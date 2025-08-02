@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
@@ -155,6 +156,7 @@ class StagingGameComponent extends StatelessWidget {
     BoxConstraints constraints,
     double gutter,
     EdgeInsets padding,
+    itemCount,
   ) {
     final constraintMaxWidth = constraints.maxWidth - padding.horizontal;
     final constrainMaxHeight = constraints.maxHeight - padding.vertical;
@@ -166,7 +168,7 @@ class StagingGameComponent extends StatelessWidget {
     int idealNumberOfColumns = maxNumberOfColumns;
 
     for (int column = 1; column <= maxNumberOfColumns; column++) {
-      final row = (games.length / column).ceil();
+      final row = (itemCount / column).ceil();
       final itemWidth = (constraintMaxWidth - gutter * (column - 1)) / column;
       final itemHeight = itemWidth / goldenRatio;
 
@@ -187,80 +189,26 @@ class StagingGameComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.titleLarge;
     const gutter = spaceDefault;
     const padding = EdgeInsets.only(right: space16);
+    final games = context.watch<GameData>().stagingMatches;
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         return GridView.builder(
+          shrinkWrap: true,
           itemCount: games.length,
           padding: padding,
           itemBuilder: (BuildContext context, int index) {
+            final game = games[index];
             return ShadedContainer(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Expanded(
-                    child: CourtHeader(
-                      leading: Text('COURT ${index + 1}', style: textStyle),
-                      title: Text(
-                        'SKILL GAP ${games[index].eloGap()}',
-                        style: textStyle,
-                      ),
-                      actions: [
-                        if (PersistentSetting.instance.getGameType() ==
-                            GameType.gameBased)
-                          Button(
-                            icon: const Icon(
-                              Icons.play_arrow,
-                              color: Colors.green,
-                            ),
-                            onPressed: () {
-                              final gameData = Provider.of<GameData>(
-                                context,
-                                listen: false,
-                              );
-                              if (games[index].players.isEmpty &&
-                                  gameData.player.length -
-                                          getPlayerFromGames(games).length <
-                                      Game.playerPerCourt) {
-                                context.showErrorToast(
-                                  'Not enough players to make a court',
-                                );
-                                return;
-                              }
-                              context.showErrorToast(
-                                "Game Based not implemented",
-                              );
-                            },
-                          ),
-                        Button(
-                          icon: const Icon(Icons.sync),
-                          onPressed: () {
-                            final gameData = Provider.of<GameData>(
-                              context,
-                              listen: false,
-                            );
-                            if (games[index].players.isEmpty &&
-                                gameData.player.length -
-                                        getPlayerFromGames(games).length <
-                                    Game.playerPerCourt) {
-                              context.showErrorToast(
-                                'Not enough players to make a court',
-                              );
-                              return;
-                            }
-                            final error = gameData.makeSingleCourt(index);
-                            if (error != null) {
-                              context.showErrorToast(error);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
+                    child: CourtHeader(game: game, courtNumber: index),
                   ),
-                  CourtComponent(players: games[index].players),
+                  CourtComponent(players: game.players),
                 ],
               ),
             );
@@ -270,6 +218,7 @@ class StagingGameComponent extends StatelessWidget {
               constraints,
               gutter,
               padding,
+              games.length,
             ),
             mainAxisSpacing: gutter,
             crossAxisSpacing: gutter,
@@ -282,36 +231,114 @@ class StagingGameComponent extends StatelessWidget {
 }
 
 class CourtHeader extends StatefulWidget {
-  final Widget? leading;
-  final Widget? title;
-  final List<Widget>? actions;
+  final int courtNumber;
+  final Game game;
 
-  const CourtHeader({super.key, this.leading, this.title, this.actions});
+  const CourtHeader({super.key, required this.courtNumber, required this.game});
 
   @override
   State<CourtHeader> createState() => _CourtHeaderState();
 }
 
-class _CourtHeaderState extends State<CourtHeader> {
+class _CourtHeaderState extends State<CourtHeader>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  bool isPlaying = false;
+
+  Widget startStopPlayingIcon() {
+    if (!isPlaying) {
+      return Button(
+        icon: const Icon(Icons.play_arrow, color: Colors.green),
+        onPressed: () {
+          if (!widget.game.isPlayable()) {
+            context.showErrorToast('Not enough players to make a court');
+            return;
+          }
+          setState(() => isPlaying = true);
+        },
+      );
+    } else {
+      return Button(
+        icon: const Icon(Icons.stop, color: Colors.red),
+        child: const Text("Finish", style: TextStyle(color: Colors.red)),
+        onPressed: () async {
+          setState(() => isPlaying = false);
+          final error = await context.read<GameData>().saveSingleGame(
+            widget.game,
+          );
+          if (!mounted) return;
+          if (error != null) {
+            context.showErrorToast(error);
+            return;
+          }
+          if (PersistentSetting.instance.getGameType() == GameType.gameBased) {
+            onPressGenerateGame();
+          }
+        },
+      );
+    }
+  }
+
+  void onPressGenerateGame() {
+    final gameData = Provider.of<GameData>(context, listen: false);
+    if (widget.game.players.isEmpty &&
+        gameData.player.length -
+                getPlayerFromGames(gameData.stagingMatches).length <
+            Game.playerPerCourt) {
+      context.showErrorToast('Not enough players to make a court');
+      return;
+    }
+    final error = gameData.makeSingleCourt(widget.courtNumber);
+    if (error != null && mounted) {
+      context.showErrorToast(error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Theme.of(context).colorScheme.secondaryContainer,
-      padding: const EdgeInsets.symmetric(
-        vertical: spaceComponent,
-        horizontal: spaceDefault,
-      ),
-      alignment: Alignment.centerLeft,
-      child: Row(
-        spacing: spaceComponent,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          ?widget.leading,
-          const Spacer(),
-          ?widget.title,
-          Row(mainAxisSize: MainAxisSize.min, children: widget.actions ?? []),
-        ],
-      ),
+    final textStyle = Theme.of(context).textTheme.titleLarge;
+    super.build(context);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        LinearProgressIndicator(
+          value: isPlaying ? null : 0,
+          color: context.colorScheme.secondaryContainer,
+          backgroundColor: Colors.transparent,
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: spaceComponent,
+            horizontal: spaceDefault,
+          ),
+          alignment: Alignment.centerLeft,
+          child: Row(
+            spacing: spaceComponent,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('COURT ${widget.courtNumber + 1}', style: textStyle),
+              const Spacer(),
+              Text('SKILL GAP ${widget.game.eloGap()}', style: textStyle),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (PersistentSetting.instance.getGameType() ==
+                      GameType.gameBased)
+                    startStopPlayingIcon(),
+                  if (!isPlaying)
+                    Button(
+                      icon: const Icon(Icons.sync),
+                      onPressed: onPressGenerateGame,
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
+
+  @override
+  bool get wantKeepAlive =>
+      PersistentSetting.instance.getGameType() == GameType.gameBased;
 }

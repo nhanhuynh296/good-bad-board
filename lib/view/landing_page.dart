@@ -26,21 +26,18 @@ class LandingPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text(appName)),
       drawer: const LandingPageDrawer(),
-      body: Center(
-        child: GridView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.symmetric(
-            horizontal: spacePageX,
-            vertical: spacePageY,
-          ),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: sqrt(children.length).ceil(),
-            mainAxisSpacing: spaceCard,
-            crossAxisSpacing: spaceCard,
-            mainAxisExtent: 450,
-          ),
-          children: children,
+      body: GridView(
+        padding: const EdgeInsets.symmetric(
+          horizontal: spacePageX,
+          vertical: spacePageY,
         ),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: sqrt(children.length).ceil(),
+          mainAxisSpacing: spaceCard,
+          crossAxisSpacing: spaceCard,
+          mainAxisExtent: 450,
+        ),
+        children: children,
       ),
     );
   }
@@ -77,7 +74,7 @@ class LandingPageDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width * 0.5;
+    final width = MediaQuery.sizeOf(context).width * 0.25;
     return Drawer(
       width: width,
       child: Column(
