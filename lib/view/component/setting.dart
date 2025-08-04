@@ -6,10 +6,8 @@ import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
-import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/container.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
@@ -212,7 +210,7 @@ class _TimePickerState extends State<TimePicker> {
                 baseOffset: 0,
                 extentOffset: controller.text.length,
               ),
-
+              onSubmitted: (_) => _onLosingFocus(),
               onTapOutside: (_) => _onLosingFocus(),
               onChanged: (_) => _onChange(),
             ),
@@ -241,19 +239,15 @@ class TimerSetting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timerData = context.watch<TimerData>();
     return Column(
       mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
         Text("Game Duration", style: context.textTheme.titleLarge),
         TimePicker(
-          initialDuration: timerData.duration,
+          initialDuration: PersistentSetting.instance.getGameDuration(),
           onChanged: (duration) {
-            Provider.of<TimerData>(
-              context,
-              listen: false,
-            ).setDuration(duration);
+            PersistentSetting.instance.setGameDuration(duration);
           },
         ),
       ],

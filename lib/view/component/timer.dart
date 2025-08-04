@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/spacing.dart';
+import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
@@ -24,9 +25,9 @@ class _CountdownTimerState extends State<CountdownTimer>
   void initState() {
     super.initState();
     final timerData = Provider.of<TimerData>(context, listen: false);
-    _controller = AnimationController(vsync: this, duration: timerData.duration)
-      ..value =
-          timerData.elapsed.inMilliseconds / timerData.duration.inMilliseconds;
+    final gameDuration = PersistentSetting.instance.getGameDuration();
+    _controller = AnimationController(vsync: this, duration: gameDuration)
+      ..value = timerData.elapsed.inMilliseconds / gameDuration.inMilliseconds;
     _controller.addStatusListener((status) {
       if (status.isCompleted) widget.onExpired?.call();
     });

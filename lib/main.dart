@@ -12,50 +12,61 @@ import 'package:provider/provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
-    FutureBuilder(
-      future: loading(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const CircularProgressIndicator();
-        }
-        return MultiProvider(
-          providers: [
-            ChangeNotifierProvider.value(value: PersistentSetting.instance),
-            ChangeNotifierProvider(create: (_) => GameData()),
-            ChangeNotifierProvider(create: (_) => TimerData()),
-          ],
-          child: const MyApp(),
-        );
-      },
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: PersistentSetting.instance),
+        ChangeNotifierProvider(create: (_) => GameData()),
+        ChangeNotifierProvider(create: (_) => TimerData()),
+      ],
+      child: const MyApp(),
     ),
   );
 }
 
-Future<void> loading() async {
-  await RepositoryService.instance.initialize();
-
-  await Future.wait([
-    PlayerRepository.instance.initialize(),
-    PersistentSetting.instance.initialize(),
-  ]);
-
-  await GameRepository.instance.initialize();
-
-  return;
-}
-
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final Future completer;
+
+  Future<void> loading() async {
+    await Future.wait([
+      RepositoryService.instance.initialize(),
+      PersistentSetting.instance.initialize(),
+    ]);
+
+    await PlayerRepository.instance.initialize();
+    // Depends on PlayerRepository to initialize first
+    await GameRepository.instance.initialize();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    completer = loading();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      routerConfig: router,
-      title: 'Flutter Demo',
-      theme: lightTheme,
-      darkTheme: darkTheme,
-      themeMode: ThemeMode.system,
+    return FutureBuilder(
+      future: completer,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) debugPrint(snapshot.error.toString());
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const CircularProgressIndicator();
+        }
+        return MaterialApp.router(
+          routerConfig: router,
+          title: 'Flutter Demo',
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: ThemeMode.system,
+        );
+      },
     );
   }
 }
