@@ -5,6 +5,7 @@ import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
+import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/dialog/toasts.dart';
@@ -20,8 +21,25 @@ class GameMakerPage extends StatefulWidget {
   State<GameMakerPage> createState() => _GameMakerPageState();
 }
 
-class _GameMakerPageState extends State<GameMakerPage> {
+class _GameMakerPageState extends State<GameMakerPage>
+    with SingleTickerProviderStateMixin {
   bool autoMakeGame = false;
+  late final AnimationController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final timerData = Provider.of<TimerData>(context, listen: false);
+    final gameDuration = PersistentSetting.instance.getGameDuration();
+    controller = AnimationController(vsync: this, duration: gameDuration)
+      ..value = timerData.elapsed.inMilliseconds / gameDuration.inMilliseconds;
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +53,11 @@ class _GameMakerPageState extends State<GameMakerPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () async {
-            final result = await showAdaptiveDialog(
+            if (controller.status != AnimationStatus.forward) {
+              return Navigator.of(context).pop();
+            }
+
+            final result = await showAdaptiveDialog<bool>(
               context: context,
               builder: (_) => const ConfirmExitDialog(),
             );
@@ -69,6 +91,7 @@ class _GameMakerPageState extends State<GameMakerPage> {
                 children: [
                   if (gameType == GameType.timeBased) ...[
                     CountdownTimer(
+                      controller: controller,
                       onExpired: () {
                         if (autoMakeGame) {
                           gameData

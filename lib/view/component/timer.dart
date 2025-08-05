@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/spacing.dart';
-import 'package:good_bad_board/state/persistent_setting.dart';
-import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
-import 'package:provider/provider.dart';
 
 class CountdownTimer extends StatefulWidget {
+  final AnimationController controller;
   final VoidCallback? onExpired;
 
-  const CountdownTimer({super.key, this.onExpired});
+  const CountdownTimer({super.key, required this.controller, this.onExpired});
 
   @override
   State<CountdownTimer> createState() => _CountdownTimerState();
@@ -24,24 +22,27 @@ class _CountdownTimerState extends State<CountdownTimer>
   @override
   void initState() {
     super.initState();
-    final timerData = Provider.of<TimerData>(context, listen: false);
-    final gameDuration = PersistentSetting.instance.getGameDuration();
-    _controller = AnimationController(vsync: this, duration: gameDuration)
-      ..value = timerData.elapsed.inMilliseconds / gameDuration.inMilliseconds;
-    _controller.addStatusListener((status) {
-      if (status.isCompleted) widget.onExpired?.call();
-    });
+    _controller = widget.controller;
+    _controller.addStatusListener(statusListener);
   }
 
   @override
-  void deactivate() {
-    context.read<TimerData>().saveTimeElapsed(timeElapsed);
-    super.deactivate();
+  void didUpdateWidget(covariant CountdownTimer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      _controller.removeStatusListener(statusListener);
+      _controller = widget.controller;
+      _controller.addStatusListener(statusListener);
+    }
+  }
+
+  void statusListener(AnimationStatus status) {
+    if (status.isCompleted) widget.onExpired?.call();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller.removeStatusListener(statusListener);
     super.dispose();
   }
 

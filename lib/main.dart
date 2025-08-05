@@ -18,19 +18,19 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => GameData()),
         ChangeNotifierProvider(create: (_) => TimerData()),
       ],
-      child: const MyApp(),
+      child: const AppLoader(),
     ),
   );
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class AppLoader extends StatefulWidget {
+  const AppLoader({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<AppLoader> createState() => _AppLoaderState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _AppLoaderState extends State<AppLoader> {
   late final Future completer;
 
   Future<void> loading() async {
@@ -59,14 +59,23 @@ class _MyAppState extends State<MyApp> {
         if (snapshot.connectionState != ConnectionState.done) {
           return const CircularProgressIndicator();
         }
-        return MaterialApp.router(
-          routerConfig: router,
-          title: 'Flutter Demo',
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: ThemeMode.system,
-        );
+        return const MyApp();
       },
+    );
+  }
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      routerConfig: router,
+      title: 'Flutter Demo',
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.system,
     );
   }
 }
