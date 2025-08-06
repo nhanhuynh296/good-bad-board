@@ -1,15 +1,16 @@
 import 'package:flutter/widgets.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum Setting { background, gameType, gameDuration }
+enum Setting { background, gameType, gameDuration, language }
 
 enum GameType {
   timeBased,
   gameBased;
 
-  String toDisplayString() => switch (this) {
-    GameType.timeBased => 'TIME BASED',
-    GameType.gameBased => 'GAME BASED',
+  String toDisplayString(BuildContext context) => switch (this) {
+    GameType.timeBased => AppLocalizations.of(context)!.time_based,
+    GameType.gameBased => AppLocalizations.of(context)!.game_based,
   };
 }
 
@@ -61,4 +62,20 @@ class PersistentSetting extends ChangeNotifier {
         element.name == sharedPreference.getString(Setting.gameType.name),
     orElse: () => GameType.timeBased,
   );
+
+  Future<void> setLanguage(Locale locale) async {
+    await sharedPreference.setString(
+      Setting.language.name,
+      locale.toLanguageTag(),
+    );
+    notifyListeners();
+  }
+
+  Locale getLanguage() {
+    final localeString = sharedPreference.getString(Setting.language.name);
+    if (localeString != null) {
+      return Locale.fromSubtags(languageCode: localeString);
+    }
+    return const Locale('en'); // Default to English if not set
+  }
 }

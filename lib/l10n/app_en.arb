@@ -1,0 +1,110 @@
+{
+  "about": "About",
+  "active_player": "Active Player",
+  "add": "Add",
+  "app_name": "Badminton Game Generator",
+  "are_you_sure_you_want_to_delete_this_player": "Are you sure you want to delete this player?",
+  "@are_you_sure_you_want_to_delete_this_player": {
+    "description": "Confirmation message when deleting a player"
+  },
+  "are_you_sure_you_want_to_exit": "Are you sure you want to exit?",
+  "auto_game": "Auto Game",
+  "@auto_game": {
+    "description": "Automatically generate games after a session ends"
+  },
+  "auto_make_game_is_status": "Auto make game is {status}",
+  "@auto_make_game_is_status": {
+    "description": "Status of the auto game feature",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "break_": "Break",
+  "@break_": {
+    "description": "Prevent player from further playing"
+  },
+  "cancel": "Cancel",
+  "coming_soon": "Coming Soon",
+  "court_background": "Court Background",
+  "delete": "Delete",
+  "done": "Done",
+  "elo": "Elo",
+  "email": "Email",
+  "first_name": "First Name",
+  "game_based": "Game Based",
+  "game_duration": "Game Duration",
+  "game_history": "Game History",
+  "game_number": "Game {number}",
+  "@game_number": {
+    "description": "Indicates the game number in a series",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "game_type": "Game Type",
+  "@game_type": {
+    "description": "Type of game, e.g., game based or time based, or singles or doubles..."
+  },
+  "generate_game": "Generate Game",
+  "generate_some_game_to_start": "Generate some games to start",
+  "inactive_player": "Inactive Player",
+  "language": "Language",
+  "language_name": "English",
+  "@language_name": {
+    "description": "Name of the language in its own language. E.g., 'English' in English, 'Français' in French, etc."
+  },
+  "last_name": "Last Name",
+  "makeGame": "Make Game",
+  "@makeGame": {
+    "description": "Create a new game session"
+  },
+  "most_game_played": "Most Game Played",
+  "most_session_attended": "Most Session Attended",
+  "n_court": "{count, plural, =0{No Court} =1{1 Court} other{{count} Courts}}",
+  "@n_court": {
+    "description": "Court used for the game",
+    "placeholders": {
+      "count": {
+        "format": "compact",
+        "type": "num"
+      }
+    }
+  },
+  "off": "Off",
+  "@off": {
+    "description": "Disable a feature"
+  },
+  "ok": "OK",
+  "on": "On",
+  "@on": {
+    "description": "Enable a feature"
+  },
+  "playerRegister": "Player Register",
+  "@playerRegister": {
+    "description": "Register new players"
+  },
+  "playerStatistic": "Player Statistic",
+  "@playerStatistic": {
+    "description": "View player statistics"
+  },
+  "player_deleted": "Player {identifier} deleted",
+  "@player_deleted": {
+    "description": "Notification when a player is deleted",
+    "placeholders": {
+      "identifier": {
+        "type": "String"
+      }
+    }
+  },
+  "regenerate_game": "Regenerate Game",
+  "save": "Save",
+  "settings": "Settings",
+  "sign_in_id": "Sign In ID",
+  "skill_gap": "Skill Gap",
+  "time_based": "Time Based",
+  "update": "Update"
+}

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
@@ -43,7 +44,7 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
 
     return HighlightWidget(
       icon: Icons.star,
-      title: 'Most game played: ${record?.$2}',
+      title: '${AppLocalizations.of(context)!.most_game_played}: ${record?.$2}',
       subtitle: playerNameOrNull ?? 'N/a',
     );
   }
@@ -68,7 +69,8 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
 
     return HighlightWidget(
       icon: Icons.diversity_3_outlined,
-      title: 'Most attended session: ${record?.$2}',
+      title:
+          '${AppLocalizations.of(context)!.most_session_attended}: ${record?.$2}',
       subtitle: playerNameOrNull ?? 'N/a',
     );
   }
@@ -87,7 +89,7 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
 
         return HighlightWidget(
           icon: Icons.diversity_3_outlined,
-          title: 'Active player',
+          title: AppLocalizations.of(context)!.active_player,
           subtitle: '${activePlayer.length}/${player?.length ?? "--"}',
         );
       },

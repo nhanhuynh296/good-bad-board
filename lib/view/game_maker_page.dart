@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/spacing.dart';
@@ -68,7 +69,9 @@ class _GameMakerPageState extends State<GameMakerPage>
           },
         ),
         title: Text(
-          "GAME ${gameData.history.length + 1}",
+          AppLocalizations.of(
+            context,
+          )!.game_number(gameData.history.length + 1),
           style: context.textTheme.titleLarge,
         ),
         actions: [
@@ -129,8 +132,8 @@ class _GameMakerPageState extends State<GameMakerPage>
       floatingActionButton: FloatingActionButton(
         mini: true,
         onPressed: () {
-          const snackBar = SnackBar(
-            content: Text('To be Implemented'),
+          final snackBar = SnackBar(
+            content: Text(AppLocalizations.of(context)!.coming_soon),
             duration: Durations.extralong4,
           );
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -213,13 +216,19 @@ class _AutoMakeNextGameIconButtonState
             : const Icon(Icons.add_to_queue),
         child: Opacity(
           opacity: selected ? 1 : 0.5,
-          child: const Text("Auto Game"),
+          child: Text(AppLocalizations.of(context)!.auto_game),
         ),
 
         onPressed: () {
           setState(() => selected = !selected);
           widget.onChanged?.call(selected);
-          context.showToast("Auto Make Game is ${selected ? "ON" : "OFF"}");
+          context.showToast(
+            AppLocalizations.of(context)!.auto_make_game_is_status(
+              selected
+                  ? AppLocalizations.of(context)!.on
+                  : AppLocalizations.of(context)!.off,
+            ),
+          );
         },
       ),
     );
@@ -232,10 +241,6 @@ class CourtModifier extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    final StringBuffer buffer = StringBuffer('${gameData.numberOfCourt} Court');
-    if (gameData.numberOfCourt > 1) {
-      buffer.write('s');
-    }
     final textStyle = Theme.of(context).textTheme.headlineSmall;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -247,7 +252,10 @@ class CourtModifier extends StatelessWidget {
               gameData.setNumberOfCourt(gameData.numberOfCourt - 1),
           icon: Icon(Icons.remove, size: textStyle?.fontSize),
         ),
-        Text(buffer.toString(), style: textStyle),
+        Text(
+          AppLocalizations.of(context)!.n_court(gameData.numberOfCourt),
+          style: textStyle,
+        ),
         Button(
           type: ButtonType.outlined,
           onPressed: () =>
@@ -290,7 +298,9 @@ class BottomActionBar extends StatelessWidget {
                   }
                 },
                 child: Text(
-                  generateActive ? 'Re-Generate Game' : 'Generate Game',
+                  generateActive
+                      ? AppLocalizations.of(context)!.regenerate_game
+                      : AppLocalizations.of(context)!.generate_game,
                 ),
               ),
             ),
@@ -316,7 +326,7 @@ class BottomActionBar extends StatelessWidget {
                       return;
                     }
                   },
-                  child: const Text('Save'),
+                  child: Text(AppLocalizations.of(context)!.save),
                 ),
               ),
           ],
@@ -332,25 +342,19 @@ class ConfirmExitDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Confirm Exit'),
-      content: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Exit this screen will stop the timer.'),
-          Text('Are you sure you want to exit?'),
-        ],
-      ),
+      title: Text(AppLocalizations.of(context)!.are_you_sure_you_want_to_exit),
+      content: const Text('Exit this screen will stop the timer.'),
       actions: [
         Button(
           type: ButtonType.text,
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
           onPressed: () {
             Navigator.of(context).pop(false);
           },
         ),
         Button(
           type: ButtonType.filled,
-          child: const Text('OK'),
+          child: Text(AppLocalizations.of(context)!.ok),
           onPressed: () {
             Navigator.of(context).pop(true);
           },

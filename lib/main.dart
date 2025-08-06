@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/repository_service.dart';
@@ -11,16 +12,7 @@ import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: PersistentSetting.instance),
-        ChangeNotifierProvider(create: (_) => GameData()),
-        ChangeNotifierProvider(create: (_) => TimerData()),
-      ],
-      child: const AppLoader(),
-    ),
-  );
+  runApp(const AppLoader());
 }
 
 class AppLoader extends StatefulWidget {
@@ -52,15 +44,22 @@ class _AppLoaderState extends State<AppLoader> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: completer,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) debugPrint(snapshot.error.toString());
-        if (snapshot.connectionState != ConnectionState.done) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: PersistentSetting.instance),
+        ChangeNotifierProvider(create: (_) => GameData()),
+        ChangeNotifierProvider(create: (_) => TimerData()),
+      ],
+      child: FutureBuilder(
+        future: completer,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) debugPrint(snapshot.error.toString());
+          if (snapshot.connectionState == ConnectionState.done) {
+            return const MyApp();
+          }
           return const CircularProgressIndicator();
-        }
-        return const MyApp();
-      },
+        },
+      ),
     );
   }
 }
@@ -72,8 +71,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       routerConfig: router,
-      title: 'Flutter Demo',
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: lightTheme,
+      locale: context.select(
+        (PersistentSetting persistentSetting) =>
+            persistentSetting.getLanguage(),
+      ),
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
     );
