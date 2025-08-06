@@ -2,34 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
-import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/view/component/container.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
 
   static const children = <Widget>[
-    CourtSetting(),
+    LanguageSetting(),
     TimerSetting(),
     GameTypeSetting(),
+    CourtSetting(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Setting", style: context.textTheme.titleLarge),
-      ),
-      body: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: spacePageX,
-          vertical: spacePageY,
+        title: Text(
+          AppLocalizations.of(context)!.settings,
+          style: context.textTheme.titleLarge,
         ),
+      ),
+      body: DefaultTextStyle(
+        style: context.textTheme.titleMedium!,
+        textAlign: TextAlign.center,
         child: ListView.separated(
+          padding: const EdgeInsets.symmetric(
+            horizontal: spacePageX,
+            vertical: spacePageY,
+          ),
           separatorBuilder: (_, _) => const SizedBox(height: space32),
           itemBuilder: (_, index) => children[index],
           itemCount: children.length,
@@ -123,7 +130,10 @@ class _CourtSettingState extends State<CourtSetting> {
       mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
-        Text("Court Theme", style: context.textTheme.titleLarge),
+        Text(
+          AppLocalizations.of(context)!.court_background,
+          style: context.textTheme.titleLarge,
+        ),
         Row(spacing: spaceDefault, children: children.toList(growable: false)),
       ],
     );
@@ -243,7 +253,10 @@ class TimerSetting extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
-        Text("Game Duration", style: context.textTheme.titleLarge),
+        Text(
+          AppLocalizations.of(context)!.game_duration,
+          style: context.textTheme.titleLarge,
+        ),
         TimePicker(
           initialDuration: PersistentSetting.instance.getGameDuration(),
           onChanged: (duration) {
@@ -257,8 +270,6 @@ class TimerSetting extends StatelessWidget {
 
 class GameTypeSetting extends StatefulWidget {
   const GameTypeSetting({super.key});
-
-  static const options = ["TIME BASED", "GAME BASED"];
 
   @override
   State<GameTypeSetting> createState() => _GameTypeSettingState();
@@ -277,29 +288,79 @@ class _GameTypeSettingState extends State<GameTypeSetting> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
         Text("Game Type", style: context.textTheme.titleLarge),
-        Row(
-          spacing: spaceCard,
-          children: GameType.values
-              .map(
-                (gameType) => Expanded(
-                  child: SettingMultipleChoice(
-                    onPressed: () {
-                      onGameTypeSelected(gameType);
-                    },
-                    selected: chosen == gameType,
-                    child: Text(
-                      gameType.toDisplayString(),
-                      style: TextStyle(
-                        color: context.colorScheme.onSecondaryContainer,
-                      ),
-                    ),
+        SizedBox(
+          height: 200,
+          child: ListView.separated(
+            shrinkWrap: true,
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (BuildContext context, int index) {
+              final gameType = GameType.values[index];
+              return SettingMultipleChoice(
+                onPressed: () {
+                  onGameTypeSelected(gameType);
+                },
+                selected: chosen == gameType,
+                child: Text(
+                  gameType.toDisplayString(context),
+                  style: TextStyle(
+                    color: context.colorScheme.onSecondaryContainer,
                   ),
                 ),
-              )
-              .toUnmodifiableList(),
+              );
+            },
+            separatorBuilder: (_, _) => const SizedBox(width: spaceCard),
+            itemCount: GameType.values.length,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class LanguageSetting extends StatelessWidget {
+  const LanguageSetting({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final currentLocale = context.watch<PersistentSetting>().getLanguage();
+    return Column(
+      spacing: spaceCard,
+      children: [
+        Text(
+          AppLocalizations.of(context)!.language,
+          style: context.textTheme.titleLarge,
+        ),
+        SizedBox(
+          height: 200,
+          child: ListView.separated(
+            shrinkWrap: true,
+            scrollDirection: Axis.horizontal,
+            separatorBuilder: (_, _) => const SizedBox(width: spaceCard),
+
+            itemBuilder: (BuildContext context, int index) {
+              final locale = AppLocalizations.supportedLocales[index];
+              return SettingMultipleChoice(
+                onPressed: () {
+                  PersistentSetting.instance.setLanguage(locale);
+                },
+                selected: currentLocale == locale,
+                child: Localizations.override(
+                  locale: locale,
+                  context: context,
+                  child: Builder(
+                    builder: (context) {
+                      return Text(AppLocalizations.of(context)!.language_name);
+                    },
+                  ),
+                ),
+              );
+            },
+            itemCount: AppLocalizations.supportedLocales.length,
+          ),
         ),
       ],
     );

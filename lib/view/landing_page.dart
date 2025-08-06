@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/setting.dart';
@@ -14,17 +15,20 @@ class LandingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final children = [
       LandingPageOption(
-        label: 'Player Register',
+        label: AppLocalizations.of(context)!.playerRegister,
         onTap: () => context.go('/register'),
       ),
-      LandingPageOption(label: 'Make Game', onTap: () => context.go('/game')),
       LandingPageOption(
-        label: 'Player Statistic',
+        label: AppLocalizations.of(context)!.makeGame,
+        onTap: () => context.go('/game'),
+      ),
+      LandingPageOption(
+        label: AppLocalizations.of(context)!.playerStatistic,
         onTap: () => context.go('/stats'),
       ),
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text(appName)),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.app_name)),
       drawer: const LandingPageDrawer(),
       body: GridView(
         padding: const EdgeInsets.symmetric(
@@ -74,13 +78,13 @@ class LandingPageDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width * 0.25;
     return Drawer(
-      width: width,
       child: Column(
         children: [
           ListTile(
-            title: const Text("Settings"),
+            leading: const Icon(Icons.settings),
+            title: Text(AppLocalizations.of(context)!.settings),
+
             onTap: () {
               Navigator.of(
                 context,
@@ -89,7 +93,8 @@ class LandingPageDrawer extends StatelessWidget {
             trailing: Icon(Icons.adaptive.arrow_forward),
           ),
           ListTile(
-            title: const Text("Abouts"),
+            leading: const Icon(Icons.info),
+            title: Text(AppLocalizations.of(context)!.about),
             onTap: () {
               showLicensePage(
                 context: context,
