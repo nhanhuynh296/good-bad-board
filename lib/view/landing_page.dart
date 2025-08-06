@@ -74,9 +74,7 @@ class LandingPageDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width * 0.25;
     return Drawer(
-      width: width,
       child: Column(
         children: [
           ListTile(
