@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum Setting { background, gameType }
+enum Setting { background, gameType, gameDuration }
 
 enum GameType {
   timeBased,
@@ -38,6 +38,22 @@ class PersistentSetting extends ChangeNotifier {
   Future<void> setGameType(GameType type) async {
     await sharedPreference.setString(Setting.gameType.name, type.name);
     notifyListeners();
+  }
+
+  Future<void> setGameDuration(Duration duration) async {
+    await sharedPreference.setInt(
+      Setting.gameDuration.name,
+      duration.inSeconds,
+    );
+    notifyListeners();
+  }
+
+  Duration getGameDuration() {
+    return Duration(
+      seconds:
+          sharedPreference.getInt(Setting.gameDuration.name) ??
+          10 * Duration.secondsPerMinute,
+    );
   }
 
   GameType getGameType() => GameType.values.firstWhere(
