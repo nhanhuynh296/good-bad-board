@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/importer.dart';
+import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
@@ -172,9 +173,19 @@ class _PlayerListState extends State<PlayerList> {
                   (player.signInId?.toUpperCase().contains(query) ?? false)),
         )
         .sortedBy((player) => player.name())
-        .toList();
+        .toUnmodifiableList();
     final gameData = Provider.of<GameData>(context);
     final playerById = gameData.player.map((player) => player.id).toSet();
+
+    Future<void> onSingleResultTapped(Player player) async {
+      if (playerById.contains(player.id)) {
+        gameData.removePlayer(player);
+      } else {
+        gameData.addFullPricedPlayer(player);
+      }
+      searchFocusNode.requestFocus();
+      selectSearchText();
+    }
 
     return Column(
       spacing: spaceDefault,
@@ -200,12 +211,7 @@ class _PlayerListState extends State<PlayerList> {
                   searchFocusNode.requestFocus();
                   return;
                 }
-                if (playerById.contains(player.id)) {
-                  gameData.removePlayer(player);
-                } else {
-                  gameData.addFullPricedPlayer(player);
-                }
-                searchFocusNode.requestFocus();
+                onSingleResultTapped(player);
               },
               trailing: [
                 IconButton(
@@ -254,19 +260,13 @@ class _PlayerListState extends State<PlayerList> {
                     return Row(
                       children: [
                         Expanded(
-                          key: ValueKey(player.id),
+                          key: ObjectKey(player),
                           child: ClickablePlayerComponent(
                             inMatch: false,
                             data: player,
                             filled: isAlreadyInGame,
                             onTap: () {
-                              setState(() {
-                                if (isAlreadyInGame) {
-                                  gameData.removePlayer(player);
-                                } else {
-                                  gameData.addFullPricedPlayer(player);
-                                }
-                              });
+                              onSingleResultTapped(player);
                             },
                           ),
                         ),

@@ -291,7 +291,10 @@ class _GameTypeSettingState extends State<GameTypeSetting> {
       mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
-        Text("Game Type", style: context.textTheme.titleLarge),
+        Text(
+          AppLocalizations.of(context)!.game_type,
+          style: context.textTheme.titleLarge,
+        ),
         SizedBox(
           height: 200,
           child: ListView.separated(

@@ -34,6 +34,8 @@ class GameData extends ChangeNotifier {
 
   Set<Player> get player => _players.values.toSet();
 
+  Map<String, Player> get players => Map.unmodifiable(_players);
+
   final List<GameContainer> history = [];
 
   /// Candidate to be added to history
@@ -60,11 +62,16 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  void onUpdatePlayer(Player newPlayer) {
-    final oldPlayer = _players[newPlayer.id];
+  void onUpdatePlayer(Player newPlayer) async {
+    final oldPlayer = await PlayerRepository.instance.get(newPlayer.id);
     if (oldPlayer == null) return;
-    _players[newPlayer.id] = newPlayer;
+
     PlayerRepository.instance.update(newPlayer.id, newPlayer);
+
+    if (_players.containsKey(oldPlayer.id)) {
+      _players.update(oldPlayer.id, (_) => newPlayer);
+    }
+
     for (var game in stagingMatches) {
       if (game.players.contains(oldPlayer)) {
         game.players[game.players.indexOf(oldPlayer)] = newPlayer;
