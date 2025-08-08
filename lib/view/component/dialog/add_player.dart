@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/view/component/button.dart';
+import 'package:good_bad_board/view/component/dialog/toasts.dart';
 
 class AddPlayerDialog extends StatefulWidget {
   final ValueChanged<Player>? onSubmit;
@@ -36,7 +38,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
           children: [
             TextFormField(
               initialValue: firstName,
-              decoration: const InputDecoration(labelText: 'First Name'),
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.first_name,
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter first name';
@@ -47,7 +52,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             ),
             TextFormField(
               initialValue: lastName,
-              decoration: const InputDecoration(labelText: 'Last Name'),
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.last_name,
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter last name';
@@ -58,7 +66,9 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             ),
             DropdownButtonFormField(
               value: elo,
-              decoration: const InputDecoration(labelText: 'Elo'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.elo,
+              ),
               validator: (value) {
                 if (value != null) return null;
                 return 'Please select elo';
@@ -78,7 +88,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             ),
             TextFormField(
               initialValue: signInId,
-              decoration: const InputDecoration(labelText: 'Sign In ID'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.sign_in_id,
+              ),
+              textInputAction: TextInputAction.next,
               validator: (value) {
                 signInId = value;
                 return null;
@@ -90,7 +103,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
       actions: <Widget>[
         Button(
           type: ButtonType.text,
-          child: const Text('Cancel'),
+          child: const Text("Reset"),
           onPressed: () {
             resetForm();
           },
@@ -100,6 +113,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
           onPressed: () {
             // Validate returns true if the form is valid, or false otherwise.
             if (!_formKey.currentState!.validate()) {
+              context.showErrorToast('Please fill out all fields correctly.');
               return;
             }
             widget.onSubmit?.call(
@@ -112,7 +126,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             );
             resetForm();
           },
-          child: const Text('Add'),
+          child: Text(AppLocalizations.of(context)!.add),
         ),
       ],
     );
