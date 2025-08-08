@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
-import 'package:good_bad_board/repository/game_repository.dart';
-import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
@@ -73,10 +71,7 @@ class _GameMakerPageState extends State<GameMakerPage>
           )!.game_number(gameData.history.length + 1),
           style: context.textTheme.titleLarge,
         ),
-        actions: [
-          const AutoMakeNextGameIconButton(),
-          const SaveDataIconButton(),
-        ],
+        actions: [const AutoMakeNextGameIconButton()],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: spacePageX),
@@ -133,50 +128,6 @@ class _GameMakerPageState extends State<GameMakerPage>
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.miniStartDocked,
-    );
-  }
-}
-
-class SaveDataIconButton extends StatefulWidget {
-  const SaveDataIconButton({super.key});
-
-  @override
-  State<SaveDataIconButton> createState() => _SaveDataIconButtonState();
-}
-
-class _SaveDataIconButtonState extends State<SaveDataIconButton> {
-  bool isSaving = false;
-
-  void onPressed() async {
-    setState(() {
-      isSaving = true;
-    });
-    Stopwatch stopwatch = Stopwatch()..start();
-    await Future.wait([
-      GameRepository.instance.save(),
-      PlayerRepository.instance.save(),
-    ]);
-    stopwatch.stop();
-    setState(() {
-      isSaving = false;
-    });
-    if (!mounted) return;
-
-    context.showSnackBar(
-      SnackBar(
-        content: Text(
-          'Data saved (took ${stopwatch.elapsed.inMilliseconds} milliseconds)',
-        ),
-        showCloseIcon: true,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: isSaving ? null : onPressed,
-      icon: const Icon(Icons.save),
     );
   }
 }
