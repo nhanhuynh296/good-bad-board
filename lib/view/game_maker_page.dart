@@ -214,57 +214,54 @@ class BottomActionBar extends StatelessWidget {
         vertical: space16,
       ),
       height: space64,
-      child: SizedBox(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: spaceDefault,
-          children: [
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: spaceDefault,
+        children: [
+          Expanded(
+            child: Button(
+              type: generateActive ? ButtonType.outlined : ButtonType.filled,
+              onPressed: () async {
+                final error = await gameData.makeGame();
+                if (!context.mounted) return;
+                if (error != null) {
+                  context.showErrorToast(error);
+                  return;
+                }
+              },
+              child: Text(
+                generateActive
+                    ? AppLocalizations.of(context)!.regenerate_game
+                    : AppLocalizations.of(context)!.generate_game,
+              ),
+            ),
+          ),
+          if (generateActive)
             Expanded(
+              flex: 2,
               child: Button(
-                type: generateActive ? ButtonType.outlined : ButtonType.filled,
+                type: ButtonType.filled,
                 onPressed: () async {
-                  final error = await gameData.makeGame();
-                  if (!context.mounted) return;
-                  if (error != null) {
-                    context.showErrorToast(error);
+                  final invalidGames = gameData.stagingMatches.where(
+                    (match) => match.players.isNotEmpty && !match.isPlayable(),
+                  );
+                  if (invalidGames.isNotEmpty) {
+                    context.showErrorToast(
+                      'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
+                    );
+                    return;
+                  }
+                  final errorOrNull = await gameData.saveCurrentGame();
+                  if (errorOrNull != null && context.mounted) {
+                    context.showErrorToast(errorOrNull);
                     return;
                   }
                 },
-                child: Text(
-                  generateActive
-                      ? AppLocalizations.of(context)!.regenerate_game
-                      : AppLocalizations.of(context)!.generate_game,
-                ),
+                child: Text(AppLocalizations.of(context)!.save),
               ),
             ),
-            if (generateActive)
-              Expanded(
-                flex: 2,
-                child: Button(
-                  type: ButtonType.filled,
-                  onPressed: () async {
-                    final invalidGames = gameData.stagingMatches.where(
-                      (match) =>
-                          match.players.isNotEmpty && !match.isPlayable(),
-                    );
-                    if (invalidGames.isNotEmpty) {
-                      context.showErrorToast(
-                        'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
-                      );
-                      return;
-                    }
-                    final errorOrNull = await gameData.saveCurrentGame();
-                    if (errorOrNull != null && context.mounted) {
-                      context.showErrorToast(errorOrNull);
-                      return;
-                    }
-                  },
-                  child: Text(AppLocalizations.of(context)!.save),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
