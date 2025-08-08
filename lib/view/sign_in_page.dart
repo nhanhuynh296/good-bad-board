@@ -144,6 +144,7 @@ class _PlayerListState extends State<PlayerList> {
   void initState() {
     super.initState();
     textController = TextEditingController();
+    searchFocusNode.requestFocus();
   }
 
   @override
