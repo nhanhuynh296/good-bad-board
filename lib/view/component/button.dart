@@ -57,6 +57,7 @@ class Button extends StatelessWidget {
         onPressed: onPressed,
         onLongPress: onLongPress,
         textStyle: textStyle,
+        backgroundColor: backgroundColor,
         padding: padding,
         child: child,
       ),
@@ -209,6 +210,7 @@ class TextButtonWidget extends StatelessWidget {
   final VoidCallback? onLongPress;
   final TextStyle? textStyle;
   final EdgeInsets? padding;
+  final Color? backgroundColor;
 
   const TextButtonWidget({
     super.key,
@@ -219,6 +221,7 @@ class TextButtonWidget extends StatelessWidget {
     this.onLongPress,
     this.textStyle,
     this.padding,
+    this.backgroundColor,
   }) : assert(icon != null || child != null, 'icon or child must be provided');
 
   @override
@@ -231,6 +234,7 @@ class TextButtonWidget extends StatelessWidget {
     final buttonStyle = ButtonStyle(
       textStyle: WidgetStatePropertyAll(textStyle),
       padding: WidgetStatePropertyAll(padding),
+      backgroundColor: WidgetStatePropertyAll(backgroundColor),
     );
 
     return onlyIcon
