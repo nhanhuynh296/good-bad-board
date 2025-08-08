@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum Setting { background, gameType, gameDuration, language }
+enum Setting { background, gameType, gameDuration, language, autoMakegame }
 
 enum GameType {
   timeBased,
@@ -77,5 +77,14 @@ class PersistentSetting extends ChangeNotifier {
       return Locale.fromSubtags(languageCode: localeString);
     }
     return const Locale('en'); // Default to English if not set
+  }
+
+  Future<void> setAutoMakeGame(bool value) async {
+    await sharedPreference.setBool(Setting.autoMakegame.name, value);
+    notifyListeners();
+  }
+
+  bool getAutoMakeGame() {
+    return sharedPreference.getBool(Setting.autoMakegame.name) ?? false;
   }
 }

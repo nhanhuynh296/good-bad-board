@@ -263,7 +263,7 @@ class _CourtHeaderState extends State<CourtHeader>
             context.showErrorToast(error);
             return;
           }
-          if (PersistentSetting.instance.getGameType() == GameType.gameBased) {
+          if (PersistentSetting.instance.getAutoMakeGame()) {
             onPressGenerateGame();
           }
         },

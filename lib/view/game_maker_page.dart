@@ -24,7 +24,6 @@ class GameMakerPage extends StatefulWidget {
 
 class _GameMakerPageState extends State<GameMakerPage>
     with SingleTickerProviderStateMixin {
-  bool autoMakeGame = false;
   late final AnimationController controller;
 
   @override
@@ -75,11 +74,7 @@ class _GameMakerPageState extends State<GameMakerPage>
           style: context.textTheme.titleLarge,
         ),
         actions: [
-          AutoMakeNextGameIconButton(
-            onChanged: (newState) => setState(() {
-              autoMakeGame = newState;
-            }),
-          ),
+          const AutoMakeNextGameIconButton(),
           const SaveDataIconButton(),
         ],
       ),
@@ -96,7 +91,7 @@ class _GameMakerPageState extends State<GameMakerPage>
                     CountdownTimer(
                       controller: controller,
                       onExpired: () {
-                        if (autoMakeGame) {
+                        if (PersistentSetting.instance.getAutoMakeGame()) {
                           gameData
                             ..saveCurrentGame()
                             ..makeGame();
@@ -118,7 +113,7 @@ class _GameMakerPageState extends State<GameMakerPage>
                   const CourtModifier(),
                   Expanded(
                     child: CurrentGameView(
-                      key: ValueKey(gameData.stagingMatches.isEmpty),
+                      key: ObjectKey(gameData.stagingMatches),
                     ),
                   ),
                 ],
@@ -132,11 +127,7 @@ class _GameMakerPageState extends State<GameMakerPage>
       floatingActionButton: FloatingActionButton(
         mini: true,
         onPressed: () {
-          final snackBar = SnackBar(
-            content: Text(AppLocalizations.of(context)!.coming_soon),
-            duration: Durations.extralong4,
-          );
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          context.showToast(AppLocalizations.of(context)!.coming_soon);
         },
         child: const Icon(Icons.apps),
       ),
@@ -190,22 +181,14 @@ class _SaveDataIconButtonState extends State<SaveDataIconButton> {
   }
 }
 
-class AutoMakeNextGameIconButton extends StatefulWidget {
-  final ValueChanged<bool>? onChanged;
-
-  const AutoMakeNextGameIconButton({super.key, this.onChanged});
-
-  @override
-  State<AutoMakeNextGameIconButton> createState() =>
-      _AutoMakeNextGameIconButtonState();
-}
-
-class _AutoMakeNextGameIconButtonState
-    extends State<AutoMakeNextGameIconButton> {
-  bool selected = false;
+class AutoMakeNextGameIconButton extends StatelessWidget {
+  const AutoMakeNextGameIconButton({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final selected = context.select(
+      (PersistentSetting setting) => setting.getAutoMakeGame(),
+    );
     return ShadedContainer(
       shaded: false,
       bordered: selected,
@@ -220,11 +203,11 @@ class _AutoMakeNextGameIconButtonState
         ),
 
         onPressed: () {
-          setState(() => selected = !selected);
-          widget.onChanged?.call(selected);
+          final newState = !selected;
+          PersistentSetting.instance.setAutoMakeGame(newState);
           context.showToast(
             AppLocalizations.of(context)!.auto_make_game_is_status(
-              selected
+              newState
                   ? AppLocalizations.of(context)!.on
                   : AppLocalizations.of(context)!.off,
             ),
