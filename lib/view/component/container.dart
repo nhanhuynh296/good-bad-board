@@ -10,6 +10,8 @@ class ShadedContainer extends StatelessWidget {
   final Color? borderColor;
   final Color? backgroundColor;
   final Color? shadedColor;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
 
   const ShadedContainer({
     super.key,
@@ -19,6 +21,8 @@ class ShadedContainer extends StatelessWidget {
     this.borderColor,
     this.backgroundColor,
     this.shadedColor,
+    this.padding,
+    this.margin,
   });
 
   @override
@@ -50,6 +54,8 @@ class ShadedContainer extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       foregroundDecoration: borderedDecoration,
       decoration: backgroundDecoration,
+      padding: padding,
+      margin: margin,
       child: Material(type: MaterialType.transparency, child: child),
     );
   }

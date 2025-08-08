@@ -55,7 +55,7 @@ class _SignInPageState extends State<SignInPage> {
                       if (!context.mounted) return;
 
                       final existingPlayersName = {
-                        for (final player in gameData.player)
+                        for (final player in gameData.players.values)
                           player.name(): player,
                       };
 
@@ -144,6 +144,7 @@ class _PlayerListState extends State<PlayerList> {
   void initState() {
     super.initState();
     textController = TextEditingController();
+    searchFocusNode.requestFocus();
   }
 
   @override
@@ -175,10 +176,10 @@ class _PlayerListState extends State<PlayerList> {
         .sortedBy((player) => player.name())
         .toUnmodifiableList();
     final gameData = Provider.of<GameData>(context);
-    final playerById = gameData.player.map((player) => player.id).toSet();
+    final playingPlayers = gameData.players;
 
     Future<void> onSingleResultTapped(Player player) async {
-      if (playerById.contains(player.id)) {
+      if (playingPlayers.containsKey(player.id)) {
         gameData.removePlayer(player);
       } else {
         gameData.addFullPricedPlayer(player);
@@ -253,9 +254,10 @@ class _PlayerListState extends State<PlayerList> {
                 child: ListRenderer(
                   key: ValueKey(query),
                   itemBuilder: (BuildContext context, int index) {
-                    final isAlreadyInGame = playerById.contains(
+                    final isAlreadyInGame = playingPlayers.containsKey(
                       filteredPlayers[index].id,
                     );
+
                     final player = filteredPlayers[index];
                     return Row(
                       children: [

@@ -33,24 +33,17 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    final playingPlayers = Set.unmodifiable(
-      getPlayerFromGames(gameData.stagingMatches),
-    );
+    final playingPlayers = getPlayerFromGames(gameData.stagingMatches).toSet();
     final playerStatistic = gameData.getCurrentPlayersHistory();
-    final inactivePlayers = gameData.player
+    final inactivePlayers = gameData.players.values
+        .toSet()
         .difference(playingPlayers)
         .where(
           (player) => '${player.name()}${player.elo}'.toLowerCase().contains(
             query.toLowerCase(),
           ),
         )
-        .sorted((player1, player2) {
-          if (playerStatistic[player1] != playerStatistic[player2]) {
-            return playerStatistic[player1]!.toInt() -
-                playerStatistic[player2]!.toInt();
-          }
-          return player1.name().compareTo(player2.name());
-        });
+        .sortedBy((player) => playerStatistic[player] ?? 0);
 
     return _InactivePlayerDraggable(
       child: Column(
@@ -270,7 +263,7 @@ class _CourtHeaderState extends State<CourtHeader>
             context.showErrorToast(error);
             return;
           }
-          if (PersistentSetting.instance.getGameType() == GameType.gameBased) {
+          if (PersistentSetting.instance.getAutoMakeGame()) {
             onPressGenerateGame();
           }
         },
@@ -281,7 +274,7 @@ class _CourtHeaderState extends State<CourtHeader>
   void onPressGenerateGame() {
     final gameData = Provider.of<GameData>(context, listen: false);
     if (widget.game.players.isEmpty &&
-        gameData.player.length -
+        gameData.players.length -
                 getPlayerFromGames(gameData.stagingMatches).length <
             Game.playerPerCourt) {
       context.showErrorToast('Not enough players to make a court');

@@ -52,7 +52,7 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
         children: [
           Text('Edit player', style: context.textTheme.headlineMedium),
           const Spacer(),
-          gameData.player.contains(widget.player)
+          gameData.players.containsKey(widget.player.id)
               ? Button(
                   icon: Icon(
                     Icons.no_accounts,

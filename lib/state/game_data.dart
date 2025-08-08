@@ -32,8 +32,6 @@ class GameData extends ChangeNotifier {
 
   final Map<String, Player> _players = {};
 
-  Set<Player> get player => _players.values.toSet();
-
   Map<String, Player> get players => Map.unmodifiable(_players);
 
   final List<GameContainer> history = [];

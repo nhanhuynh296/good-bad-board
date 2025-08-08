@@ -10,6 +10,7 @@ import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
+import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/reusable.dart';
 import 'package:intl/intl.dart';
 
@@ -293,47 +294,46 @@ class HighlightWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Container(
-        margin: const EdgeInsets.all(space16),
-        child: Row(
-          spacing: space16,
-          children: [
-            Icon(icon),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: space8,
-                children: [
-                  Text(
-                    title,
-                    style: context.textTheme.bodyLarge,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: true,
+    return ShadedContainer(
+      margin: const EdgeInsets.all(space8),
+      padding: const EdgeInsets.all(space8),
+      child: Row(
+        spacing: space16,
+        children: [
+          Icon(icon),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: space8,
+              children: [
+                Text(
+                  title,
+                  style: context.textTheme.bodyLarge,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
+                ),
+                if (subtitle != null)
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Text(
+                        subtitle!,
+                        style: context.textTheme.titleLarge,
+                        overflow: TextOverflow.fade,
+                      ),
+                    ),
                   ),
-                  if (subtitle != null)
-                    Flexible(
-                      child: SingleChildScrollView(
-                        child: Text(
-                          subtitle!,
-                          style: context.textTheme.titleLarge,
-                          overflow: TextOverflow.fade,
-                        ),
-                      ),
+                if (caption != null)
+                  Flexible(
+                    child: DefaultTextStyle(
+                      style: context.textTheme.titleLarge!,
+                      child: caption!,
                     ),
-                  if (caption != null)
-                    Flexible(
-                      child: DefaultTextStyle(
-                        style: context.textTheme.titleLarge!,
-                        child: caption!,
-                      ),
-                    ),
-                ],
-              ),
+                  ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/repository_interface.dart';
@@ -67,7 +66,7 @@ class GameRepository extends InMemoryRepository<Game> {
           gameDto.playerDto.map(_playerRepository.getPlayerFromDto),
         );
         return Game(
-          players: maybePlayers.nonNulls.toFixedLengthList(),
+          players: maybePlayers.nonNulls.toList(growable: true),
           id: gameDto.id,
           createdDate: gameDto.createdDate,
         );
