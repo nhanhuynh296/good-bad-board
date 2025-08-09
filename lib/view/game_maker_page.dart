@@ -252,9 +252,16 @@ class BottomActionBar extends StatelessWidget {
                     );
                     return;
                   }
-                  final errorOrNull = await gameData.saveCurrentGame();
-                  if (errorOrNull != null && context.mounted) {
-                    context.showErrorToast(errorOrNull);
+                  try {
+                    final errorOrNull = await gameData.saveCurrentGame();
+                    if (errorOrNull != null && context.mounted) {
+                      context.showErrorToast(errorOrNull);
+                      return;
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      context.showErrorToast(e.toString());
+                    }
                     return;
                   }
                 },
