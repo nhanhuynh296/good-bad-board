@@ -84,7 +84,6 @@ class LandingPageDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.settings),
             title: Text(AppLocalizations.of(context)!.settings),
-
             onTap: () {
               Navigator.of(
                 context,
@@ -96,9 +95,20 @@ class LandingPageDrawer extends StatelessWidget {
             leading: const Icon(Icons.info),
             title: Text(AppLocalizations.of(context)!.about),
             onTap: () {
-              showLicensePage(
+              showAboutDialog(
                 context: context,
-                applicationName: '$appName - Nathan Huynh',
+                applicationVersion: "VERSION: $version",
+                applicationName: appName,
+                children: [
+                  const ListTile(
+                    title: Text("Author"),
+                    subtitle: Text("NATHAN HUYNH"),
+                  ),
+                  const ListTile(
+                    title: Text("Contact"),
+                    subtitle: Text("nhanhuynh296@gmail.com"),
+                  ),
+                ],
               );
             },
             trailing: Icon(Icons.adaptive.arrow_forward),
