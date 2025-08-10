@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/spacing.dart';
+import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
+import 'package:good_bad_board/view/component/dialog/toasts.dart';
+import 'package:provider/provider.dart';
 
 class CountdownTimer extends StatefulWidget {
   final AnimationController controller;
@@ -56,6 +59,11 @@ class _CountdownTimerState extends State<CountdownTimer>
         type: ButtonType.text,
         padding: EdgeInsets.zero,
         onPressed: () async {
+          if (context.read<GameData>().stagingMatches.isEmpty &&
+              _controller.isDismissed) {
+            context.showErrorToast('Generate some games first!');
+            return;
+          }
           // Order of operations is important here.
           // If the controller is dismissed or completed, we animate back to 0.
           if (_controller.isDismissed || _controller.isCompleted) {

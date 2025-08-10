@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +27,10 @@ class _BlankGame extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Icons.auto_awesome, size: textStyle.fontSize!),
-        Text("Generate some game to start", style: textStyle),
+        Text(
+          AppLocalizations.of(context)!.generate_some_game_to_start,
+          style: textStyle,
+        ),
       ],
     );
   }
