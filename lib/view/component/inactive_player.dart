@@ -255,16 +255,16 @@ class _CourtHeaderState extends State<CourtHeader>
         child: const Text("Finish", style: TextStyle(color: Colors.red)),
         onPressed: () async {
           setState(() => isPlaying = false);
-          final error = await context.read<GameData>().saveSingleGame(
-            widget.game,
-          );
-          if (!mounted) return;
-          if (error != null) {
-            context.showErrorToast(error);
-            return;
-          }
-          if (PersistentSetting.instance.getAutoMakeGame()) {
-            onPressGenerateGame();
+          try {
+            await context.read<GameData>().saveSingleGame(widget.game);
+            if (PersistentSetting.instance.getAutoMakeGame()) {
+              onPressGenerateGame();
+            }
+          } catch (e) {
+            if (mounted) {
+              context.showErrorToast(e.toString());
+              return;
+            }
           }
         },
       );
@@ -280,9 +280,13 @@ class _CourtHeaderState extends State<CourtHeader>
       context.showErrorToast('Not enough players to make a court');
       return;
     }
-    final error = gameData.makeSingleCourt(widget.courtNumber);
-    if (error != null && mounted) {
-      context.showErrorToast(error);
+    try {
+      gameData.makeSingleCourt(widget.courtNumber);
+    } catch (error) {
+      // If the error is not null and the widget is still mounted, show the error toast
+      if (mounted) {
+        context.showErrorToast(error.toString());
+      }
     }
   }
 

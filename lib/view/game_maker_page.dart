@@ -223,10 +223,12 @@ class BottomActionBar extends StatelessWidget {
             child: Button(
               type: generateActive ? ButtonType.outlined : ButtonType.filled,
               onPressed: () async {
-                final error = await gameData.makeGame();
-                if (!context.mounted) return;
-                if (error != null) {
-                  context.showErrorToast(error);
+                try {
+                  await gameData.makeGame();
+                } catch (e) {
+                  if (context.mounted) {
+                    context.showErrorToast(e.toString());
+                  }
                   return;
                 }
               },
@@ -253,11 +255,7 @@ class BottomActionBar extends StatelessWidget {
                     return;
                   }
                   try {
-                    final errorOrNull = await gameData.saveCurrentGame();
-                    if (errorOrNull != null && context.mounted) {
-                      context.showErrorToast(errorOrNull);
-                      return;
-                    }
+                    await gameData.saveCurrentGame();
                   } catch (e) {
                     if (context.mounted) {
                       context.showErrorToast(e.toString());
