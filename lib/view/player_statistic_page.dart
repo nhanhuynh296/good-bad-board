@@ -65,7 +65,8 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
 
     return HighlightWidget(
       icon: Icons.star_outline,
-      title: '${AppLocalizations.of(context)!.most_game_played}: ${record?.$2}',
+      title:
+          '${AppLocalizations.of(context)!.most_games_played}: ${record?.$2}',
       subtitle: playerNameOrNull ?? 'N/a',
     );
   }
@@ -91,7 +92,7 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
     return HighlightWidget(
       icon: Icons.diversity_3_outlined,
       title:
-          '${AppLocalizations.of(context)!.most_session_attended}: ${record?.$2}',
+          '${AppLocalizations.of(context)!.most_sessions_attended}: ${record?.$2}',
       subtitle: playerNameOrNull ?? 'N/a',
     );
   }
@@ -182,10 +183,10 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
     const double height = 200;
 
     final startTimeText = startTime == null
-        ? "THE BEGINNING"
+        ? AppLocalizations.of(context)!.the_beginning
         : dateToString(startTime!);
     final endTimeText = DateUtils.isSameDay(DateTime.now(), endTime)
-        ? "THE END"
+        ? AppLocalizations.of(context)!.today
         : dateToString(endTime);
     return Scaffold(
       appBar: AppBar(
@@ -193,7 +194,7 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
           mainAxisSize: MainAxisSize.min,
           spacing: 4,
           children: [
-            Text(AppLocalizations.of(context)!.playerStatistic),
+            Text(AppLocalizations.of(context)!.player_statistic),
             const Text("from"),
             Button(
               padding: EdgeInsets.zero,
@@ -249,7 +250,10 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
             ),
             // const Expanded(child: Placeholder()),
             if (games.isNotEmpty)
-              Text('Games History', style: context.textTheme.titleLarge),
+              Text(
+                AppLocalizations.of(context)!.game_history,
+                style: context.textTheme.titleLarge,
+              ),
             Expanded(
               child: ListView.separated(
                 itemBuilder: (context, index) {

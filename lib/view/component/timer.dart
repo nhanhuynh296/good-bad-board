@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
@@ -101,7 +102,7 @@ class _CountdownTimerState extends State<CountdownTimer>
                 spacing: spaceComponent,
                 children: [
                   Text(
-                    'Time Remaining',
+                    AppLocalizations.of(context)!.time_remaining,
                     style: textTheme.titleLarge,
                     textAlign: TextAlign.center,
                   ),

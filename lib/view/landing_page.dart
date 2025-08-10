@@ -15,15 +15,15 @@ class LandingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final children = [
       LandingPageOption(
-        label: AppLocalizations.of(context)!.playerRegister,
+        label: AppLocalizations.of(context)!.player_register,
         onTap: () => context.go('/register'),
       ),
       LandingPageOption(
-        label: AppLocalizations.of(context)!.makeGame,
+        label: AppLocalizations.of(context)!.make_game,
         onTap: () => context.go('/game'),
       ),
       LandingPageOption(
-        label: AppLocalizations.of(context)!.playerStatistic,
+        label: AppLocalizations.of(context)!.player_statistic,
         onTap: () => context.go('/stats'),
       ),
     ];

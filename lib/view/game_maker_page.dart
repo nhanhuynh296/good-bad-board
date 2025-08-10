@@ -315,7 +315,7 @@ class AutoMakeNextGameIconButton extends StatelessWidget {
           final newState = !selected;
           PersistentSetting.instance.setAutoMakeGame(newState);
           context.showToast(
-            AppLocalizations.of(context)!.auto_make_game_is_status(
+            AppLocalizations.of(context)!.auto_game_status(
               newState
                   ? AppLocalizations.of(context)!.on
                   : AppLocalizations.of(context)!.off,
