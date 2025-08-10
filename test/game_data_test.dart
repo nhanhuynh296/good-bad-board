@@ -34,8 +34,7 @@ void main() {
 
   test('Can not make game if not enough player', () async {
     final gameData = GameData()..setNumberOfCourt(1);
-    final error = await gameData.makeGame();
-    expect(error, isNotNull);
+    expectLater(gameData.makeGame, throwsException);
     players.forEach(gameData.addFullPricedPlayer);
   });
 
@@ -44,8 +43,7 @@ void main() {
     players.forEach(gameData.addFullPricedPlayer);
     expect(gameData.players, hasLength(4));
     expect(gameData.stagingMatches, isEmpty);
-    final error = await gameData.makeGame();
-    expect(error, isNull);
+    await gameData.makeGame();
     expect(gameData.stagingMatches, isNotEmpty);
   });
 
@@ -54,8 +52,7 @@ void main() {
     players.forEach(gameData.addFullPricedPlayer);
     expect(gameData.players, hasLength(4));
     expect(gameData.stagingMatches, isEmpty);
-    final error = await gameData.makeGame();
-    expect(error, isNull);
+    await gameData.makeGame();
     expect(gameData.stagingMatches, isNotEmpty);
 
     gameData.addFullPricedPlayer(inactivePlayer);

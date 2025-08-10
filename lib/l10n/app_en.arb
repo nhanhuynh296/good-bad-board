@@ -36,6 +36,7 @@
   "game_based": "Game Based",
   "game_duration": "Game Duration",
   "game_history": "Game History",
+  "game_is_currently_running": "Game is currently running...",
   "game_number": "Game {number}",
   "@game_number": {
     "description": "Indicates the game number in a series",
@@ -99,6 +100,10 @@
         "type": "String"
       }
     }
+  },
+  "regenerate": "Regenerate",
+  "@regenerate": {
+    "description": "Confirmation button to regenerate a game"
   },
   "regenerate_game": "Regenerate Game",
   "save": "Save",

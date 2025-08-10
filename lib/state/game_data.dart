@@ -100,11 +100,13 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String?> makeGame() async {
-    if (numberOfCourt <= 0) return 'There are no court available';
-    if (_players.isEmpty) return 'There are no player';
+  Future<void> makeGame() async {
+    if (numberOfCourt <= 0) throw Exception('There are no court available');
+    if (_players.isEmpty) throw Exception('There are no player');
     if (_players.length < Game.playerPerCourt) {
-      return 'Not enough players, need at least ${Game.playerPerCourt}, got ${_players.length}';
+      throw Exception(
+        'Not enough players, need at least ${Game.playerPerCourt}, got ${_players.length}',
+      );
     }
     stagingMatches = List.empty();
     final candidatePlayer = _choosePlayer().shuffled();
@@ -130,13 +132,12 @@ class GameData extends ChangeNotifier {
       );
     }
     notifyListeners();
-    return null;
   }
 
   /// Refresh one single court with new players.
-  String? makeSingleCourt(int courtIndex) {
+  void makeSingleCourt(int courtIndex) {
     if (courtIndex >= numberOfCourt || courtIndex < 0) {
-      return 'Invalid court index';
+      throw Exception('Invalid court index');
     }
     // available player should exclude the player in the current court itself
     final numberOfPlayerInTargetCourt =
@@ -147,7 +148,9 @@ class GameData extends ChangeNotifier {
         getPlayerFromGames(stagingMatches).length +
         numberOfPlayerInTargetCourt;
     if (playerAvailable < Game.playerPerCourt) {
-      return 'Not enough players, need at least ${Game.playerPerCourt}, got $playerAvailable';
+      throw Exception(
+        'Not enough players, need at least ${Game.playerPerCourt}, got $playerAvailable',
+      );
     }
     stagingMatches[courtIndex] = Game.create(List.empty());
     stagingMatches[courtIndex] = Game.create(
@@ -155,16 +158,17 @@ class GameData extends ChangeNotifier {
       _choosePlayer(Game.playerPerCourt).toList(growable: true),
     );
     notifyListeners();
-    return null;
   }
 
-  Future<String?> saveCurrentGame() async {
-    if (stagingMatches.isEmpty) return "No game to save";
+  Future<void> saveCurrentGame() async {
+    if (stagingMatches.isEmpty) throw Exception("No game to save");
     final invalidGames = stagingMatches.where(
       (match) => match.players.isNotEmpty && !match.isPlayable(),
     );
     if (invalidGames.isNotEmpty) {
-      return 'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}';
+      throw Exception(
+        'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}',
+      );
     }
     history.add(stagingMatches);
     await GameRepository.instance.addAll(stagingMatches);
@@ -174,15 +178,16 @@ class GameData extends ChangeNotifier {
     debugPrint(
       'Average match every should have played: ${getCurrentPlayerAverageMatchPlayed().toStringAsFixed(2)}',
     );
-    return null;
   }
 
   /// Save a single game to the history and remove it from the staging matches.
   /// For use in game based
-  Future<String?> saveSingleGame(Game game) async {
-    if (game.players.isEmpty) return "No game to save";
+  Future<void> saveSingleGame(Game game) async {
+    if (game.players.isEmpty) throw Exception("No game to save");
     if (!game.isPlayable()) {
-      return 'PLAYER IS NOT BALANCE ON COURT ${stagingMatches.indexOf(game) + 1}';
+      throw Exception(
+        'PLAYER IS NOT BALANCE ON COURT ${stagingMatches.indexOf(game) + 1}',
+      );
     }
     final currentGameIndex = stagingMatches.indexOf(game);
     history.add([game]);
@@ -193,7 +198,6 @@ class GameData extends ChangeNotifier {
     debugPrint(
       'Average match every should have played: ${getCurrentPlayerAverageMatchPlayed().toStringAsFixed(2)}',
     );
-    return null;
   }
 
   Iterable<Player> _choosePlayer([int? n]) {
@@ -336,11 +340,13 @@ class GameData extends ChangeNotifier {
     );
   }
 
-  String? swapPlayer(Player player1, Player player2) {
+  void swapPlayer(Player player1, Player player2) {
     final game1 = gameContainingPlayer(player1);
     final game2 = gameContainingPlayer(player2);
     // At least one player has to be from the current view
-    if (game1 == null || game2 == null) "CAN NOT SWAP BETWEEN INACTIVE PLAYERS";
+    if (game1 == null && game2 == null) {
+      throw Exception("CAN NOT SWAP BETWEEN INACTIVE PLAYERS");
+    }
 
     if (game1 != null) {
       game1.players
@@ -357,7 +363,6 @@ class GameData extends ChangeNotifier {
       'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
     );
     notifyListeners();
-    return null;
   }
 
   /// Add a player to the court. If player is already in the court, remove them

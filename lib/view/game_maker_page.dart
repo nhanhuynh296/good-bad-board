@@ -45,6 +45,8 @@ class _GameMakerPageState extends State<GameMakerPage>
     final gameType = context.select(
       (PersistentSetting setting) => setting.getGameType(),
     );
+    final generateActive = gameData.stagingMatches.isNotEmpty;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -87,9 +89,15 @@ class _GameMakerPageState extends State<GameMakerPage>
                       controller: controller,
                       onExpired: () {
                         if (PersistentSetting.instance.getAutoMakeGame()) {
-                          gameData
-                            ..saveCurrentGame()
-                            ..makeGame();
+                          try {
+                            gameData
+                              ..saveCurrentGame()
+                              ..makeGame();
+                          } catch (e) {
+                            if (context.mounted) {
+                              context.showErrorToast(e.toString());
+                            }
+                          }
                         }
                       },
                     ),
@@ -117,7 +125,157 @@ class _GameMakerPageState extends State<GameMakerPage>
           ],
         ),
       ),
-      bottomNavigationBar: const BottomActionBar(),
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.symmetric(
+          horizontal: spacePageX,
+          vertical: space16,
+        ),
+        height: space64,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: spaceDefault,
+          children: [
+            Expanded(
+              child: Button(
+                type: generateActive ? ButtonType.outlined : ButtonType.filled,
+                onPressed: () async {
+                  if (controller.isForwardOrCompleted) {
+                    showAdaptiveDialog(
+                      barrierDismissible: true,
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.game_is_currently_running,
+                          ),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Regenerating the game will not count these games towards the history.",
+                              ),
+                              Text(
+                                "This will lead to some player will be on court more than other players!",
+                                style: context.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            Button(
+                              type: ButtonType.text,
+                              child: Text(AppLocalizations.of(context)!.cancel),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            Button(
+                              type: ButtonType.filled,
+                              child: Text(
+                                AppLocalizations.of(context)!.regenerate_game,
+                              ),
+                              onPressed: () {
+                                controller.stop();
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                    return;
+                  }
+                  try {
+                    await gameData.makeGame();
+                  } catch (e) {
+                    if (context.mounted) {
+                      context.showErrorToast(e.toString());
+                    }
+                    return;
+                  }
+                },
+                child: Text(
+                  generateActive
+                      ? AppLocalizations.of(context)!.regenerate_game
+                      : AppLocalizations.of(context)!.generate_game,
+                ),
+              ),
+            ),
+            if (generateActive)
+              Expanded(
+                flex: 2,
+                child: Button(
+                  type: ButtonType.filled,
+                  onPressed: () async {
+                    final invalidGames = gameData.stagingMatches.where(
+                      (match) =>
+                          match.players.isNotEmpty && !match.isPlayable(),
+                    );
+                    if (invalidGames.isNotEmpty) {
+                      context.showErrorToast(
+                        'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
+                      );
+                      return;
+                    }
+                    if (controller.isDismissed) {
+                      final result = await showAdaptiveDialog<bool?>(
+                        context: context,
+                        barrierDismissible: true,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("Game is not running"),
+                            content: const Text(
+                              "Do you sure to save the game without running timer?",
+                            ),
+                            actions: [
+                              Button(
+                                type: ButtonType.text,
+                                child: Text(
+                                  AppLocalizations.of(context)!.cancel,
+                                ),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              Button(
+                                type: ButtonType.filled,
+                                child: Text(AppLocalizations.of(context)!.save),
+                                onPressed: () {
+                                  Navigator.of(context).pop(true);
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (result != true) {
+                        return;
+                      }
+                    }
+                    try {
+                      await Future.wait([
+                        gameData.saveCurrentGame(),
+                        controller.animateBack(0, duration: Durations.short3),
+                      ]);
+                    } catch (e) {
+                      if (context.mounted) {
+                        context.showErrorToast(e.toString());
+                      }
+                      return;
+                    }
+                  },
+                  child: Text(AppLocalizations.of(context)!.save),
+                ),
+              ),
+          ],
+        ),
+      ),
 
       floatingActionButton: FloatingActionButton(
         mini: true,
@@ -197,79 +355,6 @@ class CourtModifier extends StatelessWidget {
           icon: Icon(Icons.add, size: textStyle?.fontSize),
         ),
       ],
-    );
-  }
-}
-
-class BottomActionBar extends StatelessWidget {
-  const BottomActionBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final gameData = Provider.of<GameData>(context, listen: true);
-    final generateActive = gameData.stagingMatches.isNotEmpty;
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: spacePageX,
-        vertical: space16,
-      ),
-      height: space64,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: spaceDefault,
-        children: [
-          Expanded(
-            child: Button(
-              type: generateActive ? ButtonType.outlined : ButtonType.filled,
-              onPressed: () async {
-                final error = await gameData.makeGame();
-                if (!context.mounted) return;
-                if (error != null) {
-                  context.showErrorToast(error);
-                  return;
-                }
-              },
-              child: Text(
-                generateActive
-                    ? AppLocalizations.of(context)!.regenerate_game
-                    : AppLocalizations.of(context)!.generate_game,
-              ),
-            ),
-          ),
-          if (generateActive)
-            Expanded(
-              flex: 2,
-              child: Button(
-                type: ButtonType.filled,
-                onPressed: () async {
-                  final invalidGames = gameData.stagingMatches.where(
-                    (match) => match.players.isNotEmpty && !match.isPlayable(),
-                  );
-                  if (invalidGames.isNotEmpty) {
-                    context.showErrorToast(
-                      'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
-                    );
-                    return;
-                  }
-                  try {
-                    final errorOrNull = await gameData.saveCurrentGame();
-                    if (errorOrNull != null && context.mounted) {
-                      context.showErrorToast(errorOrNull);
-                      return;
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      context.showErrorToast(e.toString());
-                    }
-                    return;
-                  }
-                },
-                child: Text(AppLocalizations.of(context)!.save),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }
