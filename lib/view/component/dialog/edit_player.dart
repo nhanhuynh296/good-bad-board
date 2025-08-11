@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
@@ -66,7 +67,7 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
                   },
                   type: ButtonType.filled,
                   backgroundColor: context.colorScheme.onSurfaceVariant,
-                  child: const Text("Break"),
+                  child: Text(AppLocalizations.of(context)!.break_),
                 )
               : Button(
                   onPressed: () async {
@@ -97,7 +98,9 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
           children: [
             TextFormField(
               initialValue: firstName,
-              decoration: const InputDecoration(labelText: 'First name'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.first_name,
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter name';
@@ -108,7 +111,9 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
             ),
             TextFormField(
               initialValue: lastName,
-              decoration: const InputDecoration(labelText: 'Last name'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.last_name,
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter name';
@@ -139,7 +144,9 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
             ),
             TextFormField(
               initialValue: signInId,
-              decoration: const InputDecoration(labelText: 'Sign In ID'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.sign_in_id,
+              ),
               validator: (value) {
                 signInId = value;
                 return null;
@@ -149,14 +156,16 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
               initialValue: widget.player.id,
               enabled: false,
               readOnly: true,
-              decoration: const InputDecoration(labelText: 'ID'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.id,
+              ),
             ),
           ],
         ),
       ),
       actions: <Widget>[
         Button(
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -178,7 +187,7 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
             );
             Navigator.of(context).pop();
           },
-          child: const Text('Update'),
+          child: Text(AppLocalizations.of(context)!.update),
         ),
       ],
     );
@@ -202,7 +211,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
       ),
       actions: <Widget>[
         Button(
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
           onPressed: () {
             Navigator.of(context).pop(false);
           },
@@ -213,7 +222,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).pop(true);
           },
-          child: const Text('Delete'),
+          child: Text(AppLocalizations.of(context)!.delete),
         ),
       ],
     );
@@ -246,12 +255,12 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
       title: const Text("Bulk Edit"),
       actions: [
         Button(
-          child: const Text("Cancel"),
+          child: Text(AppLocalizations.of(context)!.cancel),
           onPressed: () => Navigator.of(context).pop(false),
         ),
         Button(
           type: ButtonType.filled,
-          child: const Text("Done"),
+          child: Text(AppLocalizations.of(context)!.done),
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ],

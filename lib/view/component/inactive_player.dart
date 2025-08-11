@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
@@ -51,7 +52,7 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
         children: [
           if (query.isEmpty)
             Text(
-              'Inactive Players',
+              AppLocalizations.of(context)!.inactive_player,
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
@@ -73,7 +74,7 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
                     );
                   },
                   icon: const Icon(Icons.person_add),
-                  tooltip: 'Add New Player',
+                  tooltip: AppLocalizations.of(context)!.add_player,
                 ),
               ],
             ),
@@ -312,9 +313,15 @@ class _CourtHeaderState extends State<CourtHeader>
             spacing: spaceComponent,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('COURT ${widget.courtNumber + 1}', style: textStyle),
+              Text(
+                AppLocalizations.of(context)!.court_n(widget.courtNumber + 1),
+                style: textStyle,
+              ),
               const Spacer(),
-              Text('SKILL GAP ${widget.game.eloGap()}', style: textStyle),
+              Text(
+                AppLocalizations.of(context)!.skill_gap_n(widget.game.eloGap()),
+                style: textStyle,
+              ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
