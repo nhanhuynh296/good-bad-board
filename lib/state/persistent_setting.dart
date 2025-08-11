@@ -64,19 +64,19 @@ class PersistentSetting extends ChangeNotifier {
   );
 
   Future<void> setLanguage(Locale locale) async {
-    await sharedPreference.setString(
-      Setting.language.name,
-      locale.toLanguageTag(),
-    );
+    await sharedPreference.setStringList(Setting.language.name, [
+      locale.languageCode,
+      ?locale.countryCode,
+    ]);
     notifyListeners();
   }
 
   Locale getLanguage() {
-    final localeString = sharedPreference.getString(Setting.language.name);
-    if (localeString != null) {
-      return Locale.fromSubtags(languageCode: localeString);
-    }
-    return const Locale('en'); // Default to English if not set
+    final localeString = sharedPreference.getStringList(Setting.language.name);
+    if (localeString == null) return const Locale('en');
+    final languageCode = localeString.elementAtOrNull(0) ?? 'en';
+    final countryCode = localeString.elementAtOrNull(1);
+    return Locale(languageCode, countryCode);
   }
 
   Future<void> setAutoMakeGame(bool value) async {
@@ -86,5 +86,10 @@ class PersistentSetting extends ChangeNotifier {
 
   bool getAutoMakeGame() {
     return sharedPreference.getBool(Setting.autoMakegame.name) ?? false;
+  }
+
+  Future<void> clear() async {
+    await sharedPreference.clear();
+    notifyListeners();
   }
 }

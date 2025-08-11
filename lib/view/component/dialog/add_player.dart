@@ -29,7 +29,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('New Player'),
+      title: Text(AppLocalizations.of(context)!.add_player),
       content: Form(
         key: _formKey,
         child: Column(
@@ -103,7 +103,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
       actions: <Widget>[
         Button(
           type: ButtonType.text,
-          child: const Text("Reset"),
+          child: Text(AppLocalizations.of(context)!.reset),
           onPressed: () {
             resetForm();
           },

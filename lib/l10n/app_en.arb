@@ -2,6 +2,7 @@
   "about": "About",
   "active_player": "Active Player",
   "add": "Add",
+  "add_player": "Add Player",
   "app_name": "Badminton Game Generator",
   "are_you_sure_you_want_to_delete_this_player": "Are you sure you want to delete this player?",
   "@are_you_sure_you_want_to_delete_this_player": {
@@ -12,9 +13,9 @@
   "@auto_game": {
     "description": "Automatically generate games after a session ends"
   },
-  "auto_make_game_is_status": "Auto make game is {status}",
-  "@auto_make_game_is_status": {
-    "description": "Status of the auto game feature",
+  "auto_game_status": "Auto game generation is {status}",
+  "@auto_game_status": {
+    "description": "Status of the auto game feature (On/Off)",
     "placeholders": {
       "status": {
         "type": "String"
@@ -23,93 +24,130 @@
   },
   "break_": "Break",
   "@break_": {
-    "description": "Prevent player from further playing"
+    "description": "Temporarily exclude a player from gameplay"
   },
   "cancel": "Cancel",
   "coming_soon": "Coming Soon",
   "court_background": "Court Background",
+  "court_n": "Court {n}",
+  "@court_n": {
+    "description": "Label for a badminton court (e.g., Court 1)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "delete": "Delete",
   "done": "Done",
   "elo": "Elo",
+  "@elo": {
+    "description": "Player skill rating system"
+  },
   "email": "Email",
   "first_name": "First Name",
   "game_based": "Game Based",
+  "@game_based": {
+    "description": "Game format (e.g., 21-point matches)"
+  },
   "game_duration": "Game Duration",
   "game_history": "Game History",
   "game_is_currently_running": "Game is currently running...",
-  "game_number": "Game {number}",
+  "game_number": "Game {n}",
   "@game_number": {
-    "description": "Indicates the game number in a series",
+    "description": "Sequential game number (e.g., Game 3)",
     "placeholders": {
-      "number": {
+      "n": {
         "type": "int"
       }
     }
   },
   "game_type": "Game Type",
   "@game_type": {
-    "description": "Type of game, e.g., game based or time based, or singles or doubles..."
+    "description": "Singles, doubles, or mixed doubles"
   },
+  "games_history": "Games History",
   "generate_game": "Generate Game",
   "generate_some_game_to_start": "Generate some games to start",
+  "id": "ID",
+  "@id": {
+    "description": "Unique player identifier"
+  },
   "inactive_player": "Inactive Player",
   "language": "Language",
   "language_name": "English",
   "@language_name": {
-    "description": "Name of the language in its own language. E.g., 'English' in English, 'Français' in French, etc."
+    "description": "Language name in its native form"
   },
   "last_name": "Last Name",
-  "makeGame": "Make Game",
-  "@makeGame": {
+  "make_game": "Make Game",
+  "@make_game": {
     "description": "Create a new game session"
   },
-  "most_game_played": "Most Game Played",
-  "most_session_attended": "Most Session Attended",
+  "most_games_played": "Most Games Played",
+  "most_sessions_attended": "Most Sessions Attended",
   "n_court": "{count, plural, =0{No Court} =1{1 Court} other{{count} Courts}}",
   "@n_court": {
-    "description": "Court used for the game",
+    "description": "Number of courts in use",
     "placeholders": {
       "count": {
-        "format": "compact",
         "type": "num"
       }
     }
   },
   "off": "Off",
   "@off": {
-    "description": "Disable a feature"
+    "description": "Feature disabled"
   },
   "ok": "OK",
   "on": "On",
   "@on": {
-    "description": "Enable a feature"
+    "description": "Feature enabled"
   },
-  "playerRegister": "Player Register",
-  "@playerRegister": {
-    "description": "Register new players"
-  },
-  "playerStatistic": "Player Statistic",
-  "@playerStatistic": {
-    "description": "View player statistics"
-  },
-  "player_deleted": "Player {identifier} deleted",
+  "player_deleted": "Player {id} deleted",
   "@player_deleted": {
-    "description": "Notification when a player is deleted",
+    "description": "Notification after player deletion",
     "placeholders": {
-      "identifier": {
+      "id": {
         "type": "String"
       }
     }
   },
+  "player_register": "Player Register",
+  "player_statistic": "Player Statistics",
+  "@player_statistic": {
+    "description": "View player statistics"
+  },
   "regenerate": "Regenerate",
   "@regenerate": {
-    "description": "Confirmation button to regenerate a game"
+    "description": "Recreate a game with new parameters"
   },
   "regenerate_game": "Regenerate Game",
+  "reset": "Reset",
   "save": "Save",
   "settings": "Settings",
   "sign_in_id": "Sign In ID",
-  "skill_gap": "Skill Gap",
+  "skill_gap_n": "Skill Gap: {gap}",
+  "@skill_gap_n": {
+    "description": "Difference in Elo ratings between players",
+    "placeholders": {
+      "gap": {
+        "type": "num"
+      }
+    }
+  },
+  "the_beginning": "The Beginning",
+  "@the_beginning": {
+    "description": "Start of a session or timeline"
+  },
   "time_based": "Time Based",
+  "@time_based": {
+    "description": "Game format with fixed duration (e.g., 30 minutes)"
+  },
+  "time_remaining": "Time Remaining",
+  "@time_remaining": {
+    "description": "Countdown for ongoing game/session"
+  },
+  "today": "Today",
   "update": "Update"
 }
