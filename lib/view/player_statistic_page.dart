@@ -167,6 +167,41 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
     );
   }
 
+  Widget totalGames(List<Game> games) {
+    return HighlightWidget(
+      icon: Icons.info_outline,
+      title: 'Total games',
+      subtitle: games.length.toString(),
+    );
+  }
+
+  /// Group games into weekly frequency and find average frequency
+  Widget gameFrequency(List<Game> games) {
+    final now = DateTime.now();
+    final weeklyGames = games.groupSetsBy(
+      (game) => DateUtils.dateOnly(
+        game.createdDate,
+      ).subtract(Duration(days: now.weekday - 1)),
+    );
+
+    if (weeklyGames.isEmpty) {
+      return const HighlightWidget(
+        icon: Icons.info_outline,
+        title: "No games played",
+      );
+    }
+
+    final averageFrequency = weeklyGames.values
+        .map((games) => games.length)
+        .average;
+
+    return HighlightWidget(
+      icon: Icons.calendar_today_outlined,
+      title: "Average weekly games",
+      subtitle: averageFrequency.toStringAsFixed(2),
+    );
+  }
+
   Widget placeholder() {
     return HighlightWidget(
       icon: Icons.info_outline,
@@ -240,6 +275,8 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
               child: OverviewPanel(
                 maxCrossAxisExtent: height,
                 children: [
+                  totalGames(games),
+                  gameFrequency(games),
                   mostGamePlayed(games),
                   mostConsistent(games),
                   regularUser(games),
