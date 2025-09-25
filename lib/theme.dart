@@ -13,6 +13,10 @@ abstract class AppColors {
   static const Color lightGold = Color(0xFFFFE4B5); // Lightened Gold Rush
   static const Color darkBlue = Color(0xFF04085C); // Darkened St Andrew’s Blue
   static const Color grey = Color(0xFF9E9E9E); // Neutral Grey
+
+  static const Color orange = Color.fromARGB(0xFF, 255, 140, 40); // Orange
+  static const Color teal = Color.fromARGB(0xFF, 67, 171, 174);
+  static const Color yellow = Color.fromARGB(0xFF, 253, 221, 98);
 }
 
 const String fontFamily = 'Gotham';
