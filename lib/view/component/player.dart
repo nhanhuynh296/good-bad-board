@@ -15,12 +15,16 @@ class _PlayerComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      alignment: Alignment.center,
       width: size?.width,
       height: size?.height,
-      alignment: Alignment.center,
-      child: Text(
-        '${data.name().toUpperCase()} (${data.elo.name.toUpperCase()})',
-        textAlign: TextAlign.center,
+      constraints: BoxConstraints(minHeight: size?.height ?? 65),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(data.name().toUpperCase()),
+          Text(data.elo.name.toUpperCase()),
+        ],
       ),
     );
   }
