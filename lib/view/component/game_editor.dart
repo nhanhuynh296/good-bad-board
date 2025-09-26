@@ -5,19 +5,23 @@ import 'package:good_bad_board/view/component/inactive_player.dart';
 import 'package:provider/provider.dart';
 
 class CurrentGameView extends StatelessWidget {
-  const CurrentGameView({super.key});
+  final GameContainer games;
+
+  const CurrentGameView({super.key, required this.games});
 
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    if (gameData.stagingMatches.isEmpty) return const _BlankGame();
-
+    final stagingMatches = context.select(
+      (GameData gameData) => gameData.stagingMatches,
+    );
+    if (stagingMatches.isEmpty) return const BlankGame();
     return StagingGameComponent(gameData.stagingMatches);
   }
 }
 
-class _BlankGame extends StatelessWidget {
-  const _BlankGame();
+class BlankGame extends StatelessWidget {
+  const BlankGame({super.key});
 
   @override
   Widget build(BuildContext context) {

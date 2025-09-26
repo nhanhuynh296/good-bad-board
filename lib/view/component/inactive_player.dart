@@ -185,7 +185,6 @@ class StagingGameComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     const gutter = spaceDefault;
     const padding = EdgeInsets.only(right: space16);
-    final games = context.watch<GameData>().stagingMatches;
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {

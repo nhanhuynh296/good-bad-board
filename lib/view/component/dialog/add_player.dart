@@ -65,7 +65,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               },
             ),
             DropdownButtonFormField(
-              value: elo,
+              initialValue: elo,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.elo,
               ),
