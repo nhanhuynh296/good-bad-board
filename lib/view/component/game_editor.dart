@@ -1,23 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
-import 'package:good_bad_board/state/game_data.dart';
-import 'package:good_bad_board/view/component/inactive_player.dart';
-import 'package:provider/provider.dart';
 
-class CurrentGameView extends StatelessWidget {
-  const CurrentGameView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final gameData = Provider.of<GameData>(context);
-    if (gameData.stagingMatches.isEmpty) return const _BlankGame();
-
-    return StagingGameComponent(gameData.stagingMatches);
-  }
-}
-
-class _BlankGame extends StatelessWidget {
-  const _BlankGame();
+class BlankGame extends StatelessWidget {
+  const BlankGame({super.key});
 
   @override
   Widget build(BuildContext context) {

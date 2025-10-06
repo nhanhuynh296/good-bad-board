@@ -123,7 +123,7 @@ class _EditPlayerDialogState extends State<EditPlayerDialog> {
               },
             ),
             DropdownButtonFormField(
-              value: elo,
+              initialValue: elo,
               decoration: const InputDecoration(labelText: 'Elo'),
               validator: (value) {
                 if (value != null) return null;

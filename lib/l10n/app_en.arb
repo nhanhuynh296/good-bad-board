@@ -69,6 +69,7 @@
   "games_history": "Games History",
   "generate_game": "Generate Game",
   "generate_some_game_to_start": "Generate some games to start",
+  "history": "History",
   "id": "ID",
   "@id": {
     "description": "Unique player identifier"
@@ -148,6 +149,7 @@
   "@time_remaining": {
     "description": "Countdown for ongoing game/session"
   },
+  "to_current_session": "To current session",
   "today": "Today",
   "update": "Update"
 }

@@ -167,7 +167,7 @@ class GameData extends ChangeNotifier {
     );
     if (invalidGames.isNotEmpty) {
       throw Exception(
-        'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}',
+        'PLAYERS ARE NOT BALANCED ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}',
       );
     }
     history.add(stagingMatches);
@@ -186,7 +186,7 @@ class GameData extends ChangeNotifier {
     if (game.players.isEmpty) throw Exception("No game to save");
     if (!game.isPlayable()) {
       throw Exception(
-        'PLAYER IS NOT BALANCE ON COURT ${stagingMatches.indexOf(game) + 1}',
+        'PLAYERS ARE NOT BALANCED ON COURT ${stagingMatches.indexOf(game) + 1}',
       );
     }
     final currentGameIndex = stagingMatches.indexOf(game);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
+import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
@@ -21,8 +22,9 @@ class GameMakerPage extends StatefulWidget {
 }
 
 class _GameMakerPageState extends State<GameMakerPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController controller;
+  int tabIndex = 0;
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _GameMakerPageState extends State<GameMakerPage>
     final gameDuration = PersistentSetting.instance.getGameDuration();
     controller = AnimationController(vsync: this, duration: gameDuration)
       ..value = timerData.elapsed.inMilliseconds / gameDuration.inMilliseconds;
+    switchToStagingGame();
   }
 
   @override
@@ -39,41 +42,89 @@ class _GameMakerPageState extends State<GameMakerPage>
     super.dispose();
   }
 
+  void switchToStagingGame() {
+    final gameData = Provider.of<GameData>(context, listen: false);
+    final allGames = gameData.history.followedBy([gameData.stagingMatches]);
+    setState(() {
+      tabIndex = allGames.length - 1;
+    });
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      centerTitle: true,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () async {
+          if (controller.status != AnimationStatus.forward) {
+            return Navigator.of(context).pop();
+          }
+
+          final result = await showAdaptiveDialog<bool>(
+            context: context,
+            builder: (_) => const ConfirmExitDialog(),
+          );
+
+          if (result == true && mounted) {
+            Navigator.of(context).pop();
+          }
+        },
+      ),
+      title: Text(
+        AppLocalizations.of(context)!.game_number(tabIndex + 1),
+        style: context.textTheme.titleLarge,
+      ),
+      actions: [
+        const AutoMakeNextGameIconButton(),
+        const _OpenHistoryDrawerButton(),
+      ],
+    );
+  }
+
+  Widget _buildSwitchToStagingGameButton() {
+    return Button(
+      type: ButtonType.outlined,
+      icon: const Icon(Icons.history),
+      onPressed: switchToStagingGame,
+      child: Text(AppLocalizations.of(context)!.to_current_session),
+    );
+  }
+
+  bool isViewingStagingGame() {
+    final gameData = Provider.of<GameData>(context, listen: false);
+    final allGames = gameData.history.followedBy([gameData.stagingMatches]);
+    return tabIndex == allGames.length - 1;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final gameData = Provider.of<GameData>(context);
     final gameType = context.select(
       (PersistentSetting setting) => setting.getGameType(),
     );
-    final generateActive = gameData.stagingMatches.isNotEmpty;
+    final history = context.select((GameData data) => data.history);
+    final stagingMatches = context.select(
+      (GameData data) => data.stagingMatches,
+    );
+
+    final generateActive = stagingMatches.isNotEmpty;
+
+    final allGames = history.followedBy([stagingMatches]).toUnmodifiableList();
 
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () async {
-            if (controller.status != AnimationStatus.forward) {
-              return Navigator.of(context).pop();
-            }
-
-            final result = await showAdaptiveDialog<bool>(
-              context: context,
-              builder: (_) => const ConfirmExitDialog(),
+      appBar: _buildAppBar(),
+      endDrawer: Drawer(
+        child: ListView.builder(
+          itemCount: allGames.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              onTap: () => setState(() => tabIndex = index),
+              title: Text(
+                AppLocalizations.of(context)!.game_number(index + 1),
+                style: context.textTheme.titleLarge,
+              ),
             );
-
-            if (result == true && context.mounted) {
-              Navigator.of(context).pop();
-            }
           },
         ),
-        title: Text(
-          AppLocalizations.of(
-            context,
-          )!.game_number(gameData.history.length + 1),
-          style: context.textTheme.titleLarge,
-        ),
-        actions: [const AutoMakeNextGameIconButton()],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: spacePageX),
@@ -90,7 +141,7 @@ class _GameMakerPageState extends State<GameMakerPage>
                       onExpired: () {
                         if (PersistentSetting.instance.getAutoMakeGame()) {
                           try {
-                            gameData
+                            context.read<GameData>()
                               ..saveCurrentGame()
                               ..makeGame();
                           } catch (e) {
@@ -103,7 +154,11 @@ class _GameMakerPageState extends State<GameMakerPage>
                     ),
                     const Divider(),
                   ],
-                  const Expanded(child: InactivePlayerComponent()),
+                  isViewingStagingGame()
+                      ? const Expanded(child: InactivePlayerComponent())
+                      : const Text(
+                          "Inactive Players is not available in history view",
+                        ),
                 ],
               ),
             ),
@@ -115,9 +170,9 @@ class _GameMakerPageState extends State<GameMakerPage>
                 children: [
                   const CourtModifier(),
                   Expanded(
-                    child: CurrentGameView(
-                      key: ObjectKey(gameData.stagingMatches),
-                    ),
+                    child: (allGames.elementAt(tabIndex).isEmpty)
+                        ? const BlankGame()
+                        : StagingGameComponent(allGames.elementAt(tabIndex)),
                   ),
                 ],
               ),
@@ -131,150 +186,171 @@ class _GameMakerPageState extends State<GameMakerPage>
           vertical: space16,
         ),
         height: space64,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: spaceDefault,
-          children: [
-            Expanded(
-              child: Button(
-                type: generateActive ? ButtonType.outlined : ButtonType.filled,
-                onPressed: () async {
-                  if (controller.isForwardOrCompleted) {
-                    showAdaptiveDialog(
-                      barrierDismissible: true,
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text(
-                            AppLocalizations.of(
-                              context,
-                            )!.game_is_currently_running,
-                          ),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Regenerating the game will not count these games towards the history.",
-                              ),
-                              Text(
-                                "This will lead to some player will be on court more than other players!",
-                                style: context.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
+        child: (isViewingStagingGame())
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: spaceDefault,
+                children: [
+                  Expanded(
+                    child: Button(
+                      type: generateActive
+                          ? ButtonType.outlined
+                          : ButtonType.filled,
+                      onPressed: () async {
+                        if (controller.isForwardOrCompleted) {
+                          showAdaptiveDialog(
+                            barrierDismissible: true,
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.game_is_currently_running,
                                 ),
-                              ),
-                            ],
-                          ),
-                          actions: [
-                            Button(
-                              type: ButtonType.text,
-                              child: Text(AppLocalizations.of(context)!.cancel),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            Button(
-                              type: ButtonType.filled,
-                              child: Text(
-                                AppLocalizations.of(context)!.regenerate_game,
-                              ),
-                              onPressed: () {
-                                controller.stop();
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                    return;
-                  }
-                  try {
-                    await gameData.makeGame();
-                  } catch (e) {
-                    if (context.mounted) {
-                      context.showErrorToast(e.toString());
-                    }
-                    return;
-                  }
-                },
-                child: Text(
-                  generateActive
-                      ? AppLocalizations.of(context)!.regenerate_game
-                      : AppLocalizations.of(context)!.generate_game,
-                ),
-              ),
-            ),
-            if (generateActive)
-              Expanded(
-                flex: 2,
-                child: Button(
-                  type: ButtonType.filled,
-                  onPressed: () async {
-                    final invalidGames = gameData.stagingMatches.where(
-                      (match) =>
-                          match.players.isNotEmpty && !match.isPlayable(),
-                    );
-                    if (invalidGames.isNotEmpty) {
-                      context.showErrorToast(
-                        'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => gameData.stagingMatches.indexOf(game) + 1).join(', ')}',
-                      );
-                      return;
-                    }
-                    if (controller.isDismissed) {
-                      final result = await showAdaptiveDialog<bool?>(
-                        context: context,
-                        barrierDismissible: true,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("Game is not running"),
-                            content: const Text(
-                              "Do you sure to save the game without running timer?",
-                            ),
-                            actions: [
-                              Button(
-                                type: ButtonType.text,
-                                child: Text(
-                                  AppLocalizations.of(context)!.cancel,
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Regenerating the game will not count these games towards the history.",
+                                    ),
+                                    Text(
+                                      "This will lead to some player will be on court more than other players!",
+                                      style: context.textTheme.titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ],
                                 ),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                              Button(
-                                type: ButtonType.filled,
-                                child: Text(AppLocalizations.of(context)!.save),
-                                onPressed: () {
-                                  Navigator.of(context).pop(true);
-                                },
-                              ),
-                            ],
+                                actions: [
+                                  Button(
+                                    type: ButtonType.text,
+                                    child: Text(
+                                      AppLocalizations.of(context)!.cancel,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  Button(
+                                    type: ButtonType.filled,
+                                    child: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.regenerate_game,
+                                    ),
+                                    onPressed: () {
+                                      controller.stop();
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
                           );
-                        },
-                      );
+                          return;
+                        }
+                        try {
+                          await context.read<GameData>().makeGame();
+                          setState(() {
+                            tabIndex = allGames.length - 1;
+                          });
+                        } catch (e) {
+                          if (context.mounted) {
+                            context.showErrorToast(e.toString());
+                          }
+                          return;
+                        }
+                      },
+                      child: Text(
+                        generateActive
+                            ? AppLocalizations.of(context)!.regenerate_game
+                            : AppLocalizations.of(context)!.generate_game,
+                      ),
+                    ),
+                  ),
+                  if (generateActive)
+                    Expanded(
+                      flex: 2,
+                      child: Button(
+                        type: ButtonType.filled,
+                        onPressed: () async {
+                          final invalidGames = stagingMatches.where(
+                            (match) =>
+                                match.players.isNotEmpty && !match.isPlayable(),
+                          );
+                          if (invalidGames.isNotEmpty) {
+                            context.showErrorToast(
+                              'PLAYERS ARE NOT BALANCED ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}',
+                            );
+                            return;
+                          }
+                          if (controller.isDismissed) {
+                            final result = await showAdaptiveDialog<bool?>(
+                              context: context,
+                              barrierDismissible: true,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text("Game is not running"),
+                                  content: const Text(
+                                    "Do you sure to save the game without running timer?",
+                                  ),
+                                  actions: [
+                                    Button(
+                                      type: ButtonType.text,
+                                      child: Text(
+                                        AppLocalizations.of(context)!.cancel,
+                                      ),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                    Button(
+                                      type: ButtonType.filled,
+                                      child: Text(
+                                        AppLocalizations.of(context)!.save,
+                                      ),
+                                      onPressed: () {
+                                        Navigator.of(context).pop(true);
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
 
-                      if (result != true) {
-                        return;
-                      }
-                    }
-                    try {
-                      await Future.wait([
-                        gameData.saveCurrentGame(),
-                        controller.animateBack(0, duration: Durations.short3),
-                      ]);
-                    } catch (e) {
-                      if (context.mounted) {
-                        context.showErrorToast(e.toString());
-                      }
-                      return;
-                    }
-                  },
-                  child: Text(AppLocalizations.of(context)!.save),
-                ),
-              ),
-          ],
-        ),
+                            if (result != true) {
+                              return;
+                            }
+                          }
+                          try {
+                            if (!context.mounted) return;
+                            await Future.wait([
+                              context.read<GameData>().saveCurrentGame(),
+                              controller.animateBack(
+                                0,
+                                duration: Durations.short3,
+                              ),
+                            ]);
+                            // The allGames.length is not updated for some reason, just use
+                            setState(() {
+                              tabIndex = allGames.length;
+                            });
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            context.showErrorToast(e.toString());
+                            return;
+                          }
+                        },
+                        child: Text(AppLocalizations.of(context)!.save),
+                      ),
+                    ),
+                ],
+              )
+            : _buildSwitchToStagingGameButton(),
       ),
 
       floatingActionButton: FloatingActionButton(
@@ -286,6 +362,22 @@ class _GameMakerPageState extends State<GameMakerPage>
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.miniStartDocked,
+    );
+  }
+}
+
+class _OpenHistoryDrawerButton extends StatelessWidget {
+  const _OpenHistoryDrawerButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      type: ButtonType.text,
+      icon: const Icon(Icons.history),
+      child: Text(AppLocalizations.of(context)!.history),
+      onPressed: () {
+        Scaffold.of(context).openEndDrawer();
+      },
     );
   }
 }
