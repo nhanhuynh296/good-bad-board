@@ -284,7 +284,7 @@ class _GameMakerPageState extends State<GameMakerPage>
                           );
                           if (invalidGames.isNotEmpty) {
                             context.showErrorToast(
-                              'PLAYER IS NOT BALANCE ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}',
+                              'PLAYERS ARE NOT BALANCED ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}',
                             );
                             return;
                           }
