@@ -12,12 +12,14 @@ class ShadedContainer extends StatelessWidget {
   final Color? shadedColor;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
+  final bool rounded;
 
   const ShadedContainer({
     super.key,
     required this.child,
     this.shaded = true,
     this.bordered = true,
+    this.rounded = true,
     this.borderColor,
     this.backgroundColor,
     this.shadedColor,
@@ -27,7 +29,9 @@ class ShadedContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const baseDecoration = BoxDecoration(borderRadius: outlinedBorderRadius);
+    final baseDecoration = BoxDecoration(
+      borderRadius: rounded ? outlinedBorderRadius : null,
+    );
 
     final borderedDecoration = baseDecoration.copyWith(
       color: Colors.transparent,

@@ -14,11 +14,13 @@ class Button extends StatelessWidget {
   final TextStyle? textStyle;
   final Color? backgroundColor;
   final EdgeInsets? padding;
+  final bool rounded;
 
   const Button({
     super.key,
     this.type = ButtonType.text,
     this.disabled = false,
+    this.rounded = true,
     this.child,
     this.icon,
     this.onPressed,
@@ -33,6 +35,7 @@ class Button extends StatelessWidget {
     return switch (type) {
       ButtonType.filled => FilledButtonWidget(
         disabled: disabled,
+        rounded: rounded,
         icon: icon,
         onPressed: onPressed,
         onLongPress: onLongPress,
@@ -43,6 +46,7 @@ class Button extends StatelessWidget {
       ),
       ButtonType.outlined => OutlinedButtonWidget(
         disabled: disabled,
+        rounded: rounded,
         icon: icon,
         onPressed: onPressed,
         onLongPress: onLongPress,
@@ -53,6 +57,7 @@ class Button extends StatelessWidget {
       ),
       ButtonType.text => TextButtonWidget(
         disabled: disabled,
+        rounded: rounded,
         icon: icon,
         onPressed: onPressed,
         onLongPress: onLongPress,
@@ -74,10 +79,12 @@ class FilledButtonWidget extends StatelessWidget {
   final TextStyle? textStyle;
   final Color? backgroundColor;
   final EdgeInsets? padding;
+  final bool rounded;
 
   const FilledButtonWidget({
     super.key,
     this.disabled = false,
+    this.rounded = true,
     this.child,
     this.icon,
     this.onPressed,
@@ -105,6 +112,7 @@ class FilledButtonWidget extends StatelessWidget {
     return ShadedContainer(
       bordered: false,
       shaded: true,
+      rounded: rounded,
       shadedColor: Theme.of(context).colorScheme.secondaryContainer,
       child: onlyIcon
           ? IconButton.filled(
@@ -139,10 +147,12 @@ class OutlinedButtonWidget extends StatelessWidget {
   final TextStyle? textStyle;
   final Color? backgroundColor;
   final EdgeInsets? padding;
+  final bool rounded;
 
   const OutlinedButtonWidget({
     super.key,
     this.disabled = false,
+    this.rounded = true,
     this.child,
     this.icon,
     this.onPressed,
@@ -152,7 +162,7 @@ class OutlinedButtonWidget extends StatelessWidget {
     this.padding,
   }) : assert(icon != null || child != null, 'icon or child must be provided');
 
-  static const buttonBoxShadow = BoxShadow(offset: Offset(4, 4));
+  static const buttonBoxShadow = BoxShadow(offset: shadowedOutlinedOffset);
 
   @override
   Widget build(BuildContext context) {
@@ -177,6 +187,7 @@ class OutlinedButtonWidget extends StatelessWidget {
     return ShadedContainer(
       shaded: true,
       bordered: true,
+      rounded: rounded,
       shadedColor: Theme.of(context).colorScheme.inverseSurface,
       child: onlyIcon
           ? IconButton.outlined(
@@ -211,10 +222,12 @@ class TextButtonWidget extends StatelessWidget {
   final TextStyle? textStyle;
   final EdgeInsets? padding;
   final Color? backgroundColor;
+  final bool rounded;
 
   const TextButtonWidget({
     super.key,
     this.disabled = false,
+    this.rounded = true,
     this.child,
     this.icon,
     this.onPressed,

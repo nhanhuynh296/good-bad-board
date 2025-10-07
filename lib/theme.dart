@@ -21,8 +21,10 @@ abstract class AppColors {
 
 const String fontFamily = 'Gotham';
 
-const outlinedBorderSide = BorderSide(width: 2);
-const outlinedBorderRadius = BorderRadius.all(Radius.circular(5));
+const outlinedBorderSide = BorderSide(width: 4);
+const shadowedOutlinedOffset = Offset(8.0, 8.0);
+
+const outlinedBorderRadius = BorderRadius.all(Radius.circular(40));
 const noOutlinedBorder = RoundedRectangleBorder(
   borderRadius: outlinedBorderRadius,
 );

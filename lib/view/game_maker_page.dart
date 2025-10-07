@@ -432,6 +432,7 @@ class CourtModifier extends StatelessWidget {
       children: [
         Button(
           type: ButtonType.outlined,
+          rounded: false,
           onPressed: () =>
               gameData.setNumberOfCourt(gameData.numberOfCourt - 1),
           icon: Icon(Icons.remove, size: textStyle?.fontSize),
@@ -442,6 +443,7 @@ class CourtModifier extends StatelessWidget {
         ),
         Button(
           type: ButtonType.outlined,
+          rounded: false,
           onPressed: () =>
               gameData.setNumberOfCourt(gameData.numberOfCourt + 1),
           icon: Icon(Icons.add, size: textStyle?.fontSize),
