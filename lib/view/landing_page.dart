@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:good_bad_board/global.dart';
@@ -8,7 +9,6 @@ import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/theme.dart';
 import 'package:good_bad_board/view/component/button.dart';
-import 'package:good_bad_board/view/component/reusable.dart';
 import 'package:good_bad_board/view/component/setting.dart';
 
 class LandingPage extends StatelessWidget {
@@ -49,12 +49,31 @@ class LandingPage extends StatelessWidget {
       ),
     ];
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.app_name)),
+      appBar: AppBar(
+        shape: const ContinuousRectangleBorder(side: outlinedBorderSide),
+        actions: [
+          VerticalDivider(
+            thickness: BottomBar.border.width,
+            width: BottomBar.border.width,
+          ),
+          Container(
+            constraints: BottomBar.buttonConstraint,
+            color: AppColors.teal,
+            alignment: Alignment.center,
+            child: Text(
+              DateTime.now().year.toString(),
+              style: const TextStyle(fontSize: 20),
+            ),
+          ),
+        ],
+        toolbarHeight: BottomBar.headerHeight,
+      ),
       drawer: const LandingPageDrawer(),
+      bottomNavigationBar: const BottomBar(),
       body: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 64,
-          vertical: pageSpacing.vertical,
+        padding: const EdgeInsets.symmetric(
+          horizontal: space64,
+          vertical: spacePageY,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -125,6 +144,7 @@ class LandingPageOption extends StatefulWidget {
 
 class _LandingPageOptionState extends State<LandingPageOption> {
   bool isHover = false;
+
   @override
   Widget build(BuildContext context) {
     return Transform.scale(
@@ -194,6 +214,44 @@ class LandingPageDrawer extends StatelessWidget {
               );
             },
             trailing: Icon(Icons.adaptive.arrow_forward),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class BottomBar extends StatelessWidget {
+  const BottomBar({super.key});
+
+  static const headerHeight = 100.0;
+  static const buttonConstraint = BoxConstraints(minWidth: 300);
+  static const border = BorderSide(width: 3);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: headerHeight,
+      decoration: const BoxDecoration(border: BoxBorder.fromBorderSide(border)),
+      child: Row(
+        children: [
+          const Spacer(),
+          VerticalDivider(thickness: border.width, width: border.width),
+          InkWell(
+            onTap: () =>
+                SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+            child: Container(
+              constraints: buttonConstraint,
+              alignment: Alignment.center,
+              child: const Row(
+                spacing: space16,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.logout, size: 40),
+                  Text("Quit", style: TextStyle(fontSize: 20)),
+                ],
+              ),
+            ),
           ),
         ],
       ),
