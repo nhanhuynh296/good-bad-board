@@ -92,7 +92,6 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
                     itemBuilder: (BuildContext context, int index) =>
                         DraggablePlayerComponent(
                           data: inactivePlayers[index],
-                          size: const Size.fromHeight(50),
                           shouldAcceptIncomingDragPlayer:
                               // Disallow dragging to other inactive player
                               (player) => !inactivePlayers.contains(player),

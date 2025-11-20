@@ -2,28 +2,30 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
-import 'package:good_bad_board/view/component/button.dart';
+import 'package:good_bad_board/theme.dart';
 import 'package:good_bad_board/view/component/dialog/edit_player.dart';
 import 'package:provider/provider.dart';
 
+import 'button.dart';
+
 class _PlayerComponent extends StatelessWidget {
   final Player data;
-  final Size? size;
+  final bool showElo;
 
-  const _PlayerComponent({super.key, required this.data, this.size});
+  const _PlayerComponent({super.key, required this.data, this.showElo = true});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      width: size?.width,
-      height: size?.height,
-      constraints: BoxConstraints(minHeight: size?.height ?? 65),
+      constraints: const BoxConstraints(minHeight: 65),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: showElo
+            ? MainAxisAlignment.spaceBetween
+            : MainAxisAlignment.center,
         children: [
-          Text(data.name().toUpperCase()),
-          Text(data.elo.name.toUpperCase()),
+          Text(data.name().toUpperCase(), textAlign: TextAlign.center),
+          if (showElo) Text(data.elo.name.toUpperCase()),
         ],
       ),
     );
@@ -38,7 +40,7 @@ class ClickablePlayerComponent extends _PlayerComponent {
 
   const ClickablePlayerComponent({
     super.key,
-    super.size,
+    super.showElo = true,
     required super.data,
     this.filled = false,
     this.disabled = false,
@@ -68,10 +70,14 @@ class ClickablePlayerComponent extends _PlayerComponent {
     }
 
     return Button(
-      type: filled ? ButtonType.filled : ButtonType.outlined,
+      type: ButtonType.outlined,
       onPressed: onTap,
       onLongPress: onSecondaryAction,
       disabled: disabled,
+      backgroundColor: filled ? AppColors.yellow : null,
+      textStyle: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(color: filled ? Colors.black : null),
       child: super.build(context),
     );
   }
@@ -83,7 +89,7 @@ class DraggablePlayerComponent extends _PlayerComponent {
 
   const DraggablePlayerComponent({
     super.key,
-    super.size,
+    super.showElo = true,
     required super.data,
     this.onDragToTarget,
     this.shouldAcceptIncomingDragPlayer,
@@ -122,12 +128,12 @@ class DraggablePlayerComponent extends _PlayerComponent {
                   matchGapColor[maxMatchPlayed - matchPlayed] ??
                   matchGapColor[matchGapColor.keys.max],
               child: ClickablePlayerComponent(
+                showElo: showElo,
                 inMatch: true,
                 key: ValueKey(data.id),
                 data: data,
                 filled: true,
                 disabled: isInvalidDragHovering,
-                size: size,
               ),
             ),
           ),

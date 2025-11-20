@@ -55,6 +55,7 @@ class CourtComponent extends StatelessWidget {
                       _CourtSameSide(
                         children: [
                           DraggablePlayerComponent(
+                            showElo: false,
                             data: sortedPlayer.first,
                             onDragToTarget: (draggedToPlayer) => onDragToTarget(
                               sortedPlayer.first,
@@ -62,6 +63,7 @@ class CourtComponent extends StatelessWidget {
                             ),
                           ),
                           DraggablePlayerComponent(
+                            showElo: false,
                             data: sortedPlayer.last,
                             onDragToTarget: (draggedToPlayer) => onDragToTarget(
                               sortedPlayer.last,
@@ -73,6 +75,7 @@ class CourtComponent extends StatelessWidget {
                       _CourtSameSide(
                         children: [
                           DraggablePlayerComponent(
+                            showElo: false,
                             data: sortedPlayer[2],
                             onDragToTarget: (draggedToPlayer) => onDragToTarget(
                               sortedPlayer[2],
@@ -80,6 +83,8 @@ class CourtComponent extends StatelessWidget {
                             ),
                           ),
                           DraggablePlayerComponent(
+                            showElo: false,
+
                             data: sortedPlayer[1],
                             onDragToTarget: (draggedToPlayer) => onDragToTarget(
                               sortedPlayer[1],
@@ -94,6 +99,7 @@ class CourtComponent extends StatelessWidget {
                     children: players
                         .map(
                           (player) => DraggablePlayerComponent(
+                            showElo: false,
                             data: player,
                             onDragToTarget: (draggedToPlayer) =>
                                 onDragToTarget(player, draggedToPlayer),
@@ -106,6 +112,7 @@ class CourtComponent extends StatelessWidget {
                       // This would be on the left so that the player can be dragged easily
                       const SizedBox(),
                       DraggablePlayerComponent(
+                        showElo: false,
                         data: players.first,
                         onDragToTarget: (draggedToPlayer) =>
                             onDragToTarget(players.first, draggedToPlayer),
@@ -116,6 +123,7 @@ class CourtComponent extends StatelessWidget {
                     children: players
                         .map(
                           (player) => DraggablePlayerComponent(
+                            showElo: false,
                             data: player,
                             onDragToTarget: (draggedToPlayer) =>
                                 onDragToTarget(player, draggedToPlayer),

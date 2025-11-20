@@ -19,10 +19,7 @@ class ListRenderer<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final padding =
         this.padding ??
-        const EdgeInsets.symmetric(
-          vertical: spaceDefault,
-          horizontal: spacePageX,
-        );
+        const EdgeInsets.symmetric(vertical: spaceDefault, horizontal: space32);
 
     return ListView.separated(
       itemCount: items.length,

@@ -6,7 +6,7 @@ abstract class AppColors {
   // Primary Colors
   static const Color stAndrewsBlue = Color(0xFF060D87); // Ōrangitea
   static const Color goldRush = Color(0xFFF4B142); // Rere Tārewa Kōura
-  static const Color black = Color(0xFF000000); // Pango
+  static const Color black = shadow; // Pango
   static const Color white = Color(0xFFFFFFFF); // Mā
 
   // Derived Colors
@@ -17,6 +17,7 @@ abstract class AppColors {
   static const Color orange = Color.fromARGB(0xFF, 255, 140, 40); // Orange
   static const Color teal = Color.fromARGB(0xFF, 67, 171, 174);
   static const Color yellow = Color.fromARGB(0xFF, 253, 221, 98);
+  static const Color shadow = Color(0xFF1E1E1E);
 }
 
 const String fontFamily = 'Gotham';
@@ -43,10 +44,13 @@ const commonButtonTheme = ButtonStyle(
 );
 
 ThemeData get lightTheme {
+  const titleTextStyle = TextStyle(color: AppColors.black);
+  final defaultTextStyle = titleTextStyle.copyWith(color: AppColors.black);
+
   return ThemeData(
     useMaterial3: true,
     colorScheme: const ColorScheme.light(
-      primary: AppColors.stAndrewsBlue,
+      primary: AppColors.teal,
       onPrimary: AppColors.white,
       secondary: AppColors.goldRush,
       onSecondary: AppColors.black,
@@ -79,31 +83,31 @@ ThemeData get lightTheme {
       elevation: 2,
       shape: lightOutlinedBorder,
     ),
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(
+    textTheme: TextTheme(
+      displayLarge: const TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.bold,
       ),
-      displayMedium: TextStyle(
+      displayMedium: const TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.bold,
       ),
-      displaySmall: TextStyle(
+      displaySmall: const TextStyle(
         color: AppColors.stAndrewsBlue,
         fontWeight: FontWeight.bold,
       ),
-      headlineLarge: TextStyle(color: AppColors.stAndrewsBlue),
-      headlineMedium: TextStyle(color: AppColors.stAndrewsBlue),
-      headlineSmall: TextStyle(color: AppColors.stAndrewsBlue),
-      titleLarge: TextStyle(color: AppColors.stAndrewsBlue),
-      titleMedium: TextStyle(color: AppColors.stAndrewsBlue),
-      titleSmall: TextStyle(color: AppColors.stAndrewsBlue),
-      bodyLarge: TextStyle(color: AppColors.black),
-      bodyMedium: TextStyle(color: AppColors.black),
-      bodySmall: TextStyle(color: AppColors.black),
-      labelLarge: TextStyle(color: AppColors.stAndrewsBlue),
-      labelMedium: TextStyle(color: AppColors.stAndrewsBlue),
-      labelSmall: TextStyle(color: AppColors.stAndrewsBlue),
+      headlineLarge: titleTextStyle,
+      headlineMedium: titleTextStyle,
+      headlineSmall: titleTextStyle,
+      titleLarge: titleTextStyle,
+      titleMedium: titleTextStyle,
+      titleSmall: titleTextStyle,
+      bodyLarge: defaultTextStyle,
+      bodyMedium: defaultTextStyle,
+      bodySmall: defaultTextStyle,
+      labelLarge: titleTextStyle,
+      labelMedium: titleTextStyle,
+      labelSmall: titleTextStyle,
     ),
     dialogTheme: const DialogThemeData(shape: lightOutlinedBorder),
     inputDecorationTheme: InputDecorationTheme(
@@ -131,7 +135,7 @@ ThemeData get lightTheme {
         borderSide: outlinedBorderSide.copyWith(color: Colors.red),
         borderRadius: outlinedBorderRadius,
       ),
-      floatingLabelStyle: const TextStyle(color: AppColors.stAndrewsBlue),
+      floatingLabelStyle: titleTextStyle,
     ),
     elevatedButtonTheme: const ElevatedButtonThemeData(
       style: ButtonStyle(
@@ -155,8 +159,11 @@ ThemeData get lightTheme {
     iconButtonTheme: const IconButtonThemeData(
       style: ButtonStyle(shape: WidgetStatePropertyAll(noOutlinedBorder)),
     ),
-    filledButtonTheme: const FilledButtonThemeData(
-      style: ButtonStyle(shape: WidgetStatePropertyAll(noOutlinedBorder)),
+    filledButtonTheme: FilledButtonThemeData(
+      style: ButtonStyle(
+        shape: const WidgetStatePropertyAll(noOutlinedBorder),
+        textStyle: WidgetStatePropertyAll(defaultTextStyle),
+      ),
     ),
     searchBarTheme: const SearchBarThemeData(
       shape: WidgetStatePropertyAll(noOutlinedBorder),

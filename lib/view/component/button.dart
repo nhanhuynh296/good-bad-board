@@ -103,11 +103,14 @@ class FilledButtonWidget extends StatelessWidget {
     final onTapLogic = disabled ? null : onPressed ?? () {};
     final onSecondaryTapLogic = disabled ? null : onLongPress;
 
-    final filledButtonStyle = ButtonStyle(
-      backgroundColor: WidgetStatePropertyAll(backgroundColor),
-      textStyle: WidgetStatePropertyAll(textStyle),
-      padding: WidgetStatePropertyAll(padding),
-    );
+    final filledButtonStyle = Theme.of(context).filledButtonTheme.style
+        ?.copyWith(
+          textStyle: WidgetStatePropertyAll(textStyle),
+          iconSize: WidgetStatePropertyAll(textStyle?.fontSize),
+          backgroundColor: WidgetStatePropertyAll(backgroundColor),
+          foregroundColor: WidgetStatePropertyAll(textStyle?.color),
+          padding: WidgetStatePropertyAll(padding),
+        );
 
     return ShadedContainer(
       bordered: false,
@@ -171,22 +174,25 @@ class OutlinedButtonWidget extends StatelessWidget {
     final onTapLogic = disabled ? null : onPressed ?? () {};
     final onSecondaryTapLogic = disabled ? null : onLongPress;
 
-    final outlinedButtonStyle = ButtonStyle(
-      textStyle: WidgetStatePropertyAll(textStyle),
-      padding: WidgetStatePropertyAll(padding),
-      backgroundColor: WidgetStatePropertyAll(
-        backgroundColor ?? Theme.of(context).colorScheme.surface,
-      ),
-      side: WidgetStatePropertyAll(
-        outlinedBorderSide.copyWith(
-          color: Theme.of(context).colorScheme.inverseSurface,
-        ),
-      ),
-    );
+    final outlinedButtonStyle = Theme.of(context).outlinedButtonTheme.style
+        ?.copyWith(
+          textStyle: WidgetStatePropertyAll(textStyle),
+          iconSize: WidgetStatePropertyAll(textStyle?.fontSize),
+          foregroundColor: WidgetStatePropertyAll(textStyle?.color),
+          padding: WidgetStatePropertyAll(padding),
+          backgroundColor: WidgetStatePropertyAll(
+            backgroundColor ?? Theme.of(context).colorScheme.surface,
+          ),
+          side: WidgetStatePropertyAll(
+            outlinedBorderSide.copyWith(
+              color: Theme.of(context).colorScheme.inverseSurface,
+            ),
+          ),
+        );
 
     return ShadedContainer(
-      shaded: true,
-      bordered: true,
+      shaded: !onlyIcon,
+      bordered: !onlyIcon,
       rounded: rounded,
       shadedColor: Theme.of(context).colorScheme.inverseSurface,
       child: onlyIcon
@@ -244,10 +250,12 @@ class TextButtonWidget extends StatelessWidget {
     final onTapLogic = disabled ? null : onPressed ?? () {};
     final onSecondaryTapLogic = disabled ? null : onLongPress;
 
-    final buttonStyle = ButtonStyle(
+    final buttonStyle = Theme.of(context).textButtonTheme.style?.copyWith(
       textStyle: WidgetStatePropertyAll(textStyle),
+      iconSize: WidgetStatePropertyAll(textStyle?.fontSize),
       padding: WidgetStatePropertyAll(padding),
       backgroundColor: WidgetStatePropertyAll(backgroundColor),
+      foregroundColor: WidgetStatePropertyAll(textStyle?.color),
     );
 
     return onlyIcon
