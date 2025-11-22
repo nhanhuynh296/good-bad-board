@@ -15,12 +15,14 @@ class Button extends StatelessWidget {
   final Color? backgroundColor;
   final EdgeInsets? padding;
   final bool rounded;
+  final bool shaded;
 
   const Button({
     super.key,
     this.type = ButtonType.text,
     this.disabled = false,
     this.rounded = true,
+    this.shaded = true,
     this.child,
     this.icon,
     this.onPressed,
@@ -35,6 +37,7 @@ class Button extends StatelessWidget {
     return switch (type) {
       ButtonType.filled => FilledButtonWidget(
         disabled: disabled,
+        shaded: shaded,
         rounded: rounded,
         icon: icon,
         onPressed: onPressed,
@@ -46,6 +49,7 @@ class Button extends StatelessWidget {
       ),
       ButtonType.outlined => OutlinedButtonWidget(
         disabled: disabled,
+        shaded: shaded,
         rounded: rounded,
         icon: icon,
         onPressed: onPressed,
@@ -80,11 +84,13 @@ class FilledButtonWidget extends StatelessWidget {
   final Color? backgroundColor;
   final EdgeInsets? padding;
   final bool rounded;
+  final bool shaded;
 
   const FilledButtonWidget({
     super.key,
     this.disabled = false,
     this.rounded = true,
+    this.shaded = true,
     this.child,
     this.icon,
     this.onPressed,
@@ -117,7 +123,7 @@ class FilledButtonWidget extends StatelessWidget {
 
     return ShadedContainer(
       bordered: false,
-      shaded: true,
+      shaded: shaded,
       rounded: rounded,
       shadedColor: Theme.of(context).colorScheme.secondaryContainer,
       child: onlyIcon
@@ -154,11 +160,13 @@ class OutlinedButtonWidget extends StatelessWidget {
   final Color? backgroundColor;
   final EdgeInsets? padding;
   final bool rounded;
+  final bool shaded;
 
   const OutlinedButtonWidget({
     super.key,
     this.disabled = false,
     this.rounded = true,
+    this.shaded = true,
     this.child,
     this.icon,
     this.onPressed,
@@ -197,9 +205,9 @@ class OutlinedButtonWidget extends StatelessWidget {
         );
 
     return ShadedContainer(
-      shaded: !onlyIcon,
+      shaded: !onlyIcon && shaded,
       bordered: !onlyIcon,
-      rounded: rounded,
+      rounded: rounded || onlyIcon,
       shadedColor: Theme.of(context).colorScheme.inverseSurface,
       child: onlyIcon
           ? IconButton.outlined(
