@@ -106,8 +106,6 @@ class _GameMakerPageState extends State<GameMakerPage>
       (GameData data) => data.stagingMatches,
     );
 
-    final generateActive = stagingMatches.isNotEmpty;
-
     final allGames = history.followedBy([stagingMatches]).toUnmodifiableList();
 
     return Scaffold(
@@ -180,50 +178,143 @@ class _GameMakerPageState extends State<GameMakerPage>
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.symmetric(
-          horizontal: spacePageX,
-          vertical: space16,
-        ),
-        height: space64,
-        child: (isViewingStagingGame())
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: spaceDefault,
-                children: [
+      bottomNavigationBar: buildFooter(context),
+
+      floatingActionButton: FloatingActionButton(
+        mini: true,
+        onPressed: () {
+          context.showToast(AppLocalizations.of(context)!.coming_soon);
+        },
+        child: const Icon(Icons.apps),
+      ),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.miniStartDocked,
+    );
+  }
+
+  Container buildFooter(BuildContext context) {
+    final history = context.select((GameData data) => data.history);
+    final stagingMatches = context.select(
+      (GameData data) => data.stagingMatches,
+    );
+    final generateActive = stagingMatches.isNotEmpty;
+    final allGames = history.followedBy([stagingMatches]).toUnmodifiableList();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: spacePageX,
+        vertical: space16,
+      ),
+      height: space64,
+      child: (isViewingStagingGame())
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: spaceDefault,
+              children: [
+                Expanded(
+                  child: Button(
+                    type: generateActive
+                        ? ButtonType.outlined
+                        : ButtonType.filled,
+                    onPressed: () async {
+                      if (controller.isForwardOrCompleted) {
+                        showAdaptiveDialog(
+                          barrierDismissible: true,
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.game_is_currently_running,
+                              ),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Regenerating the game will not count these games towards the history.",
+                                  ),
+                                  Text(
+                                    "This will lead to some player will be on court more than other players!",
+                                    style: context.textTheme.titleSmall
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              actions: [
+                                Button(
+                                  type: ButtonType.text,
+                                  child: Text(
+                                    AppLocalizations.of(context)!.cancel,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                Button(
+                                  type: ButtonType.filled,
+                                  child: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.regenerate_game,
+                                  ),
+                                  onPressed: () {
+                                    controller.stop();
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        return;
+                      }
+                      try {
+                        await context.read<GameData>().makeGame();
+                        setState(() {
+                          tabIndex = allGames.length - 1;
+                        });
+                      } catch (e) {
+                        if (context.mounted) {
+                          context.showErrorToast(e.toString());
+                        }
+                        return;
+                      }
+                    },
+                    child: Text(
+                      generateActive
+                          ? AppLocalizations.of(context)!.regenerate_game
+                          : AppLocalizations.of(context)!.generate_game,
+                    ),
+                  ),
+                ),
+                if (generateActive)
                   Expanded(
+                    flex: 2,
                     child: Button(
-                      type: generateActive
-                          ? ButtonType.outlined
-                          : ButtonType.filled,
+                      type: ButtonType.filled,
                       onPressed: () async {
-                        if (controller.isForwardOrCompleted) {
-                          showAdaptiveDialog(
-                            barrierDismissible: true,
+                        final invalidGames = stagingMatches.where(
+                          (match) =>
+                              match.players.isNotEmpty && !match.isPlayable(),
+                        );
+                        if (invalidGames.isNotEmpty) {
+                          context.showErrorToast(
+                            'PLAYERS ARE NOT BALANCED ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}',
+                          );
+                          return;
+                        }
+                        if (controller.isDismissed) {
+                          final result = await showAdaptiveDialog<bool?>(
                             context: context,
+                            barrierDismissible: true,
                             builder: (context) {
                               return AlertDialog(
-                                title: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.game_is_currently_running,
-                                ),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Regenerating the game will not count these games towards the history.",
-                                    ),
-                                    Text(
-                                      "This will lead to some player will be on court more than other players!",
-                                      style: context.textTheme.titleSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ],
+                                title: const Text("Game is not running"),
+                                content: const Text(
+                                  "Do you sure to save the game without running timer?",
                                 ),
                                 actions: [
                                   Button(
@@ -238,130 +329,46 @@ class _GameMakerPageState extends State<GameMakerPage>
                                   Button(
                                     type: ButtonType.filled,
                                     child: Text(
-                                      AppLocalizations.of(
-                                        context,
-                                      )!.regenerate_game,
+                                      AppLocalizations.of(context)!.save,
                                     ),
                                     onPressed: () {
-                                      controller.stop();
-                                      Navigator.of(context).pop();
+                                      Navigator.of(context).pop(true);
                                     },
                                   ),
                                 ],
                               );
                             },
                           );
-                          return;
+
+                          if (result != true) {
+                            return;
+                          }
                         }
                         try {
-                          await context.read<GameData>().makeGame();
+                          if (!context.mounted) return;
+                          await Future.wait([
+                            context.read<GameData>().saveCurrentGame(),
+                            controller.animateBack(
+                              0,
+                              duration: Durations.short3,
+                            ),
+                          ]);
+                          // The allGames.length is not updated for some reason, just use
                           setState(() {
-                            tabIndex = allGames.length - 1;
+                            tabIndex = allGames.length;
                           });
                         } catch (e) {
-                          if (context.mounted) {
-                            context.showErrorToast(e.toString());
-                          }
+                          if (!context.mounted) return;
+                          context.showErrorToast(e.toString());
                           return;
                         }
                       },
-                      child: Text(
-                        generateActive
-                            ? AppLocalizations.of(context)!.regenerate_game
-                            : AppLocalizations.of(context)!.generate_game,
-                      ),
+                      child: Text(AppLocalizations.of(context)!.save),
                     ),
                   ),
-                  if (generateActive)
-                    Expanded(
-                      flex: 2,
-                      child: Button(
-                        type: ButtonType.filled,
-                        onPressed: () async {
-                          final invalidGames = stagingMatches.where(
-                            (match) =>
-                                match.players.isNotEmpty && !match.isPlayable(),
-                          );
-                          if (invalidGames.isNotEmpty) {
-                            context.showErrorToast(
-                              'PLAYERS ARE NOT BALANCED ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}',
-                            );
-                            return;
-                          }
-                          if (controller.isDismissed) {
-                            final result = await showAdaptiveDialog<bool?>(
-                              context: context,
-                              barrierDismissible: true,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: const Text("Game is not running"),
-                                  content: const Text(
-                                    "Do you sure to save the game without running timer?",
-                                  ),
-                                  actions: [
-                                    Button(
-                                      type: ButtonType.text,
-                                      child: Text(
-                                        AppLocalizations.of(context)!.cancel,
-                                      ),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                    Button(
-                                      type: ButtonType.filled,
-                                      child: Text(
-                                        AppLocalizations.of(context)!.save,
-                                      ),
-                                      onPressed: () {
-                                        Navigator.of(context).pop(true);
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-
-                            if (result != true) {
-                              return;
-                            }
-                          }
-                          try {
-                            if (!context.mounted) return;
-                            await Future.wait([
-                              context.read<GameData>().saveCurrentGame(),
-                              controller.animateBack(
-                                0,
-                                duration: Durations.short3,
-                              ),
-                            ]);
-                            // The allGames.length is not updated for some reason, just use
-                            setState(() {
-                              tabIndex = allGames.length;
-                            });
-                          } catch (e) {
-                            if (!context.mounted) return;
-                            context.showErrorToast(e.toString());
-                            return;
-                          }
-                        },
-                        child: Text(AppLocalizations.of(context)!.save),
-                      ),
-                    ),
-                ],
-              )
-            : _buildSwitchToStagingGameButton(),
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        mini: true,
-        onPressed: () {
-          context.showToast(AppLocalizations.of(context)!.coming_soon);
-        },
-        child: const Icon(Icons.apps),
-      ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.miniStartDocked,
+              ],
+            )
+          : _buildSwitchToStagingGameButton(),
     );
   }
 }
