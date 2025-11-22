@@ -166,7 +166,10 @@ ThemeData get lightTheme {
       ),
     ),
     searchBarTheme: const SearchBarThemeData(
-      shape: WidgetStatePropertyAll(noOutlinedBorder),
+      shape: WidgetStatePropertyAll(lightOutlinedBorder),
+      padding: WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: space16),
+      ),
     ),
     chipTheme: const ChipThemeData(shape: lightOutlinedBorder),
     scrollbarTheme: const ScrollbarThemeData(
@@ -302,6 +305,9 @@ ThemeData get darkTheme {
     ),
     searchBarTheme: SearchBarThemeData(
       shape: WidgetStatePropertyAll(darkOutlinedBorder),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: space16),
+      ),
     ),
     chipTheme: ChipThemeData(shape: darkOutlinedBorder),
     scrollbarTheme: const ScrollbarThemeData(
