@@ -7,7 +7,6 @@ import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
-import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
@@ -52,8 +51,8 @@ class _GameMakerPageState extends State<GameMakerPage>
   }
 
   AppBar _buildAppBar() {
-    return AppBar(
-      centerTitle: true,
+    return Header(
+      context,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () async {
@@ -71,10 +70,7 @@ class _GameMakerPageState extends State<GameMakerPage>
           }
         },
       ),
-      title: Text(
-        AppLocalizations.of(context)!.game_number(tabIndex + 1),
-        style: context.textTheme.titleLarge,
-      ),
+      title: Text(AppLocalizations.of(context)!.game_number(tabIndex + 1)),
       actions: [
         const AutoMakeNextGameIconButton(),
         const _OpenHistoryDrawerButton(),
@@ -128,13 +124,16 @@ class _GameMakerPageState extends State<GameMakerPage>
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: spacePageX),
+        padding: const EdgeInsets.symmetric(
+          horizontal: spacePageX,
+          vertical: spacePageY,
+        ),
         child: Row(
-          spacing: spaceDefault,
+          spacing: spacePageY,
           children: [
             Expanded(
               child: Column(
-                spacing: spaceComponent,
+                spacing: spacePageY,
                 children: [
                   if (gameType == GameType.timeBased) ...[
                     CountdownTimer(
@@ -153,7 +152,6 @@ class _GameMakerPageState extends State<GameMakerPage>
                         }
                       },
                     ),
-                    const Divider(),
                   ],
                   isViewingStagingGame()
                       ? const Expanded(child: InactivePlayerComponent())
@@ -431,7 +429,9 @@ class _OpenHistoryDrawerButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Button(
       type: ButtonType.text,
+      rounded: false,
       icon: const Icon(Icons.history),
+      textStyle: Header.getHeaderButtonTextStyle(context),
       child: Text(AppLocalizations.of(context)!.history),
       onPressed: () {
         Scaffold.of(context).openEndDrawer();
@@ -448,31 +448,35 @@ class AutoMakeNextGameIconButton extends StatelessWidget {
     final selected = context.select(
       (PersistentSetting setting) => setting.getAutoMakeGame(),
     );
-    return ShadedContainer(
-      shaded: false,
-      bordered: selected,
-      child: Button(
-        type: ButtonType.text,
-        icon: selected
-            ? const Icon(Icons.queue_play_next)
-            : const Icon(Icons.add_to_queue),
-        child: Opacity(
-          opacity: selected ? 1 : 0.5,
-          child: Text(AppLocalizations.of(context)!.auto_game),
-        ),
 
-        onPressed: () {
-          final newState = !selected;
-          PersistentSetting.instance.setAutoMakeGame(newState);
-          context.showToast(
-            AppLocalizations.of(context)!.auto_game_status(
-              newState
-                  ? AppLocalizations.of(context)!.on
-                  : AppLocalizations.of(context)!.off,
-            ),
-          );
-        },
+    final textStyle = Header.getHeaderButtonTextStyle(context);
+    return Button(
+      type: selected ? ButtonType.filled : ButtonType.text,
+      shaded: false,
+      rounded: false,
+      icon: selected
+          ? const Icon(Icons.queue_play_next)
+          : const Icon(Icons.add_to_queue),
+      textStyle: textStyle?.copyWith(
+        color: selected
+            ? null
+            : textStyle.color?.withAlpha(
+                ((textStyle.color?.a ?? 1) * 255.0 / 2.0).toInt(),
+              ),
       ),
+
+      onPressed: () {
+        final newState = !selected;
+        PersistentSetting.instance.setAutoMakeGame(newState);
+        context.showToast(
+          AppLocalizations.of(context)!.auto_game_status(
+            newState
+                ? AppLocalizations.of(context)!.on
+                : AppLocalizations.of(context)!.off,
+          ),
+        );
+      },
+      child: Text(AppLocalizations.of(context)!.auto_game),
     );
   }
 }
@@ -483,7 +487,11 @@ class CourtModifier extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameData = Provider.of<GameData>(context);
-    final textStyle = Theme.of(context).textTheme.headlineSmall;
+    final backgroundColor = context.colorScheme.secondary;
+    final iconTextStyle = Theme.of(context).textTheme.headlineMedium?.copyWith(
+      color: context.colorScheme.onPrimary,
+      fontWeight: FontWeight.bold,
+    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       spacing: spaceDefault,
@@ -491,20 +499,24 @@ class CourtModifier extends StatelessWidget {
         Button(
           type: ButtonType.outlined,
           rounded: false,
+          backgroundColor: backgroundColor,
           onPressed: () =>
               gameData.setNumberOfCourt(gameData.numberOfCourt - 1),
-          icon: Icon(Icons.remove, size: textStyle?.fontSize),
+          icon: const Icon(Icons.remove),
+          textStyle: iconTextStyle,
         ),
         Text(
           AppLocalizations.of(context)!.n_court(gameData.numberOfCourt),
-          style: textStyle,
+          style: iconTextStyle?.copyWith(color: backgroundColor),
         ),
         Button(
           type: ButtonType.outlined,
           rounded: false,
+          backgroundColor: backgroundColor,
           onPressed: () =>
               gameData.setNumberOfCourt(gameData.numberOfCourt + 1),
-          icon: Icon(Icons.add, size: textStyle?.fontSize),
+          icon: const Icon(Icons.add),
+          textStyle: iconTextStyle,
         ),
       ],
     );
