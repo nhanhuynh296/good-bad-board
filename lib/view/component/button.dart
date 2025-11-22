@@ -111,7 +111,11 @@ class FilledButtonWidget extends StatelessWidget {
           foregroundColor: WidgetStatePropertyAll(textStyle?.color),
           padding: WidgetStatePropertyAll(padding),
           shape: WidgetStatePropertyAll(
-            !rounded ? const ContinuousRectangleBorder() : null,
+            onlyIcon
+                ? const CircleBorder()
+                : !rounded
+                ? const ContinuousRectangleBorder()
+                : null,
           ),
         );
 
@@ -192,7 +196,11 @@ class OutlinedButtonWidget extends StatelessWidget {
             ),
           ),
           shape: WidgetStatePropertyAll(
-            !rounded ? const ContinuousRectangleBorder() : null,
+            onlyIcon
+                ? const CircleBorder()
+                : !rounded
+                ? const ContinuousRectangleBorder()
+                : null,
           ),
         );
 
@@ -263,7 +271,11 @@ class TextButtonWidget extends StatelessWidget {
       backgroundColor: WidgetStatePropertyAll(backgroundColor),
       foregroundColor: WidgetStatePropertyAll(textStyle?.color),
       shape: WidgetStatePropertyAll(
-        !rounded ? const ContinuousRectangleBorder() : null,
+        onlyIcon
+            ? const CircleBorder()
+            : !rounded
+            ? const ContinuousRectangleBorder()
+            : null,
       ),
     );
 
