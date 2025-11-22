@@ -12,6 +12,7 @@ import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/game_editor.dart';
 import 'package:good_bad_board/view/component/inactive_player.dart';
 import 'package:good_bad_board/view/component/timer.dart';
+import 'package:good_bad_board/view/landing_page.dart';
 import 'package:provider/provider.dart';
 
 class GameMakerPage extends StatefulWidget {
@@ -83,7 +84,9 @@ class _GameMakerPageState extends State<GameMakerPage>
 
   Widget _buildSwitchToStagingGameButton() {
     return Button(
-      type: ButtonType.outlined,
+      type: ButtonType.text,
+      backgroundColor: Colors.transparent,
+      rounded: false,
       icon: const Icon(Icons.history),
       onPressed: switchToStagingGame,
       child: Text(AppLocalizations.of(context)!.to_current_session),
@@ -192,7 +195,7 @@ class _GameMakerPageState extends State<GameMakerPage>
     );
   }
 
-  Container buildFooter(BuildContext context) {
+  Widget buildFooter(BuildContext context) {
     final history = context.select((GameData data) => data.history);
     final stagingMatches = context.select(
       (GameData data) => data.stagingMatches,
@@ -201,22 +204,50 @@ class _GameMakerPageState extends State<GameMakerPage>
     final allGames = history.followedBy([stagingMatches]).toUnmodifiableList();
 
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: spacePageX,
-        vertical: space16,
+      decoration: const BoxDecoration(
+        border: BoxBorder.fromBorderSide(BottomBar.border),
       ),
-      height: space64,
+      height: BottomBar.headerHeight,
       child: (isViewingStagingGame())
           ? Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: spaceDefault,
               children: [
                 Expanded(
                   child: Button(
-                    type: generateActive
-                        ? ButtonType.outlined
-                        : ButtonType.filled,
+                    type: ButtonType.text,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    rounded: false,
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: Theme.of(
+                        context,
+                      ).buttonTheme.colorScheme?.onSecondary,
+                    ),
+                    child: Text(
+                      "Back",
+                      style: context.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                VerticalDivider(
+                  thickness: BottomBar.border.width,
+                  width: BottomBar.border.width,
+                ),
+                const Spacer(flex: 3),
+                VerticalDivider(
+                  thickness: BottomBar.border.width,
+                  width: BottomBar.border.width,
+                ),
+                Expanded(
+                  flex: generateActive ? 1 : 5,
+                  child: Button(
+                    rounded: false,
+                    type: ButtonType.text,
                     onPressed: () async {
                       if (controller.isForwardOrCompleted) {
                         showAdaptiveDialog(
@@ -283,18 +314,32 @@ class _GameMakerPageState extends State<GameMakerPage>
                         return;
                       }
                     },
+                    backgroundColor: generateActive
+                        ? Colors.transparent
+                        : context.colorScheme.primary,
                     child: Text(
                       generateActive
                           ? AppLocalizations.of(context)!.regenerate_game
                           : AppLocalizations.of(context)!.generate_game,
+                      style: context.textTheme.titleLarge?.copyWith(
+                        color: context.colorScheme.secondary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
+                VerticalDivider(
+                  thickness: BottomBar.border.width,
+                  width: BottomBar.border.width,
+                ),
+
                 if (generateActive)
                   Expanded(
-                    flex: 2,
+                    flex: 4,
                     child: Button(
-                      type: ButtonType.filled,
+                      type: ButtonType.text,
+                      backgroundColor: context.colorScheme.primary,
+                      rounded: false,
                       onPressed: () async {
                         final invalidGames = stagingMatches.where(
                           (match) =>
@@ -363,7 +408,13 @@ class _GameMakerPageState extends State<GameMakerPage>
                           return;
                         }
                       },
-                      child: Text(AppLocalizations.of(context)!.save),
+                      child: Text(
+                        AppLocalizations.of(context)!.save,
+                        style: context.textTheme.titleLarge?.copyWith(
+                          color: context.colorScheme.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
               ],
