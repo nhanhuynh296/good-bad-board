@@ -8,6 +8,7 @@ name: Building artifact
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   artifact:
