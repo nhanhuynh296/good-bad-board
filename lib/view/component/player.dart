@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/theme.dart';
+import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/dialog/edit_player.dart';
 import 'package:provider/provider.dart';
 
@@ -37,6 +38,7 @@ class ClickablePlayerComponent extends _PlayerComponent {
   final VoidCallback? onTap;
   final bool disabled;
   final bool inMatch;
+  final bool shaded;
 
   const ClickablePlayerComponent({
     super.key,
@@ -45,6 +47,7 @@ class ClickablePlayerComponent extends _PlayerComponent {
     this.filled = false,
     this.disabled = false,
     this.inMatch = false,
+    this.shaded = true,
     this.onTap,
   });
 
@@ -69,31 +72,35 @@ class ClickablePlayerComponent extends _PlayerComponent {
       );
     }
 
-    return Button(
-      type: ButtonType.outlined,
-      onPressed: onTap,
-      onLongPress: onSecondaryAction,
-      disabled: disabled,
-      backgroundColor: filled ? AppColors.yellow : null,
-      textStyle: Theme.of(
-        context,
-      ).textTheme.titleSmall?.copyWith(color: filled ? Colors.black : null),
-      child: super.build(context),
+    return ShadedContainer(
+      shaded: shaded,
+      child: Button(
+        type: ButtonType.text,
+        onPressed: onTap,
+        onLongPress: onSecondaryAction,
+        disabled: disabled,
+        backgroundColor: filled ? AppColors.yellow : null,
+        textStyle: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(color: filled ? Colors.black : null),
+        child: super.build(context),
+      ),
     );
   }
 }
 
-class DraggablePlayerComponent extends _PlayerComponent {
+class DraggablePlayerComponent extends ClickablePlayerComponent {
   final DragTargetAccept<Player>? onDragToTarget;
   final DragTargetWillAccept<Player>? shouldAcceptIncomingDragPlayer;
 
   const DraggablePlayerComponent({
     super.key,
     super.showElo = true,
+    super.shaded = true,
     required super.data,
     this.onDragToTarget,
     this.shouldAcceptIncomingDragPlayer,
-  });
+  }) : super(inMatch: true, filled: true);
 
   static const matchGapColor = {
     0: Colors.green,
@@ -129,10 +136,11 @@ class DraggablePlayerComponent extends _PlayerComponent {
                   matchGapColor[matchGapColor.keys.max],
               child: ClickablePlayerComponent(
                 showElo: showElo,
-                inMatch: true,
+                shaded: shaded,
+                inMatch: inMatch,
                 key: ValueKey(data.id),
                 data: data,
-                filled: true,
+                filled: filled,
                 disabled: isInvalidDragHovering,
               ),
             ),
