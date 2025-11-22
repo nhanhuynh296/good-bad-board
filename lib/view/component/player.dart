@@ -1,6 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/theme.dart';
 import 'package:good_bad_board/view/component/container.dart';
@@ -20,13 +22,24 @@ class _PlayerComponent extends StatelessWidget {
     return Container(
       alignment: Alignment.center,
       constraints: const BoxConstraints(minHeight: 65),
+      padding: const EdgeInsets.symmetric(horizontal: space8),
       child: Row(
+        spacing: space8,
         mainAxisAlignment: showElo
             ? MainAxisAlignment.spaceBetween
             : MainAxisAlignment.center,
         children: [
-          Text(data.name().toUpperCase(), textAlign: TextAlign.center),
-          if (showElo) Text(data.elo.name.toUpperCase()),
+          Text(
+            data.name().toUpperCase(),
+            textAlign: TextAlign.center,
+            style: context.textTheme.titleMedium,
+          ),
+          if (showElo)
+            if (showElo)
+              Text(
+                data.elo.name.toUpperCase(),
+                style: context.textTheme.titleMedium,
+              ),
         ],
       ),
     );
