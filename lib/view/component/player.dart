@@ -14,8 +14,14 @@ import 'button.dart';
 class _PlayerComponent extends StatelessWidget {
   final Player data;
   final bool showElo;
+  final Color? eloBackgroundColor;
 
-  const _PlayerComponent({super.key, required this.data, this.showElo = true});
+  const _PlayerComponent({
+    super.key,
+    required this.data,
+    this.showElo = true,
+    this.eloBackgroundColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +41,19 @@ class _PlayerComponent extends StatelessWidget {
             style: context.textTheme.titleMedium,
           ),
           if (showElo)
-            if (showElo)
-              Text(
+            ShadedContainer(
+              shaded: false,
+              bordered: eloBackgroundColor != null,
+              backgroundColor: context.colorScheme.secondary,
+              padding: const EdgeInsets.symmetric(
+                horizontal: space32,
+                vertical: space8,
+              ),
+              child: Text(
                 data.elo.name.toUpperCase(),
                 style: context.textTheme.titleMedium,
               ),
+            ),
         ],
       ),
     );
