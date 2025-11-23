@@ -207,7 +207,7 @@ class OutlinedButtonWidget extends StatelessWidget {
     return ShadedContainer(
       shaded: !onlyIcon && shaded,
       bordered: !onlyIcon,
-      rounded: rounded || onlyIcon,
+      rounded: rounded,
       shadedColor: Theme.of(context).colorScheme.inverseSurface,
       child: onlyIcon
           ? IconButton.outlined(
