@@ -52,9 +52,9 @@ ThemeData get lightTheme {
     colorScheme: const ColorScheme.light(
       primary: AppColors.teal,
       onPrimary: AppColors.white,
-      secondary: AppColors.goldRush,
+      secondary: AppColors.orange,
       onSecondary: AppColors.black,
-      tertiary: AppColors.lightGold,
+      tertiary: AppColors.yellow,
       onTertiary: AppColors.stAndrewsBlue,
       error: Colors.red,
       onError: AppColors.white,
