@@ -54,7 +54,9 @@ class LandingPage extends StatelessWidget {
     return Scaffold(
       appBar: Header(context),
       drawer: const LandingPageDrawer(),
-      bottomNavigationBar: const BottomBar(),
+      bottomNavigationBar: const BottomBar(
+        children: [Spacer(), QuitBottomBarButton()],
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: space64,
@@ -121,6 +123,7 @@ class Header extends AppBar {
     BuildContext context, {
     super.key,
     super.leading,
+    super.backgroundColor,
     Widget? title,
     List<Widget>? actions,
   }) : super(
@@ -132,7 +135,9 @@ class Header extends AppBar {
                    if (actions == null)
                      Container(
                        constraints: BottomBar.buttonConstraint,
-                       color: AppColors.teal,
+                       color: backgroundColor != null
+                           ? context.colorScheme.onPrimary
+                           : context.colorScheme.primary,
                        alignment: Alignment.center,
                        child: Text(
                          DateTime.now().year.toString(),
@@ -257,7 +262,8 @@ class LandingPageDrawer extends StatelessWidget {
 }
 
 class BottomBar extends StatelessWidget {
-  const BottomBar({super.key});
+  final Iterable<Widget> children;
+  const BottomBar({super.key, this.children = const []});
 
   static const headerHeight = 100.0;
   static const buttonConstraint = BoxConstraints.expand(
@@ -272,21 +278,52 @@ class BottomBar extends StatelessWidget {
       height: headerHeight,
       decoration: const BoxDecoration(border: BoxBorder.fromBorderSide(border)),
       child: Row(
-        children: [
-          const Spacer(),
-          VerticalDivider(thickness: border.width, width: border.width),
-          Container(
-            constraints: buttonConstraint,
-            child: Button(
-              onPressed: () =>
-                  SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
-              rounded: false,
-              icon: const Icon(Icons.logout),
-              textStyle: Header.getHeaderButtonTextStyle(context),
-              child: const Text("Quit"),
-            ),
-          ),
-        ],
+        children: children
+            .intersperseOuter(
+              VerticalDivider(thickness: border.width, width: border.width),
+            )
+            .toUnmodifiableList(),
+      ),
+    );
+  }
+}
+
+class QuitBottomBarButton extends StatelessWidget {
+  const QuitBottomBarButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BottomBar.buttonConstraint,
+      child: Button(
+        onPressed: () =>
+            SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+        rounded: false,
+        icon: const Icon(Icons.logout),
+        textStyle: Header.getHeaderButtonTextStyle(context),
+        child: const Text("Quit"),
+      ),
+    );
+  }
+}
+
+class BackButtonBottomBar extends StatelessWidget {
+  const BackButtonBottomBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BottomBar.buttonConstraint,
+      child: Button(
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
+        rounded: false,
+        icon: const Icon(Icons.chevron_left),
+        textStyle: Header.getHeaderButtonTextStyle(
+          context,
+        )?.copyWith(fontWeight: FontWeight.bold),
+        child: Text("Back", style: context.textTheme.titleLarge),
       ),
     );
   }

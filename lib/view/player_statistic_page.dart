@@ -12,6 +12,7 @@ import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/component/reusable.dart';
+import 'package:good_bad_board/view/landing_page.dart';
 import 'package:intl/intl.dart';
 
 class PlayerStatisticPage extends StatefulWidget {
@@ -189,52 +190,51 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
         ? AppLocalizations.of(context)!.today
         : dateToString(endTime);
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 4,
-          children: [
-            Text(AppLocalizations.of(context)!.player_statistic),
-            const Text("from"),
-            Button(
-              padding: EdgeInsets.zero,
-              child: Text(startTimeText),
-              onPressed: () async {
-                final result = await showDatePicker(
-                  context: context,
-                  initialDate: startTime,
-                  firstDate: DateTime.fromMicrosecondsSinceEpoch(0),
-                  lastDate: DateTime.now(),
-                );
-                if (result == null) return;
-                startTime = result;
-                onFilterDayChanged();
-              },
-            ),
-            const Text("to"),
-            Button(
-              padding: EdgeInsets.zero,
-              child: Text(endTimeText),
-              onPressed: () async {
-                final result = await showDatePicker(
-                  context: context,
-                  initialDate: endTime,
-                  firstDate: DateTime.fromMicrosecondsSinceEpoch(0),
-                  lastDate: DateTime.now(),
-                );
-                if (result == null) return;
-                endTime = result;
-                onFilterDayChanged();
-              },
-            ),
-          ],
-        ),
-      ),
+      appBar: Header(context, backgroundColor: context.colorScheme.primary),
       body: Container(
         padding: pageSpacing,
         child: Column(
           spacing: spaceComponent,
           children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 4,
+              children: [
+                Text(AppLocalizations.of(context)!.player_statistic),
+                const Text("from"),
+                Button(
+                  padding: EdgeInsets.zero,
+                  child: Text(startTimeText),
+                  onPressed: () async {
+                    final result = await showDatePicker(
+                      context: context,
+                      initialDate: startTime,
+                      firstDate: DateTime.fromMicrosecondsSinceEpoch(0),
+                      lastDate: DateTime.now(),
+                    );
+                    if (result == null) return;
+                    startTime = result;
+                    onFilterDayChanged();
+                  },
+                ),
+                const Text("to"),
+                Button(
+                  padding: EdgeInsets.zero,
+                  child: Text(endTimeText),
+                  onPressed: () async {
+                    final result = await showDatePicker(
+                      context: context,
+                      initialDate: endTime,
+                      firstDate: DateTime.fromMicrosecondsSinceEpoch(0),
+                      lastDate: DateTime.now(),
+                    );
+                    if (result == null) return;
+                    endTime = result;
+                    onFilterDayChanged();
+                  },
+                ),
+              ],
+            ),
             SizedBox(
               height: height * 2,
               child: OverviewPanel(

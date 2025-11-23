@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/importer.dart';
 import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
@@ -15,6 +15,7 @@ import 'package:good_bad_board/view/component/dialog/edit_player.dart';
 import 'package:good_bad_board/view/component/dialog/toasts.dart';
 import 'package:good_bad_board/view/component/list_renderer.dart';
 import 'package:good_bad_board/view/component/player.dart';
+import 'package:good_bad_board/view/landing_page.dart';
 import 'package:provider/provider.dart';
 
 class SignInPage extends StatefulWidget {
@@ -29,13 +30,7 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          GoRouter.of(
-            context,
-          ).routerDelegate.currentConfiguration.matches.last.matchedLocation,
-        ),
-      ),
+      appBar: Header(context, backgroundColor: context.colorScheme.tertiary),
       body: Padding(
         padding: const EdgeInsets.all(space64),
         child: Row(
@@ -54,6 +49,7 @@ class _SignInPageState extends State<SignInPage> {
           ],
         ),
       ),
+      bottomNavigationBar: const BottomBar(children: [BackButtonBottomBar()]),
     );
   }
 
@@ -61,7 +57,10 @@ class _SignInPageState extends State<SignInPage> {
     final fontSize = Theme.of(context).textTheme.headlineLarge!.fontSize;
     return ShadedContainer(
       shaded: false,
-      padding: const EdgeInsets.all(space64),
+      padding: const EdgeInsets.symmetric(
+        horizontal: space64,
+        vertical: space32,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -122,7 +121,7 @@ class _SignInPageState extends State<SignInPage> {
               }),
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: space32),
         ],
       ),
     );
@@ -269,7 +268,10 @@ class _PlayerListState extends State<PlayerList> {
     }
 
     return ShadedContainer(
-      padding: const EdgeInsets.fromLTRB(space64, space32, space64, space64),
+      padding: const EdgeInsets.symmetric(
+        horizontal: space64,
+        vertical: space32,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: space32,

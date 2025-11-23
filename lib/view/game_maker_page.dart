@@ -75,6 +75,7 @@ class _GameMakerPageState extends State<GameMakerPage>
         const AutoMakeNextGameIconButton(),
         const _OpenHistoryDrawerButton(),
       ],
+      backgroundColor: context.colorScheme.secondary,
     );
   }
 
@@ -201,48 +202,15 @@ class _GameMakerPageState extends State<GameMakerPage>
     final generateActive = stagingMatches.isNotEmpty;
     final allGames = history.followedBy([stagingMatches]).toUnmodifiableList();
 
-    return Container(
-      decoration: const BoxDecoration(
-        border: BoxBorder.fromBorderSide(BottomBar.border),
-      ),
-      height: BottomBar.headerHeight,
-      child: (isViewingStagingGame())
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Button(
-                    type: ButtonType.text,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    rounded: false,
-                    icon: Icon(
-                      Icons.chevron_left,
-                      color: Theme.of(
-                        context,
-                      ).buttonTheme.colorScheme?.onSecondary,
-                    ),
-                    child: Text(
-                      "Back",
-                      style: context.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                VerticalDivider(
-                  thickness: BottomBar.border.width,
-                  width: BottomBar.border.width,
-                ),
-                const Spacer(flex: 3),
-                VerticalDivider(
-                  thickness: BottomBar.border.width,
-                  width: BottomBar.border.width,
-                ),
-                Expanded(
-                  flex: generateActive ? 1 : 5,
+    return BottomBar(
+      children: (isViewingStagingGame())
+          ? [
+              const Expanded(child: BackButtonBottomBar()),
+              const Spacer(flex: 3),
+              Expanded(
+                flex: generateActive ? 1 : 5,
+                child: ConstrainedBox(
+                  constraints: BottomBar.buttonConstraint,
                   child: Button(
                     rounded: false,
                     type: ButtonType.text,
@@ -326,14 +294,12 @@ class _GameMakerPageState extends State<GameMakerPage>
                     ),
                   ),
                 ),
-                VerticalDivider(
-                  thickness: BottomBar.border.width,
-                  width: BottomBar.border.width,
-                ),
-
-                if (generateActive)
-                  Expanded(
-                    flex: 4,
+              ),
+              if (generateActive)
+                Expanded(
+                  flex: 4,
+                  child: ConstrainedBox(
+                    constraints: BottomBar.buttonConstraint,
                     child: Button(
                       type: ButtonType.text,
                       backgroundColor: context.colorScheme.primary,
@@ -415,9 +381,14 @@ class _GameMakerPageState extends State<GameMakerPage>
                       ),
                     ),
                   ),
-              ],
-            )
-          : _buildSwitchToStagingGameButton(),
+                ),
+            ]
+          : [
+              ConstrainedBox(
+                constraints: BottomBar.buttonConstraint,
+                child: _buildSwitchToStagingGameButton(),
+              ),
+            ],
     );
   }
 }
