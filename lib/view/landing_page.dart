@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:good_bad_board/core/build_context_extension.dart';
+import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/global.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/theme.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/setting.dart';
+import 'package:intersperse/intersperse.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -49,25 +52,7 @@ class LandingPage extends StatelessWidget {
       ),
     ];
     return Scaffold(
-      appBar: AppBar(
-        shape: const ContinuousRectangleBorder(side: outlinedBorderSide),
-        actions: [
-          VerticalDivider(
-            thickness: BottomBar.border.width,
-            width: BottomBar.border.width,
-          ),
-          Container(
-            constraints: BottomBar.buttonConstraint,
-            color: AppColors.teal,
-            alignment: Alignment.center,
-            child: Text(
-              DateTime.now().year.toString(),
-              style: const TextStyle(fontSize: 20),
-            ),
-          ),
-        ],
-        toolbarHeight: BottomBar.headerHeight,
-      ),
+      appBar: Header(context),
       drawer: const LandingPageDrawer(),
       bottomNavigationBar: const BottomBar(),
       body: Padding(
@@ -122,6 +107,56 @@ class LandingPage extends StatelessWidget {
       ),
     );
   }
+}
+
+class Header extends AppBar {
+  static String getTitle(BuildContext context) => GoRouter.of(
+    context,
+  ).routerDelegate.currentConfiguration.matches.last.matchedLocation;
+
+  static TextStyle? getHeaderButtonTextStyle(BuildContext context) =>
+      context.textTheme.headlineMedium?.copyWith();
+
+  Header(
+    BuildContext context, {
+    super.key,
+    super.leading,
+    Widget? title,
+    List<Widget>? actions,
+  }) : super(
+         shape: const ContinuousRectangleBorder(side: outlinedBorderSide),
+         title: title ?? Text(getTitle(context)),
+         actions:
+             [
+                   ...?actions,
+                   if (actions == null)
+                     Container(
+                       constraints: BottomBar.buttonConstraint,
+                       color: AppColors.teal,
+                       alignment: Alignment.center,
+                       child: Text(
+                         DateTime.now().year.toString(),
+                         style: getHeaderButtonTextStyle(context),
+                       ),
+                     ),
+                 ]
+                 .map(
+                   (e) =>
+                       Container(
+                             constraints: BottomBar.buttonConstraint,
+                             child: e,
+                           )
+                           as Widget,
+                 )
+                 .intersperseOuter(
+                   VerticalDivider(
+                     thickness: BottomBar.border.width,
+                     width: BottomBar.border.width,
+                   ),
+                 )
+                 .toUnmodifiableList(),
+         toolbarHeight: BottomBar.headerHeight,
+       );
 }
 
 class LandingPageOption extends StatefulWidget {
@@ -225,7 +260,10 @@ class BottomBar extends StatelessWidget {
   const BottomBar({super.key});
 
   static const headerHeight = 100.0;
-  static const buttonConstraint = BoxConstraints(minWidth: 300);
+  static const buttonConstraint = BoxConstraints.expand(
+    width: 300,
+    height: headerHeight,
+  );
   static const border = BorderSide(width: 3);
 
   @override
@@ -237,20 +275,15 @@ class BottomBar extends StatelessWidget {
         children: [
           const Spacer(),
           VerticalDivider(thickness: border.width, width: border.width),
-          InkWell(
-            onTap: () =>
-                SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
-            child: Container(
-              constraints: buttonConstraint,
-              alignment: Alignment.center,
-              child: const Row(
-                spacing: space16,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.logout, size: 40),
-                  Text("Quit", style: TextStyle(fontSize: 20)),
-                ],
-              ),
+          Container(
+            constraints: buttonConstraint,
+            child: Button(
+              onPressed: () =>
+                  SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+              rounded: false,
+              icon: const Icon(Icons.logout),
+              textStyle: Header.getHeaderButtonTextStyle(context),
+              child: const Text("Quit"),
             ),
           ),
         ],

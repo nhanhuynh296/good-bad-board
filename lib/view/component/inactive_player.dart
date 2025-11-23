@@ -46,66 +46,79 @@ class _InactivePlayerComponentState extends State<InactivePlayerComponent> {
         )
         .sortedBy((player) => playerStatistic[player] ?? 0);
 
-    return _InactivePlayerDraggable(
-      child: Column(
-        spacing: spaceComponent,
-        children: [
-          if (query.isEmpty)
-            Text(
-              AppLocalizations.of(context)!.inactive_player,
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0),
-            child: SearchBar(
-              hintText: 'Search for name, elo...',
-              leading: query.isEmpty ? const Icon(Icons.search) : null,
-              onChanged: (i) {
-                setState(() {
-                  query = i;
-                });
-              },
-              trailing: [
-                IconButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SignInPage()),
-                    );
+    return ShadedContainer(
+      shaded: false,
+      borderColor: context.colorScheme.primary,
+      child: _InactivePlayerDraggable(
+        child: Padding(
+          padding: const EdgeInsets.all(space32),
+          child: Column(
+            spacing: spaceComponent,
+            children: [
+              if (query.isEmpty)
+                Text(
+                  AppLocalizations.of(context)!.inactive_player,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: TextAlign.center,
+                ),
+              ShadedContainer(
+                margin: const EdgeInsets.only(right: space32),
+                child: SearchBar(
+                  hintText: 'Search for name, elo...',
+                  leading: query.isEmpty ? const Icon(Icons.search) : null,
+                  onChanged: (i) {
+                    setState(() {
+                      query = i;
+                    });
                   },
-                  icon: const Icon(Icons.person_add),
-                  tooltip: AppLocalizations.of(context)!.add_player,
-                ),
-              ],
-            ),
-          ),
-          (inactivePlayers.isNotEmpty)
-              ? Expanded(
-                  child: ListRenderer(
-                    padding: const EdgeInsets.fromLTRB(
-                      0,
-                      spaceDefault,
-                      space32,
-                      spaceDefault,
+                  trailing: [
+                    Button(
+                      type: ButtonType.filled,
+                      shaded: false,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const SignInPage()),
+                        );
+                      },
+                      icon: const Icon(Icons.person_add),
+                      child: Text(AppLocalizations.of(context)!.add_player),
                     ),
-                    items: inactivePlayers,
-                    itemBuilder: (BuildContext context, int index) =>
-                        DraggablePlayerComponent(
-                          data: inactivePlayers[index],
-                          shouldAcceptIncomingDragPlayer:
-                              // Disallow dragging to other inactive player
-                              (player) => !inactivePlayers.contains(player),
-                          onDragToTarget: (player) {
-                            gameData.swapPlayer(player, inactivePlayers[index]);
-                          },
-                        ),
-                  ),
-                )
-              : Text(
-                  'No player with that name, or elo',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  ],
                 ),
-        ],
+              ),
+              (inactivePlayers.isNotEmpty)
+                  ? Expanded(
+                      child: ListRenderer(
+                        padding: const EdgeInsets.fromLTRB(
+                          0,
+                          spaceDefault,
+                          space32,
+                          spaceDefault,
+                        ),
+                        items: inactivePlayers,
+                        itemBuilder: (BuildContext context, int index) =>
+                            DraggablePlayerComponent(
+                              shaded: false,
+                              data: inactivePlayers[index],
+                              shouldAcceptIncomingDragPlayer:
+                                  // Disallow dragging to other inactive player
+                                  (player) => !inactivePlayers.contains(player),
+                              onDragToTarget: (player) {
+                                gameData.swapPlayer(
+                                  player,
+                                  inactivePlayers[index],
+                                );
+                              },
+                            ),
+                      ),
+                    )
+                  : Text(
+                      'No player with that name, or elo',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+            ],
+          ),
+        ),
       ),
     );
   }
