@@ -86,6 +86,10 @@ class _GameMakerPageState extends State<GameMakerPage>
       rounded: false,
       icon: const Icon(Icons.history),
       onPressed: switchToStagingGame,
+      textStyle: context.textTheme.titleLarge?.copyWith(
+        color: context.colorScheme.onPrimary,
+        fontWeight: FontWeight.bold,
+      ),
       child: Text(AppLocalizations.of(context)!.to_current_session),
     );
   }
@@ -114,21 +118,18 @@ class _GameMakerPageState extends State<GameMakerPage>
         child: ListView.builder(
           itemCount: allGames.length,
           itemBuilder: (context, index) {
+            final title = (index == allGames.length - 1)
+                ? AppLocalizations.of(context)!.current_game
+                : AppLocalizations.of(context)!.game_number(index + 1);
             return ListTile(
               onTap: () => setState(() => tabIndex = index),
-              title: Text(
-                AppLocalizations.of(context)!.game_number(index + 1),
-                style: context.textTheme.titleLarge,
-              ),
+              title: Text(title, style: context.textTheme.titleLarge),
             );
           },
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: spacePageX,
-          vertical: spacePageY,
-        ),
+        padding: const EdgeInsets.all(16),
         child: Row(
           spacing: spacePageY,
           children: [
@@ -164,18 +165,9 @@ class _GameMakerPageState extends State<GameMakerPage>
             ),
             Expanded(
               flex: 2,
-              child: Column(
-                spacing: spaceDefault,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CourtModifier(),
-                  Expanded(
-                    child: (allGames.elementAt(tabIndex).isEmpty)
-                        ? const BlankGame()
-                        : StagingGameComponent(allGames.elementAt(tabIndex)),
-                  ),
-                ],
-              ),
+              child: (allGames.elementAt(tabIndex).isEmpty)
+                  ? const BlankGame()
+                  : StagingGameComponent(allGames.elementAt(tabIndex)),
             ),
           ],
         ),
@@ -207,7 +199,7 @@ class _GameMakerPageState extends State<GameMakerPage>
       children: (isViewingStagingGame())
           ? [
               const Expanded(child: BackButtonBottomBar()),
-              const Spacer(flex: 3),
+              const Expanded(flex: 3, child: CourtModifier()),
               Expanded(
                 flex: generateActive ? 1 : 5,
                 child: ConstrainedBox(
@@ -282,14 +274,16 @@ class _GameMakerPageState extends State<GameMakerPage>
                       }
                     },
                     backgroundColor: generateActive
-                        ? Colors.transparent
+                        ? context.colorScheme.onPrimary
                         : context.colorScheme.primary,
                     child: Text(
                       generateActive
                           ? AppLocalizations.of(context)!.regenerate_game
                           : AppLocalizations.of(context)!.generate_game,
                       style: context.textTheme.titleLarge?.copyWith(
-                        color: context.colorScheme.secondary,
+                        color: generateActive
+                            ? context.colorScheme.secondary
+                            : context.colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -481,7 +475,7 @@ class CourtModifier extends StatelessWidget {
         ),
         Text(
           AppLocalizations.of(context)!.n_court(gameData.numberOfCourt),
-          style: iconTextStyle?.copyWith(color: backgroundColor),
+          style: iconTextStyle,
         ),
         Button(
           type: ButtonType.outlined,

@@ -205,7 +205,6 @@ class StagingGameComponent extends StatelessWidget {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         return GridView.builder(
-          shrinkWrap: true,
           itemCount: games.length,
           padding: padding,
           itemBuilder: (BuildContext context, int index) {

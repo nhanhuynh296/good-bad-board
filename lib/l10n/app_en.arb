@@ -38,6 +38,7 @@
       }
     }
   },
+  "current_game": "Current Game",
   "delete": "Delete",
   "done": "Done",
   "elo": "Elo",
