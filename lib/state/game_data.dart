@@ -128,7 +128,17 @@ class GameData extends ChangeNotifier {
     );
     if (stagingMatches.length < numberOfCourt) {
       stagingMatches.addAll(
-        List.filled(numberOfCourt - stagingMatches.length, Game.create([])),
+        List.generate(
+          numberOfCourt - stagingMatches.length,
+          (_) => Game.create(List.empty(growable: true)),
+          // Probably no need to move court around
+          growable: false,
+        ),
+      );
+      assert(
+        stagingMatches.map((e) => identityHashCode(e)).toSet().length ==
+            stagingMatches.length,
+        "Expected all staging matches to be unique",
       );
     }
     notifyListeners();
