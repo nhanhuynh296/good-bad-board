@@ -14,14 +14,8 @@ import 'button.dart';
 class _PlayerComponent extends StatelessWidget {
   final Player data;
   final bool showElo;
-  final Color? eloBackgroundColor;
 
-  const _PlayerComponent({
-    super.key,
-    required this.data,
-    this.showElo = true,
-    this.eloBackgroundColor,
-  });
+  const _PlayerComponent({super.key, required this.data, this.showElo = true});
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +37,7 @@ class _PlayerComponent extends StatelessWidget {
           if (showElo)
             ShadedContainer(
               shaded: false,
-              bordered: eloBackgroundColor != null,
+              bordered: showElo,
               backgroundColor: context.colorScheme.secondary,
               padding: const EdgeInsets.symmetric(
                 horizontal: space32,

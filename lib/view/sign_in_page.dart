@@ -49,7 +49,10 @@ class _SignInPageState extends State<SignInPage> {
           ],
         ),
       ),
-      bottomNavigationBar: const BottomBar(children: [BackButtonBottomBar()]),
+      bottomNavigationBar: BottomBar(
+        children: [BackButtonBottomBar()],
+        backgroundColor: context.colorScheme.tertiary,
+      ),
     );
   }
 
@@ -66,13 +69,11 @@ class _SignInPageState extends State<SignInPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         spacing: space64,
         children: [
-          Flexible(
-            child: Text(
-              "WELCOME BACK!",
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: space64,
-              ),
+          Text(
+            "WELCOME BACK!",
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: space64,
             ),
           ),
           Expanded(
@@ -121,7 +122,7 @@ class _SignInPageState extends State<SignInPage> {
               }),
             ),
           ),
-          const SizedBox(height: space32),
+          const Spacer(),
         ],
       ),
     );

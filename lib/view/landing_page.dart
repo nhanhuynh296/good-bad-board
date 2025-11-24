@@ -40,7 +40,20 @@ class LandingPage extends StatelessWidget {
         backgroundColor: AppColors.orange,
         child: SvgPicture.asset("asset/image/landing-make-game.svg"),
       ),
-      const SizedBox.shrink(),
+      LandingPageOption(
+        label: Text(
+          AppLocalizations.of(context)!.settings,
+          style: TextStyle(color: context.colorScheme.onPrimary),
+          textAlign: TextAlign.center,
+        ),
+        backgroundColor: context.colorScheme.primaryContainer,
+        child: Icon(
+          Icons.settings,
+          color: context.colorScheme.onPrimary,
+          size: 175,
+        ),
+        onTap: () => context.go('/settings'),
+      ),
       LandingPageOption(
         label: Text(
           AppLocalizations.of(context)!.player_statistic,
@@ -112,9 +125,8 @@ class LandingPage extends StatelessWidget {
 }
 
 class Header extends AppBar {
-  static String getTitle(BuildContext context) => GoRouter.of(
-    context,
-  ).routerDelegate.currentConfiguration.matches.last.matchedLocation;
+  static String getTitle(BuildContext context) =>
+      GoRouter.of(context).routeInformationProvider.value.uri.path;
 
   static TextStyle? getHeaderButtonTextStyle(BuildContext context) =>
       context.textTheme.headlineMedium?.copyWith();
@@ -128,6 +140,7 @@ class Header extends AppBar {
     List<Widget>? actions,
   }) : super(
          shape: const ContinuousRectangleBorder(side: outlinedBorderSide),
+         titleTextStyle: context.textTheme.headlineLarge,
          title: title ?? Text(getTitle(context)),
          actions:
              [
@@ -263,7 +276,8 @@ class LandingPageDrawer extends StatelessWidget {
 
 class BottomBar extends StatelessWidget {
   final Iterable<Widget> children;
-  const BottomBar({super.key, this.children = const []});
+  final Color? backgroundColor;
+  const BottomBar({super.key, this.children = const [], this.backgroundColor});
 
   static const headerHeight = 100.0;
   static const buttonConstraint = BoxConstraints.expand(
@@ -276,7 +290,10 @@ class BottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: headerHeight,
-      decoration: const BoxDecoration(border: BoxBorder.fromBorderSide(border)),
+      decoration: BoxDecoration(
+        border: const BoxBorder.fromBorderSide(border),
+        color: backgroundColor,
+      ),
       child: Row(
         children: children
             .intersperseOuter(
@@ -315,6 +332,7 @@ class BackButtonBottomBar extends StatelessWidget {
     return ConstrainedBox(
       constraints: BottomBar.buttonConstraint,
       child: Button(
+        backgroundColor: context.colorScheme.onPrimary,
         onPressed: () {
           Navigator.of(context).pop();
         },

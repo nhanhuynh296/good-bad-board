@@ -203,6 +203,7 @@ class _GameMakerPageState extends State<GameMakerPage>
     final allGames = history.followedBy([stagingMatches]).toUnmodifiableList();
 
     return BottomBar(
+      backgroundColor: context.colorScheme.secondary,
       children: (isViewingStagingGame())
           ? [
               const Expanded(child: BackButtonBottomBar()),

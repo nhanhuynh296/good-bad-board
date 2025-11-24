@@ -1,6 +1,7 @@
 // GoRouter configuration
 import 'package:go_router/go_router.dart';
 import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/view/component/setting.dart';
 import 'package:good_bad_board/view/game_maker_page.dart';
 import 'package:good_bad_board/view/landing_page.dart';
 import 'package:good_bad_board/view/player_statistic_page.dart';
@@ -25,6 +26,10 @@ final router = GoRouter(
         GoRoute(
           path: '/stats',
           builder: (context, state) => const PlayerStatisticPage(),
+        ),
+        GoRoute(
+          path: '/settings',
+          builder: (context, state) => const SettingPage(),
         ),
       ],
     ),
