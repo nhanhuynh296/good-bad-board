@@ -385,9 +385,11 @@ class _GameMakerPageState extends State<GameMakerPage>
                 ),
             ]
           : [
-              ConstrainedBox(
-                constraints: BottomBar.buttonConstraint,
-                child: _buildSwitchToStagingGameButton(),
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: BottomBar.buttonConstraint,
+                  child: _buildSwitchToStagingGameButton(),
+                ),
               ),
             ],
     );

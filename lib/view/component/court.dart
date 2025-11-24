@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/spacing.dart';
@@ -14,20 +15,51 @@ const _spaceVertical = _spaceHorizontal / 2;
 
 class CourtComponent extends StatelessWidget {
   final PlayerContainer players;
+  final bool draggable;
 
-  const CourtComponent({super.key, required this.players});
+  const CourtComponent({
+    super.key,
+    required this.players,
+    this.draggable = true,
+  });
+
+  Widget buildDraggablePlayer(Player player) {
+    return Builder(
+      builder: (context) {
+        return DraggablePlayerComponent(
+          showElo: false,
+          shaded: false,
+          data: player,
+          onDragToTarget: (draggedToPlayer) {
+            context.read<GameData>().swapPlayer(player, draggedToPlayer);
+          },
+        );
+      },
+    );
+  }
+
+  Widget buildNonDraggablePlayer(Player player) {
+    return ClickablePlayerComponent(
+      data: player,
+      showElo: false,
+      shaded: false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    void onDragToTarget(Player player, Player draggedToPlayer) {
-      final gameData = Provider.of<GameData>(context, listen: false);
-      gameData.swapPlayer(player, draggedToPlayer);
-    }
-
     final sortedPlayer = players.sortedBy((player) => player.elo.index);
     final gameData = Provider.of<GameData>(context);
+
+    Widget buildPlayerWidget(Player player) {
+      return draggable
+          ? buildDraggablePlayer(player)
+          : buildNonDraggablePlayer(player);
+    }
+
     return DragTarget<Player>(
       onWillAcceptWithDetails: (detail) {
+        if (!draggable) return false;
         if (players.contains(detail.data)) return false;
         if (players.length >= Game.playerPerCourt) return false;
         return true;
@@ -41,7 +73,8 @@ class CourtComponent extends StatelessWidget {
         return Stack(
           children: [
             Image.asset(PersistentSetting.instance.getBackground()),
-            if (isInvalidDragHovering) const InvalidDropTargetOverlay(),
+            if (isInvalidDragHovering && draggable)
+              const InvalidDropTargetOverlay(),
 
             Positioned.fill(
               child: Padding(
@@ -54,87 +87,33 @@ class CourtComponent extends StatelessWidget {
                     children: [
                       _CourtSameSide(
                         children: [
-                          DraggablePlayerComponent(
-                            showElo: false,
-                            shaded: false,
-                            data: sortedPlayer.first,
-                            onDragToTarget: (draggedToPlayer) => onDragToTarget(
-                              sortedPlayer.first,
-                              draggedToPlayer,
-                            ),
-                          ),
-                          DraggablePlayerComponent(
-                            showElo: false,
-                            shaded: false,
-                            data: sortedPlayer.last,
-                            onDragToTarget: (draggedToPlayer) => onDragToTarget(
-                              sortedPlayer.last,
-                              draggedToPlayer,
-                            ),
-                          ),
+                          buildPlayerWidget(sortedPlayer.first),
+                          buildPlayerWidget(sortedPlayer.last),
                         ],
                       ),
                       _CourtSameSide(
                         children: [
-                          DraggablePlayerComponent(
-                            showElo: false,
-                            shaded: false,
-                            data: sortedPlayer[2],
-                            onDragToTarget: (draggedToPlayer) => onDragToTarget(
-                              sortedPlayer[2],
-                              draggedToPlayer,
-                            ),
-                          ),
-                          DraggablePlayerComponent(
-                            showElo: false,
-                            shaded: false,
-                            data: sortedPlayer[1],
-                            onDragToTarget: (draggedToPlayer) => onDragToTarget(
-                              sortedPlayer[1],
-                              draggedToPlayer,
-                            ),
-                          ),
+                          buildPlayerWidget(sortedPlayer[2]),
+                          buildPlayerWidget(sortedPlayer[1]),
                         ],
                       ),
                     ],
                   ),
                   2 => _CourtDifferentSide(
                     children: players
-                        .map(
-                          (player) => DraggablePlayerComponent(
-                            showElo: false,
-                            shaded: false,
-                            data: player,
-                            onDragToTarget: (draggedToPlayer) =>
-                                onDragToTarget(player, draggedToPlayer),
-                          ),
-                        )
-                        .toList(growable: false),
+                        .map(buildPlayerWidget)
+                        .toFixedLengthList(),
                   ),
                   1 => _CourtDifferentSide(
                     children: [
                       // This would be on the left so that the player can be dragged easily
                       const SizedBox(),
-                      DraggablePlayerComponent(
-                        showElo: false,
-                        shaded: false,
-                        data: players.first,
-                        onDragToTarget: (draggedToPlayer) =>
-                            onDragToTarget(players.first, draggedToPlayer),
-                      ),
+                      buildPlayerWidget(sortedPlayer.first),
                     ],
                   ),
                   _ when players.isNotEmpty => _CourtSameSide(
                     children: players
-                        .map(
-                          (player) => DraggablePlayerComponent(
-                            showElo: false,
-                            shaded: false,
-                            data: player,
-                            onDragToTarget: (draggedToPlayer) =>
-                                onDragToTarget(player, draggedToPlayer),
-                          ),
-                        )
+                        .map(buildPlayerWidget)
                         .toList(growable: false),
                   ),
                   _ => const SizedBox(),

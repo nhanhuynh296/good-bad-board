@@ -198,6 +198,10 @@ class StagingGameComponent extends StatelessWidget {
     const gutter = spaceDefault;
     const padding = EdgeInsets.only(right: space16);
 
+    final isStagingGame = context.select(
+      (GameData gameData) => gameData.stagingMatches == games,
+    );
+
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         return GridView.builder(
@@ -213,7 +217,10 @@ class StagingGameComponent extends StatelessWidget {
                   Expanded(
                     child: CourtHeader(game: game, courtNumber: index),
                   ),
-                  CourtComponent(players: game.players),
+                  CourtComponent(
+                    players: game.players,
+                    draggable: isStagingGame,
+                  ),
                 ],
               ),
             );
