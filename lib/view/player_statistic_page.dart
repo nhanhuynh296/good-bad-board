@@ -10,6 +10,7 @@ import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/theme.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/landing_page.dart';
@@ -301,7 +302,13 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
                 Button(
                   type: ButtonType.outlined,
                   backgroundColor: context.colorScheme.tertiary,
-
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => GameHistory(games),
+                      ),
+                    );
+                  },
                   padding: const EdgeInsets.all(space32),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -457,6 +464,137 @@ class OverviewPanel extends StatelessWidget {
       crossAxisSpacing: spacing,
       childAspectRatio: 1 / goldenRatio,
       children: children,
+    );
+  }
+}
+
+class GameHistory extends StatefulWidget {
+  final List<Game> games;
+  const GameHistory(this.games, {super.key});
+
+  @override
+  State<GameHistory> createState() => _GameHistoryState();
+}
+
+class _GameHistoryState extends State<GameHistory> {
+  bool? sortAscending;
+
+  @override
+  Widget build(BuildContext context) {
+    final games = switch (sortAscending) {
+      true => widget.games.sortedBy((game) => game.createdDate),
+      false => widget.games.sortedBy((game) => game.createdDate).reversed,
+      null => widget.games,
+    }.toUnmodifiableList();
+    return Scaffold(
+      appBar: Header(context, backgroundColor: context.colorScheme.primary),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: space64),
+        child: DefaultTextStyle(
+          style: (context.textTheme.titleLarge ?? const TextStyle()).copyWith(
+            fontWeight: FontWeight.bold,
+            color: context.colorScheme.primary,
+          ),
+          child: Column(
+            spacing: space32,
+            children: [
+              ShadedContainer(
+                backgroundColor: context.colorScheme.tertiaryContainer,
+                padding: const EdgeInsets.symmetric(vertical: space32),
+                margin: const EdgeInsets.only(top: space32),
+                child: Row(
+                  children: [
+                    const Spacer(),
+                    const Expanded(
+                      flex: 3,
+                      child: Row(
+                        spacing: space8,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [Icon(Icons.person), Text("Players")],
+                      ),
+                    ),
+                    Flexible(
+                      flex: 2,
+                      child: Center(
+                        child: Button(
+                          onPressed: () {
+                            setState(() {
+                              if (sortAscending == null) {
+                                sortAscending = true;
+                                return;
+                              }
+                              sortAscending = !sortAscending!;
+                            });
+                          },
+                          child: const Row(
+                            spacing: space8,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.calendar_month),
+                              Text("Date"),
+                              Icon(Icons.swap_vert),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  itemBuilder: (BuildContext context, int index) {
+                    final game = games[index];
+                    return Container(
+                      alignment: Alignment.center,
+                      height: space128,
+                      child: Row(
+                        children: [
+                          const Spacer(),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              game.players.map((e) => e.name()).join(', '),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    DateFormat.yMMMd().format(game.createdDate),
+                                  ),
+                                  Text(
+                                    DateFormat.jm().format(game.createdDate),
+                                    style: TextStyle(
+                                      color: context.colorScheme.onSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  separatorBuilder: (BuildContext context, int index) {
+                    return const Divider(color: AppColors.grey);
+                  },
+                  itemCount: widget.games.length,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: BottomBar(
+        backgroundColor: context.colorScheme.primary,
+        children: [const BackButtonBottomBar()],
+      ),
     );
   }
 }

@@ -109,6 +109,7 @@ ThemeData get lightTheme {
       labelMedium: titleTextStyle,
       labelSmall: titleTextStyle,
     ),
+    dividerColor: AppColors.grey,
     dialogTheme: const DialogThemeData(shape: lightOutlinedBorder),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
@@ -248,6 +249,7 @@ ThemeData get darkTheme {
       labelMedium: TextStyle(color: AppColors.goldRush),
       labelSmall: TextStyle(color: AppColors.goldRush),
     ),
+    dividerColor: AppColors.grey,
     dialogTheme: DialogThemeData(shape: darkOutlinedBorder),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
