@@ -210,17 +210,22 @@ class StagingGameComponent extends StatelessWidget {
           itemBuilder: (BuildContext context, int index) {
             final game = games[index];
             return ShadedContainer(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Expanded(
-                    child: CourtHeader(game: game, courtNumber: index),
-                  ),
-                  CourtComponent(
-                    players: game.players,
-                    draggable: isStagingGame,
-                  ),
-                ],
+              child: Builder(
+                builder: (context) {
+                  if (isStagingGame) context.watch<GameData>();
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Expanded(
+                        child: CourtHeader(game: game, courtNumber: index),
+                      ),
+                      CourtComponent(
+                        players: game.players,
+                        draggable: isStagingGame,
+                      ),
+                    ],
+                  );
+                },
               ),
             );
           },
@@ -335,6 +340,7 @@ class _CourtHeaderState extends State<CourtHeader>
                 style: textStyle,
               ),
               const Spacer(),
+              Text(widget.game.players.length.toString()),
               Text(
                 AppLocalizations.of(context)!.skill_gap_n(widget.game.eloGap()),
                 style: textStyle,
