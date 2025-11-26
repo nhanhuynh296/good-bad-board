@@ -7,16 +7,18 @@ class BlankGame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textStyle = Theme.of(context).textTheme.bodyLarge!;
-    return Row(
-      spacing: textStyle.fontSize!,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.auto_awesome, size: textStyle.fontSize!),
-        Text(
-          AppLocalizations.of(context)!.generate_some_game_to_start,
-          style: textStyle,
-        ),
-      ],
+    return Center(
+      child: Row(
+        spacing: textStyle.fontSize!,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.auto_awesome, size: textStyle.fontSize!),
+          Text(
+            AppLocalizations.of(context)!.generate_some_game_to_start,
+            style: textStyle,
+          ),
+        ],
+      ),
     );
   }
 }

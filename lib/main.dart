@@ -72,7 +72,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       builder: (context, child) => ResponsiveBreakpoints.builder(
-        child: child!,
+        child: Stack(
+          children: [if (child != null) child, const ScreenSizeOverlay()],
+        ),
         breakpoints: [
           const Breakpoint(start: 0, end: 576, name: 'xs'),
           const Breakpoint(start: 577, end: 768, name: 'sm'),
@@ -92,6 +94,68 @@ class MyApp extends StatelessWidget {
       ),
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
+    );
+  }
+}
+
+class ScreenSizeOverlay extends StatefulWidget {
+  const ScreenSizeOverlay({super.key});
+
+  @override
+  State<ScreenSizeOverlay> createState() => _ScreenSizeOverlayState();
+}
+
+class _ScreenSizeOverlayState extends State<ScreenSizeOverlay>
+    with SingleTickerProviderStateMixin {
+  Size? _lastSize;
+  double _opacity = 0.0;
+
+  void _onSizeChanged(Size size) {
+    if (_lastSize == size) return;
+    _lastSize = size;
+
+    setState(() {
+      _opacity = 1.0;
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      setState(() => _opacity = 0.0);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    _onSizeChanged(size);
+
+    if (_opacity == 0) return const SizedBox.shrink();
+
+    return IgnorePointer(
+      child: Center(
+        child: Material(
+          child: AnimatedOpacity(
+            opacity: _opacity,
+            duration: const Duration(seconds: 2),
+            curve: Curves.easeOut,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withAlpha(128),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '${size.width.toStringAsFixed(0)} × ${size.height.toStringAsFixed(0)} == ${ResponsiveBreakpoints.of(context).breakpoint.name}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

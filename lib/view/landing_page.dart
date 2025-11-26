@@ -72,43 +72,49 @@ class LandingPage extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: space64,
+          horizontal: space32,
           vertical: spacePageY,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Flexible(
-              flex: 2,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Text(
-                      "Let's play Badminton!",
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(
-                            fontSize: 115,
-                            color: AppColors.black,
-                            fontWeight: FontWeight.w700,
-                          ),
-                      textAlign: TextAlign.center,
+            if (context.breakpoint.largerThan('xl'))
+              Expanded(
+                flex: 2,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (context.breakpoint.largerThan('xl'))
+                      Flexible(
+                        child: Text(
+                          "Let's play Badminton!",
+                          style: Theme.of(context).textTheme.headlineLarge
+                              ?.copyWith(
+                                fontSize: 115,
+                                color: AppColors.black,
+                                fontWeight: FontWeight.w700,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    Expanded(
+                      child: SvgPicture.asset("asset/image/landing.svg"),
                     ),
-                  ),
-                  Expanded(child: SvgPicture.asset("asset/image/landing.svg")),
-                ],
+                  ],
+                ),
               ),
-            ),
             Expanded(
               flex: 3,
               child: GridView(
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: spacePageX,
+                  horizontal: space32,
                   vertical: spacePageY,
                 ),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: sqrt(children.length).ceil(),
+                  crossAxisCount: context.breakpoint.smallerOrEqualTo('sm')
+                      ? 1
+                      : sqrt(children.length).ceil(),
                   mainAxisSpacing: space64,
                   crossAxisSpacing: space64,
                   mainAxisExtent: 300,
@@ -219,7 +225,9 @@ class _LandingPageOptionState extends State<LandingPageOption> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               if (widget.label != null) Flexible(child: widget.label!),
-              if (widget.child != null) Flexible(child: widget.child!),
+              if (widget.child != null &&
+                  context.breakpoint.largerOrEqualTo('xl'))
+                Flexible(child: widget.child!),
             ],
           ),
         ),

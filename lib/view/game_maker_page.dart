@@ -133,36 +133,37 @@ class _GameMakerPageState extends State<GameMakerPage>
         child: Row(
           spacing: spacePageY,
           children: [
-            Expanded(
-              child: Column(
-                spacing: spacePageY,
-                children: [
-                  if (gameType == GameType.timeBased) ...[
-                    CountdownTimer(
-                      controller: controller,
-                      onExpired: () {
-                        if (PersistentSetting.instance.getAutoMakeGame()) {
-                          try {
-                            context.read<GameData>()
-                              ..saveCurrentGame()
-                              ..makeGame();
-                          } catch (e) {
-                            if (context.mounted) {
-                              context.showErrorToast(e.toString());
+            if (context.breakpoint.largerThan('lg'))
+              Expanded(
+                child: Column(
+                  spacing: spacePageY,
+                  children: [
+                    if (gameType == GameType.timeBased) ...[
+                      CountdownTimer(
+                        controller: controller,
+                        onExpired: () {
+                          if (PersistentSetting.instance.getAutoMakeGame()) {
+                            try {
+                              context.read<GameData>()
+                                ..saveCurrentGame()
+                                ..makeGame();
+                            } catch (e) {
+                              if (context.mounted) {
+                                context.showErrorToast(e.toString());
+                              }
                             }
                           }
-                        }
-                      },
-                    ),
+                        },
+                      ),
+                    ],
+                    isViewingStagingGame()
+                        ? const Expanded(child: InactivePlayerComponent())
+                        : const Text(
+                            "Inactive Players is not available in history view",
+                          ),
                   ],
-                  isViewingStagingGame()
-                      ? const Expanded(child: InactivePlayerComponent())
-                      : const Text(
-                          "Inactive Players is not available in history view",
-                        ),
-                ],
+                ),
               ),
-            ),
             Expanded(
               flex: 2,
               child: (allGames.elementAt(tabIndex).isEmpty)

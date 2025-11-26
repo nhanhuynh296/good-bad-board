@@ -219,7 +219,11 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
     return Scaffold(
       appBar: Header(context, backgroundColor: context.colorScheme.primary),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: space64),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.breakpoint.smallerOrEqualTo('xl')
+              ? space32
+              : space64,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           spacing: spaceDefault,
@@ -280,53 +284,58 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
                 ],
               ),
             ),
-            StaggeredGridView.count(
-              shrinkWrap: true,
-              scrollDirection: Axis.vertical,
-              crossAxisCount: 6,
-              mainAxisSpacing: space32,
-              crossAxisSpacing: space32,
-              staggeredTiles: const [
-                StaggeredTile.count(1, 1),
-                StaggeredTile.count(2, 1),
-                StaggeredTile.count(2, 1),
-                StaggeredTile.count(1, 2),
-                StaggeredTile.count(2, 1),
-                StaggeredTile.count(1, 1),
-                StaggeredTile.count(2, 1),
-              ],
-              children: [
-                totalGames(allGames),
-                mostGamePlayed(games),
-                mostConsistent(games),
-                Button(
-                  type: ButtonType.outlined,
-                  backgroundColor: context.colorScheme.tertiary,
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => GameHistory(games),
-                      ),
-                    );
-                  },
-                  padding: const EdgeInsets.all(space32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context)!.game_history,
-                        style: headerTextStyle,
-                      ),
-                      Expanded(
-                        child: SvgPicture.asset("asset/image/hour-glass.svg"),
-                      ),
-                    ],
+            Expanded(
+              child: StaggeredGridView.count(
+                key: ValueKey(context.breakpoint.breakpoint.name),
+                padding: const EdgeInsets.symmetric(horizontal: space32),
+                scrollDirection: Axis.vertical,
+                crossAxisCount: context.breakpoint.smallerOrEqualTo('xl')
+                    ? 3
+                    : 6,
+                mainAxisSpacing: space32,
+                crossAxisSpacing: space32,
+                staggeredTiles: const [
+                  StaggeredTile.count(1, 1),
+                  StaggeredTile.count(2, 1),
+                  StaggeredTile.count(2, 1),
+                  StaggeredTile.count(1, 2),
+                  StaggeredTile.count(2, 1),
+                  StaggeredTile.count(1, 1),
+                  StaggeredTile.count(2, 1),
+                ],
+                children: [
+                  totalGames(allGames),
+                  mostGamePlayed(games),
+                  mostConsistent(games),
+                  Button(
+                    type: ButtonType.outlined,
+                    backgroundColor: context.colorScheme.tertiary,
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => GameHistory(games),
+                        ),
+                      );
+                    },
+                    padding: const EdgeInsets.all(space32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.game_history,
+                          style: headerTextStyle,
+                        ),
+                        Expanded(
+                          child: SvgPicture.asset("asset/image/hour-glass.svg"),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                placeholder(),
-                regularUser(games),
-                leastActiveUser(allGames),
-              ],
+                  placeholder(),
+                  regularUser(games),
+                  leastActiveUser(allGames),
+                ],
+              ),
             ),
             // const Expanded(child: Placeholder()),
             // if (games.isNotEmpty)
@@ -359,8 +368,8 @@ class _PlayerStatisticPageState extends State<PlayerStatisticPage> {
         ),
       ),
       bottomNavigationBar: BottomBar(
-        children: [BackButtonBottomBar()],
         backgroundColor: context.colorScheme.primary,
+        children: [const BackButtonBottomBar()],
       ),
     );
   }

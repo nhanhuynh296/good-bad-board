@@ -65,20 +65,21 @@ class _CountdownTimerState extends State<CountdownTimer>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Expanded(
-              flex: 5,
+              flex: context.breakpoint.largerThan('lg') ? 5 : 3,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Flexible(
-                    child: Text(
-                      AppLocalizations.of(context)!.time_remaining,
-                      style: textTheme.headlineMedium?.copyWith(
-                        color: context.colorScheme.onPrimary,
+                  if (context.breakpoint.largerThan('lg'))
+                    Flexible(
+                      child: Text(
+                        AppLocalizations.of(context)!.time_remaining,
+                        style: textTheme.headlineMedium?.copyWith(
+                          color: context.colorScheme.onPrimary,
+                        ),
+                        textAlign: TextAlign.left,
+                        maxLines: 2,
                       ),
-                      textAlign: TextAlign.left,
-                      maxLines: 2,
                     ),
-                  ),
                   Flexible(
                     child: ShadedContainer(
                       bordered: false,

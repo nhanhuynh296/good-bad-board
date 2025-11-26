@@ -37,9 +37,10 @@ class _SignInPageState extends State<SignInPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           spacing: spaceCard,
           children: [
-            Expanded(child: buildMainSection(context)),
+            if (context.breakpoint.largerThan('lg'))
+              Expanded(child: buildMainSection(context)),
             Expanded(
-              flex: 3,
+              flex: context.breakpoint.largerThan('lg') ? 2 : 1,
               child: switch (index) {
                 0 => const PlayerList(),
                 1 => const AddPlayerDialog(),
@@ -50,8 +51,8 @@ class _SignInPageState extends State<SignInPage> {
         ),
       ),
       bottomNavigationBar: BottomBar(
-        children: [BackButtonBottomBar()],
         backgroundColor: context.colorScheme.tertiary,
+        children: [const BackButtonBottomBar()],
       ),
     );
   }
