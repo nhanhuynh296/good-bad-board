@@ -9,6 +9,7 @@ import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:good_bad_board/theme.dart';
 import 'package:provider/provider.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +71,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      builder: (context, child) => ResponsiveBreakpoints.builder(
+        child: child!,
+        breakpoints: [
+          const Breakpoint(start: 0, end: 576, name: 'xs'),
+          const Breakpoint(start: 577, end: 768, name: 'sm'),
+          const Breakpoint(start: 769, end: 992, name: 'md'),
+          const Breakpoint(start: 993, end: 1200, name: 'lg'),
+          const Breakpoint(start: 1201, end: 1400, name: 'xl'),
+          const Breakpoint(start: 1401, end: double.infinity, name: 'xxl'),
+        ],
+      ),
       routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
