@@ -2,44 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
-import 'package:good_bad_board/global.dart';
+import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/spacing.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
+import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/container.dart';
+import 'package:good_bad_board/view/landing_page.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
 
-  static const children = <Widget>[
-    LanguageSetting(),
-    TimerSetting(),
-    GameTypeSetting(),
-    CourtSetting(),
-  ];
+  static TextStyle getSettingHeaderTextStyle(BuildContext context) {
+    return context.textTheme.displayMedium!;
+  }
+
+  // static const children = <Widget>[
+  //   LanguageSetting(),
+  //   TimerSetting(),
+  //   GameTypeSetting(),
+  //   CourtSetting(),
+  // ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.settings,
-          style: context.textTheme.titleLarge,
-        ),
+      appBar: Header(context, backgroundColor: context.colorScheme.primary),
+      bottomNavigationBar: BottomBar(
+        backgroundColor: context.colorScheme.primary,
+        children: const [BackButtonBottomBar()],
       ),
-      body: DefaultTextStyle(
-        style: context.textTheme.titleMedium!,
-        textAlign: TextAlign.center,
-        child: ListView.separated(
-          padding: const EdgeInsets.symmetric(
-            horizontal: spacePageX,
-            vertical: spacePageY,
-          ),
-          separatorBuilder: (_, _) => const SizedBox(height: space32),
-          itemBuilder: (_, index) => children[index],
-          itemCount: children.length,
+      body: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: space64, vertical: space32),
+        child: Row(
+          spacing: space32,
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: LanguageSetting()),
+                  Flexible(child: GameTypeSetting()),
+                  Flexible(child: TimerSetting()),
+                ],
+              ),
+            ),
+            Expanded(child: CourtSetting()),
+          ],
         ),
       ),
     );
@@ -62,20 +74,12 @@ class SettingMultipleChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: goldenRatio,
-      child: ShadedContainer(
-        backgroundColor: selected
-            ? context.colorScheme.secondaryContainer
-            : null,
-        child: InkWell(
-          onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.all(spaceCard),
-            child: Center(child: child),
-          ),
-        ),
-      ),
+    return Button(
+      shaded: false,
+      type: ButtonType.outlined,
+      backgroundColor: selected ? context.colorScheme.secondary : null,
+      onPressed: onPressed,
+      child: child,
     );
   }
 }
@@ -98,43 +102,39 @@ class _CourtSettingState extends State<CourtSetting> {
   @override
   Widget build(BuildContext context) {
     final children = choices.map((choice) {
-      final name = choice
-          .split("/")
-          .last
-          .replaceFirst('.webp', '')
-          .replaceAll('_', ' ')
-          .toUpperCase();
       Widget child = SettingMultipleChoice(
+        onPressed: () => setState(() {
+          chosen = choice;
+          PersistentSetting.instance.setCourtBackground(choice);
+        }),
         selected: choice == chosen,
-        child: Image.asset(choice),
+        child: Padding(
+          padding: const EdgeInsets.all(spaceDefault),
+          child: Image.asset(choice),
+        ),
       );
 
-      child = Column(
-        mainAxisSize: MainAxisSize.min,
-        spacing: spaceCard,
-        children: [
-          GestureDetector(
-            onTap: () => setState(() {
-              chosen = choice;
-              PersistentSetting.instance.setCourtBackground(choice);
-            }),
-            child: child,
-          ),
-          Text(name, style: context.textTheme.titleMedium),
-        ],
-      );
       return Flexible(child: child);
     });
 
     return Column(
       mainAxisSize: MainAxisSize.min,
-      spacing: spaceCard,
+      spacing: spaceDefault,
       children: [
         Text(
           AppLocalizations.of(context)!.court_background,
-          style: context.textTheme.titleLarge,
+          style: SettingPage.getSettingHeaderTextStyle(context),
         ),
-        Row(spacing: spaceDefault, children: children.toList(growable: false)),
+        Flexible(
+          child: ShadedContainer(
+            padding: const EdgeInsets.all(space32),
+            child: Column(
+              spacing: space32,
+              mainAxisSize: MainAxisSize.min,
+              children: children.toUnmodifiableList(),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -206,23 +206,24 @@ class _TimePickerState extends State<TimePicker> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(label),
-        SizedBox(
-          width: 3 * textStyle!.fontSize!,
-          child: Focus(
-            child: TextField(
-              controller: controller,
-              textAlign: TextAlign.center,
-              style: textStyle,
-              keyboardType: TextInputType.number,
-
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onTap: () => controller.selection = TextSelection(
-                baseOffset: 0,
-                extentOffset: controller.text.length,
+        ShadedContainer(
+          child: SizedBox(
+            width: 4 * textStyle!.fontSize!,
+            child: Focus(
+              child: TextField(
+                controller: controller,
+                textAlign: TextAlign.center,
+                style: textStyle,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onTap: () => controller.selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: controller.text.length,
+                ),
+                onSubmitted: (_) => _onLosingFocus(),
+                onTapOutside: (_) => _onLosingFocus(),
+                onChanged: (_) => _onChange(),
               ),
-              onSubmitted: (_) => _onLosingFocus(),
-              onTapOutside: (_) => _onLosingFocus(),
-              onChanged: (_) => _onChange(),
             ),
           ),
         ),
@@ -235,6 +236,7 @@ class _TimePickerState extends State<TimePicker> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
+      spacing: space32,
       children: [
         _buildField(controller: minuteTextController, label: "min"),
         Text(":", style: context.textTheme.displayLarge),
@@ -255,7 +257,7 @@ class TimerSetting extends StatelessWidget {
       children: [
         Text(
           AppLocalizations.of(context)!.game_duration,
-          style: context.textTheme.titleLarge,
+          style: SettingPage.getSettingHeaderTextStyle(context),
         ),
         TimePicker(
           initialDuration: PersistentSetting.instance.getGameDuration(),
@@ -293,30 +295,34 @@ class _GameTypeSettingState extends State<GameTypeSetting> {
       children: [
         Text(
           AppLocalizations.of(context)!.game_type,
-          style: context.textTheme.titleLarge,
+          style: SettingPage.getSettingHeaderTextStyle(context),
         ),
-        SizedBox(
-          height: 200,
-          child: ListView.separated(
-            shrinkWrap: true,
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (BuildContext context, int index) {
-              final gameType = GameType.values[index];
-              return SettingMultipleChoice(
-                onPressed: () {
-                  onGameTypeSelected(gameType);
-                },
-                selected: chosen == gameType,
-                child: Text(
-                  gameType.toDisplayString(context),
-                  style: TextStyle(
-                    color: context.colorScheme.onSecondaryContainer,
+        ShadedContainer(
+          child: Container(
+            height: space128,
+            padding: const EdgeInsets.all(space32),
+            alignment: Alignment.center,
+            child: ListView.separated(
+              shrinkWrap: true,
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (BuildContext context, int index) {
+                final gameType = GameType.values[index];
+                return SettingMultipleChoice(
+                  onPressed: () {
+                    onGameTypeSelected(gameType);
+                  },
+                  selected: chosen == gameType,
+                  child: Text(
+                    gameType.toDisplayString(context),
+                    style: TextStyle(
+                      color: context.colorScheme.onSecondaryContainer,
+                    ),
                   ),
-                ),
-              );
-            },
-            separatorBuilder: (_, _) => const SizedBox(width: spaceCard),
-            itemCount: GameType.values.length,
+                );
+              },
+              separatorBuilder: (_, _) => const SizedBox(width: spaceCard),
+              itemCount: GameType.values.length,
+            ),
           ),
         ),
       ],
@@ -331,38 +337,47 @@ class LanguageSetting extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentLocale = context.watch<PersistentSetting>().getLanguage();
     return Column(
+      mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
         Text(
           AppLocalizations.of(context)!.language,
-          style: context.textTheme.titleLarge,
+          style: SettingPage.getSettingHeaderTextStyle(context),
         ),
-        SizedBox(
-          height: 200,
-          child: ListView.separated(
-            shrinkWrap: true,
-            scrollDirection: Axis.horizontal,
-            separatorBuilder: (_, _) => const SizedBox(width: spaceCard),
+        ShadedContainer(
+          child: Container(
+            height: space128,
+            padding: const EdgeInsets.all(space32),
+            alignment: Alignment.center,
+            child: Center(
+              child: ListView.separated(
+                shrinkWrap: true,
+                scrollDirection: Axis.horizontal,
+                separatorBuilder: (_, _) => const SizedBox(width: spaceCard),
 
-            itemBuilder: (BuildContext context, int index) {
-              final locale = AppLocalizations.supportedLocales[index];
-              return SettingMultipleChoice(
-                onPressed: () {
-                  PersistentSetting.instance.setLanguage(locale);
-                },
-                selected: currentLocale == locale,
-                child: Localizations.override(
-                  locale: locale,
-                  context: context,
-                  child: Builder(
-                    builder: (context) {
-                      return Text(AppLocalizations.of(context)!.language_name);
+                itemBuilder: (BuildContext context, int index) {
+                  final locale = AppLocalizations.supportedLocales[index];
+                  return SettingMultipleChoice(
+                    onPressed: () {
+                      PersistentSetting.instance.setLanguage(locale);
                     },
-                  ),
-                ),
-              );
-            },
-            itemCount: AppLocalizations.supportedLocales.length,
+                    selected: currentLocale == locale,
+                    child: Localizations.override(
+                      locale: locale,
+                      context: context,
+                      child: Builder(
+                        builder: (context) {
+                          return Text(
+                            AppLocalizations.of(context)!.language_name,
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+                itemCount: AppLocalizations.supportedLocales.length,
+              ),
+            ),
           ),
         ),
       ],
