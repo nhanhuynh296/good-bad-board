@@ -27,6 +27,7 @@ class SignInPage extends StatefulWidget {
 
 class _SignInPageState extends State<SignInPage> {
   int index = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +44,11 @@ class _SignInPageState extends State<SignInPage> {
               flex: context.breakpoint.largerThan('lg') ? 2 : 1,
               child: switch (index) {
                 0 => const PlayerList(),
-                1 => const AddPlayerDialog(),
+                1 => AddPlayerDialog(
+                  onSubmit: (player) => setState(() {
+                    PlayerRepository.instance.add(player);
+                  }),
+                ),
                 _ => const SizedBox.shrink(),
               },
             ),
