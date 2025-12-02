@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
@@ -11,6 +13,7 @@ import 'package:good_bad_board/view/component/container.dart';
 import 'package:good_bad_board/view/landing_page.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
@@ -34,29 +37,43 @@ class SettingPage extends StatelessWidget {
         backgroundColor: context.colorScheme.primary,
         children: const [BackButtonBottomBar()],
       ),
-      body: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: space64, vertical: space32),
-        child: Row(
-          spacing: space32,
-          children: [
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(child: LanguageSetting()),
-                  Flexible(child: GameTypeSetting()),
-                  Flexible(child: TimerSetting()),
-                ],
-              ),
-            ),
-            Expanded(child: CourtSetting()),
-          ],
+      body: StaggeredGridView.count(
+        key: ValueKey(context.breakpoint.breakpoint),
+        padding: const EdgeInsets.symmetric(
+          horizontal: space64,
+          vertical: space64,
         ),
+        scrollDirection: Axis.vertical,
+        crossAxisCount: context.breakpoint.smallerThan('lg') ? 6 : 12,
+        staggeredTiles: const [
+          StaggeredTile.count(6, 2),
+          StaggeredTile.count(6, 6),
+          StaggeredTile.count(6, 2),
+          StaggeredTile.count(6, 2),
+        ],
+        mainAxisSpacing: spaceCard,
+        crossAxisSpacing: spaceCard,
+        children: const [
+          LanguageSetting(),
+          CourtSetting(),
+          GameTypeSetting(),
+          TimerSetting(),
+        ],
       ),
     );
   }
 }
+
+SliverGridDelegate getGridDelegate(BuildContext context, List children) =>
+    SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: min(
+        context.breakpoint.smallerThan('lg') ? 2 : 4,
+        children.length,
+      ),
+      mainAxisExtent: space64,
+      crossAxisSpacing: spaceCard,
+      mainAxisSpacing: spaceCard,
+    );
 
 class SettingMultipleChoice extends StatelessWidget {
   final Widget child;
@@ -255,9 +272,11 @@ class TimerSetting extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
-        Text(
-          AppLocalizations.of(context)!.game_duration,
-          style: SettingPage.getSettingHeaderTextStyle(context),
+        Flexible(
+          child: Text(
+            AppLocalizations.of(context)!.game_duration,
+            style: SettingPage.getSettingHeaderTextStyle(context),
+          ),
         ),
         TimePicker(
           initialDuration: PersistentSetting.instance.getGameDuration(),
@@ -293,36 +312,34 @@ class _GameTypeSettingState extends State<GameTypeSetting> {
       mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
-        Text(
-          AppLocalizations.of(context)!.game_type,
-          style: SettingPage.getSettingHeaderTextStyle(context),
+        Flexible(
+          child: Text(
+            AppLocalizations.of(context)!.game_type,
+            style: SettingPage.getSettingHeaderTextStyle(context),
+          ),
         ),
         ShadedContainer(
-          child: Container(
-            height: space128,
+          child: GridView.builder(
             padding: const EdgeInsets.all(space32),
-            alignment: Alignment.center,
-            child: ListView.separated(
-              shrinkWrap: true,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (BuildContext context, int index) {
-                final gameType = GameType.values[index];
-                return SettingMultipleChoice(
-                  onPressed: () {
-                    onGameTypeSelected(gameType);
-                  },
-                  selected: chosen == gameType,
-                  child: Text(
-                    gameType.toDisplayString(context),
-                    style: TextStyle(
-                      color: context.colorScheme.onSecondaryContainer,
-                    ),
+            shrinkWrap: true,
+            scrollDirection: Axis.vertical,
+            itemBuilder: (BuildContext context, int index) {
+              final gameType = GameType.values[index];
+              return SettingMultipleChoice(
+                onPressed: () {
+                  onGameTypeSelected(gameType);
+                },
+                selected: chosen == gameType,
+                child: Text(
+                  gameType.toDisplayString(context),
+                  style: TextStyle(
+                    color: context.colorScheme.onSecondaryContainer,
                   ),
-                );
-              },
-              separatorBuilder: (_, _) => const SizedBox(width: spaceCard),
-              itemCount: GameType.values.length,
-            ),
+                ),
+              );
+            },
+            itemCount: GameType.values.length,
+            gridDelegate: getGridDelegate(context, GameType.values),
           ),
         ),
       ],
@@ -340,43 +357,39 @@ class LanguageSetting extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       spacing: spaceCard,
       children: [
-        Text(
-          AppLocalizations.of(context)!.language,
-          style: SettingPage.getSettingHeaderTextStyle(context),
+        Flexible(
+          child: Text(
+            AppLocalizations.of(context)!.language,
+            style: SettingPage.getSettingHeaderTextStyle(context),
+          ),
         ),
         ShadedContainer(
-          child: Container(
-            height: space128,
+          child: GridView.builder(
             padding: const EdgeInsets.all(space32),
-            alignment: Alignment.center,
-            child: Center(
-              child: ListView.separated(
-                shrinkWrap: true,
-                scrollDirection: Axis.horizontal,
-                separatorBuilder: (_, _) => const SizedBox(width: spaceCard),
-
-                itemBuilder: (BuildContext context, int index) {
-                  final locale = AppLocalizations.supportedLocales[index];
-                  return SettingMultipleChoice(
-                    onPressed: () {
-                      PersistentSetting.instance.setLanguage(locale);
-                    },
-                    selected: currentLocale == locale,
-                    child: Localizations.override(
-                      locale: locale,
-                      context: context,
-                      child: Builder(
-                        builder: (context) {
-                          return Text(
-                            AppLocalizations.of(context)!.language_name,
-                          );
-                        },
-                      ),
-                    ),
-                  );
+            shrinkWrap: true,
+            scrollDirection: Axis.vertical,
+            itemBuilder: (BuildContext context, int index) {
+              final locale = AppLocalizations.supportedLocales[index];
+              return SettingMultipleChoice(
+                onPressed: () {
+                  PersistentSetting.instance.setLanguage(locale);
                 },
-                itemCount: AppLocalizations.supportedLocales.length,
-              ),
+                selected: currentLocale == locale,
+                child: Localizations.override(
+                  locale: locale,
+                  context: context,
+                  child: Builder(
+                    builder: (context) {
+                      return Text(AppLocalizations.of(context)!.language_name);
+                    },
+                  ),
+                ),
+              );
+            },
+            itemCount: AppLocalizations.supportedLocales.length,
+            gridDelegate: getGridDelegate(
+              context,
+              AppLocalizations.supportedLocales,
             ),
           ),
         ),
