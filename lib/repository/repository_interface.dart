@@ -1,4 +1,6 @@
-abstract class InMemoryRepository<V> {
+import 'package:flutter/foundation.dart';
+
+abstract class InMemoryRepository<V> extends ChangeNotifier {
   Future<void> add(V value);
 
   Future<void> delete(String id);

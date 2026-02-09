@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:good_bad_board/repository/database_helper.dart';
 import 'package:path_provider/path_provider.dart';
 
 class RepositoryService {
@@ -12,5 +13,6 @@ class RepositoryService {
   Future<void> initialize() async {
     rootPath = (await getApplicationDocumentsDirectory()).path;
     log('Application root path: $rootPath');
+    await DatabaseHelper.instance.initialize();
   }
 }

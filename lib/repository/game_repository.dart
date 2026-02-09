@@ -1,12 +1,11 @@
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:good_bad_board/model/game.dart';
+import 'package:good_bad_board/repository/database_helper.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/repository_interface.dart';
-import 'package:good_bad_board/repository/repository_service.dart';
+import 'package:sqflite/sqflite.dart';
 
 part 'game_repository.freezed.dart';
 part 'game_repository.g.dart';
@@ -44,53 +43,78 @@ class GameRepository extends InMemoryRepository<Game> {
 
   static const String databaseFilename = 'games.json';
 
+  late final Database _db;
+
   late final Map<String, Game> _cache;
 
   late final PlayerRepository _playerRepository;
 
   Future<void> initialize() async {
     _playerRepository = PlayerRepository.instance;
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
+    _db = await DatabaseHelper.instance.database;
 
-    if (!await selectedFile.exists()) {
-      _cache = {};
-      return;
-    }
-    final json = await selectedFile.readAsString();
-    final dto = GameDatabase.fromJson(jsonDecode(json));
-    final games = await Future.wait(
-      dto.games.map((gameDto) async {
-        final maybePlayers = await Future.wait(
-          gameDto.playerDto.map(_playerRepository.getPlayerFromDto),
-        );
-        return Game(
-          players: maybePlayers.nonNulls.toList(growable: true),
-          id: gameDto.id,
-          createdDate: gameDto.createdDate,
-        );
-      }),
+    final rows = await _db.query(
+      DatabaseHelper.gamesTable,
+      orderBy: 'createdDate ASC',
     );
+    final games = <Game>[];
+    for (final row in rows) {
+      final gameId = row['id'] as String;
+      final playerRows = await _db.query(
+        DatabaseHelper.gamePlayersTable,
+        columns: ['playerId'],
+        where: 'gameId = ?',
+        whereArgs: [gameId],
+        orderBy: 'playerOrder ASC',
+      );
+      final playerIds = playerRows.map((playerRow) {
+        return playerRow['playerId'] as String;
+      });
+      final maybePlayers = await Future.wait(
+        playerIds.map(_playerRepository.get),
+      );
+      games.add(
+        Game(
+          players: maybePlayers.nonNulls.toList(growable: true),
+          id: gameId,
+          createdDate: DateTime.fromMillisecondsSinceEpoch(
+            row['createdDate'] as int,
+          ),
+        ),
+      );
+    }
 
     _cache = Map.fromEntries(games.map((e) => MapEntry(e.id, e)));
   }
 
   @override
-  Future<void> add(Game game) {
+  Future<void> add(Game game) async {
     _cache[game.id] = game;
-    return save();
+    await _db.transaction((txn) async {
+      await _upsertGame(txn, game);
+    });
+    notifyListeners();
   }
 
   Future<void> addAll(Iterable<Game> games) async {
     _cache.addAll(Map.fromEntries(games.map((e) => MapEntry(e.id, e))));
-    return save();
+    await _db.transaction((txn) async {
+      for (final game in games) {
+        await _upsertGame(txn, game);
+      }
+    });
+    notifyListeners();
   }
 
   @override
-  Future<void> delete(id) async {
+  Future<void> delete(String id) async {
     _cache.remove(id);
-    return save();
+    await _db.delete(
+      DatabaseHelper.gamesTable,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    notifyListeners();
   }
 
   @override
@@ -108,18 +132,47 @@ class GameRepository extends InMemoryRepository<Game> {
   }
 
   @override
-  Future<void> update(String id, Game value) {
+  Future<void> update(String id, Game value) async {
     _cache.update(id, (_) => value);
-    return save();
+    await _db.transaction((txn) async {
+      await _upsertGame(txn, value);
+    });
+    notifyListeners();
   }
 
   Future<void> save() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
+    await _db.transaction((txn) async {
+      await txn.delete(DatabaseHelper.gamePlayersTable);
+      await txn.delete(DatabaseHelper.gamesTable);
+      for (final game in _cache.values) {
+        await _upsertGame(txn, game);
+      }
+    });
+    log('${runtimeType.toString()} saved to sqlite');
+  }
+
+  Map<String, Object?> _gameToRow(Game game) => {
+    'id': game.id,
+    'createdDate': game.createdDate.millisecondsSinceEpoch,
+  };
+
+  Future<void> _upsertGame(DatabaseExecutor txn, Game game) async {
+    await txn.insert(
+      DatabaseHelper.gamesTable,
+      _gameToRow(game),
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    await selectedFile.create(recursive: true);
-    final dto = GameDatabase(_cache.values.map(GameDto.fromGame));
-    await selectedFile.writeAsString(jsonEncode(dto.toJson()));
-    log('${runtimeType.toString()} saved at $selectedFile');
+    await txn.delete(
+      DatabaseHelper.gamePlayersTable,
+      where: 'gameId = ?',
+      whereArgs: [game.id],
+    );
+    for (var i = 0; i < game.players.length; i++) {
+      await txn.insert(
+        DatabaseHelper.gamePlayersTable,
+        {'gameId': game.id, 'playerId': game.players[i].id, 'playerOrder': i},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
   }
 }

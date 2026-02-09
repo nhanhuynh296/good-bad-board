@@ -26,14 +26,19 @@ class _AppLoaderState extends State<AppLoader> {
   late final Future completer;
 
   Future<void> loading() async {
-    await Future.wait([
-      RepositoryService.instance.initialize(),
-      PersistentSetting.instance.initialize(),
-    ]);
+    try {
+      await Future.wait([
+        RepositoryService.instance.initialize(),
+        PersistentSetting.instance.initialize(),
+      ]);
 
-    await PlayerRepository.instance.initialize();
-    // Depends on PlayerRepository to initialize first
-    await GameRepository.instance.initialize();
+      await PlayerRepository.instance.initialize();
+      // Depends on PlayerRepository to initialize first
+      await GameRepository.instance.initialize();
+    } catch (e) {
+      debugPrint('Error during initialization: $e');
+      rethrow;
+    }
   }
 
   @override

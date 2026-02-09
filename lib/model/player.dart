@@ -1,7 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:good_bad_board/repository/database_helper.dart';
 import 'package:uuid/uuid.dart';
 
 part 'player.freezed.dart';
+
 part 'player.g.dart';
 
 enum Elo {
@@ -46,7 +48,29 @@ abstract class Player with _$Player {
 
   factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
 
+  Map<String, dynamic> toJson() => _$PlayerToJson(this as _Player);
+
+  factory Player.fromSqliteRow(Map<String, Object?> row) {
+    final createdDate = row['createdDate'] as int?;
+    return Player(
+      firstName: row['firstName'] as String,
+      lastName: row['lastName'] as String,
+      elo: Elo.values[row['elo'] as int],
+      id: row['id'] as String,
+      signInId: row['signInId'] as String?,
+      createdDate: createdDate == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(createdDate),
+    );
+  }
+
   static String jsonReferencedPlayer(Player player) => player.id;
+
+  Map<String, Object?> toSqliteRow() {
+    final json = _$PlayerToJson(this as _Player);
+    json['createdDate'] = DatabaseHelper.sqlLiteDateTimeSerializer(createdDate);
+    return json;
+  }
 
   String toDisplayString() =>
       '$firstName $lastName (${elo.name.toUpperCase()})';
