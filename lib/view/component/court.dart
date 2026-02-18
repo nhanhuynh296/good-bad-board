@@ -40,7 +40,10 @@ class CourtComponent extends StatelessWidget {
 
         return Stack(
           children: [
-            Image.asset(PersistentSetting.instance.getBackground()),
+            Image.asset(
+              PersistentSetting.instance.getBackground(),
+              semanticLabel: 'court background',
+            ),
             if (isInvalidDragHovering) const InvalidDropTargetOverlay(),
 
             Positioned.fill(

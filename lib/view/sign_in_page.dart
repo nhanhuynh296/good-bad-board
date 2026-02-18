@@ -103,7 +103,7 @@ class _SignInPageState extends State<SignInPage> {
                             ),
                           );
                       if (confirmedSelection != true) return;
-
+                      if (!context.mounted) return;
                       setState(() {
                         PlayerRepository.instance.addAll(uniqueParsedPlayers);
                       });

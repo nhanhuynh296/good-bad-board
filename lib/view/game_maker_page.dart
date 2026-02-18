@@ -255,6 +255,7 @@ class _GameMakerPageState extends State<GameMakerPage>
                         }
                         try {
                           await context.read<GameData>().makeGame();
+                          if (!context.mounted) return;
                           setState(() {
                             tabIndex = allGames.length - 1;
                           });
@@ -335,6 +336,7 @@ class _GameMakerPageState extends State<GameMakerPage>
                                 duration: Durations.short3,
                               ),
                             ]);
+                            if (!context.mounted) return;
                             // The allGames.length is not updated for some reason, just use
                             setState(() {
                               tabIndex = allGames.length;

@@ -107,7 +107,6 @@ class DraggablePlayerComponent extends _PlayerComponent {
         final bool isInvalidDragHovering = rejectedItems.isNotEmpty;
         return Draggable<Player>(
           data: data,
-          // delay: Durations.short1,
           dragAnchorStrategy: pointerDragAnchorStrategy,
           feedback: _DraggingPlayerComponent(data: data),
           child: Transform.scale(
@@ -115,7 +114,7 @@ class DraggablePlayerComponent extends _PlayerComponent {
             child: Badge(
               label: Text(matchPlayed.toStringAsFixed(0)),
               backgroundColor:
-                  matchGapColor[maxMatchPlayed - matchPlayed] ??
+                  matchGapColor[(maxMatchPlayed - matchPlayed).round()] ??
                   matchGapColor[matchGapColor.keys.max],
               child: ClickablePlayerComponent(
                 inMatch: true,

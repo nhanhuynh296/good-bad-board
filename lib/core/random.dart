@@ -16,12 +16,12 @@ extension Picker<E> on List<E> {
       );
     }
 
-    final availableWeights = List<double>.from(weights);
+    final availableWeights = List<double>.of(weights);
 
     final random = Random();
     final pickedElements = <E>[];
 
-    final availableElements = List<E>.from(this);
+    final availableElements = List<E>.of(this);
     for (var i = 0; i < count; i++) {
       final normalizedWeights = availableWeights
           .map((weight) => weight / availableWeights.sum)

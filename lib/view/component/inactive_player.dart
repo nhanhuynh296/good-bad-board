@@ -150,7 +150,7 @@ class StagingGameComponent extends StatelessWidget {
     BoxConstraints constraints,
     double gutter,
     EdgeInsets padding,
-    itemCount,
+    int itemCount,
   ) {
     final constraintMaxWidth = constraints.maxWidth - padding.horizontal;
     final constrainMaxHeight = constraints.maxHeight - padding.vertical;

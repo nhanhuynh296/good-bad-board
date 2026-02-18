@@ -53,7 +53,7 @@ class _AppLoaderState extends State<AppLoader> {
       child: FutureBuilder(
         future: completer,
         builder: (context, snapshot) {
-          if (snapshot.hasError) debugPrint(snapshot.error.toString());
+          if (snapshot.hasError) debugPrint(snapshot.error!.toString());
           if (snapshot.connectionState == ConnectionState.done) {
             return const MyApp();
           }

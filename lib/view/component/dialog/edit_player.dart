@@ -267,7 +267,6 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
       content: Container(
         padding: const EdgeInsets.all(0),
 
-        // width: 450,
         child: IntrinsicWidth(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -319,12 +318,12 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
                           style: TextStyle(fontStyle: FontStyle.italic),
                         ),
                       ),
-                      // DataColumn(
-                      //   label: Text(
-                      //     'Sign in ID',
-                      //     style: TextStyle(fontStyle: FontStyle.italic),
-                      //   ),
-                      // ),
+                      DataColumn(
+                        label: Text(
+                          'Sign in ID',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                      ),
                     ],
                     rows: widget.players
                         .mapIndexed(
