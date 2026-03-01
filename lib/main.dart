@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/repository/game_repository.dart';
+import 'package:good_bad_board/repository/json_game_data_source.dart';
+import 'package:good_bad_board/repository/json_player_data_source.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/repository_service.dart';
 import 'package:good_bad_board/routes.dart';
@@ -31,9 +33,20 @@ class _AppLoaderState extends State<AppLoader> {
       PersistentSetting.instance.initialize(),
     ]);
 
-    await PlayerRepository.instance.initialize();
+    final rootPath = RepositoryService.instance.rootPath;
+
+    await PlayerRepository.instance.initialize(
+      JsonPlayerDataSource(
+        filePath: '$rootPath/${PlayerRepository.databaseFilename}',
+      ),
+    );
     // Depends on PlayerRepository to initialize first
-    await GameRepository.instance.initialize();
+    await GameRepository.instance.initialize(
+      JsonGameDataSource(
+        filePath: '$rootPath/${GameRepository.databaseFilename}',
+        playerRepository: PlayerRepository.instance,
+      ),
+    );
   }
 
   @override

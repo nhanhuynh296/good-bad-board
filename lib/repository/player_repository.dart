@@ -1,11 +1,7 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
-
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/repository/data_source.dart';
 import 'package:good_bad_board/repository/repository_interface.dart';
-import 'package:good_bad_board/repository/repository_service.dart';
 
 part 'player_repository.freezed.dart';
 part 'player_repository.g.dart';
@@ -38,18 +34,13 @@ class PlayerRepository extends InMemoryRepository<Player> {
 
   late final Map<String, Player> _cache;
 
-  Future<void> initialize() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
-    if (!await selectedFile.exists()) {
-      _cache = {};
-      return;
-    }
-    final json = await selectedFile.readAsString();
-    final dto = PlayerDatabase.fromJson(jsonDecode(json));
+  late final DataSource<Player> _dataSource;
+
+  Future<void> initialize(DataSource<Player> dataSource) async {
+    _dataSource = dataSource;
+    final players = await _dataSource.loadAll();
     _cache = Map.fromEntries(
-      dto.players.map((player) => MapEntry(player.id, player)),
+      players.map((player) => MapEntry(player.id, player)),
     );
   }
 
@@ -99,13 +90,6 @@ class PlayerRepository extends InMemoryRepository<Player> {
   }
 
   Future<void> save() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
-
-    await selectedFile.create(recursive: true);
-    final dto = PlayerDatabase(_cache.values);
-    await selectedFile.writeAsString(jsonEncode(dto.toJson()));
-    log('${runtimeType.toString()} saved at $selectedFile');
+    await _dataSource.saveAll(_cache.values);
   }
 }

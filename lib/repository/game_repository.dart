@@ -1,12 +1,8 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
-
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:good_bad_board/model/game.dart';
+import 'package:good_bad_board/repository/data_source.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/repository_interface.dart';
-import 'package:good_bad_board/repository/repository_service.dart';
 
 part 'game_repository.freezed.dart';
 part 'game_repository.g.dart';
@@ -46,33 +42,11 @@ class GameRepository extends InMemoryRepository<Game> {
 
   late final Map<String, Game> _cache;
 
-  late final PlayerRepository _playerRepository;
+  late final DataSource<Game> _dataSource;
 
-  Future<void> initialize() async {
-    _playerRepository = PlayerRepository.instance;
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
-
-    if (!await selectedFile.exists()) {
-      _cache = {};
-      return;
-    }
-    final json = await selectedFile.readAsString();
-    final dto = GameDatabase.fromJson(jsonDecode(json));
-    final games = await Future.wait(
-      dto.games.map((gameDto) async {
-        final maybePlayers = await Future.wait(
-          gameDto.playerDto.map(_playerRepository.getPlayerFromDto),
-        );
-        return Game(
-          players: maybePlayers.nonNulls.toList(growable: true),
-          id: gameDto.id,
-          createdDate: gameDto.createdDate,
-        );
-      }),
-    );
-
+  Future<void> initialize(DataSource<Game> dataSource) async {
+    _dataSource = dataSource;
+    final games = await _dataSource.loadAll();
     _cache = Map.fromEntries(games.map((e) => MapEntry(e.id, e)));
   }
 
@@ -114,12 +88,6 @@ class GameRepository extends InMemoryRepository<Game> {
   }
 
   Future<void> save() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
-    await selectedFile.create(recursive: true);
-    final dto = GameDatabase(_cache.values.map(GameDto.fromGame));
-    await selectedFile.writeAsString(jsonEncode(dto.toJson()));
-    log('${runtimeType.toString()} saved at $selectedFile');
+    await _dataSource.saveAll(_cache.values);
   }
 }
