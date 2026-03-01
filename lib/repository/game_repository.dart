@@ -40,9 +40,9 @@ class GameRepository extends InMemoryRepository<Game> {
 
   static const String databaseFilename = 'games.json';
 
-  late final Map<String, Game> _cache;
+  late Map<String, Game> _cache;
 
-  late final DataSource<Game> _dataSource;
+  late DataSource<Game> _dataSource;
 
   Future<void> initialize(DataSource<Game> dataSource) async {
     _dataSource = dataSource;

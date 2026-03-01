@@ -32,9 +32,9 @@ class PlayerRepository extends InMemoryRepository<Player> {
 
   static const String databaseFilename = 'players.json';
 
-  late final Map<String, Player> _cache;
+  late Map<String, Player> _cache;
 
-  late final DataSource<Player> _dataSource;
+  late DataSource<Player> _dataSource;
 
   Future<void> initialize(DataSource<Player> dataSource) async {
     _dataSource = dataSource;
