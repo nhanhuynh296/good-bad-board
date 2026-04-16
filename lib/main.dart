@@ -27,9 +27,12 @@ class _AppLoaderState extends State<AppLoader> {
   late final Future completer;
 
   Future<void> loading() async {
+    // PersistentSetting first: sharedPreference must be set before any widget
+    // reads it — including MyApp, which is rendered on FutureBuilder completion.
+    await PersistentSetting.instance.initialize();
+
     // RepositoryService opens the SQLite DB (includes sqfliteFfiInit for Windows)
     await RepositoryService.instance.initialize();
-    await PersistentSetting.instance.initialize();
 
     // One-time silent migration: JSON → SQLite (idempotent; throws on failure)
     await MigrationRunner.run(
@@ -59,7 +62,12 @@ class _AppLoaderState extends State<AppLoader> {
       child: FutureBuilder(
         future: completer,
         builder: (context, snapshot) {
-          if (snapshot.hasError) debugPrint(snapshot.error!.toString());
+          if (snapshot.hasError) {
+            debugPrint(snapshot.error!.toString());
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
           if (snapshot.connectionState == ConnectionState.done) {
             return const MyApp();
           }
