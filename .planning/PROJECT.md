@@ -56,6 +56,17 @@ The committee can run a session end-to-end — sign in players, generate balance
 - **Authentication / multi-user roles** — single shared device model; no login required
 - **Undo for player deletion** — not mentioned; standard delete pattern sufficient for now
 
+## Current Milestone: v2.0 Click-to-Move
+
+**Goal:** Add tap-to-select/tap-to-place player movement as an alternative to drag-and-drop on the game maker screen.
+
+**Target features:**
+- Tap a player (on court or inactive list) to select/highlight them
+- Tap a court background to move the selected player into that court
+- Tap another player to swap the selected player with them
+- Tap the same player or a non-target area to deselect
+- Coexists with existing drag-and-drop behavior
+
 ## Context
 
 - **Existing stack**: Flutter + Provider (`ChangeNotifier`) + `go_router`; models use `freezed` + `json_serializable`; storage is singleton repositories backed by JSON files in app documents directory
@@ -81,6 +92,8 @@ The committee can run a session end-to-end — sign in players, generate balance
 | Avatar = initials default, optional photo upload | Zero-friction baseline; photo upload for clubs that want richer profiles | — Pending |
 | Paying tracker covers both session fees and membership status | Both are committee concerns; combining avoids two separate UIs | — Pending |
 
+| Click-to-move coexists with drag-and-drop | Both input methods serve different user preferences; drag for desktop, tap for touch | — v2.0 |
+
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
@@ -99,4 +112,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after initialization*
+*Last updated: 2026-04-16 after milestone v2.0 start*
