@@ -29,10 +29,10 @@ _None deferred for this milestone._
 
 | REQ-ID | Phase | Plan | Status |
 |--------|-------|------|--------|
-| SEL-01 | — | — | Pending |
-| SEL-02 | — | — | Pending |
-| SEL-03 | — | — | Pending |
-| SEL-04 | — | — | Pending |
-| MOV-01 | — | — | Pending |
-| MOV-02 | — | — | Pending |
-| COE-01 | — | — | Pending |
+| SEL-01 | Phase 2 | — | Pending |
+| SEL-02 | Phase 2 | — | Pending |
+| SEL-03 | Phase 2 | — | Pending |
+| SEL-04 | Phase 2 | — | Pending |
+| MOV-01 | Phase 3 | — | Pending |
+| MOV-02 | Phase 3 | — | Pending |
+| COE-01 | Phase 3 | — | Pending |
