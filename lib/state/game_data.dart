@@ -279,18 +279,24 @@ class GameData extends ChangeNotifier {
       final court = games[courtIdx];
       if (court.players.length != optimizedCourtElos.length) continue;
       // Sort players to match the optimized elo order returned by the isolate.
+      // When two players share the same ELO rank, stabilize by original index.
       // Game.players is an EqualUnmodifiableListView (freezed), so we replace
       // the game object rather than mutating the list in place.
-      final sorted = List<Player>.from(court.players)
-        ..sort(
-          (a, b) => optimizedCourtElos
-              .indexOf(a.elo.index)
-              .compareTo(optimizedCourtElos.indexOf(b.elo.index)),
-        );
+      final indexed = court.players
+          .asMap()
+          .entries
+          .map((e) => (orig: e.key, player: e.value))
+          .toList();
+      indexed.sort((a, b) {
+        final posA = optimizedCourtElos.indexOf(a.player.elo.index);
+        final posB = optimizedCourtElos.indexOf(b.player.elo.index);
+        if (posA != posB) return posA.compareTo(posB);
+        return a.orig.compareTo(b.orig);
+      });
       games[courtIdx] = Game(
         id: court.id,
         createdDate: court.createdDate,
-        players: sorted,
+        players: indexed.map((e) => e.player).toList(),
       );
     }
   }
