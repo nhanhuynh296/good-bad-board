@@ -32,6 +32,9 @@ class RepositoryService {
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 1) await _migrateV1(db);
       },
+      onOpen: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
     );
     log('SQLite database opened at ${p.join(rootPath, 'good_bad_board.db')}');
   }
