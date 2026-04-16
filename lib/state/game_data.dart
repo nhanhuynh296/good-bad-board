@@ -67,7 +67,7 @@ class GameData extends ChangeNotifier {
     final oldPlayer = await PlayerRepository.instance.get(newPlayer.id);
     if (oldPlayer == null) return;
 
-    PlayerRepository.instance.update(newPlayer.id, newPlayer);
+    await PlayerRepository.instance.update(newPlayer.id, newPlayer);
 
     if (_players.containsKey(oldPlayer.id)) {
       _players.update(oldPlayer.id, (_) => newPlayer);
