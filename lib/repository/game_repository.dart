@@ -142,6 +142,6 @@ class GameRepository extends InMemoryRepository<Game> {
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
-    _cache.update(id, (_) => value);
+    _cache[id] = value;
   }
 }

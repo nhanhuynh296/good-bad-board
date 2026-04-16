@@ -108,7 +108,7 @@ class PlayerRepository extends InMemoryRepository<Player> {
       where: 'id = ?',
       whereArgs: [id],
     );
-    _cache.update(id, (_) => value);
+    _cache[id] = value;
   }
 
   Map<String, dynamic> _playerToMap(Player p) => {
