@@ -65,7 +65,7 @@ class _AppLoaderState extends State<AppLoader> {
           if (snapshot.hasError) {
             debugPrint(snapshot.error!.toString());
             return const Center(
-              child: CircularProgressIndicator(),
+              child: Text('Startup error — please restart the app.'),
             );
           }
           if (snapshot.connectionState == ConnectionState.done) {
