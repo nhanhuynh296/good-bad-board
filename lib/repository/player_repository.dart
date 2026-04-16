@@ -1,11 +1,10 @@
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/repository/repository_interface.dart';
 import 'package:good_bad_board/repository/repository_service.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 part 'player_repository.freezed.dart';
 part 'player_repository.g.dart';
@@ -34,23 +33,15 @@ class PlayerRepository extends InMemoryRepository<Player> {
 
   static final PlayerRepository instance = PlayerRepository._();
 
-  static const String databaseFilename = 'players.json';
-
-  late final Map<String, Player> _cache;
+  late Map<String, Player> _cache;
 
   Future<void> initialize() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
-    if (!await selectedFile.exists()) {
-      _cache = {};
-      return;
-    }
-    final json = await selectedFile.readAsString();
-    final dto = PlayerDatabase.fromJson(jsonDecode(json));
+    final db = RepositoryService.instance.db;
+    final rows = await db.query('players');
     _cache = Map.fromEntries(
-      dto.players.map((player) => MapEntry(player.id, player)),
+      rows.map((row) => MapEntry(row['id'] as String, _mapToPlayer(row))),
     );
+    log('PlayerRepository loaded ${_cache.length} players from SQLite');
   }
 
   Iterable<Player> getAllCachedPlayers() {
@@ -58,20 +49,37 @@ class PlayerRepository extends InMemoryRepository<Player> {
   }
 
   @override
-  Future<void> add(Player player) {
+  Future<void> add(Player player) async {
+    await RepositoryService.instance.db.insert(
+      'players',
+      _playerToMap(player),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
     _cache[player.id] = player;
-    return save();
   }
 
   Future<void> addAll(Iterable<Player> players) async {
+    final db = RepositoryService.instance.db;
+    await db.transaction((txn) async {
+      for (final player in players) {
+        await txn.insert(
+          'players',
+          _playerToMap(player),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
     _cache.addAll(Map.fromEntries(players.map((e) => MapEntry(e.id, e))));
-    return save();
   }
 
   @override
   Future<void> delete(String id) async {
+    await RepositoryService.instance.db.delete(
+      'players',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     _cache.remove(id);
-    return save();
   }
 
   @override
@@ -93,19 +101,33 @@ class PlayerRepository extends InMemoryRepository<Player> {
   }
 
   @override
-  Future<void> update(String id, Player value) {
-    _cache.update(id, (_) => value);
-    return save();
-  }
-
-  Future<void> save() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
+  Future<void> update(String id, Player value) async {
+    await RepositoryService.instance.db.update(
+      'players',
+      _playerToMap(value),
+      where: 'id = ?',
+      whereArgs: [id],
     );
-
-    await selectedFile.create(recursive: true);
-    final dto = PlayerDatabase(_cache.values);
-    await selectedFile.writeAsString(jsonEncode(dto.toJson()));
-    log('${runtimeType.toString()} saved at $selectedFile');
+    _cache.update(id, (_) => value);
   }
+
+  Map<String, dynamic> _playerToMap(Player p) => {
+    'id': p.id,
+    'first_name': p.firstName,
+    'last_name': p.lastName,
+    'elo': p.elo.name,
+    'sign_in_id': p.signInId,
+    'created_date': p.createdDate?.toIso8601String(),
+  };
+
+  Player _mapToPlayer(Map<String, dynamic> row) => Player(
+    id: row['id'] as String,
+    firstName: row['first_name'] as String,
+    lastName: row['last_name'] as String,
+    elo: Elo.values.firstWhere((e) => e.name == row['elo']),
+    signInId: row['sign_in_id'] as String?,
+    createdDate: row['created_date'] != null
+        ? DateTime.parse(row['created_date'] as String)
+        : null,
+  );
 }
