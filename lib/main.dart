@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/repository/game_repository.dart';
+import 'package:good_bad_board/repository/migration_runner.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/repository_service.dart';
 import 'package:good_bad_board/routes.dart';
@@ -26,13 +27,18 @@ class _AppLoaderState extends State<AppLoader> {
   late final Future completer;
 
   Future<void> loading() async {
-    await Future.wait([
-      RepositoryService.instance.initialize(),
-      PersistentSetting.instance.initialize(),
-    ]);
+    // RepositoryService opens the SQLite DB (includes sqfliteFfiInit for Windows)
+    await RepositoryService.instance.initialize();
+    await PersistentSetting.instance.initialize();
 
+    // One-time silent migration: JSON → SQLite (idempotent; throws on failure)
+    await MigrationRunner.run(
+      RepositoryService.instance.rootPath,
+      RepositoryService.instance.db,
+    );
+
+    // Sequential: GameRepository depends on PlayerRepository cache being populated
     await PlayerRepository.instance.initialize();
-    // Depends on PlayerRepository to initialize first
     await GameRepository.instance.initialize();
   }
 
