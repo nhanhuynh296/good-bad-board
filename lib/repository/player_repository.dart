@@ -126,9 +126,8 @@ class PlayerRepository extends InMemoryRepository<Player> {
     lastName: row['last_name'] as String,
     elo: Elo.values.firstWhere((e) => e.name == row['elo']),
     signInId: row['sign_in_id'] as String?,
-    createdDate:
-        row['created_date'] != null
-            ? DateTime.parse(row['created_date'] as String)
-            : null,
+    createdDate: row['created_date'] != null
+        ? DateTime.parse(row['created_date'] as String)
+        : null,
   );
 }
