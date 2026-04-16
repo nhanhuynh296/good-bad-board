@@ -168,3 +168,17 @@ No new network endpoints, auth paths, or file access patterns beyond what the pl
 ---
 *Phase: 01-infrastructure*
 *Completed: 2026-04-16*
+
+## Self-Check: PASSED
+
+- FOUND: repository_service.dart
+- FOUND: sqflite_test_helper.dart
+- FOUND: schema_test.dart
+- FOUND: player_repository_test.dart
+- FOUND: game_repository_test.dart
+- FOUND: migration_runner_test.dart
+- FOUND: game_data_isolate_test.dart
+- FOUND: 01-01-SUMMARY.md
+- FOUND commit: a98e35a
+- FOUND commit: 32406ef
+- FOUND commit: 1f792d6
