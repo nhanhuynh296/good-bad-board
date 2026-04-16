@@ -1,12 +1,11 @@
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/repository_interface.dart';
 import 'package:good_bad_board/repository/repository_service.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 part 'game_repository.freezed.dart';
 part 'game_repository.g.dart';
@@ -42,55 +41,72 @@ class GameRepository extends InMemoryRepository<Game> {
 
   static final GameRepository instance = GameRepository._();
 
-  static const String databaseFilename = 'games.json';
+  late Map<String, Game> _cache;
 
-  late final Map<String, Game> _cache;
-
-  late final PlayerRepository _playerRepository;
+  late PlayerRepository _playerRepository;
 
   Future<void> initialize() async {
     _playerRepository = PlayerRepository.instance;
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
+    final db = RepositoryService.instance.db;
 
-    if (!await selectedFile.exists()) {
-      _cache = {};
-      return;
-    }
-    final json = await selectedFile.readAsString();
-    final dto = GameDatabase.fromJson(jsonDecode(json));
+    final gameRows = await db.query('games');
     final games = await Future.wait(
-      dto.games.map((gameDto) async {
+      gameRows.map((row) async {
+        final playerRows = await db.query(
+          'game_players',
+          where: 'game_id = ?',
+          whereArgs: [row['id']],
+          orderBy: 'position ASC',
+        );
         final maybePlayers = await Future.wait(
-          gameDto.playerDto.map(_playerRepository.getPlayerFromDto),
+          playerRows.map(
+            (pr) => _playerRepository.get(pr['player_id'] as String),
+          ),
         );
         return Game(
           players: maybePlayers.nonNulls.toList(growable: true),
-          id: gameDto.id,
-          createdDate: gameDto.createdDate,
+          id: row['id'] as String,
+          createdDate: DateTime.parse(row['created_date'] as String),
         );
       }),
     );
-
-    _cache = Map.fromEntries(games.map((e) => MapEntry(e.id, e)));
+    _cache = Map.fromEntries(games.map((g) => MapEntry(g.id, g)));
+    log('GameRepository loaded ${_cache.length} games from SQLite');
   }
 
   @override
-  Future<void> add(Game game) {
+  Future<void> add(Game game) async {
+    final db = RepositoryService.instance.db;
+    await db.transaction((txn) async {
+      await txn.insert('games', {
+        'id': game.id,
+        'created_date': game.createdDate.toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      for (int i = 0; i < game.players.length; i++) {
+        await txn.insert('game_players', {
+          'game_id': game.id,
+          'player_id': game.players[i].id,
+          'position': i,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
     _cache[game.id] = game;
-    return save();
   }
 
   Future<void> addAll(Iterable<Game> games) async {
-    _cache.addAll(Map.fromEntries(games.map((e) => MapEntry(e.id, e))));
-    return save();
+    for (final game in games) {
+      await add(game);
+    }
   }
 
   @override
-  Future<void> delete(id) async {
+  Future<void> delete(String id) async {
+    final db = RepositoryService.instance.db;
+    await db.transaction((txn) async {
+      await txn.delete('game_players', where: 'game_id = ?', whereArgs: [id]);
+      await txn.delete('games', where: 'id = ?', whereArgs: [id]);
+    });
     _cache.remove(id);
-    return save();
   }
 
   @override
@@ -108,18 +124,24 @@ class GameRepository extends InMemoryRepository<Game> {
   }
 
   @override
-  Future<void> update(String id, Game value) {
+  Future<void> update(String id, Game value) async {
+    final db = RepositoryService.instance.db;
+    await db.transaction((txn) async {
+      await txn.update(
+        'games',
+        {'created_date': value.createdDate.toIso8601String()},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      await txn.delete('game_players', where: 'game_id = ?', whereArgs: [id]);
+      for (int i = 0; i < value.players.length; i++) {
+        await txn.insert('game_players', {
+          'game_id': id,
+          'player_id': value.players[i].id,
+          'position': i,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
     _cache.update(id, (_) => value);
-    return save();
-  }
-
-  Future<void> save() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
-    await selectedFile.create(recursive: true);
-    final dto = GameDatabase(_cache.values.map(GameDto.fromGame));
-    await selectedFile.writeAsString(jsonEncode(dto.toJson()));
-    log('${runtimeType.toString()} saved at $selectedFile');
   }
 }

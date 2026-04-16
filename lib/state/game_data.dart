@@ -5,7 +5,6 @@ import 'dart:math' hide log;
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/core/random.dart';
 import 'package:good_bad_board/model/game.dart';
@@ -14,10 +13,14 @@ import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:trotter/trotter.dart';
 
 typedef GameContainer = List<Game>;
 typedef PlayerContainer = List<Player>;
+
+// Plain-data payload for isolate — all fields are sendable across isolate boundary
+typedef _EloPayload = ({List<List<int>> courtElos, int maxIteration});
+typedef _EloResult =
+    List<List<int>>; // Optimized ELO index assignments per court
 
 const int maxIteration = 1000;
 
@@ -121,7 +124,15 @@ class GameData extends ChangeNotifier {
         .map((players) => Game.create(players.toList()))
         .toList();
     assert(stagingMatches.isNotEmpty);
-    _improveEloSpread(stagingMatches);
+    // Extract ELO indices for isolate (plain ints — fully sendable)
+    final courtElos = stagingMatches
+        .map((g) => g.players.map((p) => p.elo.index).toList())
+        .toList();
+    final optimizedElos = await compute(_improveEloSpreadIsolate, (
+      courtElos: courtElos,
+      maxIteration: maxIteration,
+    ));
+    _applyOptimizedOrder(stagingMatches, optimizedElos);
 
     debugPrint(
       'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
@@ -255,83 +266,29 @@ class GameData extends ChangeNotifier {
     return games.map((match) => match.eloGap());
   }
 
-  /// A greedy solution that will ended up with a local minimum. Swap 2 players at a time
-  static void _improveEloSpread(GameContainer games, {int targetSpread = 0}) {
-    Iterable<num> costFunctionInfo() => GameData.eloSpread(games);
-    num costFunction() =>
-        costFunctionInfo().average * 0.1 + costFunctionInfo().max;
-
-    if (games.length < 2) {
-      log('Only 1 court, no optimization needed');
-      return;
-    }
-    // If the current spread is too high, try to swap players with other groups
-    num currentSpread = costFunction();
-    printGames(games);
-    log('current spread ${costFunctionInfo()} => $currentSpread');
-    if (currentSpread < targetSpread) {
-      log('Current spread is already satisfied');
-      return;
-    }
-    final stopwatch = Stopwatch()..start();
-
-    bool changed = true;
-    int iteration = 0;
-    while (iteration < maxIteration && changed) {
-      iteration++;
-      changed = false;
-      log("iteration $iteration");
-      // =======================================================================
-      for (var [match1Index, match2Index] in Combinations(
-        2,
-        List.generate(games.length, (k) => k),
-      )()) {
-        for (var [p1, p2] in Amalgams(
-          2,
-          List.generate(Game.playerPerCourt, (k) => k),
-        )()) {
-          final match1 = games[match1Index];
-          final match2 = games[match2Index];
-          var temp = match1.players[p1];
-          match1.players[p1] = match2.players[p2];
-          match2.players[p2] = temp;
-
-          log('${match1.players[p1].name()} <-> ${match2.players[p2].name()}');
-          final newSpread = costFunction();
-          log(
-            '\tnew spread ${costFunctionInfo()} => ${newSpread.toStringAsFixed(2)}..current $currentSpread',
-          );
-
-          if (newSpread >= currentSpread) {
-            log('\tnah, swap back');
-            temp = match1.players[p1];
-            match1.players[p1] = match2.players[p2];
-            match2.players[p2] = temp;
-          }
-
-          if (newSpread < targetSpread) {
-            log('new spread satisfied, ending');
-            //  just enough spread
-            break;
-          }
-          if (newSpread < currentSpread) {
-            currentSpread = newSpread;
-            log('\tgood swap, next');
-            printGames(games);
-            changed = true;
-            break;
-          }
-        }
+  /// Applies the optimized ELO index order from the isolate back to stagingMatches.
+  /// The isolate returns reordered elo indices per court; we re-sort each court's
+  /// players to match the optimized elo assignment.
+  void _applyOptimizedOrder(GameContainer games, _EloResult optimizedElos) {
+    for (
+      int courtIdx = 0;
+      courtIdx < games.length && courtIdx < optimizedElos.length;
+      courtIdx++
+    ) {
+      final optimizedCourtElos = optimizedElos[courtIdx];
+      final court = games[courtIdx];
+      if (court.players.length != optimizedCourtElos.length) continue;
+      // Sort players to match the optimized elo order returned by the isolate
+      final sorted = List<Player>.from(court.players)
+        ..sort(
+          (a, b) => optimizedCourtElos
+              .indexOf(a.elo.index)
+              .compareTo(optimizedCourtElos.indexOf(b.elo.index)),
+        );
+      for (int i = 0; i < court.players.length; i++) {
+        court.players[i] = sorted[i];
       }
     }
-    // =======================================================================
-    stopwatch.stop();
-    final timeElapsed = stopwatch.elapsed;
-    log(
-      "OPTIMIZATION DONE, $iteration pass, total ${timeElapsed.inMilliseconds} ms",
-    );
-    printGames(games);
-    return;
   }
 
   Game? gameContainingPlayer(Player player) {
@@ -413,4 +370,72 @@ Iterable<(T, U)> product<T, U>(Iterable<T> a, Iterable<U> b) sync* {
       yield (x, y);
     }
   }
+}
+
+/// Top-level ELO optimizer for compute() — must be top-level for isolate serialization.
+/// Operates only on plain int data (elo indices). No Player/Game objects cross the boundary.
+///
+/// Input:  payload.courtElos[courtIndex][playerIndex] = Elo.index (0–7)
+/// Output: reordered courtElos after greedy swap optimization
+_EloResult _improveEloSpreadIsolate(_EloPayload payload) {
+  final courts = payload.courtElos.map((c) => List<int>.from(c)).toList();
+  final int numCourts = courts.length;
+  if (numCourts < 2) return courts; // Nothing to optimize
+
+  // Cost function: average elo gap * 0.1 + max elo gap
+  // elo gap per court = max(elos) - min(elos)
+  int eloGap(List<int> court) {
+    if (court.isEmpty) return 0;
+    return court.reduce((a, b) => a > b ? a : b) -
+        court.reduce((a, b) => a < b ? a : b);
+  }
+
+  double costFunction(List<List<int>> c) {
+    final gaps = c.map(eloGap).toList();
+    final avg = gaps.reduce((a, b) => a + b) / gaps.length;
+    final max = gaps.reduce((a, b) => a > b ? a : b);
+    return avg * 0.1 + max;
+  }
+
+  double currentCost = costFunction(courts);
+
+  bool changed = true;
+  int iteration = 0;
+  while (iteration < payload.maxIteration && changed) {
+    iteration++;
+    changed = false;
+
+    // Iterate all pairs of courts
+    for (int ci = 0; ci < numCourts - 1; ci++) {
+      for (int cj = ci + 1; cj < numCourts; cj++) {
+        // Iterate all ordered pairs of player slots (including same slot, as original Amalgams)
+        final int slots1 = courts[ci].length;
+        final int slots2 = courts[cj].length;
+        for (int p1 = 0; p1 < slots1; p1++) {
+          for (int p2 = 0; p2 < slots2; p2++) {
+            // Try swap
+            final temp = courts[ci][p1];
+            courts[ci][p1] = courts[cj][p2];
+            courts[cj][p2] = temp;
+
+            final newCost = costFunction(courts);
+            if (newCost < currentCost) {
+              currentCost = newCost;
+              changed = true;
+              break; // Take first improvement (greedy)
+            } else {
+              // Revert swap
+              courts[cj][p2] = courts[ci][p1];
+              courts[ci][p1] = temp;
+            }
+          }
+          if (changed) break;
+        }
+        if (changed) break;
+      }
+      if (changed) break;
+    }
+  }
+
+  return courts;
 }
