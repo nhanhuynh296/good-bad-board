@@ -1,0 +1,51 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Building artifact
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  artifact:
+    runs-on: windows-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate JSON parser
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Building artifact
+        #        new_version is new_tag without v prefix
+        run: flutter build windows --dart-define=VERSION=${{ steps.tag_version.outputs.new_version }}
+
+      - name: Archive Release
+        uses: thedoctor0/zip-release@0.7.5
+        with:
+          type: 'zip'
+          filename: 'good_bad_board_window.zip'
+          path: 'build/windows/x64/runner/Release/'
+
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+          artifacts: "good_bad_board_window.zip"
+          artifactErrorsFailBuild: true

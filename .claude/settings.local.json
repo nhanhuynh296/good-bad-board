@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk find *)",
+      "Bash(rtk wc *)",
+      "Bash(rtk grep *)",
+      "Bash(rtk ls *)",
+      "Bash(flutter run *)",
+      "Bash(flutter --version)",
+      "Bash(flutter clean *)",
+      "Bash(flutter pub *)",
+      "Bash(rtk read *)",
+      "Bash(flutter create *)",
+      "Bash(rtk git *)",
+      "Workflow(deep-research)",
+      "Bash(gh issue *)",
+      "Bash(gh pr *)"
+    ]
+  }
+}

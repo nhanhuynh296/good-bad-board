@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg height="610px" viewBox="-365 365 1340 610" width="1340px" xmlns="http://www.w3.org/2000/svg">
+    <g style="" id="ground" transform="matrix(0, 1, -1, 0, 1055, 170)">
+        <g id="baseline">
+            <rect fill="#3266D8" height="1334" width="604" x="198" y="83" />
+            <path d="M799,86v1328H201V86H799 M805,80H195v1340h610V80L805,80z" fill="#FFFFFF" />
+        </g>
+        <line fill="none" id="net_line" stroke="#FFFFFF" stroke-dasharray="12" stroke-width="6"
+            x1="195" x2="805" y1="750" y2="750" />
+        <g id="service_line">
+            <path d="M799,556v388H201V556H799 M805,550H195v400h610V550L805,550z" fill="#FFFFFF" />
+        </g>
+        <g id="bottom_baseline">
+            <path d="M799,1348v66H201v-66H799 M805,1342H195v78h610V1342L805,1342z" fill="#FFFFFF" />
+        </g>
+        <g id="top_baseline">
+            <path d="M799,86v66H201V86H799 M805,80H195v78h610V80L805,80z" fill="#FFFFFF" />
+        </g>
+        <line fill="none" id="bottom_center_line" stroke="#FFFFFF" stroke-width="6" x1="500"
+            x2="500" y1="1417" y2="947" />
+        <line fill="none" id="top_center_line" stroke="#FFFFFF" stroke-width="6" x1="500" x2="500"
+            y1="553" y2="83" />
+        <g id="left_double_line">
+            <path d="M237,86v1328h-36V86H237 M243,80h-48v1340h48V80L243,80z" fill="#FFFFFF" />
+        </g>
+        <g id="right_double_line">
+            <path style="" d="M799,86v1328h-36V86H799 M805,80h-48v1340h48V80L805,80z"
+                fill="#FFFFFF" />
+        </g>
+    </g>
+</svg>

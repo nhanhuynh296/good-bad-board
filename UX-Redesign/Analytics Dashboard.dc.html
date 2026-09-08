@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#f0eee9;font-family:'Inter',system-ui,sans-serif}
+  .rangebtn{border:none;cursor:pointer;font-family:inherit;font-weight:700;transition:all .15s ease}
+  .rangebtn:hover{opacity:.85}
+  .bar{transition:height .3s ease}
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;justify-content:center;padding:{{ pagePad }};box-sizing:border-box">
+<div style="width:100%;max-width:1280px" ref="{{ rootRef }}">
+
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;margin-bottom:22px">
+    <div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;color:#221d18">Club Analytics</div>
+      <div style="font-size:13px;color:#8a7c68;margin-top:4px">Riverside Badminton Club · engagement, courts &amp; ELO</div>
+    </div>
+    <div style="display:flex;gap:4px;background:#fffdfa;border:1px solid #eee4d8;border-radius:10px;padding:4px">
+      <button class="rangebtn" onClick="{{ setRange4 }}" style="{{ rangeStyle_4 }}">4 wks</button>
+      <button class="rangebtn" onClick="{{ setRange12 }}" style="{{ rangeStyle_12 }}">12 wks</button>
+      <button class="rangebtn" onClick="{{ setRange26 }}" style="{{ rangeStyle_26 }}">26 wks</button>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div style="display:grid;grid-template-columns:{{ gKpi }};gap:12px;margin-bottom:16px">
+    <sc-for list="{{ kpis }}" as="kpi" hint-placeholder-count="6">
+      <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:16px 18px">
+        <div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#8a7c68;text-transform:uppercase">{{ kpi.label }}</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#221d18;margin-top:6px">{{ kpi.value }}</div>
+        <div style="{{ kpi.deltaStyle }}">{{ kpi.delta }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- Row 1: attendance trend + waitlist pressure -->
+  <div style="display:grid;grid-template-columns:{{ g2to1 }};gap:16px;margin-bottom:16px">
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase">Attendance rate by session</div>
+        <div style="font-size:12px;color:#b3a891">checked-in ÷ capacity</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:150px">
+        <sc-for list="{{ attendanceBars }}" as="b" hint-placeholder-count="12">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end" title="{{ b.tip }}">
+            <div style="font-size:10px;font-weight:700;color:#8a7c68">{{ b.pct }}</div>
+            <div class="bar" style="{{ b.style }}"></div>
+            <div style="font-size:9.5px;color:#b3a891">{{ b.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase;margin-bottom:14px">Waitlist pressure</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:118px">
+        <sc-for list="{{ waitlistBars }}" as="b" hint-placeholder-count="12">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end" title="{{ b.tip }}">
+            <div class="bar" style="{{ b.style }}"></div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;color:#8a7c68;margin-top:12px;line-height:1.5">{{ waitlistNote }}</div>
+    </div>
+  </div>
+
+  <!-- Row 2: matchmaking fairness -->
+  <div style="display:grid;grid-template-columns:{{ g2to1 }};gap:16px;margin-bottom:16px">
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase">Avg ELO spread per court</div>
+        <div style="font-size:12px;color:#b3a891">lower = fairer matchmaking</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:130px">
+        <sc-for list="{{ spreadBars }}" as="b" hint-placeholder-count="12">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end" title="{{ b.tip }}">
+            <div style="font-size:10px;font-weight:700;color:#8a7c68">{{ b.val }}</div>
+            <div class="bar" style="{{ b.style }}"></div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;color:#8a7c68;margin-top:12px;line-height:1.5">{{ spreadNote }}</div>
+    </div>
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase">Fairness by court</div>
+        <div style="font-size:12px;color:#b3a891">avg spread</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ fairnessRows }}" as="c" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:64px;font-size:12.5px;font-weight:700;color:#221d18">Court {{ c.number }}</div>
+            <div style="flex:1;height:12px;background:#f0e6d6;border-radius:6px;overflow:hidden">
+              <div style="{{ c.fillStyle }}"></div>
+            </div>
+            <div style="width:42px;text-align:right;font-size:12.5px;font-weight:700;color:#8a7c68">{{ c.spread }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:11px;color:#b3a891;margin-top:12px">{{ fairnessNote }}</div>
+    </div>
+  </div>
+
+  <!-- Row 3: court utilization + re-rolls -->
+  <div style="display:grid;grid-template-columns:{{ g11 }};gap:16px;margin-bottom:16px">
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase">Court utilization</div>
+        <div style="font-size:12px;color:#b3a891">assigned time ÷ available</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ courtRows }}" as="c" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:64px;font-size:12.5px;font-weight:700;color:#221d18">Court {{ c.number }}</div>
+            <div style="flex:1;height:12px;background:#f0e6d6;border-radius:6px;overflow:hidden">
+              <div style="{{ c.fillStyle }}"></div>
+            </div>
+            <div style="width:42px;text-align:right;font-size:12.5px;font-weight:700;color:#8a7c68">{{ c.pct }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;color:#8a7c68;margin-top:14px;line-height:1.5">Full-4 fill rate <strong style="color:#221d18">{{ fillRate }}</strong> · idle court time <strong style="color:#221d18">{{ idleTime }}</strong> per session, mostly Court 6 late rounds</div>
+    </div>
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase">Re-rolls per session</div>
+        <div style="font-size:12px;color:#b3a891">fairness friction</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:118px">
+        <sc-for list="{{ rerollBars }}" as="b" hint-placeholder-count="12">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end" title="{{ b.tip }}">
+            <div class="bar" style="{{ b.style }}"></div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;color:#8a7c68;margin-top:12px;line-height:1.5">{{ rerollNote }}</div>
+    </div>
+  </div>
+
+  <!-- Row 3: ELO distribution + top movers + at-risk -->
+  <div style="display:grid;grid-template-columns:{{ g3 }};gap:16px">
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase;margin-bottom:14px">ELO distribution</div>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:130px">
+        <sc-for list="{{ eloBuckets }}" as="b" hint-placeholder-count="7">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+            <div style="font-size:10.5px;font-weight:700;color:#8a7c68">{{ b.count }}</div>
+            <div class="bar" style="{{ b.style }}"></div>
+            <div style="font-size:9.5px;color:#b3a891;white-space:nowrap">{{ b.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;color:#8a7c68;margin-top:12px;line-height:1.5">Median <strong style="color:#221d18">{{ eloMedian }}</strong> · club avg trending {{ eloAvgTrend }} over the period</div>
+    </div>
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase;margin-bottom:12px">Top ELO movers</div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ movers }}" as="m" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 4px;border-bottom:1px solid #f5efe5">
+            <div style="display:flex;flex-direction:column;gap:1px">
+              <span style="font-size:13px;font-weight:600;color:#221d18">{{ m.name }}</span>
+              <span style="font-size:11px;color:#b3a891">{{ m.elo }} ELO</span>
+            </div>
+            <span style="{{ m.deltaStyle }}">{{ m.delta }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:11px;color:#b3a891;margin-top:10px"><strong style="color:#c2410c">{{ stagnantCount }} players stagnant</strong> — no ELO change in 10+ sessions</div>
+    </div>
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase">At-risk players</div>
+        <div style="font-size:11px;font-weight:700;color:#ff6a2b">{{ atRiskCount }} lapsed</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ atRisk }}" as="p" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 4px;border-bottom:1px solid #f5efe5">
+            <div style="display:flex;flex-direction:column;gap:1px">
+              <span style="font-size:13px;font-weight:600;color:#221d18">{{ p.name }}</span>
+              <span style="font-size:11px;color:#b3a891">was {{ p.usual }}</span>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:#8a7c68">{{ p.lastSeen }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:11px;color:#b3a891;margin-top:10px">Regulars (≥2×/mo) not seen in 3+ weeks</div>
+    </div>
+  </div>
+
+  <!-- Row 5: social & network dynamics -->
+  <div style="display:grid;grid-template-columns:{{ g11 }};gap:16px;margin-top:16px">
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase">Player mixing</div>
+        <div style="font-size:12px;color:#b3a891">distinct partners ÷ games played</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ mixingRows }}" as="m" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:110px;font-size:12.5px;font-weight:600;color:#221d18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.name }}</div>
+            <div style="flex:1;height:12px;background:#f0e6d6;border-radius:6px;overflow:hidden">
+              <div style="{{ m.fillStyle }}"></div>
+            </div>
+            <div style="width:64px;text-align:right;font-size:11.5px;font-weight:700;{{ m.tagStyle }}">{{ m.tag }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;color:#8a7c68;margin-top:12px;line-height:1.5">{{ mixingNote }}</div>
+    </div>
+    <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#8a7c68;text-transform:uppercase">New player integration</div>
+        <div style="font-size:12px;color:#b3a891">joined in last 8 weeks</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ integrationRows }}" as="p" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 4px;border-bottom:1px solid #f5efe5">
+            <div style="display:flex;flex-direction:column;gap:1px">
+              <span style="font-size:13px;font-weight:600;color:#221d18">{{ p.name }}</span>
+              <span style="font-size:11px;color:#b3a891">{{ p.joined }} · {{ p.sessions }} sessions</span>
+            </div>
+            <span style="{{ p.statusStyle }}">{{ p.status }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;color:#8a7c68;margin-top:12px;line-height:1.5">{{ integrationNote }}</div>
+    </div>
+  </div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {&quot;width&quot;: 1328},
+  &quot;accentColor&quot;: {&quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#ff6a2b&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;#ff6a2b&quot;, &quot;#2a6fdb&quot;, &quot;#1f8a5b&quot;, &quot;#8a4fd8&quot;], &quot;section&quot;: &quot;Theme&quot;},
+  &quot;showAtRisk&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Modules&quot;}
+}">
+const SESSIONS = [
+  // 26 weeks of session data, oldest first: [attendance %, waitlisted, rerolls]
+  [72,0,1],[68,1,2],[75,0,1],[81,2,3],[70,0,0],[78,1,2],[83,2,1],[76,0,2],
+  [80,1,1],[85,3,2],[74,0,1],[79,1,3],[88,4,2],[82,2,1],[77,0,2],[84,3,1],
+  [90,5,3],[86,3,2],[81,1,1],[88,4,2],[92,6,2],[87,3,1],[85,2,3],[91,5,2],[94,7,1],[89,4,2]
+];
+const CAPACITY = 24;
+
+// avg ELO spread per court, per session (same window as SESSIONS, oldest first)
+const SPREADS = [148,141,152,138,144,133,129,136,124,131,119,127,112,121,109,116,104,111,98,106,94,101,89,96,84,91];
+
+const FAIRNESS = [
+  { number: 1, spread: 82 }, { number: 2, spread: 91 }, { number: 3, spread: 96 },
+  { number: 4, spread: 104 }, { number: 5, spread: 127 }, { number: 6, spread: 143 }
+];
+
+const MIXING = [
+  { name: 'Mei-Ling Chu', score: 0.82, tag: 'connector' },
+  { name: 'Tom Aldous', score: 0.74, tag: 'connector' },
+  { name: 'Priya Nair', score: 0.61, tag: '' },
+  { name: 'Sam Whitford', score: 0.34, tag: 'clique' },
+  { name: 'Dana Ropati', score: 0.31, tag: 'clique' },
+  { name: 'Jordan Lee', score: 0.22, tag: 'isolated' }
+];
+
+const INTEGRATION = [
+  { name: 'Aroha Ngata', joined: '2 wks ago', sessions: 3, pctRegulars: 78 },
+  { name: 'Chris Okafor', joined: '4 wks ago', sessions: 5, pctRegulars: 64 },
+  { name: 'Lena Fischer', joined: '5 wks ago', sessions: 4, pctRegulars: 41 },
+  { name: 'Dev Patel', joined: '7 wks ago', sessions: 2, pctRegulars: 18 }
+];
+
+const COURTS = [
+  { number: 1, util: 94 }, { number: 2, util: 91 }, { number: 3, util: 88 },
+  { number: 4, util: 82 }, { number: 5, util: 71 }, { number: 6, util: 58 }
+];
+
+const ELO_BUCKETS = [
+  { label: '<900', count: 4 }, { label: '900–1k', count: 9 }, { label: '1k–1.1k', count: 15 },
+  { label: '1.1k–1.2k', count: 19 }, { label: '1.2k–1.3k', count: 12 }, { label: '1.3k–1.4k', count: 6 }, { label: '1.4k+', count: 3 }
+];
+
+const MOVERS = [
+  { name: 'Priya Nair', elo: 1284, delta: 62 },
+  { name: 'Tom Aldous', elo: 1176, delta: 48 },
+  { name: 'Mei-Ling Chu', elo: 1342, delta: 35 },
+  { name: 'Sam Whitford', elo: 1058, delta: -29 },
+  { name: 'Dana Ropati', elo: 1121, delta: -41 },
+  { name: 'Alex Petrov', elo: 1203, delta: -55 }
+];
+
+const AT_RISK = [
+  { name: 'Jordan Lee', usual: '3×/month', lastSeen: '5 wks' },
+  { name: 'Ffion Hughes', usual: '2×/month', lastSeen: '4 wks' },
+  { name: 'Marco Silva', usual: '4×/month', lastSeen: '4 wks' },
+  { name: 'Ruth Kaur', usual: '2×/month', lastSeen: '3 wks' },
+  { name: 'Ben Tanoa', usual: '3×/month', lastSeen: '3 wks' }
+];
+
+class Component extends DCLogic {
+  state = { range: 12, w: 1280 };
+
+  constructor(props){ super(props); this.rootRef = React.createRef(); }
+  componentDidMount(){
+    const el = this.rootRef && this.rootRef.current;
+    if (el && typeof ResizeObserver !== 'undefined'){
+      this._ro = new ResizeObserver(es => { const width = es[0].contentRect.width; if (Math.abs(width - this.state.w) > 1) this.setState({ w: width }); });
+      this._ro.observe(el);
+      const w0 = el.getBoundingClientRect().width; if (w0 && Math.abs(w0 - this.state.w) > 1) this.setState({ w: w0 });
+    }
+  }
+  componentWillUnmount(){ if (this._ro) this._ro.disconnect(); }
+
+  setRange(n) { this.setState({ range: n }); }
+
+  renderVals() {
+    const range = this.state.range;
+    const accent = this.props.accentColor ?? '#ff6a2b';
+    const showAtRisk = this.props.showAtRisk ?? true;
+    const w = this.state.w || 1280;
+    const phone = w < 680, tablet = w >= 680 && w < 1000, narrow = w < 1000;
+    const gKpi = 'repeat(' + (phone ? 2 : tablet ? 3 : 6) + ',1fr)';
+    const g2to1 = narrow ? '1fr' : '2fr 1fr';
+    const g11 = phone ? '1fr' : '1fr 1fr';
+    const g3 = phone ? '1fr' : (narrow ? '1fr 1fr' : '1.2fr 1fr 1fr');
+    const pagePad = phone ? '20px 14px' : (tablet ? '28px 20px' : '36px 24px');
+    const win = SESSIONS.slice(-range);
+    const prev = SESSIONS.slice(-(range * 2), -range);
+    const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
+
+    const attAvg = avg(win.map(s => s[0]));
+    const attPrev = avg(prev.map(s => s[0])) || attAvg;
+    const wlAvg = avg(win.map(s => s[1]));
+    const rrAvg = avg(win.map(s => s[2]));
+    const utilAvg = avg(COURTS.map(c => c.util));
+
+    const delta = (cur, pre, unit) => {
+      const d = cur - pre;
+      const sign = d >= 0 ? '+' : '−';
+      return sign + Math.abs(d).toFixed(1) + unit + ' vs prior period';
+    };
+    const deltaStyle = good => 'font-size:11px;font-weight:700;margin-top:4px;color:' + (good ? '#2e7d4f' : '#c2410c');
+
+    const kpis = [
+      { label: 'Active players', value: '68', delta: '+5 joined this period', deltaStyle: deltaStyle(true) },
+      { label: 'Avg attendance', value: attAvg.toFixed(0) + '%', delta: delta(attAvg, attPrev, 'pt'), deltaStyle: deltaStyle(attAvg >= attPrev) },
+      { label: 'Retention (4wk)', value: '87%', delta: '−2pt vs prior period', deltaStyle: deltaStyle(false) },
+      { label: 'Court utilization', value: utilAvg.toFixed(0) + '%', delta: 'Court 6 underused', deltaStyle: 'font-size:11px;font-weight:600;margin-top:4px;color:#8a7c68' },
+      { label: 'Avg waitlist', value: wlAvg.toFixed(1), delta: 'per session', deltaStyle: 'font-size:11px;font-weight:600;margin-top:4px;color:#8a7c68' },
+      { label: 'Re-rolls / session', value: rrAvg.toFixed(1), delta: delta(rrAvg, avg(prev.map(s => s[2])) || rrAvg, ''), deltaStyle: deltaStyle(rrAvg <= (avg(prev.map(s => s[2])) || rrAvg)) }
+    ];
+
+    // Chart bars — cap visible bars at 13 for readability on wide ranges
+    const step = Math.ceil(win.length / 13);
+    const shown = win.filter((_, i) => (win.length - 1 - i) % step === 0);
+    const n = shown.length;
+
+    const attendanceBars = shown.map((s, i) => {
+      const h = Math.round((s[0] / 100) * 108);
+      const latest = i === n - 1;
+      return {
+        pct: s[0] + '%',
+        label: 'S' + (i + 1),
+        tip: Math.round(s[0] / 100 * CAPACITY) + '/' + CAPACITY + ' checked in',
+        style: 'width:100%;max-width:34px;height:' + h + 'px;border-radius:5px 5px 2px 2px;background:' + (latest ? accent : '#e8dcc8')
+      };
+    });
+
+    const maxWl = Math.max(1, ...shown.map(s => s[1]));
+    const waitlistBars = shown.map(s => ({
+      tip: s[1] + ' waitlisted',
+      style: 'width:100%;max-width:30px;height:' + Math.max(4, Math.round(s[1] / maxWl * 100)) + 'px;border-radius:4px 4px 2px 2px;background:' + (s[1] >= maxWl * 0.75 ? accent : '#e8dcc8')
+    }));
+
+    const maxRr = Math.max(1, ...shown.map(s => s[2]));
+    const rerollBars = shown.map(s => ({
+      tip: s[2] + ' re-rolls',
+      style: 'width:100%;max-width:30px;height:' + Math.max(4, Math.round(s[2] / maxRr * 100)) + 'px;border-radius:4px 4px 2px 2px;background:#d9c7a8'
+    }));
+
+    const courtRows = COURTS.map(c => ({
+      number: c.number,
+      pct: c.util + '%',
+      fillStyle: 'height:100%;width:' + c.util + '%;border-radius:6px;background:' + (c.util < 65 ? '#d9c7a8' : accent)
+    }));
+
+    const maxBucket = Math.max(...ELO_BUCKETS.map(b => b.count));
+    const eloBuckets = ELO_BUCKETS.map(b => ({
+      label: b.label, count: b.count,
+      style: 'width:100%;max-width:44px;height:' + Math.round(b.count / maxBucket * 86) + 'px;border-radius:5px 5px 2px 2px;background:' + (b.count === maxBucket ? accent : '#e8dcc8')
+    }));
+
+    const movers = MOVERS.map(m => ({
+      name: m.name, elo: m.elo,
+      delta: (m.delta > 0 ? '▲ +' : '▼ −') + Math.abs(m.delta),
+      deltaStyle: 'font-size:13px;font-weight:800;color:' + (m.delta > 0 ? '#2e7d4f' : '#c2410c')
+    }));
+
+    const rangeStyle = r => this.state.range === r
+      ? 'padding:7px 14px;border-radius:7px;font-size:12.5px;background:#221d18;color:#fff'
+      : 'padding:7px 14px;border-radius:7px;font-size:12.5px;background:transparent;color:#8a7c68';
+
+    // Matchmaking fairness
+    const spreadWin = SPREADS.slice(-range).filter((_, i, a) => (a.length - 1 - i) % Math.ceil(a.length / 13) === 0);
+    const maxSpread = Math.max(...spreadWin);
+    const spreadBars = spreadWin.map((v, i) => ({
+      val: v,
+      tip: 'avg spread ' + v + ' ELO',
+      style: 'width:100%;max-width:34px;height:' + Math.round(v / maxSpread * 92) + 'px;border-radius:5px 5px 2px 2px;background:' + (i === spreadWin.length - 1 ? accent : '#e8dcc8')
+    }));
+    const spreadDrop = spreadWin[0] - spreadWin[spreadWin.length - 1];
+    const maxFair = Math.max(...FAIRNESS.map(f => f.spread));
+    const fairnessRows = FAIRNESS.map(f => ({
+      number: f.number,
+      spread: String(f.spread),
+      fillStyle: 'height:100%;width:' + Math.round(f.spread / maxFair * 100) + '%;border-radius:6px;background:' + (f.spread > 120 ? '#c2410c' : '#d9c7a8')
+    }));
+
+    // Social dynamics
+    const mixingRows = MIXING.map(m => ({
+      name: m.name,
+      fillStyle: 'height:100%;width:' + Math.round(m.score * 100) + '%;border-radius:6px;background:' + (m.score < 0.35 ? '#c2410c' : accent),
+      tag: m.tag || m.score.toFixed(2),
+      tagStyle: m.tag === 'isolated' ? 'color:#c2410c' : m.tag === 'clique' ? 'color:#b3861f' : 'color:#8a7c68'
+    }));
+    const integrationRows = INTEGRATION.map(p => ({
+      name: p.name, joined: p.joined, sessions: p.sessions,
+      status: p.pctRegulars + '% w/ regulars',
+      statusStyle: 'font-size:12px;font-weight:700;color:' + (p.pctRegulars >= 50 ? '#2e7d4f' : '#c2410c')
+    }));
+
+    return {
+      kpis, attendanceBars, waitlistBars, rerollBars, courtRows, eloBuckets, movers,
+      spreadBars, fairnessRows, mixingRows, integrationRows,
+      spreadNote: 'Average within-court spread is down ' + spreadDrop + ' ELO over the period — matchmaking is getting fairer.',
+      fairnessNote: 'Courts 5–6 run wider spreads — they absorb overflow when numbers are odd.',
+      mixingNote: 'Two connectors bridge most of the club; Jordan Lee plays almost exclusively with the same three partners.',
+      integrationNote: 'Healthy when new players hit 50%+ games with regulars by week 4. Dev Patel needs a nudge into mixed courts.',
+      stagnantCount: 9,
+      fillRate: '81%',
+      idleTime: '22 min',
+      atRisk: showAtRisk ? AT_RISK : [],
+      atRiskCount: AT_RISK.length,
+      eloMedian: '1,148',
+      eloAvgTrend: '+11',
+      waitlistNote: wlAvg >= 2.5
+        ? 'Demand regularly exceeds capacity — consider adding a court or a second weekly session.'
+        : 'Waitlist is occasional; capacity roughly matches demand.',
+      rerollNote: 'Re-rolls cluster on high-attendance nights — a sign initial assignments strain when the level spread widens.',
+      setRange4: () => this.setRange(4), setRange12: () => this.setRange(12), setRange26: () => this.setRange(26),
+      rangeStyle_4: rangeStyle(4), rangeStyle_12: rangeStyle(12), rangeStyle_26: rangeStyle(26),
+      rootRef: this.rootRef, gKpi, g2to1, g11, g3, pagePad
+    };
+  }
+}
+</script>
+</body>
+</html>
