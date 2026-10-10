@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
+import 'package:good_bad_board/repository/data_root.dart';
 import 'package:good_bad_board/repository/game_repository.dart';
+import 'package:good_bad_board/repository/pending_registration_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
-import 'package:good_bad_board/repository/repository_service.dart';
+import 'package:good_bad_board/repository/session_log_repository.dart';
+import 'package:good_bad_board/repository/session_template_repository.dart';
 import 'package:good_bad_board/routes.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
@@ -12,11 +15,15 @@ import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AppLoader());
+  runApp(AppLoader(dataRoot: DataRoot.production()));
 }
 
 class AppLoader extends StatefulWidget {
-  const AppLoader({super.key});
+  const AppLoader({super.key, required this.dataRoot});
+
+  /// Where the JSON data files are. Required, so a caller cannot reach the
+  /// production directory by accident.
+  final DataRoot dataRoot;
 
   @override
   State<AppLoader> createState() => _AppLoaderState();
@@ -26,14 +33,22 @@ class _AppLoaderState extends State<AppLoader> {
   late final Future completer;
 
   Future<void> loading() async {
-    await Future.wait([
-      RepositoryService.instance.initialize(),
-      PersistentSetting.instance.initialize(),
-    ]);
+    await PersistentSetting.instance.initialize();
 
-    await PlayerRepository.instance.initialize();
-    // Depends on PlayerRepository to initialize first
-    await GameRepository.instance.initialize();
+    final rootDir = await widget.dataRoot.resolve();
+    PlayerRepository.instance = await PlayerRepository.initialize(
+      rootDir: rootDir,
+    );
+    // Game rosters resolve through PlayerRepository.instance lazily (see
+    // Game.players), so PlayerRepository must be initialized first.
+    GameRepository.instance = await GameRepository.initialize(rootDir: rootDir);
+    SessionLogRepository.instance = await SessionLogRepository.initialize(
+      rootDir: rootDir,
+    );
+    PendingRegistrationRepository.instance =
+        await PendingRegistrationRepository.initialize(rootDir: rootDir);
+    SessionTemplateRepository.instance =
+        await SessionTemplateRepository.initialize(rootDir: rootDir);
   }
 
   @override
@@ -79,7 +94,10 @@ class MyApp extends StatelessWidget {
             persistentSetting.getLanguage(),
       ),
       darkTheme: darkTheme,
-      themeMode: ThemeMode.system,
+      // The redesign defines a light palette only, and most widgets use
+      // AppColors directly. A dark system theme changed only the Material
+      // defaults, for example white text in light text fields.
+      themeMode: ThemeMode.light,
     );
   }
 }

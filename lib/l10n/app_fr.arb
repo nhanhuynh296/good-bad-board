@@ -214,8 +214,13 @@
   "dashboard_waitlist_empty": "Personne en attente",
   "dashboard_waitlist_hint_place": "Touchez une place sur un terrain pour y placer ce joueur",
   "dashboard_waitlist_hint_select": "Touchez un joueur, puis une place sur un terrain",
+  "shell_tab_dashboard": "Tableau de bord",
+  "shell_tab_players": "Joueurs",
+  "shell_tab_sessions": "Séances",
+  "shell_tab_analytics": "Statistiques",
+  "shell_tab_courts": "Terrains",
+  "shell_more": "Plus",
+  "shell_navigate": "NAVIGATION",
   "common_search_players": "Rechercher des joueurs…",
-  "common_toggle": "Basculer",
-  "active_player": "Joueur actif",
-  "inactive_player": "Joueur inactif"
+  "common_toggle": "Basculer"
 }

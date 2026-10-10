@@ -1028,6 +1028,34 @@
   "@dashboard_waitlist_hint_select": {
     "description": "Hint explaining how to place a waitlisted player"
   },
+  "shell_tab_dashboard": "Dashboard",
+  "@shell_tab_dashboard": {
+    "description": "Navigation tab: dashboard"
+  },
+  "shell_tab_players": "Players",
+  "@shell_tab_players": {
+    "description": "Navigation tab: players"
+  },
+  "shell_tab_sessions": "Sessions",
+  "@shell_tab_sessions": {
+    "description": "Navigation tab: sessions"
+  },
+  "shell_tab_analytics": "Analytics",
+  "@shell_tab_analytics": {
+    "description": "Navigation tab: analytics"
+  },
+  "shell_tab_courts": "Courts",
+  "@shell_tab_courts": {
+    "description": "Short bottom-bar label for the dashboard tab on phones"
+  },
+  "shell_more": "More",
+  "@shell_more": {
+    "description": "Bottom-bar tab that opens the secondary tabs sheet"
+  },
+  "shell_navigate": "NAVIGATE",
+  "@shell_navigate": {
+    "description": "Heading of the hamburger navigation menu"
+  },
   "common_search_players": "Search players…",
   "@common_search_players": {
     "description": "Default placeholder of the search input"
@@ -1035,7 +1063,5 @@
   "common_toggle": "Toggle",
   "@common_toggle": {
     "description": "Default accessibility label of a toggle button"
-  },
-  "active_player": "Active Player",
-  "inactive_player": "Inactive Player"
+  }
 }

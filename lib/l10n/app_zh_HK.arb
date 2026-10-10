@@ -214,8 +214,13 @@
   "dashboard_waitlist_empty": "冇人等緊",
   "dashboard_waitlist_hint_place": "撳場地空位，將呢位球員放入去",
   "dashboard_waitlist_hint_select": "先撳球員，再撳場地空位",
+  "shell_tab_dashboard": "儀表板",
+  "shell_tab_players": "球員",
+  "shell_tab_sessions": "場次",
+  "shell_tab_analytics": "數據分析",
+  "shell_tab_courts": "場地",
+  "shell_more": "更多",
+  "shell_navigate": "導航",
   "common_search_players": "搜尋球員…",
-  "common_toggle": "切換",
-  "active_player": "活躍球員",
-  "inactive_player": "非活躍球員"
+  "common_toggle": "切換"
 }

@@ -214,8 +214,13 @@
   "dashboard_waitlist_empty": "暂无候补球员",
   "dashboard_waitlist_hint_place": "点击场地空位放置该球员",
   "dashboard_waitlist_hint_select": "先点击球员，再点击场地空位",
+  "shell_tab_dashboard": "仪表盘",
+  "shell_tab_players": "球员",
+  "shell_tab_sessions": "场次",
+  "shell_tab_analytics": "数据分析",
+  "shell_tab_courts": "场地",
+  "shell_more": "更多",
+  "shell_navigate": "导航",
   "common_search_players": "搜索球员…",
-  "common_toggle": "切换",
-  "active_player": "活跃球员",
-  "inactive_player": "非活跃球员"
+  "common_toggle": "切换"
 }
