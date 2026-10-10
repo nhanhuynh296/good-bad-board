@@ -198,6 +198,160 @@
   "to_current_session": "To current session",
   "today": "Today",
   "update": "Update",
+  "dashboard_generate_hint": "Generate a game to get started",
+  "@dashboard_generate_hint": {
+    "description": "Empty-state hint on the dashboard when there are no courts"
+  },
+  "dashboard_courts_label": "Courts",
+  "@dashboard_courts_label": {
+    "description": "Label beside the court count adjuster in the dashboard action bar"
+  },
+  "dashboard_mode_time_based": "Time-based · {duration} rounds",
+  "@dashboard_mode_time_based": {
+    "description": "Mode label in the round rotation bar; duration is mm:ss",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboard_staged_summary": "{players} across {courts}",
+  "@dashboard_staged_summary": {
+    "description": "Summary of the pre-made next round, e.g. '16 players across 4 courts'. players is dashboard_player_count, courts is dashboard_court_count",
+    "placeholders": {
+      "players": {
+        "type": "String"
+      },
+      "courts": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboard_player_count": "{count, plural, =1{1 player} other{{count} players}}",
+  "@dashboard_player_count": {
+    "description": "Number of players, used inside dashboard_staged_summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_court_count": "{count, plural, =1{1 court} other{{count} courts}}",
+  "@dashboard_court_count": {
+    "description": "Number of courts, used inside dashboard_staged_summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_court_title": "COURT {number}",
+  "@dashboard_court_title": {
+    "description": "Uppercase title of a court card",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_reroll": "Re-roll",
+  "@dashboard_reroll": {
+    "description": "Button that re-rolls (re-generates) one court's lineup"
+  },
+  "dashboard_badge_next": "NEXT",
+  "@dashboard_badge_next": {
+    "description": "Badge on a court card showing the pre-made next round"
+  },
+  "dashboard_badge_playing": "PLAYING",
+  "@dashboard_badge_playing": {
+    "description": "Badge on a court card whose saved game is under way"
+  },
+  "dashboard_current_round": "Current round",
+  "@dashboard_current_round": {
+    "description": "Label of the live-round panel in the round rotation bar"
+  },
+  "dashboard_next_round": "Next round",
+  "@dashboard_next_round": {
+    "description": "Label of the pre-made-round panel in the round rotation bar"
+  },
+  "dashboard_round_label": "ROUND {number}",
+  "@dashboard_round_label": {
+    "description": "Uppercase round number in the round rotation bar",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_until_rotation": "until rotation",
+  "@dashboard_until_rotation": {
+    "description": "Caption under the countdown timer"
+  },
+  "dashboard_premake_next": "Pre-make next round",
+  "@dashboard_premake_next": {
+    "description": "Button that stages the next round in advance"
+  },
+  "dashboard_rotate_now": "Rotate now",
+  "@dashboard_rotate_now": {
+    "description": "Button that ends the current round and starts the next"
+  },
+  "dashboard_next_round_ready": "NEXT ROUND · READY",
+  "@dashboard_next_round_ready": {
+    "description": "Badge on the staged next-round panel"
+  },
+  "dashboard_cancel_next": "Cancel next",
+  "@dashboard_cancel_next": {
+    "description": "Button that discards the pre-made next round"
+  },
+  "dashboard_open_slot": "Open slot",
+  "@dashboard_open_slot": {
+    "description": "Placeholder for an empty player slot on a court"
+  },
+  "dashboard_spread": "{gap, plural, =0{Same level} =1{1 level gap} other{{gap} level gap}}",
+  "@dashboard_spread": {
+    "description": "Pill showing the level gap between the strongest and weakest player on a court",
+    "placeholders": {
+      "gap": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_stat_checked_in": "Checked In",
+  "@dashboard_stat_checked_in": {
+    "description": "Stat strip: number of checked-in players"
+  },
+  "dashboard_stat_remaining_slots": "Remaining Slots",
+  "@dashboard_stat_remaining_slots": {
+    "description": "Stat strip: empty court slots"
+  },
+  "dashboard_waitlist": "Waitlist",
+  "@dashboard_waitlist": {
+    "description": "Waitlist title and stat strip label"
+  },
+  "dashboard_stat_avg_level": "Avg Level",
+  "@dashboard_stat_avg_level": {
+    "description": "Stat strip: average player level on courts"
+  },
+  "dashboard_stat_avg_level_gap": "Avg Level Gap",
+  "@dashboard_stat_avg_level_gap": {
+    "description": "Stat strip: average level gap across courts"
+  },
+  "dashboard_stat_rerolls": "Re-rolls",
+  "@dashboard_stat_rerolls": {
+    "description": "Stat strip: number of re-rolls this session"
+  },
+  "dashboard_waitlist_empty": "No one waiting",
+  "@dashboard_waitlist_empty": {
+    "description": "Shown when the waitlist is empty"
+  },
+  "dashboard_waitlist_hint_place": "Tap a court slot to place this player",
+  "@dashboard_waitlist_hint_place": {
+    "description": "Hint when a waitlisted player is selected"
+  },
+  "dashboard_waitlist_hint_select": "Tap a player, then tap a court slot",
+  "@dashboard_waitlist_hint_select": {
+    "description": "Hint explaining how to place a waitlisted player"
+  },
   "common_search_players": "Search players…",
   "@common_search_players": {
     "description": "Default placeholder of the search input"
