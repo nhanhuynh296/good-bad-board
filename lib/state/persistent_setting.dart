@@ -19,10 +19,24 @@ class PersistentSetting extends ChangeNotifier {
 
   static final PersistentSetting instance = PersistentSetting._init();
 
-  late final SharedPreferencesWithCache sharedPreference;
+  SharedPreferencesWithCache? _prefs;
+
+  /// Uses `SharedPreferencesWithCache`, the same API as the released build
+  /// on `main`. Its keys have no `flutter.` prefix. The legacy
+  /// `SharedPreferences` API prefixes every key, so it cannot read the
+  /// settings that clubs already saved.
+  SharedPreferencesWithCache get sharedPreference {
+    final prefs = _prefs;
+    if (prefs == null) {
+      throw StateError(
+        'PersistentSetting not initialized. Call initialize() first.',
+      );
+    }
+    return prefs;
+  }
 
   Future<void> initialize() async {
-    sharedPreference = await SharedPreferencesWithCache.create(
+    _prefs = await SharedPreferencesWithCache.create(
       cacheOptions: const SharedPreferencesWithCacheOptions(),
     );
   }
