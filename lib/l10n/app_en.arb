@@ -2,6 +2,304 @@
   "about": "About",
   "add": "Add",
   "add_player": "Add Player",
+  "analytics_at_risk_players": "At-risk players ({count})",
+  "@analytics_at_risk_players": {
+    "description": "Card title with the number of lapsed regular players",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_attendance_change": "{change}% change over the period",
+  "@analytics_attendance_change": {
+    "description": "Attendance chart note; change is a signed whole number (e.g. +12)",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_attendance_trend": "Attendance trend",
+  "@analytics_attendance_trend": {
+    "description": "Chart title"
+  },
+  "analytics_court_util_summary": "Full-4 fill rate: {fillPct}% · avg {idle} idle courts/session",
+  "@analytics_court_util_summary": {
+    "description": "Court utilization summary; fillPct and idle are pre-formatted numbers",
+    "placeholders": {
+      "fillPct": {
+        "type": "String"
+      },
+      "idle": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_court_utilization": "Court utilization",
+  "@analytics_court_utilization": {
+    "description": "KPI tile label and chart title: share of court slots filled"
+  },
+  "analytics_courts_absorb_overflow": "{count, plural, =1{Court {courts} regularly absorb overflow with wider gaps.} other{Courts {courts} regularly absorb overflow with wider gaps.}}",
+  "@analytics_courts_absorb_overflow": {
+    "description": "Per-court fairness note; courts is a comma-separated list of court numbers, count is how many",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "courts": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_delta_vs_prior": "{delta} vs prior period",
+  "@analytics_delta_vs_prior": {
+    "description": "KPI context line comparing to the previous period; delta is pre-formatted with sign and unit (e.g. +4.2%)",
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_joined_sessions": "Joined {date} · {count} sessions",
+  "@analytics_joined_sessions": {
+    "description": "New player's join date (pre-formatted) and sessions attended",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_kpi_across_club": "across the club",
+  "@analytics_kpi_across_club": {
+    "description": "KPI context line under the registered players count"
+  },
+  "analytics_kpi_avg_attendance": "Avg attendance",
+  "@analytics_kpi_avg_attendance": {
+    "description": "KPI tile label: average attendance rate"
+  },
+  "analytics_kpi_avg_waitlist": "Avg waitlist",
+  "@analytics_kpi_avg_waitlist": {
+    "description": "KPI tile label: average number of players on the waitlist"
+  },
+  "analytics_kpi_registered_players": "Registered players",
+  "@analytics_kpi_registered_players": {
+    "description": "KPI tile label: total number of registered players"
+  },
+  "analytics_kpi_rerolls_per_session": "Re-rolls / session",
+  "@analytics_kpi_rerolls_per_session": {
+    "description": "KPI tile label: average number of re-rolls per session"
+  },
+  "analytics_kpi_retention": "Retention ({weeks}wk)",
+  "@analytics_kpi_retention": {
+    "description": "KPI tile label: player retention over the selected number of weeks",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_kpi_retention_context": "players returning from prior period",
+  "@analytics_kpi_retention_context": {
+    "description": "KPI context line under the retention percentage"
+  },
+  "analytics_level_distribution": "Level distribution",
+  "@analytics_level_distribution": {
+    "description": "Chart title"
+  },
+  "analytics_level_gap_down": "Level gap is trending down — matchmaking is improving.",
+  "@analytics_level_gap_down": {
+    "description": "Level-gap chart note when the gap is shrinking"
+  },
+  "analytics_level_gap_trend": "Level-gap trend",
+  "@analytics_level_gap_trend": {
+    "description": "Chart title"
+  },
+  "analytics_level_gap_up": "Level gap is trending up — matchmaking fairness is slipping.",
+  "@analytics_level_gap_up": {
+    "description": "Level-gap chart note when the gap is widening"
+  },
+  "analytics_median_tier": "Median tier: {tier}",
+  "@analytics_median_tier": {
+    "description": "Level distribution note naming the median skill tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_mixing_connectors": "{count, plural, =1{1 connector bridging the club} other{{count} connectors bridging the club}}",
+  "@analytics_mixing_connectors": {
+    "description": "First half of the player mixing summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_mixing_isolated": "{count, plural, =1{1 player playing a narrow circle.} other{{count} players playing a narrow circle.}}",
+  "@analytics_mixing_isolated": {
+    "description": "Second half of the player mixing summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_mixing_summary": "{connectors}, {isolated}",
+  "@analytics_mixing_summary": {
+    "description": "Joins the two halves of the player mixing summary",
+    "placeholders": {
+      "connectors": {
+        "type": "String"
+      },
+      "isolated": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_new_player_integration": "New player integration",
+  "@analytics_new_player_integration": {
+    "description": "Card title"
+  },
+  "analytics_no_court_wider_gap": "No court consistently runs a wider gap than the rest.",
+  "@analytics_no_court_wider_gap": {
+    "description": "Per-court fairness note when no court is flagged"
+  },
+  "analytics_no_data": "No data yet",
+  "@analytics_no_data": {
+    "description": "Empty state of a horizontal bar list"
+  },
+  "analytics_no_lapsed": "No regular attendees have lapsed",
+  "@analytics_no_lapsed": {
+    "description": "Empty state of the at-risk players card"
+  },
+  "analytics_no_new_players": "No new players in this window",
+  "@analytics_no_new_players": {
+    "description": "Empty state of the new player integration card"
+  },
+  "analytics_no_session_data": "No session data yet",
+  "@analytics_no_session_data": {
+    "description": "Empty state of a bar chart"
+  },
+  "analytics_no_sessions_logged": "No sessions logged yet",
+  "@analytics_no_sessions_logged": {
+    "description": "Empty state of the session history card"
+  },
+  "analytics_not_enough_sessions": "Not enough sessions logged yet.",
+  "@analytics_not_enough_sessions": {
+    "description": "Chart note shown when fewer than two sessions are logged"
+  },
+  "analytics_pct_with_regulars": "{pct}% with regulars",
+  "@analytics_pct_with_regulars": {
+    "description": "Share of a new player's games played with regulars; pct is a whole number",
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_per_court_fairness": "Per-court fairness",
+  "@analytics_per_court_fairness": {
+    "description": "Chart title: average level gap per court"
+  },
+  "analytics_player_mixing": "Player mixing",
+  "@analytics_player_mixing": {
+    "description": "Chart title: how widely each player mixes with partners"
+  },
+  "analytics_reroll_spikes": "Re-roll spikes tend to line up with high level-spread nights.",
+  "@analytics_reroll_spikes": {
+    "description": "Re-roll chart note when spikes match high level-spread sessions"
+  },
+  "analytics_reroll_steady": "Re-roll counts stay steady regardless of level spread.",
+  "@analytics_reroll_steady": {
+    "description": "Re-roll chart note when counts are steady"
+  },
+  "analytics_rerolls_per_session": "Re-rolls per session",
+  "@analytics_rerolls_per_session": {
+    "description": "Chart title"
+  },
+  "analytics_short_date": "{month}/{day}",
+  "@analytics_short_date": {
+    "description": "Compact day-and-month chart axis label (e.g. 8/14)",
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_session_history": "Session history",
+  "@analytics_session_history": {
+    "description": "Card title: list of logged games"
+  },
+  "analytics_stagnation": "{count} players flat 6+ sessions",
+  "@analytics_stagnation": {
+    "description": "Level distribution warning: number of players whose tier has not changed in their last 6 sessions",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_title": "Analytics",
+  "@analytics_title": {
+    "description": "Title of the Analytics tab"
+  },
+  "analytics_usually_per_month": "usually {freq}x/mo",
+  "@analytics_usually_per_month": {
+    "description": "How often an at-risk player usually attends; freq is a pre-formatted number",
+    "placeholders": {
+      "freq": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_waitlist_high": "Average waitlist is high ({avg}/session) — consider adding capacity or another court.",
+  "@analytics_waitlist_high": {
+    "description": "Waitlist chart note when pressure is high; avg is a pre-formatted number",
+    "placeholders": {
+      "avg": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_waitlist_low": "Waitlist pressure is low ({avg}/session).",
+  "@analytics_waitlist_low": {
+    "description": "Waitlist chart note when pressure is low; avg is a pre-formatted number",
+    "placeholders": {
+      "avg": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_waitlist_pressure": "Waitlist pressure",
+  "@analytics_waitlist_pressure": {
+    "description": "Chart title"
+  },
+  "analytics_weeks_short": "{weeks} wks",
+  "@analytics_weeks_short": {
+    "description": "Short time-range chip label, a number of weeks (e.g. 4 wks)",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_weeks_since_seen": "{weeks}w since last seen",
+  "@analytics_weeks_since_seen": {
+    "description": "Weeks since an at-risk player last attended",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
   "anonymised_player": "Deleted player",
   "@anonymised_player": {
     "description": "Placeholder shown in place of the name of a Player who has been anonymised (deleted)"
