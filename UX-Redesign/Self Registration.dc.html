@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#f0eee9;font-family:'Inter',system-ui,sans-serif}
+  .lvlbtn{border:none;cursor:pointer;font-family:inherit;transition:all .15s ease;text-align:left}
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;justify-content:center;padding:48px 20px;box-sizing:border-box">
+  <div style="width:100%;max-width:520px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#221d18">Riverside Badminton Club</div>
+      <div style="font-size:14px;color:#8a7c68;margin-top:6px">Join the club — takes about a minute</div>
+    </div>
+
+    <sc-if value="{{ submitted }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:36px 28px;text-align:center">
+        <div style="font-size:34px;margin-bottom:10px">✓</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:#221d18;margin-bottom:8px">Thanks, {{ firstName }}!</div>
+        <div style="font-size:14px;color:#8a7c68;line-height:1.6">Your sign-up is pending organizer approval. We've set your starting level to <strong style="color:#ff6a2b">{{ selectedTierLabel }}</strong> — an organizer may adjust this after your first few sessions.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ notSubmitted }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#fffdfa;border:1px solid #eee4d8;border-radius:14px;padding:28px">
+        <div style="font-size:12px;font-weight:800;color:#8a7c68;text-transform:uppercase;margin-bottom:6px">Step 1 — Your details</div>
+        <input value="{{ name }}" onChange="{{ setName }}" placeholder="Full name" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:9px;border:1px solid #e2d8c8;font-size:14px;margin-bottom:10px;font-family:inherit">
+        <input value="{{ contact }}" onChange="{{ setContact }}" placeholder="Email or phone" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:9px;border:1px solid #e2d8c8;font-size:14px;margin-bottom:20px;font-family:inherit">
+
+        <div style="font-size:12px;font-weight:800;color:#8a7c68;text-transform:uppercase;margin-bottom:6px">Step 2 — Which best describes your level?</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+          <button class="lvlbtn" onClick="{{ setTierAmateur }}" style="{{ tierStyle_amateur }}">
+            <div style="font-weight:700;font-size:14px">Amateur</div>
+            <div style="font-size:12px;opacity:.75">New to the sport, or play a few times a year for fun</div>
+          </button>
+          <button class="lvlbtn" onClick="{{ setTierIntermediate }}" style="{{ tierStyle_intermediate }}">
+            <div style="font-weight:700;font-size:14px">Intermediate</div>
+            <div style="font-size:12px;opacity:.75">Play regularly, know all the shots, casual club level</div>
+          </button>
+          <button class="lvlbtn" onClick="{{ setTierAdvanced }}" style="{{ tierStyle_advanced }}">
+            <div style="font-weight:700;font-size:14px">Advanced</div>
+            <div style="font-size:12px;opacity:.75">Competitive club or tournament player</div>
+          </button>
+          <button class="lvlbtn" onClick="{{ setTierProfessional }}" style="{{ tierStyle_professional }}">
+            <div style="font-weight:700;font-size:14px">Professional</div>
+            <div style="font-size:12px;opacity:.75">Ranked, coached, or former/current competitive athlete</div>
+          </button>
+        </div>
+
+        <button onClick="{{ submit }}" style="{{ submitStyle }}" disabled="{{ submitDisabled }}">Submit for approval</button>
+        <div style="font-size:11px;color:#b3a891;text-align:center;margin-top:12px">An organizer reviews every new sign-up before you're added to the roster.</div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const TIER_LABELS = { amateur: 'Amateur', intermediate: 'Intermediate', advanced: 'Advanced', professional: 'Professional' };
+
+class Component extends DCLogic {
+  state = { name: '', contact: '', tier: 'intermediate', submitted: false };
+
+  setName(ev) { this.setState({ name: ev.target.value }); }
+  setContact(ev) { this.setState({ contact: ev.target.value }); }
+  setTier(t) { this.setState({ tier: t }); }
+  submit() { if (this.state.name.trim() && this.state.contact.trim()) this.setState({ submitted: true }); }
+
+  renderVals() {
+    const s = this.state;
+    const tierStyle = (t) => s.tier === t
+      ? 'padding:12px 14px;border-radius:9px;background:#221d18;color:#fff;border:1px solid #221d18'
+      : 'padding:12px 14px;border-radius:9px;background:#fbf6ee;color:#221d18;border:1px solid #eee4d8';
+    const canSubmit = s.name.trim().length > 0 && s.contact.trim().length > 0;
+    return {
+      name: s.name, contact: s.contact, submitted: s.submitted, notSubmitted: !s.submitted,
+      firstName: s.name.trim().split(' ')[0] || 'there',
+      selectedTierLabel: TIER_LABELS[s.tier],
+      setName: (ev) => this.setName(ev), setContact: (ev) => this.setContact(ev),
+      setTierAmateur: () => this.setTier('amateur'), setTierIntermediate: () => this.setTier('intermediate'),
+      setTierAdvanced: () => this.setTier('advanced'), setTierProfessional: () => this.setTier('professional'),
+      tierStyle_amateur: tierStyle('amateur'), tierStyle_intermediate: tierStyle('intermediate'),
+      tierStyle_advanced: tierStyle('advanced'), tierStyle_professional: tierStyle('professional'),
+      submit: () => this.submit(),
+      submitDisabled: !canSubmit,
+      submitStyle: canSubmit
+        ? 'width:100%;padding:14px;border:none;border-radius:9px;background:#ff6a2b;color:#221d18;font-weight:800;font-size:15px;cursor:pointer'
+        : 'width:100%;padding:14px;border:none;border-radius:9px;background:#f0e6d6;color:#b3a891;font-weight:800;font-size:15px;cursor:not-allowed'
+    };
+  }
+}
+
+</script>
+</body>
+</html>
