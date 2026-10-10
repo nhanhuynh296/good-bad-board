@@ -121,6 +121,183 @@
   "@player_statistic": {
     "description": "View player statistics"
   },
+  "players_already_exists": "A player named \"{name}\" already exists",
+  "@players_already_exists": {
+    "description": "Toast when approving a registration whose name matches an existing player",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_approve": "Approve",
+  "@players_approve": {
+    "description": "Button to approve a pending self-registration"
+  },
+  "players_approve_failed": "Failed to approve {name}",
+  "@players_approve_failed": {
+    "description": "Toast when approving a registration fails",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_approved_toast": "{name} has been approved",
+  "@players_approved_toast": {
+    "description": "Toast after a registration is approved",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_at_capacity_banner": "Session at capacity — new check-ins will join the waitlist",
+  "@players_at_capacity_banner": {
+    "description": "Banner shown when the session has reached its player capacity"
+  },
+  "players_attendance": "Attendance",
+  "@players_attendance": {
+    "description": "Section label in the player profile card"
+  },
+  "players_attended_sessions": "{total, plural, =1{Attended {attended} of 1 session} other{Attended {attended} of {total} sessions}}",
+  "@players_attended_sessions": {
+    "description": "Attendance summary in the player profile card",
+    "placeholders": {
+      "attended": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "players_bulk_edit": "Bulk Edit",
+  "@players_bulk_edit": {
+    "description": "Title of the dialog for editing imported players in bulk"
+  },
+  "players_capacity_left": "{checkedIn} / {capacity} · {left} left",
+  "@players_capacity_left": {
+    "description": "Session capacity summary: checked-in players, capacity and remaining places",
+    "placeholders": {
+      "checkedIn": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      },
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "players_checked_in": "Checked in",
+  "@players_checked_in": {
+    "description": "Players table column header for the check-in toggle"
+  },
+  "players_checkin_in": "In",
+  "@players_checkin_in": {
+    "description": "Check-in toggle label when the player is checked in"
+  },
+  "players_checkin_out": "Out",
+  "@players_checkin_out": {
+    "description": "Check-in toggle label when the player is not checked in"
+  },
+  "players_conflict_existing_names": "Conflict name with existing player: {names}",
+  "@players_conflict_existing_names": {
+    "description": "Error when imported names clash with existing players",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "players_current_level": "Current Level",
+  "@players_current_level": {
+    "description": "Stat label in the player profile card"
+  },
+  "players_delete_player_body": "Remove {name} from the club roster? This can't be undone.",
+  "@players_delete_player_body": {
+    "description": "Confirmation message when deleting a player from the roster",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_delete_player_title": "Delete player?",
+  "@players_delete_player_title": {
+    "description": "Title of the delete-player confirmation dialog"
+  },
+  "players_deleted_toast": "{name} deleted",
+  "@players_deleted_toast": {
+    "description": "Toast after a player is deleted",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_disable": "Disable",
+  "@players_disable": {
+    "description": "Button confirming that a player will be disabled"
+  },
+  "players_disable_player_body": "They'll be checked out and removed from their court or the waitlist immediately.",
+  "@players_disable_player_body": {
+    "description": "Explanation in the disable-player confirmation dialog"
+  },
+  "players_disable_player_title": "Disable player?",
+  "@players_disable_player_title": {
+    "description": "Title of the disable-player confirmation dialog"
+  },
+  "players_diversity": "Diversity",
+  "@players_diversity": {
+    "description": "Stat label: number of distinct partners played with"
+  },
+  "players_duplicate_name_in_file": "Duplicate name found in file",
+  "@players_duplicate_name_in_file": {
+    "description": "Error when an imported file contains the same name twice"
+  },
+  "players_enter_first_name": "Please enter first name",
+  "@players_enter_first_name": {
+    "description": "Validation error for an empty first name"
+  },
+  "players_enter_last_name": "Please enter last name",
+  "@players_enter_last_name": {
+    "description": "Validation error for an empty last name"
+  },
+  "players_fill_all_fields": "Please fill out all fields correctly.",
+  "@players_fill_all_fields": {
+    "description": "Error toast when the add-player form is invalid"
+  },
+  "players_header_name_id": "Name / ID",
+  "@players_header_name_id": {
+    "description": "Players table column header for name and sign-in ID"
+  },
+  "players_import": "Import",
+  "@players_import": {
+    "description": "Button to import players from a CSV file"
+  },
+  "players_import_failed": "Failed to import players — try again",
+  "@players_import_failed": {
+    "description": "Error toast when saving imported players fails"
+  },
+  "players_level": "Level",
+  "@players_level": {
+    "description": "Players table column header for the skill level"
+  },
+  "players_level_progression": "Level Progression",
+  "@players_level_progression": {
+    "description": "Section label for the level sparkline in the player profile card"
+  },
+  "players_matches": "Matches",
+  "@players_matches": {
+    "description": "Stat label: number of games played"
+  },
+  "players_membership": "Membership",
+  "@players_membership": {
+    "description": "Players table column header for membership status"
+  },
   "players_membership_casual": "Casual",
   "@players_membership_casual": {
     "description": "Membership status: casual (non-member) player"
@@ -132,6 +309,77 @@
   "players_membership_member": "Member",
   "@players_membership_member": {
     "description": "Membership status: club member"
+  },
+  "players_most_frequent_partners": "Most Frequent Partners",
+  "@players_most_frequent_partners": {
+    "description": "Section label in the player profile card"
+  },
+  "players_name": "Name",
+  "@players_name": {
+    "description": "Column header for the player name"
+  },
+  "players_no_players_matching": "No players matching \"{query}\"",
+  "@players_no_players_matching": {
+    "description": "Empty state when the player search has no results",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "players_no_players_yet": "No players added yet",
+  "@players_no_players_yet": {
+    "description": "Empty state when no players exist"
+  },
+  "players_no_session_data": "No session data yet",
+  "@players_no_session_data": {
+    "description": "Attendance summary when there is no session history"
+  },
+  "players_pending_registrations_title": "Pending self-registrations ({count})",
+  "@players_pending_registrations_title": {
+    "description": "Title of the pending self-registrations card with the number pending",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "players_reject": "Reject",
+  "@players_reject": {
+    "description": "Button to reject a pending self-registration"
+  },
+  "players_rejected_toast": "{name} has been rejected",
+  "@players_rejected_toast": {
+    "description": "Toast after a registration is rejected",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_search_placeholder": "Search players…",
+  "@players_search_placeholder": {
+    "description": "Placeholder for the player search field"
+  },
+  "players_select_elo": "Please select elo",
+  "@players_select_elo": {
+    "description": "Validation error when no Elo level is selected"
+  },
+  "players_select_import_file": "Select import data file",
+  "@players_select_import_file": {
+    "description": "File picker title for importing players from CSV"
+  },
+  "players_select_output_file": "Please select an output file:",
+  "@players_select_output_file": {
+    "description": "File picker title for saving game data"
+  },
+  "players_select_saved_data_file": "Select saved data file",
+  "@players_select_saved_data_file": {
+    "description": "File picker title for loading saved game data"
+  },
+  "players_session_full_cannot_check_in": "Session at capacity — cannot check in",
+  "@players_session_full_cannot_check_in": {
+    "description": "Snackbar when a check-in is refused because the session is full"
   },
   "regenerate": "Regenerate",
   "@regenerate": {

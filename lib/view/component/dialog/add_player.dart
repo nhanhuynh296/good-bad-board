@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/player.dart';
-import 'package:good_bad_board/spacing.dart';
+import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/dialog/toasts.dart';
 
+/// The Add-player form, shown with `showDialog<Player>`.
+///
+/// The dialog closes itself and returns the new [Player] through the
+/// `showDialog` future; the caller only reads that result. Callers must not
+/// pop it themselves — `showDialog` puts this route on the **root** Navigator,
+/// while a caller's own `BuildContext` inside the shell resolves to the
+/// per-tab Navigator, so popping from there tears down the tab and leaves a
+/// blank screen.
 class AddPlayerDialog extends StatefulWidget {
-  final ValueChanged<Player>? onSubmit;
-
-  const AddPlayerDialog({super.key, this.onSubmit});
+  const AddPlayerDialog({super.key});
 
   @override
   State<AddPlayerDialog> createState() => _AddPlayerDialogState();
@@ -44,7 +50,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter first name';
+                  return AppLocalizations.of(context)!.players_enter_first_name;
                 }
                 firstName = value;
                 return null;
@@ -58,7 +64,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter last name';
+                  return AppLocalizations.of(context)!.players_enter_last_name;
                 }
                 lastName = value;
                 return null;
@@ -71,7 +77,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               ),
               validator: (value) {
                 if (value != null) return null;
-                return 'Please select elo';
+                return AppLocalizations.of(context)!.players_select_elo;
               },
               items: Elo.values
                   .map(
@@ -102,6 +108,13 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
       ),
       actions: <Widget>[
         Button(
+          key: const Key('add-player-cancel'),
+          type: ButtonType.text,
+          child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+          // Closes with no player — the caller's `result` is null.
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        Button(
           type: ButtonType.text,
           child: Text(AppLocalizations.of(context)!.reset),
           onPressed: () {
@@ -109,14 +122,19 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
           },
         ),
         Button(
+          key: const Key('add-player-submit'),
           type: ButtonType.filled,
           onPressed: () {
             // Validate returns true if the form is valid, or false otherwise.
             if (!_formKey.currentState!.validate()) {
-              context.showErrorToast('Please fill out all fields correctly.');
+              context.showErrorToast(
+                AppLocalizations.of(context)!.players_fill_all_fields,
+              );
               return;
             }
-            widget.onSubmit?.call(
+            // This context sits below the dialog route on the root Navigator,
+            // so this pops the dialog — and only the dialog.
+            Navigator.of(context).pop(
               Player.create(
                 firstName: firstName!,
                 lastName: lastName!,
@@ -124,7 +142,6 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
                 signInId: signInId,
               ),
             );
-            resetForm();
           },
           child: Text(AppLocalizations.of(context)!.add),
         ),
