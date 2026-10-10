@@ -1,8 +1,11 @@
 {
   "about": "About",
-  "active_player": "Active Player",
   "add": "Add",
   "add_player": "Add Player",
+  "anonymised_player": "Deleted player",
+  "@anonymised_player": {
+    "description": "Placeholder shown in place of the name of a Player who has been anonymised (deleted)"
+  },
   "app_name": "Badminton Game Generator",
   "are_you_sure_you_want_to_delete_this_player": "Are you sure you want to delete this player?",
   "@are_you_sure_you_want_to_delete_this_player": {
@@ -74,7 +77,6 @@
   "@id": {
     "description": "Unique player identifier"
   },
-  "inactive_player": "Inactive Player",
   "language": "Language",
   "language_name": "English",
   "@language_name": {
@@ -119,11 +121,55 @@
   "@player_statistic": {
     "description": "View player statistics"
   },
+  "players_membership_casual": "Casual",
+  "@players_membership_casual": {
+    "description": "Membership status: casual (non-member) player"
+  },
+  "players_membership_disabled": "Disabled",
+  "@players_membership_disabled": {
+    "description": "Membership status: disabled player, cannot check in"
+  },
+  "players_membership_member": "Member",
+  "@players_membership_member": {
+    "description": "Membership status: club member"
+  },
   "regenerate": "Regenerate",
   "@regenerate": {
     "description": "Recreate a game with new parameters"
   },
   "regenerate_game": "Regenerate Game",
+  "registration_tier_advanced": "Advanced",
+  "@registration_tier_advanced": {
+    "description": "Skill tier name"
+  },
+  "registration_tier_advanced_description": "Plays regularly with strong technique and strategy",
+  "@registration_tier_advanced_description": {
+    "description": "Description of the Advanced skill tier"
+  },
+  "registration_tier_amateur": "Amateur",
+  "@registration_tier_amateur": {
+    "description": "Skill tier name"
+  },
+  "registration_tier_amateur_description": "New to badminton, or playing just for fun",
+  "@registration_tier_amateur_description": {
+    "description": "Description of the Amateur skill tier"
+  },
+  "registration_tier_intermediate": "Intermediate",
+  "@registration_tier_intermediate": {
+    "description": "Skill tier name"
+  },
+  "registration_tier_intermediate_description": "Comfortable rallying and knows the rules well",
+  "@registration_tier_intermediate_description": {
+    "description": "Description of the Intermediate skill tier"
+  },
+  "registration_tier_professional": "Professional",
+  "@registration_tier_professional": {
+    "description": "Skill tier name"
+  },
+  "registration_tier_professional_description": "Competitive or tournament-level player",
+  "@registration_tier_professional_description": {
+    "description": "Description of the Professional skill tier"
+  },
   "reset": "Reset",
   "save": "Save",
   "settings": "Settings",
@@ -151,5 +197,15 @@
   },
   "to_current_session": "To current session",
   "today": "Today",
-  "update": "Update"
+  "update": "Update",
+  "common_search_players": "Search players…",
+  "@common_search_players": {
+    "description": "Default placeholder of the search input"
+  },
+  "common_toggle": "Toggle",
+  "@common_toggle": {
+    "description": "Default accessibility label of a toggle button"
+  },
+  "active_player": "Active Player",
+  "inactive_player": "Inactive Player"
 }
