@@ -472,6 +472,68 @@
   },
   "reset": "Reset",
   "save": "Save",
+  "sessions_capacity": "Session capacity",
+  "@sessions_capacity": {
+    "description": "Label for the maximum number of players in a session"
+  },
+  "sessions_game_based": "Game-based",
+  "@sessions_game_based": {
+    "description": "Round mode where the organizer advances each court by hand"
+  },
+  "sessions_game_based_description": "Game-based · save and re-roll each court by hand",
+  "@sessions_game_based_description": {
+    "description": "Summary of game-based mode"
+  },
+  "sessions_load": "Load",
+  "@sessions_load": {
+    "description": "Button that applies a saved template"
+  },
+  "sessions_minutes_short": "min",
+  "@sessions_minutes_short": {
+    "description": "Short unit label under the minutes field"
+  },
+  "sessions_number_of_courts": "Number of courts",
+  "@sessions_number_of_courts": {
+    "description": "Label for the number of courts in use"
+  },
+  "sessions_rotation_duration": "Rotation duration",
+  "@sessions_rotation_duration": {
+    "description": "Label for the length of a timed rotation"
+  },
+  "sessions_round_mode": "Round mode",
+  "@sessions_round_mode": {
+    "description": "Title of the card configuring how rounds advance"
+  },
+  "sessions_save_current": "Save current",
+  "@sessions_save_current": {
+    "description": "Button that saves the current settings as a template"
+  },
+  "sessions_seconds_short": "sec",
+  "@sessions_seconds_short": {
+    "description": "Short unit label under the seconds field"
+  },
+  "sessions_template_name": "Template name",
+  "@sessions_template_name": {
+    "description": "Hint text for the new template name field"
+  },
+  "sessions_templates": "Session templates",
+  "@sessions_templates": {
+    "description": "Title of the card listing saved session templates"
+  },
+  "sessions_time_based": "Time-based",
+  "@sessions_time_based": {
+    "description": "Round mode where rounds advance on a timer"
+  },
+  "sessions_time_based_description": "Time-based · {duration} rounds",
+  "@sessions_time_based_description": {
+    "description": "Summary of time-based mode; duration is mm:ss",
+    "placeholders": {
+      "duration": {
+        "type": "String",
+        "example": "12:00"
+      }
+    }
+  },
   "settings": "Settings",
   "sign_in_id": "Sign In ID",
   "skill_gap_n": "Skill Gap: {gap}",
