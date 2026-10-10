@@ -386,6 +386,58 @@
     "description": "Recreate a game with new parameters"
   },
   "regenerate_game": "Regenerate Game",
+  "registration_contact": "Email or phone",
+  "@registration_contact": {
+    "description": "Label for the contact field on the signup form"
+  },
+  "registration_contact_hint": "How we can reach you",
+  "@registration_contact_hint": {
+    "description": "Placeholder for the contact field"
+  },
+  "registration_intro": "Join the club — takes about a minute",
+  "@registration_intro": {
+    "description": "Subtitle at the top of the public signup form"
+  },
+  "registration_level_question": "Which best describes your level?",
+  "@registration_level_question": {
+    "description": "Prompt above the skill tier choices"
+  },
+  "registration_name": "Name",
+  "@registration_name": {
+    "description": "Label for the name field on the signup form"
+  },
+  "registration_name_hint": "Your full name",
+  "@registration_name_hint": {
+    "description": "Placeholder for the name field"
+  },
+  "registration_review_note": "An organizer reviews every new sign-up before you're added to the roster.",
+  "@registration_review_note": {
+    "description": "Note under the signup form"
+  },
+  "registration_signed_up_as": "You're signed up as {tier}. An organizer reviews every new sign-up and may adjust your starting level before you're added to the roster.",
+  "@registration_signed_up_as": {
+    "description": "Confirmation text; tier is the localized skill tier name",
+    "placeholders": {
+      "tier": {
+        "type": "String",
+        "example": "Intermediate"
+      }
+    }
+  },
+  "registration_submit": "Submit",
+  "@registration_submit": {
+    "description": "Button that submits the signup form"
+  },
+  "registration_thanks": "Thanks, {name}!",
+  "@registration_thanks": {
+    "description": "Heading on the signup confirmation; name is the player's first name",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Jane"
+      }
+    }
+  },
   "registration_tier_advanced": "Advanced",
   "@registration_tier_advanced": {
     "description": "Skill tier name"
