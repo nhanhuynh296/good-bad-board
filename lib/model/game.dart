@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:good_bad_board/model/player.dart';
-import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:uuid/uuid.dart';
 
 part 'game.freezed.dart';
@@ -21,16 +21,31 @@ abstract class Game with _$Game {
   const Game._();
 
   factory Game({
-    required PlayerContainer players,
+    required List<String> playerIds,
     required String id,
     required DateTime createdDate,
   }) = _Game;
 
-  factory Game.create(PlayerContainer players) => Game(
-    players: players,
+  factory Game.create(Iterable<Player> players) => Game(
+    playerIds: players.map((player) => player.id).toList(growable: true),
     id: const Uuid().v4(),
     createdDate: DateTime.now(),
   );
+
+  /// [playerIds] resolved to [Player]s via [PlayerRepository], anonymised
+  /// players included (ADR-0001). An id that resolves to nothing is dropped
+  /// from this snapshot — it still stays in [playerIds] and on disk.
+  ///
+  /// Reaches the singleton directly rather than taking a resolver parameter,
+  /// unlike `analytics_engine.dart`'s `resolvePlayer` callbacks — that file
+  /// stays free of `PlayerRepository` on purpose, so its test suite can stay
+  /// pure Dart with no repository/file-IO setup. `Game` has no such
+  /// constraint: every caller (`GameData`, `GameRepository`, the widget
+  /// layer) already runs with `PlayerRepository.instance` initialized.
+  List<Player> get players => playerIds
+      .map(PlayerRepository.instance.byId)
+      .nonNulls
+      .toList(growable: true);
 
   int eloGap() {
     if (players.length < 2) return 0;
@@ -42,7 +57,10 @@ abstract class Game with _$Game {
     return players.map((player) => player.elo.index);
   }
 
-  bool isPlayable() => acceptablePlayerNumber.contains(players.length);
+  /// Whether this court holds a full or a doubles-eligible number of slots.
+  /// Counts slots ([playerIds]), not resolved [players] — an unresolvable id
+  /// still occupies a slot.
+  bool isPlayable() => acceptablePlayerNumber.contains(playerIds.length);
 
   // Json Serialization
   factory Game.fromJson(Map<String, dynamic> json) => _$GameFromJson(json);
