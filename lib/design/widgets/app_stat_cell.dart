@@ -17,10 +17,7 @@ class AppStatCell extends StatelessWidget {
   final String value;
   final bool isAccent;
 
-  static const _accentValueStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 19,
-    fontWeight: FontWeight.w800,
+  static final _accentValueStyle = AppTypography.statValue.copyWith(
     color: AppColors.accentPrimary,
   );
 

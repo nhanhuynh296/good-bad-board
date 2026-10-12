@@ -22,10 +22,7 @@ class AppChip extends StatelessWidget {
   final VoidCallback? onTap;
   final bool compact;
 
-  static const _selectedStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
+  static final _selectedStyle = AppTypography.chip.copyWith(
     color: AppColors.white,
   );
 

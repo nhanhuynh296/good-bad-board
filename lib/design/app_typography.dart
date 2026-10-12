@@ -137,6 +137,23 @@ abstract class AppTypography {
     color: AppColors.textPrimary,
   );
 
+  /// KPI card label — 10.5px, 800, uppercase
+  static const TextStyle kpiLabel = TextStyle(
+    fontFamily: bodyFont,
+    fontSize: 10.5,
+    fontWeight: FontWeight.w800,
+    color: AppColors.textMuted,
+    letterSpacing: 0.05 * 10,
+  );
+
+  /// Text input value and hint — 14px, 500
+  static const TextStyle input = TextStyle(
+    fontFamily: bodyFont,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textPrimary,
+  );
+
   // ── KPI delta ──────────────────────────────────────────
 
   /// KPI delta label — 11px, 700

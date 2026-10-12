@@ -31,17 +31,11 @@ class AppToggleButton extends StatelessWidget {
   final String? onLabel;
   final String? offLabel;
 
-  static const _onStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
+  static final _onStyle = AppTypography.buttonSm.copyWith(
     color: AppColors.white,
   );
 
-  static const _offStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
+  static final _offStyle = AppTypography.buttonSm.copyWith(
     color: AppColors.toggleOffText,
   );
 

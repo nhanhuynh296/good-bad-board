@@ -22,32 +22,17 @@ class AppKpiCard extends StatelessWidget {
   final String? delta;
   final bool? deltaPositive;
 
-  static const _labelStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 10.5,
-    fontWeight: FontWeight.w800,
-    color: AppColors.textMuted,
-    letterSpacing: 0.05 * 10,
-  );
+  static const _labelStyle = AppTypography.kpiLabel;
 
-  static const _deltaPositiveStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
+  static final _deltaPositiveStyle = AppTypography.kpiDelta.copyWith(
     color: AppColors.deltaPositive,
   );
 
-  static const _deltaNegativeStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
+  static final _deltaNegativeStyle = AppTypography.kpiDelta.copyWith(
     color: AppColors.deltaNegative,
   );
 
-  static const _deltaNeutralStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
+  static final _deltaNeutralStyle = AppTypography.kpiDelta.copyWith(
     color: AppColors.textMuted,
   );
 

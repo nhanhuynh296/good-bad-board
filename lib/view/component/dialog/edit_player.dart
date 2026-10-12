@@ -86,19 +86,25 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
                       DataColumn(
                         label: Text(
                           l10n.players_name,
-                          style: const TextStyle(fontStyle: FontStyle.italic),
+                          style: AppTypography.smBold.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                       DataColumn(
                         label: Text(
                           l10n.elo,
-                          style: const TextStyle(fontStyle: FontStyle.italic),
+                          style: AppTypography.smBold.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                       DataColumn(
                         label: Text(
                           l10n.sign_in_id,
-                          style: const TextStyle(fontStyle: FontStyle.italic),
+                          style: AppTypography.smBold.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                     ],
