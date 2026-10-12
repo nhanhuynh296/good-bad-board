@@ -4,8 +4,8 @@ import 'package:good_bad_board/features/analytics/analytics_engine.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/features/analytics/bar_chart.dart';
 
-/// ANA-09 — player counts per tier across the whole club, with median tier
-/// and an optional stagnation callout.
+/// ANA-09 — player counts per tier across the whole club, with median tier,
+/// a trend note and an optional stagnation callout.
 class LevelDistributionCard extends StatelessWidget {
   const LevelDistributionCard({super.key, required this.result});
 
@@ -26,6 +26,10 @@ class LevelDistributionCard extends StatelessWidget {
             l10n.analytics_median_tier(result.medianTierLabel),
             style: AppTypography.helper,
           ),
+          if (result.trendNote != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(result.trendNote!, style: AppTypography.helper),
+          ],
           if (result.stagnationNote != null) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(

@@ -149,16 +149,32 @@ class HorizontalBarList extends StatelessWidget {
             children: [
               SizedBox(
                 width: 90,
-                child: Text(
-                  entry.label,
-                  style: const TextStyle(
-                    fontFamily: AppTypography.bodyFont,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.label,
+                      style: const TextStyle(
+                        fontFamily: AppTypography.bodyFont,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (entry.caption != null)
+                      Text(
+                        entry.caption!,
+                        style: const TextStyle(
+                          fontFamily: AppTypography.bodyFont,
+                          fontSize: 10,
+                          color: AppColors.textSubtle,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),

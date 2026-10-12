@@ -484,18 +484,22 @@ void main() {
   });
 
   group('ANA-09: Level distribution', () {
+    LevelDistributionResult distribution(
+      List<Player> players,
+      List<Game> games,
+    ) => computeLevelDistribution(
+      players,
+      games,
+      range,
+      resolvePlayer: _resolverFor(players),
+      l10n: l10n,
+    );
+
     test(
-      'buckets players into the 4 named tiers, not raw elo, and computes median',
+      'should_bucket_players_into_the_4_named_tiers_and_compute_the_median',
       () {
         final players = [_p('A', Elo.c2), _p('B', Elo.c1), _p('C', Elo.s1)];
-        final result = computeLevelDistribution(
-          players,
-          [],
-          range,
-          resolvePlayer: _resolverFor(players),
-          l10n: l10n,
-        );
-        expect(result.points, hasLength(4));
+        final result = distribution(players, []);
         expect(result.points.map((p) => p.label), [
           'Amateur',
           'Intermediate',
@@ -506,36 +510,74 @@ void main() {
       },
     );
 
-    test('flags stagnant players with 6+ flat sessions within the range', () {
+    test('should_flag_a_player_with_6_sessions_in_range', () {
       final player = _p('Stuck', Elo.c2);
       final games = List.generate(
         6,
         (i) => _game([player], now.subtract(Duration(days: 6 - i))),
       );
-      final result = computeLevelDistribution(
-        [player],
-        games,
-        range,
-        resolvePlayer: _resolverFor([player]),
-        l10n: l10n,
-      );
-      expect(result.stagnationNote, contains('1 players'));
+      final result = distribution([player], games);
+      expect(result.stagnationNote, l10n.analytics_stagnation(1));
     });
 
-    test('stagnation ignores games outside the selected range', () {
+    test('should_count_sessions_not_games_for_stagnation', () {
+      // Six games on one night are one session.
+      final player = _p('Busy', Elo.c2);
+      final night = now.subtract(const Duration(days: 2));
+      final games = List.generate(6, (_) => _game([player], night));
+      final result = distribution([player], games);
+      expect(result.stagnationNote, isNull);
+    });
+
+    test('should_ignore_sessions_outside_the_range_for_stagnation', () {
       final player = _p('Stuck', Elo.c2);
       final games = List.generate(
         6,
         (i) => _game([player], DateTime(2000, 1, 1 + i)),
       );
-      final result = computeLevelDistribution(
-        [player],
-        games,
-        range,
-        resolvePlayer: _resolverFor([player]),
-        l10n: l10n,
-      );
+      final result = distribution([player], games);
       expect(result.stagnationNote, isNull);
+    });
+
+    test('should_report_trend_up_when_active_players_skew_higher', () {
+      final low = _p('Low', Elo.c2);
+      final high = _p('High', Elo.s1);
+      final games = [
+        _game([low], now.subtract(const Duration(days: 100))),
+        _game([high], now.subtract(const Duration(days: 3))),
+      ];
+      final result = distribution([low, high], games);
+      expect(result.trendNote, l10n.analytics_level_trend_up);
+    });
+
+    test('should_report_trend_down_when_active_players_skew_lower', () {
+      final low = _p('Low', Elo.c2);
+      final high = _p('High', Elo.s1);
+      final games = [
+        _game([high], now.subtract(const Duration(days: 100))),
+        _game([low], now.subtract(const Duration(days: 3))),
+      ];
+      final result = distribution([low, high], games);
+      expect(result.trendNote, l10n.analytics_level_trend_down);
+    });
+
+    test('should_report_trend_flat_when_the_mix_does_not_change', () {
+      final player = _p('Same', Elo.b2);
+      final games = [
+        _game([player], now.subtract(const Duration(days: 100))),
+        _game([player], now.subtract(const Duration(days: 3))),
+      ];
+      final result = distribution([player], games);
+      expect(result.trendNote, l10n.analytics_level_trend_flat);
+    });
+
+    test('should_give_no_trend_without_games_in_both_windows', () {
+      final player = _p('Only', Elo.b2);
+      final games = [
+        _game([player], now.subtract(const Duration(days: 3))),
+      ];
+      final result = distribution([player], games);
+      expect(result.trendNote, isNull);
     });
   });
 
@@ -553,7 +595,7 @@ void main() {
   });
 
   group('ANA-12: Player mixing', () {
-    test('tags a wide-partner player as connector', () {
+    test('should_tag_a_wide_partner_player_as_connector', () {
       final hub = _p('Hub', Elo.c2);
       final partners = List.generate(5, (i) => _p('P$i', Elo.c1));
       final games = List.generate(
@@ -565,10 +607,42 @@ void main() {
         resolvePlayer: _resolverFor([hub, ...partners]),
       );
       final hubEntry = mixing.firstWhere((m) => m.name == hub.name());
-      expect(hubEntry.tag, 'connector');
+      expect(hubEntry.tag, MixingTag.connector);
     });
 
-    test('uses the supplied nameOf — a deleted player shows a placeholder', () {
+    test('should_tag_a_narrow_circle_player_as_clique', () {
+      // 3 distinct partners over 10 games: score 0.3.
+      final a = _p('A', Elo.c2);
+      final others = List.generate(3, (i) => _p('O$i', Elo.c1));
+      final games = List.generate(
+        10,
+        (i) => _game([a, others[i % 3]], DateTime(2026, 1, 1 + i)),
+      );
+      final mixing = computePlayerMixing(
+        games,
+        resolvePlayer: _resolverFor([a, ...others]),
+      );
+      expect(
+        mixing.firstWhere((m) => m.name == a.name()).tag,
+        MixingTag.clique,
+      );
+    });
+
+    test('should_tag_a_one_partner_player_as_isolated', () {
+      final a = _p('A', Elo.c2);
+      final b = _p('B', Elo.c1);
+      final games = List.generate(
+        10,
+        (i) => _game([a, b], DateTime(2026, 1, 1 + i)),
+      );
+      final mixing = computePlayerMixing(
+        games,
+        resolvePlayer: _resolverFor([a, b]),
+      );
+      expect(mixing.first.tag, MixingTag.isolated);
+    });
+
+    test('should_use_the_supplied_name_for_a_deleted_player', () {
       final deleted = _p(
         'Ghost',
         Elo.c2,
@@ -584,33 +658,119 @@ void main() {
       );
       expect(mixing.map((m) => m.name), contains('Deleted player'));
     });
+
+    MixingEntry entry(int i, double score, [MixingTag? tag]) =>
+        MixingEntry(name: 'E$i', score: score, tag: tag);
+
+    test('should_sample_the_top_and_bottom_scores_when_over_10_players', () {
+      final entries = [
+        for (var i = 0; i < 12; i++)
+          entry(i, 1 - i / 12, i == 11 ? MixingTag.isolated : null),
+      ];
+      final sample = sampleMixing(entries);
+      expect(sample, hasLength(10));
+      expect(sample.map((e) => e.name), containsAll(['E0', 'E4', 'E7', 'E11']));
+    });
+
+    test('should_keep_every_player_when_10_or_fewer', () {
+      final entries = [for (var i = 0; i < 10; i++) entry(i, 1 - i / 10)];
+      expect(sampleMixing(entries), entries);
+    });
   });
 
   group('ANA-13: New player integration', () {
-    test('computes % of games played with regulars', () {
-      final regular = _p('Reg', Elo.c2, createdDate: DateTime(2020, 1, 1));
-      final regularGames = List.generate(
-        8,
-        (i) => _game([regular, _p('X$i', Elo.c1)], DateTime(2025, 1, 1 + i)),
+    final regular = _p('Reg', Elo.c2, createdDate: DateTime(2020, 1, 1));
+    final regularGames = List.generate(
+      8,
+      (i) => _game([regular, _p('X$i', Elo.c1)], DateTime(2026, 1, 1 + i)),
+    );
+    final other = _p('Y', Elo.c1);
+
+    List<NewPlayerEntry> integration(List<Game> extra, List<Player> players) =>
+        computeNewPlayerIntegration(
+          [...regularGames, ...extra],
+          [regular, ...players],
+          range: range,
+        );
+
+    Player newcomer({int joinedDaysAgo = 5}) => _p(
+      'Newbie',
+      Elo.c2,
+      createdDate: now.subtract(Duration(days: joinedDaysAgo)),
+    );
+
+    test('should_compute_the_share_of_games_played_with_regulars', () {
+      final newbie = newcomer();
+      final result = integration(
+        [
+          _game([newbie, regular], now.subtract(const Duration(days: 1))),
+        ],
+        [newbie],
       );
-      final newbie = _p(
-        'Newbie',
-        Elo.c2,
-        createdDate: now.subtract(const Duration(days: 5)),
+      expect(result.single.name, 'Newbie T');
+      expect(result.single.pctWithRegulars, 100);
+      expect(result.single.isFavorable, isTrue);
+    });
+
+    test('should_count_sessions_attended_as_distinct_days', () {
+      final newbie = newcomer();
+      final night = now.subtract(const Duration(days: 1));
+      final result = integration(
+        [
+          _game([newbie, regular], night),
+          _game([newbie, other], night),
+          _game([newbie, regular], night.subtract(const Duration(days: 2))),
+        ],
+        [newbie],
       );
-      final newbieGame = _game([
-        newbie,
-        regular,
-      ], now.subtract(const Duration(days: 1)));
+      expect(result.single.sessionsAttended, 2);
+    });
+
+    test('should_mark_below_50_percent_as_needing_attention', () {
+      final newbie = newcomer();
+      final result = integration(
+        [
+          _game([newbie, regular], now.subtract(const Duration(days: 1))),
+          _game([newbie, other], now.subtract(const Duration(days: 2))),
+          _game([newbie, other], now.subtract(const Duration(days: 3))),
+        ],
+        [newbie],
+      );
+      expect(result.single.isFavorable, isFalse);
+    });
+
+    test('should_treat_exactly_50_percent_as_favorable', () {
+      final newbie = newcomer();
+      final result = integration(
+        [
+          _game([newbie, regular], now.subtract(const Duration(days: 1))),
+          _game([newbie, other], now.subtract(const Duration(days: 2))),
+        ],
+        [newbie],
+      );
+      expect(result.single.isFavorable, isTrue);
+    });
+
+    test('should_exclude_players_who_joined_before_the_new_window', () {
+      final old = newcomer(joinedDaysAgo: kNewPlayerWindowDays + 1);
+      final edge = newcomer(joinedDaysAgo: kNewPlayerWindowDays);
+      final result = integration([], [old, edge]);
+      expect(result.map((e) => e.name), ['Newbie T']);
+      expect(result.single.joinDate, edge.createdDate);
+    });
+
+    test('should_only_count_games_inside_the_selected_range', () {
+      final newbie = newcomer(joinedDaysAgo: 50);
       final result = computeNewPlayerIntegration(
-        [...regularGames, newbieGame],
+        [
+          ...regularGames,
+          _game([newbie, regular], now.subtract(const Duration(days: 3))),
+          _game([newbie, regular], now.subtract(const Duration(days: 40))),
+        ],
         [regular, newbie],
-        now: now,
+        range: DateRange.lastWeeks(2, now: now),
       );
-      expect(result, hasLength(1));
-      expect(result.first.name, 'Newbie T');
-      expect(result.first.pctWithRegulars, 100);
-      expect(result.first.isFavorable, isTrue);
+      expect(result.single.sessionsAttended, 1);
     });
   });
 }

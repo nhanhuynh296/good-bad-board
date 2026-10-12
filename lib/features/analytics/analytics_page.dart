@@ -37,13 +37,15 @@ class AnalyticsPage extends StatefulWidget {
 
 class _AnalyticsPageState extends State<AnalyticsPage> {
   int _selectedWeeks = 12;
+  late DateRange _range;
   List<Game> _games = [];
   List<SessionLog> _sessionLogs = [];
   List<Player> _allPlayers = [];
 
-  // Range-independent results, recomputed only when data reloads (not on
-  // every range-switcher tap or rebuild) — computePlayerMixing in
-  // particular is an O(players × games) pass.
+  // Results that need the resolved roster or an O(players × games) pass —
+  // computePlayerMixing in particular. They follow the selected range, so
+  // they are recomputed when the data reloads or the range changes, not on
+  // every rebuild.
   AtRiskResult _atRisk = const AtRiskResult(entries: []);
   List<MixingEntry> _mixing = const [];
   List<NewPlayerEntry> _newPlayers = const [];
@@ -78,6 +80,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   void _reload() => setState(_recompute);
 
+  void _selectRange(int weeks) => setState(() {
+    _selectedWeeks = weeks;
+    _recompute();
+  });
+
   /// Reads are synchronous map lookups, so this can run directly from
   /// [didChangeDependencies] — no loading spinner is ever needed.
   void _recompute() {
@@ -91,18 +98,26 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     _games = playableGames;
     _sessionLogs = logs;
     _allPlayers = allPlayers;
-    _atRisk = computeAtRiskPlayers(playableGames, allPlayers);
+    _range = DateRange.lastWeeks(_selectedWeeks);
+    final gamesInRange = playableGames
+        .where((g) => _range.contains(g.createdDate))
+        .toList();
+    _atRisk = computeAtRiskPlayers(gamesInRange, allPlayers, now: _range.end);
     _mixing = computePlayerMixing(
-      playableGames,
+      gamesInRange,
       resolvePlayer: PlayerRepository.instance.byId,
       nameOf: (p) => playerDisplayName(p, l10n),
     );
-    _newPlayers = computeNewPlayerIntegration(playableGames, allPlayers);
+    _newPlayers = computeNewPlayerIntegration(
+      playableGames,
+      allPlayers,
+      range: _range,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final range = DateRange.lastWeeks(_selectedWeeks);
+    final range = _range;
     final l10n = AppLocalizations.of(context)!;
 
     final kpis = computeKpis(_games, _sessionLogs, range, l10n: l10n);
@@ -139,7 +154,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               final title = AppSectionTitle(title: l10n.analytics_title);
               final switcher = AnalyticsRangeSwitcher(
                 selectedWeeks: _selectedWeeks,
-                onChanged: (weeks) => setState(() => _selectedWeeks = weeks),
+                onChanged: _selectRange,
               );
               if (stacked) {
                 return Column(
@@ -216,8 +231,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 }
 
-/// A responsive row of chart cards — reflows to a single column on phone,
-/// per ANA-14.
+/// A responsive row of chart cards — side by side on desktop, one column on
+/// tablet and phone, per ANA-14.
 class _ChartRow extends StatelessWidget {
   const _ChartRow({required this.children});
 
@@ -227,7 +242,7 @@ class _ChartRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (isPhone(constraints.maxWidth)) {
+        if (!isDesktop(constraints.maxWidth)) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

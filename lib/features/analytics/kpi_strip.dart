@@ -4,7 +4,7 @@ import 'package:good_bad_board/features/analytics/analytics_engine.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 
 /// Responsive grid of [AppKpiCard]s — ANA-02. 6 cols desktop, 3 tablet,
-/// 2 phone.
+/// 1 phone (ANA-14).
 class KpiStrip extends StatelessWidget {
   const KpiStrip({super.key, required this.kpis});
 
@@ -15,7 +15,7 @@ class KpiStrip extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final crossAxisCount = isDesktop(width) ? 6 : (isTablet(width) ? 3 : 2);
+        final crossAxisCount = isDesktop(width) ? 6 : (isTablet(width) ? 3 : 1);
 
         return GridView.builder(
           shrinkWrap: true,

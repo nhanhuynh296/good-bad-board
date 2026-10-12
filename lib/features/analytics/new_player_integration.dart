@@ -13,6 +13,7 @@ class NewPlayerIntegrationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final needsAttention = entries.where((e) => !e.isFavorable).length;
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,6 +90,15 @@ class NewPlayerIntegrationCard extends StatelessWidget {
                   ],
                 ),
               ),
+          if (entries.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              needsAttention == 0
+                  ? l10n.analytics_new_players_ok
+                  : l10n.analytics_new_players_attention(needsAttention),
+              style: AppTypography.helper,
+            ),
+          ],
         ],
       ),
     );

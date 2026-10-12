@@ -136,7 +136,12 @@ List<_Session> _sessionsByDay(Iterable<SessionLog> logs, DateRange range) {
 
 /// A single bar-chart data point.
 class ChartPoint {
-  const ChartPoint({required this.label, required this.value, this.valueLabel});
+  const ChartPoint({
+    required this.label,
+    required this.value,
+    this.valueLabel,
+    this.caption,
+  });
 
   /// X-axis label (e.g. a short date).
   final String label;
@@ -146,6 +151,10 @@ class ChartPoint {
 
   /// Optional pre-formatted display text for the bar's top label.
   final String? valueLabel;
+
+  /// Optional small text under the label in a [HorizontalBarList] (e.g. a
+  /// player's mixing tag).
+  final String? caption;
 }
 
 /// A single KPI tile.
@@ -540,12 +549,24 @@ class LevelDistributionResult {
   const LevelDistributionResult({
     required this.points,
     required this.medianTierLabel,
+    required this.trendNote,
     required this.stagnationNote,
   });
   final List<ChartPoint> points;
   final String medianTierLabel;
+
+  /// Whether the active players skew to higher or lower tiers than in the
+  /// prior period. Null when either period has no games.
+  final String? trendNote;
   final String? stagnationNote;
 }
+
+/// Sessions a player must attend in the range to be called stagnant.
+const _stagnationSessions = 6;
+
+/// Change in the mean tier index of the active players that counts as a
+/// trend rather than steady.
+const _tierTrendThreshold = 0.1;
 
 LevelDistributionResult computeLevelDistribution(
   List<Player> allPlayers,
@@ -575,30 +596,48 @@ LevelDistributionResult computeLevelDistribution(
     medianLabel = SkillTier.values[mid].localizedLabel(l10n);
   }
 
-  // Stagnation: players whose tier hasn't changed across their last 6 games
-  // logged within the selected time range.
-  final gamesInRange = games.where((g) => range.contains(g.createdDate));
-  final byPlayer = groupBy(
-    gamesInRange.expand(
-      (g) => g.playerIds
-          .map(resolvePlayer)
-          .nonNulls
-          .map((p) => (p, g.createdDate)),
-    ),
-    (record) => record.$1.id,
-  );
-  var stagnantCount = 0;
-  for (final entry in byPlayer.entries) {
-    final sortedGames = entry.value.sortedBy((r) => r.$2);
-    if (sortedGames.length < 6) continue;
-    final last6 = sortedGames.sublist(sortedGames.length - 6);
-    final tiers = last6.map((r) => r.$1.elo.skillTier).toSet();
-    if (tiers.length == 1) stagnantCount++;
+  // Trend: the club keeps no tier history (a Game stores player ids only,
+  // ADR-0001), so progress cannot be measured. The closest honest signal is
+  // who plays: the mean current tier of the players active in this range
+  // against the prior range.
+  double? meanTier(DateRange window) {
+    final tiers = _playerIdsInRange(
+      games,
+      window,
+    ).map(resolvePlayer).nonNulls.map((p) => p.elo.skillTier.index);
+    return tiers.isEmpty ? null : tiers.average;
   }
+
+  final current = meanTier(range);
+  final before = meanTier(range.priorPeriod);
+  String? trendNote;
+  if (current != null && before != null) {
+    final change = current - before;
+    trendNote = change > _tierTrendThreshold
+        ? l10n.analytics_level_trend_up
+        : change < -_tierTrendThreshold
+        ? l10n.analytics_level_trend_down
+        : l10n.analytics_level_trend_flat;
+  }
+
+  // Stagnation: players with 6+ sessions (days) in the range. With no tier
+  // history, "tier unchanged" cannot be checked, so a tier change is not
+  // detected.
+  final sessionsByPlayer = <String, Set<DateTime>>{};
+  for (final g in games.where((g) => range.contains(g.createdDate))) {
+    for (final id in g.playerIds) {
+      if (resolvePlayer(id) == null) continue;
+      (sessionsByPlayer[id] ??= {}).add(_dateOnly(g.createdDate));
+    }
+  }
+  final stagnantCount = sessionsByPlayer.values
+      .where((days) => days.length >= _stagnationSessions)
+      .length;
 
   return LevelDistributionResult(
     points: points,
     medianTierLabel: medianLabel,
+    trendNote: trendNote,
     stagnationNote: stagnantCount > 0
         ? l10n.analytics_stagnation(stagnantCount)
         : null,
@@ -664,6 +703,8 @@ AtRiskResult computeAtRiskPlayers(
 
 // ── ANA-12: Player mixing ──────────────────────────────────────────
 
+enum MixingTag { connector, clique, isolated }
+
 class MixingEntry {
   const MixingEntry({
     required this.name,
@@ -672,7 +713,7 @@ class MixingEntry {
   });
   final String name;
   final double score;
-  final String? tag;
+  final MixingTag? tag;
 }
 
 List<MixingEntry> computePlayerMixing(
@@ -699,20 +740,36 @@ List<MixingEntry> computePlayerMixing(
     final score = (partnerIds.length / playerGames.length)
         .clamp(0, 1)
         .toDouble();
-    String? tag;
+    MixingTag? tag;
     if (score >= 0.7) {
-      tag = 'connector';
+      tag = MixingTag.connector;
     } else if (score <= 0.2) {
-      tag = 'isolated';
+      tag = MixingTag.isolated;
     } else if (score <= 0.4) {
-      tag = 'clique';
+      tag = MixingTag.clique;
     }
     result.add(MixingEntry(name: nameOf(player), score: score, tag: tag));
   }
   return result.sortedBy<num>((e) => -e.score);
 }
 
+/// The players the mixing card lists. [sorted] is highest score first. Over
+/// [size] players, it keeps the top and bottom halves, so the isolated
+/// players are not cut off.
+List<MixingEntry> sampleMixing(List<MixingEntry> sorted, {int size = 10}) {
+  if (sorted.length <= size) return sorted;
+  final half = size ~/ 2;
+  return [...sorted.take(half), ...sorted.skip(sorted.length - half)];
+}
+
 // ── ANA-13: New player integration ─────────────────────────────────
+
+/// A player counts as "new" for this many days after joining. There is no
+/// setting for it yet (UAT: "the configured new window").
+const kNewPlayerWindowDays = 60;
+
+/// A player is a "regular" at this many logged games.
+const _regularGameCount = 8;
 
 class NewPlayerEntry {
   const NewPlayerEntry({
@@ -723,31 +780,35 @@ class NewPlayerEntry {
   });
   final String name;
   final DateTime joinDate;
+
+  /// Distinct days the player played in the range.
   final int sessionsAttended;
   final double pctWithRegulars;
   bool get isFavorable => pctWithRegulars >= 50;
 }
 
+/// New players are those who joined in the [newWindowDays] before
+/// [range] ends. Their sessions and mix are measured on games in [range];
+/// regulars are found from all [games].
 List<NewPlayerEntry> computeNewPlayerIntegration(
   List<Game> games,
   List<Player> allPlayers, {
-  int newWindowDays = 60,
-  DateTime? now,
+  required DateRange range,
+  int newWindowDays = kNewPlayerWindowDays,
 }) {
-  final asOf = now ?? DateTime.now();
   final regularIds = _regularPlayerIds(games);
 
   final newPlayers = allPlayers.where(
     (p) =>
         p.createdDate != null &&
-        asOf.difference(p.createdDate!).inDays <= newWindowDays,
+        range.end.difference(p.createdDate!).inDays <= newWindowDays,
   );
 
   // Index games by player once. A scan of all games for each new player
   // costs players × games (PERSISTENCE.md §3.2).
   final newIds = {for (final p in newPlayers) p.id};
   final gamesByPlayerId = <String, List<Game>>{};
-  for (final g in games) {
+  for (final g in games.where((g) => range.contains(g.createdDate))) {
     for (final id in g.playerIds.toSet()) {
       if (newIds.contains(id)) (gamesByPlayerId[id] ??= <Game>[]).add(g);
     }
@@ -767,7 +828,10 @@ List<NewPlayerEntry> computeNewPlayerIntegration(
         return NewPlayerEntry(
           name: player.name(),
           joinDate: player.createdDate!,
-          sessionsAttended: playerGames.length,
+          sessionsAttended: playerGames
+              .map((g) => _dateOnly(g.createdDate))
+              .toSet()
+              .length,
           pctWithRegulars: pct,
         );
       })
@@ -775,8 +839,8 @@ List<NewPlayerEntry> computeNewPlayerIntegration(
       .toList();
 }
 
-/// Players who appear in at least 8 logged games are considered "regulars"
-/// for the purpose of new-player integration (ANA-13).
+/// Players who appear in at least [_regularGameCount] logged games are
+/// "regulars" for new-player integration (ANA-13).
 Set<String> _regularPlayerIds(List<Game> games) {
   final counts = <String, int>{};
   for (final g in games) {
@@ -784,7 +848,10 @@ Set<String> _regularPlayerIds(List<Game> games) {
       counts[id] = (counts[id] ?? 0) + 1;
     }
   }
-  return counts.entries.where((e) => e.value >= 8).map((e) => e.key).toSet();
+  return counts.entries
+      .where((e) => e.value >= _regularGameCount)
+      .map((e) => e.key)
+      .toSet();
 }
 
 String _shortDate(DateTime d, AppLocalizations l10n) =>

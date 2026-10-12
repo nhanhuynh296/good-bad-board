@@ -5,7 +5,8 @@ import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/features/analytics/bar_chart.dart';
 
 /// ANA-12 — 0–1 mixing score per player (distinct partners ÷ games played),
-/// tagged connector / clique / isolated.
+/// tagged connector / clique / isolated. Lists a sample: the highest and
+/// lowest scores.
 class PlayerMixingCard extends StatelessWidget {
   const PlayerMixingCard({super.key, required this.entries});
 
@@ -13,11 +14,14 @@ class PlayerMixingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Cap the list to a readable sample per the ARCHITECTURE.md spec.
-    final sample = entries.take(10).toList();
-    final connectors = entries.where((e) => e.tag == 'connector').length;
-    final isolated = entries.where((e) => e.tag == 'isolated').length;
     final l10n = AppLocalizations.of(context)!;
+    String? tagLabel(MixingTag? tag) => switch (tag) {
+      MixingTag.connector => l10n.analytics_mixing_tag_connector,
+      MixingTag.clique => l10n.analytics_mixing_tag_clique,
+      MixingTag.isolated => l10n.analytics_mixing_tag_isolated,
+      null => null,
+    };
+    int count(MixingTag tag) => entries.where((e) => e.tag == tag).length;
 
     return AppCard(
       child: Column(
@@ -26,12 +30,13 @@ class PlayerMixingCard extends StatelessWidget {
           AppSectionTitle(title: l10n.analytics_player_mixing),
           const SizedBox(height: AppSpacing.md),
           HorizontalBarList(
-            entries: sample
+            entries: sampleMixing(entries)
                 .map(
                   (e) => ChartPoint(
                     label: e.name,
                     value: e.score,
                     valueLabel: e.score.toStringAsFixed(2),
+                    caption: tagLabel(e.tag),
                   ),
                 )
                 .toList(),
@@ -40,8 +45,9 @@ class PlayerMixingCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.analytics_mixing_summary(
-              l10n.analytics_mixing_connectors(connectors),
-              l10n.analytics_mixing_isolated(isolated),
+              l10n.analytics_mixing_connectors(count(MixingTag.connector)),
+              l10n.analytics_mixing_cliques(count(MixingTag.clique)),
+              l10n.analytics_mixing_isolated(count(MixingTag.isolated)),
             ),
             style: AppTypography.helper,
           ),

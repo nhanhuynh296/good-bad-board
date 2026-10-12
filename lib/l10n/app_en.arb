@@ -114,6 +114,18 @@
   "@analytics_level_gap_up": {
     "description": "Level-gap chart note when the gap is widening"
   },
+  "analytics_level_trend_up": "Active players skew higher in tier than in the prior period.",
+  "@analytics_level_trend_up": {
+    "description": "Level distribution note: the active players are in higher tiers than in the prior period"
+  },
+  "analytics_level_trend_down": "Active players skew lower in tier than in the prior period.",
+  "@analytics_level_trend_down": {
+    "description": "Level distribution note: the active players are in lower tiers than in the prior period"
+  },
+  "analytics_level_trend_flat": "Active players' tier mix is steady vs the prior period.",
+  "@analytics_level_trend_flat": {
+    "description": "Level distribution note: the tier mix of the active players did not change"
+  },
   "analytics_median_tier": "Median tier: {tier}",
   "@analytics_median_tier": {
     "description": "Level distribution note naming the median skill tier",
@@ -132,7 +144,16 @@
       }
     }
   },
-  "analytics_mixing_isolated": "{count, plural, =1{1 player playing a narrow circle.} other{{count} players playing a narrow circle.}}",
+  "analytics_mixing_cliques": "{count, plural, =1{1 player in a clique} other{{count} players in cliques}}",
+  "@analytics_mixing_cliques": {
+    "description": "Middle part of the player mixing summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_mixing_isolated": "{count, plural, =1{1 isolated player rarely mixing.} other{{count} isolated players rarely mixing.}}",
   "@analytics_mixing_isolated": {
     "description": "Second half of the player mixing summary",
     "placeholders": {
@@ -141,11 +162,14 @@
       }
     }
   },
-  "analytics_mixing_summary": "{connectors}, {isolated}",
+  "analytics_mixing_summary": "{connectors}, {cliques}, {isolated}",
   "@analytics_mixing_summary": {
-    "description": "Joins the two halves of the player mixing summary",
+    "description": "Joins the three parts of the player mixing summary",
     "placeholders": {
       "connectors": {
+        "type": "String"
+      },
+      "cliques": {
         "type": "String"
       },
       "isolated": {
@@ -153,9 +177,34 @@
       }
     }
   },
+  "analytics_mixing_tag_connector": "connector",
+  "@analytics_mixing_tag_connector": {
+    "description": "Tag shown under a player with a high mixing score"
+  },
+  "analytics_mixing_tag_clique": "clique",
+  "@analytics_mixing_tag_clique": {
+    "description": "Tag shown under a player with a low mixing score"
+  },
+  "analytics_mixing_tag_isolated": "isolated",
+  "@analytics_mixing_tag_isolated": {
+    "description": "Tag shown under a player with a very low mixing score"
+  },
   "analytics_new_player_integration": "New player integration",
   "@analytics_new_player_integration": {
     "description": "Card title"
+  },
+  "analytics_new_players_attention": "{count, plural, =1{1 new player mostly plays away from regulars — pair them up.} other{{count} new players mostly play away from regulars — pair them up.}}",
+  "@analytics_new_players_attention": {
+    "description": "New player integration note when some new players play with regulars in under half of their games",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_new_players_ok": "New players are playing alongside regulars.",
+  "@analytics_new_players_ok": {
+    "description": "New player integration note when every new player plays with regulars in at least half of their games"
   },
   "analytics_no_court_wider_gap": "No court consistently runs a wider gap than the rest.",
   "@analytics_no_court_wider_gap": {
