@@ -39,7 +39,7 @@
 
 ### Key architectural changes
 
-1. **Navigation**: flat route list → responsive 6-tab shell (TopNavBar / BottomTabBar / HamburgerMenu depending on breakpoint)
+1. **Navigation**: flat route list → responsive 5-tab shell (TopNavBar / BottomTabBar / HamburgerMenu depending on breakpoint)
 2. **File organization**: flat `lib/view/` → `lib/features/<feature>/` with barrel exports + `lib/design/` for shared tokens + `lib/shell/` for navigation
 3. **Visual language**: blue/gold with Gotham → warm neutral (#fffdfa / #221d18 / #ff6a2b) with Space Grotesk display + Inter body
 4. **New concepts**: waitlist (separate from inactive players), session templates, self-registration with approval, analytics dashboard with charts
@@ -56,7 +56,7 @@
 | 2 | App Shell & Navigation | Stage 0 | Responsive nav (TopNavBar, BottomTabBar, CompactHeader, HamburgerMenu) |
 | 3 | Dashboard — Court Grid & Waitlist | Stages 1, 2 | CourtCard, PlayerSlot, WaitlistItem, WaitlistChip, re-roll + swap |
 | 4 | Player Management | Stages 1, 2 | PlayerTable, ExpandableProfile, LevelAdjuster, SearchInput |
-| 5 | Check-in, Sessions, Schedule, Settings | Stages 1, 2 | Remaining tabs (check-in flow, round config, templates, schedule, notification toggles) |
+| 5 | Check-in, Sessions, Settings | Stages 1, 2 | Remaining tabs (check-in flow, round config, templates, settings). Schedule and notification toggles removed 2026-10-10 |
 | 6 | Analytics Dashboard | Stages 1, 2 | Analytics page with KPI strip, bar charts, progress bars, tables |
 | 7 | Self-Registration & Polish | All prior | Self-registration page, responsive polish, theme integration |
 
@@ -298,7 +298,7 @@ Build the reusable widget primitives that every page/tab will compose from. Thes
 ## Stage 2 — App Shell & Navigation
 
 ### Goal
-Build the responsive navigation shell. The app detects breakpoint and renders the correct nav pattern. All 6 tabs are wired (Check-in was merged into the Players tab per UAT spec).
+Build the responsive navigation shell. The app detects breakpoint and renders the correct nav pattern. All 5 tabs are wired (Check-in was merged into the Players tab per UAT spec; Schedule was removed 2026-10-10).
 
 ### Inputs
 - Stage 0 (design tokens)
@@ -331,17 +331,17 @@ Build the responsive navigation shell. The app detects breakpoint and renders th
 
 #### 2.2 — `TopNavBar`
 ```dart
-// Desktop layout (≥1080px): horizontal bar with club name + tab row in one row.
-// Tablet layout (720–1079px): stacked — club name on top, scrollable tab row below.
-// Props: clubName, subtitle, tabs (list of {label, isActive, onTap}), selectedIndex
-// Dark bg (#221d18), club name in Space Grotesk 22px white.
+// Desktop layout (≥1080px): horizontal bar with tab row (no club name).
+// Tablet layout (720–1079px): scrollable tab row.
+// Props: subtitle, tabs (list of {label, isActive, onTap}), selectedIndex
+// Dark bg (#221d18).
 ```
 
 #### 2.3 — `CompactHeader`
 ```dart
-// Phone header: dark bar with club name (16px) + current tab label (11px).
+// Phone header: dark bar with current tab label.
 // Optional hamburger button (38×38, radius 8px) at trailing edge.
-// Props: clubName, currentTabLabel, showHamburger, onHamburgerTap
+// Props: currentTabLabel, showHamburger, onHamburgerTap
 ```
 
 #### 2.4 — `BottomTabBar`
@@ -357,7 +357,7 @@ Build the responsive navigation shell. The app detects breakpoint and renders th
 ```dart
 // Fullscreen dark overlay.
 // Backdrop: rgba(20,16,12, 0.5), fade animation.
-// Content: #221d18 bg, "NAVIGATE" label, vertical list of all 7 tabs.
+// Content: #221d18 bg, "NAVIGATE" label, vertical list of all 5 tabs.
 // Active tab: accent bg, #221d18 text. Inactive: transparent, white.
 // Props: tabs, selectedIndex, isOpen, onClose, onTabSelected
 ```
@@ -366,7 +366,7 @@ Build the responsive navigation shell. The app detects breakpoint and renders th
 ```dart
 // Slide-up sheet from bottom.
 // Drag handle: 38×4px, #e2d8c8.
-// Lists secondary tabs: Sessions, Schedule, Analytics, Settings.
+// Lists secondary tabs: Sessions, Analytics, Settings.
 // Each row: label + chevron "›". Active: accent color.
 // Backdrop: rgba(20,16,12, 0.45).
 // Props: secondaryTabs, selectedIndex, isOpen, onClose, onTabSelected
@@ -381,13 +381,13 @@ Build the responsive navigation shell. The app detects breakpoint and renders th
 //
 // Manages internal state for: selected tab index, hamburger open, more sheet open.
 // Delegates to current tab's page widget via IndexedStack or child.
-// Props: clubName, subtitle, tabLabels, pages (list of Widgets)
+// Props: subtitle, tabLabels, pages (list of Widgets)
 ```
 
 #### 2.8 — Route & Main Integration
 ```dart
 // routes.dart: Replace current GoRouter with one that delegates to ResponsiveShell.
-//   6 routes (/dashboard, /players, /sessions, /schedule, /analytics, /settings)
+//   5 routes (/dashboard, /players, /sessions, /analytics, /settings); /schedule redirects to /sessions
 //   Check-in is integrated into the Players tab, not a separate route.
 //   All wrapped in a shared ResponsiveShell via ShellRoute or custom builder.
 // main.dart: Ensure ChangeNotifierProviders are above the shell.
@@ -399,11 +399,11 @@ Build the responsive navigation shell. The app detects breakpoint and renders th
 
 > **UAT mapping:** NAV-01, NAV-02, NAV-03, NAV-04, NAV-05
 
-- [x] **NAV-01** — Desktop/tablet (≥720px): top header bar with club name, session subtext, and all 6 tabs visible; compact header and bottom bar not shown
-- [x] **NAV-02** — Phone (<720px): compact dark header with club short name + current tab label; 6-tab top row hidden
-- [x] **NAV-03** — Phone bottom tab bar (default `phoneNav: tabbar`): 3 destinations — Courts (Dashboard), Players (with integrated check-in), More. Selecting More opens bottom sheet with Sessions/Schedule/Analytics/Settings; tapping scrim closes sheet without switching
-- [x] **NAV-04** — "More" tab highlighted when current tab is Sessions, Schedule, Analytics, or Settings (secondary tabs)
-- [x] **NAV-05** — Phone hamburger nav (`phoneNav: hamburger`): ☰ button in compact header, full-screen dark overlay listing all 6 tabs, current tab highlighted, scrim closes without switching
+- [x] **NAV-01** — Desktop/tablet (≥720px): top header bar with session subtext and all 5 tabs visible (no club name); compact header and bottom bar not shown
+- [x] **NAV-02** — Phone (<720px): compact dark header with current tab label (no club name); 5-tab top row hidden
+- [x] **NAV-03** — Phone bottom tab bar (default `phoneNav: tabbar`): 3 destinations — Courts (Dashboard), Players (with integrated check-in), More. Selecting More opens bottom sheet with Sessions/Analytics/Settings; tapping scrim closes sheet without switching
+- [x] **NAV-04** — "More" tab highlighted when current tab is Sessions, Analytics, or Settings (secondary tabs)
+- [x] **NAV-05** — Phone hamburger nav (`phoneNav: hamburger`): ☰ button in compact header, full-screen dark overlay listing all 5 tabs, current tab highlighted, scrim closes without switching
 - [x] `flutter analyze --no-pub` passes
 - [x] Existing functionality (state management, routing) is not broken
 
@@ -726,11 +726,11 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 - [x] **PLY-05** — Level ±1 tier per click, clamped [Amateur…Professional]; "−" disabled (visually dimmed) at Amateur, "+" disabled at Professional
 - [x] **PLY-06** — Membership cycles Member → Casual → Disabled → Member. Casual → Disabled while checked in requires confirmation (auto-checked-out, removed from court/waitlist, triggers WL-02 auto-promotion); not checked in needs no confirmation. Disabled → Member: no auto-check-in
 - [x] **PLY-07** — Delete player (profile card): confirmation dialog, then permanent removal from the roster; triggers checkout/WL-02 if currently checked in
-- [x] **PLY-08** — Check-in toggle inline behaves identically to Check-in tab (CHK-02/03/05), both tabs stay in sync
+- [x] **PLY-08** — Check-in toggle inline performs CHK-02/03/05 directly (no separate Check-in tab)
 - [x] **PLY-13** — Add player: `AddPlayerDialog` closes itself and returns the player through `showDialog<Player>`; the caller only reads the result and awaits the repository write. Callers must never pop it — `showDialog` uses the root navigator while a page's context resolves to its `StatefulShellRoute` branch navigator, so popping from the caller unmounts the tab and blanks the screen. Covered by `integration_test/players_add_player_test.dart`
 
 #### Expandable profile (PLY-09…12)
-- [x] **PLY-09** — Tap anywhere on the row (controls keep their own taps) expands inline panel directly beneath row; row + panel share one rounded `AppCard` (`player-accordion-panel`), the profile has no card chrome of its own; trailing arrow `expand_more` / `expand_less` (not modal/drawer): membership status (+ "fee due" if Member with outstanding fee), 3 stat tiles (Current Level, Matches, Diversity %), level-progression sparkline, up to 3 most-frequent partners with match counts, session-attendance history summary (or "No sessions logged yet")
+- [x] **PLY-09** — Tap anywhere on the row (controls keep their own taps) expands inline panel directly beneath row; row + panel share one rounded `AppCard` (`player-accordion-panel`), the profile has no card chrome of its own; trailing arrow `expand_more` / `expand_less` (not modal/drawer): membership status, 3 stat tiles (Current Level, Matches, Diversity %), level-progression sparkline, up to 3 most-frequent partners with match counts, session-attendance history summary (or "No sessions logged yet")
 - [x] **PLY-10** — Only one profile expanded: tapping player B while A's profile open collapses A and expands B
 - [x] **PLY-11** — Collapse: via "✕" in profile panel or tapping same player's row again
 - [x] **PLY-12** — Profile stats computed from logged session history — unaffected by re-rolls or check-ins in the current live session until session is logged
@@ -740,10 +740,10 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 
 ---
 
-## Stage 5 — Sessions, Schedule, Settings
+## Stage 5 — Sessions, Settings
 
 ### Goal
-Implement the remaining 3 tabs (Sessions, Schedule, Settings). Check-in (CHK-01…06) was merged into the Players tab per UAT spec — its capacity bar, check-in/out toggles, and at-capacity banner are integrated directly into `PlayersPage`.
+Implement the remaining tabs (Sessions, Settings). The Schedule tab was removed 2026-10-10. Check-in (CHK-01…06) was merged into the Players tab per UAT spec — its capacity bar, check-in/out toggles, and at-capacity banner are integrated directly into `PlayersPage`.
 
 ### Inputs
 - Stages 0, 1, 2
@@ -753,12 +753,10 @@ Implement the remaining 3 tabs (Sessions, Schedule, Settings). Check-in (CHK-01�
 | Action | Path | Notes |
 |--------|------|-------|
 | Create | `lib/features/sessions/sessions_page.dart` | Session config + templates |
-| Create | `lib/features/schedule/schedule_page.dart` | Recurring schedule cards |
-| Create | `lib/features/settings/settings_page.dart` | Notifications + membership settings |
+| Create | `lib/features/settings/settings_page.dart` | Round, language and membership settings |
 | Create | `lib/features/sessions/sessions.dart` | Barrel |
-| Create | `lib/features/schedule/schedule.dart` | Barrel |
 | Create | `lib/features/settings/settings.dart` | Barrel |
-| Modify | `lib/routes.dart` | Wire all 3 tabs |
+| Modify | `lib/routes.dart` | Wire Sessions and Settings tabs |
 
 ### Detailed Tasks
 
@@ -779,7 +777,7 @@ Implement the remaining 3 tabs (Sessions, Schedule, Settings). Check-in (CHK-01�
 // Props: reads/writes GameData settings
 ```
 
-#### 5.2 — `SchedulePage`
+#### 5.2 — ~~`SchedulePage`~~ REMOVED 2026-10-10
 ```dart
 // Section title: "Recurring sessions"
 // Cards for each scheduled session:

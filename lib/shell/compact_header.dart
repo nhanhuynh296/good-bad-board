@@ -3,7 +3,7 @@ import 'package:good_bad_board/design/design.dart';
 
 /// A compact header bar used on phone layouts.
 ///
-/// Displays the club name and current tab label on the left,
+/// Displays the current tab label on the left,
 /// with an optional hamburger menu button on the right.
 ///
 /// Dark background matching [AppColors.headerBg].
@@ -38,7 +38,7 @@ class CompactHeader extends StatelessWidget {
           height: 48,
           child: Row(
             children: [
-              // Club name + tab label
+              // Tab label
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

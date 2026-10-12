@@ -44,9 +44,8 @@ the raw-ELO numbers shown in the standalone `Analytics Dashboard.dc.html` protot
 - `Responsive Layouts.dc.html` — a showcase canvas that mounts multiple instances of the real app in
   device frames; it has no behavior of its own. Its device dimensions are used as the reference
   breakpoints in §1 and §3.
-- **Schedule tab** is read-only in this build (see §8) — the "public calendar view" and "reminder
-  scheduling" it references under Settings are not implemented; Settings only exposes on/off
-  notification toggles (§10). Flagging as a known gap, not a UAT case to build against.
+- **Schedule tab, notification toggles, fees, invite link and club name** are removed
+  (2026-10-10). The app runs offline. Session templates (§5) replace the Schedule tab.
 - **`phoneNav` and `density`** are treated as app configuration (set at deployment/build time or via
   an admin config, not an in-app user control) — the prototype exposes them only as component props.
   UAT cases below phrase these as **preconditions** ("Given the app is configured with `phoneNav:
@@ -66,20 +65,19 @@ bottom bar/hamburger are not shown.
 **NAV-02** — Phone compact header
 Given viewport width < 720px
 When the app loads
-Then a compact dark header shows the club short name and the current tab's label instead of the
-subtext; the 7-tab top row is not shown.
+Then a compact dark header shows the current tab's label (no club name); the 5-tab top row is
+not shown.
 
 **NAV-03** — Phone bottom tab bar (default nav)
 Given viewport width < 720px and `phoneNav` is `tabbar` (default)
 When the app loads
 Then a bottom bar shows 3 destinations: Dashboard ("Courts"), Players, and "More".
 Selecting Dashboard/Players switches tabs directly. Selecting "More" opens a bottom sheet
-listing Sessions, Schedule, Analytics, Settings; selecting any of those switches to that tab and
+listing Sessions, Analytics, Settings; selecting any of those switches to that tab and
 closes the sheet; tapping the scrim outside the sheet closes it without switching tabs.
 
 **NAV-04** — "More" tab highlighted when on a secondary tab
-Given phone width, `phoneNav: tabbar`, and the current tab is Sessions, Schedule, Analytics, or
-Settings
+Given phone width, `phoneNav: tabbar`, and the current tab is Sessions, Analytics, or Settings
 When the bottom bar is shown
 Then the "More" button is rendered in its active/highlighted state (not one of the 3 primary
 buttons).
@@ -88,7 +86,7 @@ buttons).
 Given viewport width < 720px and the app is configured with `phoneNav: hamburger`
 When the app loads
 Then the compact header shows a ☰ button instead of a bottom tab bar; tapping it opens a full-screen
-dark menu listing all 7 tabs with the current tab highlighted; selecting a tab switches to it and
+dark menu listing all 5 tabs with the current tab highlighted; selecting a tab switches to it and
 closes the menu; tapping the scrim closes the menu without switching tabs.
 
 **NAV-06** — Stat strip reflow
@@ -402,13 +400,13 @@ disabled (visually dimmed, non-functional) at Amateur, and "+" is disabled at Pr
 **PLY-06** — Membership cycle (Member → Casual → Disabled)
 Given a player's membership is "Member"
 When the organizer taps their membership control
-Then it advances to "Casual". (Fee-paid status is independent and unaffected by this control.)
+Then it advances to "Casual".
 Given a player's membership is "Casual"
 When the organizer taps their membership control
 Then it advances to "Disabled" — if the player is currently checked in, a confirmation dialog
 first warns that they'll be checked out and removed from their court/waitlist immediately (see
 WL-02 auto-promotion); if they're not checked in, no confirmation is needed. Disabled players
-disappear from the Check-in tab's list (CHK-06).
+disappear from the Players tab check-in list (CHK-06).
 Given a player's membership is "Disabled"
 When the organizer taps their membership control
 Then it advances back to "Member"; this does not automatically check them back in.
@@ -474,7 +472,7 @@ Then a panel expands inline directly beneath that row (not a modal/drawer — th
 explicitly chosen after modal/drawer positioning proved unreliable, see design history). The row
 and the panel sit in one rounded panel, so they read as one accordion item. Each row has a
 trailing arrow: down when the profile is hidden, up when it is shown. The panel shows:
-membership status (plus "fee due" if a Member with an outstanding fee), 3 stat tiles (Current
+membership status, 3 stat tiles (Current
 Level, Matches, Diversity %), a level-progression sparkline, up to 3 most-frequent playing partners
 with match counts, and a session-attendance history summary (or "No sessions logged yet" if none).
 
@@ -721,7 +719,7 @@ scrolling or overlapping controls at any width.
 | Dashboard: courts & waitlist | COURT-01…13, WL-01…02 |
 | Players (with integrated check-in) | PLY-01…12, CHK-01…06 |
 | Sessions | SESS-01…06 |
-| Schedule | SCHED-01 |
+| ~~Schedule~~ (removed) | ~~SCHED-01~~ |
 | Analytics | ANA-01…14 |
 | Settings | SET-01…05 |
 | Self-Registration | REG-01…07 |
