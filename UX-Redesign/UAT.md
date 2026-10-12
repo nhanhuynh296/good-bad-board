@@ -46,10 +46,8 @@ the raw-ELO numbers shown in the standalone `Analytics Dashboard.dc.html` protot
   breakpoints in §1 and §3.
 - **Schedule tab, notification toggles, fees, invite link and club name** are removed
   (2026-10-10). The app runs offline. Session templates (§5) replace the Schedule tab.
-- **`phoneNav` and `density`** are treated as app configuration (set at deployment/build time or via
-  an admin config, not an in-app user control) — the prototype exposes them only as component props.
-  UAT cases below phrase these as **preconditions** ("Given the app is configured with `phoneNav:
-  hamburger`"), not as user actions.
+- **`phoneNav` and `density`** are prototype component props only. The app has no such setting:
+  phones always show the bottom tab bar and the ☰ menu together (NAV-03, NAV-05), at one density.
 
 ---
 
@@ -69,7 +67,7 @@ Then a compact dark header shows the current tab's label (no club name); the 5-t
 not shown.
 
 **NAV-03** — Phone bottom tab bar (default nav)
-Given viewport width < 720px and `phoneNav` is `tabbar` (default)
+Given viewport width < 720px
 When the app loads
 Then a bottom bar shows 3 destinations: Dashboard ("Courts"), Players, and "More".
 Selecting Dashboard/Players switches tabs directly. Selecting "More" opens a bottom sheet
@@ -77,17 +75,17 @@ listing Sessions, Analytics, Settings; selecting any of those switches to that t
 closes the sheet; tapping the scrim outside the sheet closes it without switching tabs.
 
 **NAV-04** — "More" tab highlighted when on a secondary tab
-Given phone width, `phoneNav: tabbar`, and the current tab is Sessions, Analytics, or Settings
+Given phone width and the current tab is Sessions, Analytics, or Settings
 When the bottom bar is shown
 Then the "More" button is rendered in its active/highlighted state (not one of the 3 primary
 buttons).
 
 **NAV-05** — Phone hamburger nav
-Given viewport width < 720px and the app is configured with `phoneNav: hamburger`
+Given viewport width < 720px
 When the app loads
-Then the compact header shows a ☰ button instead of a bottom tab bar; tapping it opens a full-screen
-dark menu listing all 5 tabs with the current tab highlighted; selecting a tab switches to it and
-closes the menu; tapping the scrim closes the menu without switching tabs.
+Then the compact header shows a ☰ button, and the bottom tab bar (NAV-03) is also shown (there is
+no `phoneNav` setting). Tapping ☰ opens a dark menu panel on the right that lists all 5 tabs with
+the current tab highlighted; selecting a tab switches to it and closes the menu; tapping the scrim closes the menu without switching tabs.
 
 **NAV-06** — Stat strip reflow
 Given the app is on the Dashboard/any tab
@@ -394,8 +392,9 @@ shown; clearing the box shows all players again.
 **PLY-05** — Level adjustment stepper
 Given a player row is shown
 When the organizer taps "+" or "−" next to their level
-Then their tier moves up/down by exactly one step, clamped within [Amateur…Professional]; "−" is
-disabled (visually dimmed, non-functional) at Amateur, and "+" is disabled at Professional.
+Then their level moves up/down by exactly one of the 8 levels (C2, C1, B2, B1, A2, A1, S2, S1),
+clamped within [C2…S1] (the lowest Amateur level and the highest Professional level); "−" is
+disabled (visually dimmed, non-functional) at C2, and "+" is disabled at S1.
 
 **PLY-06** — Membership cycle (Member → Casual → Disabled)
 Given a player's membership is "Member"
@@ -406,7 +405,7 @@ When the organizer taps their membership control
 Then it advances to "Disabled" — if the player is currently checked in, a confirmation dialog
 first warns that they'll be checked out and removed from their court/waitlist immediately (see
 WL-02 auto-promotion); if they're not checked in, no confirmation is needed. Disabled players
-disappear from the Players tab check-in list (CHK-06).
+stay in the Players list, but their check-in control is disabled (CHK-06).
 Given a player's membership is "Disabled"
 When the organizer taps their membership control
 Then it advances back to "Member"; this does not automatically check them back in.
@@ -414,9 +413,10 @@ Then it advances back to "Member"; this does not automatically check them back i
 **PLY-07** — Delete player
 Given a player's expanded profile card is shown
 When the organizer taps "Delete"
-Then a confirmation dialog warns the action cannot be undone; on confirm, the player is
-permanently removed from the club roster and, if currently checked in, from their court/waitlist
-(WL-02 auto-promotion triggered); on cancel, nothing changes.
+Then a confirmation dialog warns the action cannot be undone; on confirm, the player is removed
+from the roster and, if currently checked in, from their court/waitlist (WL-02 auto-promotion
+triggered); on cancel, nothing changes. The player record is anonymised, not erased, so past games
+keep a valid player id (ADR-0001).
 
 **CHK-01** — Capacity bar and remaining count
 Given the Players tab is active

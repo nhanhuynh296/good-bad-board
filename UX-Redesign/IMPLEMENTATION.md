@@ -401,9 +401,9 @@ Build the responsive navigation shell. The app detects breakpoint and renders th
 
 - [x] **NAV-01** — Desktop/tablet (≥720px): top header bar with session subtext and all 5 tabs visible (no club name); compact header and bottom bar not shown
 - [x] **NAV-02** — Phone (<720px): compact dark header with current tab label (no club name); 5-tab top row hidden
-- [x] **NAV-03** — Phone bottom tab bar (default `phoneNav: tabbar`): 3 destinations — Courts (Dashboard), Players (with integrated check-in), More. Selecting More opens bottom sheet with Sessions/Analytics/Settings; tapping scrim closes sheet without switching
+- [x] **NAV-03** — Phone bottom tab bar (always shown on phone): 3 destinations — Courts (Dashboard), Players (with integrated check-in), More. Selecting More opens bottom sheet with Sessions/Analytics/Settings; tapping scrim closes sheet without switching
 - [x] **NAV-04** — "More" tab highlighted when current tab is Sessions, Analytics, or Settings (secondary tabs)
-- [x] **NAV-05** — Phone hamburger nav (`phoneNav: hamburger`): ☰ button in compact header, full-screen dark overlay listing all 5 tabs, current tab highlighted, scrim closes without switching
+- [x] **NAV-05** — Phone hamburger nav (no `phoneNav` setting; shown with the bottom tab bar): ☰ button in compact header, right-hand dark panel listing all 5 tabs, current tab highlighted, scrim closes without switching
 - [x] `flutter analyze --no-pub` passes
 - [x] Existing functionality (state management, routing) is not broken
 
@@ -631,7 +631,7 @@ re-roll when the game finishes → Save again.
 - [x] **WL-02** — Auto-promotion on check-out: when a court slot opens (player checks out or set Disabled), highest-level waitlisted player(s) fill open slot(s), highest tier first — no organizer action required *(triggered by Stage 5 Check-in; logic lives in GameData)*
 
 #### Quality gates
-- [x] Widget tests for CourtCard, PlayerSlot, StatStrip (21 tests)
+- [x] Widget tests for CourtCard, PlayerSlot, StatStrip (20 tests)
 - [x] `flutter analyze --no-pub` passes (0 errors, 0 warnings)
 
 ---
@@ -723,9 +723,9 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 - [x] **NAV-08** — Table header row (Name/Level/Status/etc.) visible ≥720px; hidden <720px (only data rows)
 
 #### Level, status, membership, check-in (PLY-05…08)
-- [x] **PLY-05** — Level ±1 tier per click, clamped [Amateur…Professional]; "−" disabled (visually dimmed) at Amateur, "+" disabled at Professional
-- [x] **PLY-06** — Membership cycles Member → Casual → Disabled → Member. Casual → Disabled while checked in requires confirmation (auto-checked-out, removed from court/waitlist, triggers WL-02 auto-promotion); not checked in needs no confirmation. Disabled → Member: no auto-check-in
-- [x] **PLY-07** — Delete player (profile card): confirmation dialog, then permanent removal from the roster; triggers checkout/WL-02 if currently checked in
+- [x] **PLY-05** — Level ±1 of the 8 `Elo` levels per click, clamped [C2…S1]; "−" disabled (visually dimmed) at C2, "+" disabled at S1
+- [x] **PLY-06** — Membership cycles Member → Casual → Disabled → Member. Casual → Disabled while checked in requires confirmation (auto-checked-out, removed from court/waitlist, triggers WL-02 auto-promotion); not checked in needs no confirmation. Disabled → Member: no auto-check-in. Disabled players stay in the list with check-in disabled
+- [x] **PLY-07** — Delete player (profile card): confirmation dialog, then removal from the roster (record anonymised, ADR-0001); triggers checkout/WL-02 if currently checked in
 - [x] **PLY-08** — Check-in toggle inline performs CHK-02/03/05 directly (no separate Check-in tab)
 - [x] **PLY-13** — Add player: `AddPlayerDialog` closes itself and returns the player through `showDialog<Player>`; the caller only reads the result and awaits the repository write. Callers must never pop it — `showDialog` uses the root navigator while a page's context resolves to its `StatefulShellRoute` branch navigator, so popping from the caller unmounts the tab and blanks the screen. Covered by `integration_test/players_add_player_test.dart`
 
