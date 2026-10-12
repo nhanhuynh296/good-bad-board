@@ -100,6 +100,35 @@ void main() {
       },
     );
 
+    testWidgets('PLY-02: an approved applicant is created as Casual', (
+      tester,
+    ) async {
+      await tester.runAsync(
+        () => PendingRegistrationRepository.instance.add(
+          PendingRegistration.create(
+            name: 'Jane Doe',
+            contact: 'jane@example.com',
+            tier: SkillTier.advanced,
+          ),
+        ),
+      );
+      await tester.pumpWidget(wrap(const PlayersPage()));
+      await tester.pump();
+      await tester.pump();
+      final card = tester.widget<PendingRegistrationCard>(
+        find.byType(PendingRegistrationCard),
+      );
+
+      await tester.runAsync(() async {
+        await (card.onApprove as dynamic)(0);
+      });
+
+      expect(
+        PlayerRepository.instance.listedPlayers().single.membership,
+        MembershipStatus.casual,
+      );
+    });
+
     testWidgets(
       'rejecting removes the pending entry without creating a player',
       (tester) async {

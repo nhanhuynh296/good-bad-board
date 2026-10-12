@@ -499,7 +499,7 @@
       }
     }
   },
-  "players_at_capacity_banner": "Session at capacity — new check-ins will join the waitlist",
+  "players_at_capacity_banner": "Session at capacity — new check-ins are blocked.",
   "@players_at_capacity_banner": {
     "description": "Banner shown when the session has reached its player capacity"
   },
@@ -678,7 +678,7 @@
   "@players_no_players_yet": {
     "description": "Empty state when no players exist"
   },
-  "players_no_session_data": "No session data yet",
+  "players_no_session_data": "No sessions logged yet",
   "@players_no_session_data": {
     "description": "Attendance summary when there is no session history"
   },
@@ -761,7 +761,7 @@
   "@registration_review_note": {
     "description": "Note under the signup form"
   },
-  "registration_signed_up_as": "You're signed up as {tier}. An organizer reviews every new sign-up and may adjust your starting level before you're added to the roster.",
+  "registration_signed_up_as": "You're signed up as {tier}. An organizer reviews every new sign-up and may adjust your starting level after your first few sessions.",
   "@registration_signed_up_as": {
     "description": "Confirmation text; tier is the localized skill tier name",
     "placeholders": {
@@ -771,7 +771,7 @@
       }
     }
   },
-  "registration_submit": "Submit",
+  "registration_submit": "Submit for approval",
   "@registration_submit": {
     "description": "Button that submits the signup form"
   },

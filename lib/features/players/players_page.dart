@@ -4,14 +4,17 @@ import 'package:good_bad_board/core/importer.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/players/capacity_bar.dart';
 import 'package:good_bad_board/features/players/player_profile_card.dart';
+import 'package:good_bad_board/features/players/player_profile_stats.dart';
 import 'package:good_bad_board/features/players/player_row.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/features/players/pending_registration.dart';
 import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/pending_registration.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/pending_registration_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
+import 'package:good_bad_board/repository/session_log_repository.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/view/component/dialog/add_player.dart';
 import 'package:good_bad_board/view/component/dialog/edit_player.dart';
@@ -60,10 +63,20 @@ class _PlayersPageState extends State<PlayersPage> {
     _pendingRegistrations = PendingRegistrationRepository.instance
         .getAll()
         .toList();
+    // PLY-12: profile stats come from saved games and logs, so rebuild when
+    // a round is saved.
+    GameRepository.instance.listenable.addListener(_onHistoryChanged);
+    SessionLogRepository.instance.listenable.addListener(_onHistoryChanged);
+  }
+
+  void _onHistoryChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    GameRepository.instance.listenable.removeListener(_onHistoryChanged);
+    SessionLogRepository.instance.listenable.removeListener(_onHistoryChanged);
     PendingRegistrationRepository.instance.listenable.removeListener(
       _reloadPendingRegistrations,
     );
@@ -154,81 +167,15 @@ class _PlayersPageState extends State<PlayersPage> {
 
   // ── Profile Stats ────────────────────────────────────────
 
-  /// Compute [PlayerProfileStats] for the given player from [GameData]
-  /// history. Returns a default/empty stats object when no history exists.
-  PlayerProfileStats _computeStats(Player player, GameData gameData) {
-    final l10n = AppLocalizations.of(context)!;
-    // Early exit when no history exists — skip the full scan.
-    if (gameData.history.isEmpty) {
-      return PlayerProfileStats(
-        matchCount: 0,
-        uniquePartnerCount: 0,
-        levelHistory: const [],
-        topPartners: const [],
-        attendanceSummary: l10n.players_no_session_data,
-      );
-    }
-
-    // Collect all games the player participated in
-    final allGames = gameData.history
-        .expand((g) => g)
-        .where((g) => g.players.any((p) => p.id == player.id))
-        .toList();
-
-    final matchCount = allGames.length;
-
-    // Unique partners
-    final partnerIds = <String>{};
-    for (final game in allGames) {
-      for (final p in game.players) {
-        if (p.id != player.id) {
-          partnerIds.add(p.id);
-        }
-      }
-    }
-
-    // Top partners
-    final partnerCounts = <String, int>{};
-    for (final game in allGames) {
-      for (final p in game.players) {
-        if (p.id != player.id) {
-          partnerCounts[p.name()] = (partnerCounts[p.name()] ?? 0) + 1;
-        }
-      }
-    }
-    final topPartners = partnerCounts.entries
-        .sortedBy<num>((e) => -e.value)
-        .take(5)
-        .map((e) => PartnerEntry(e.key, e.value))
-        .toList();
-
-    // Level history from games (ordered by game order)
-    final levelHistory = allGames.map((g) {
-      final selfInGame = g.players.firstWhere((p) => p.id == player.id);
-      return selfInGame.elo;
-    }).toList();
-
-    // Attendance summary
-    final sessionCount = gameData.history.length;
-    final attendedSessions = gameData.history
-        .where(
-          (round) => round.any((g) {
-            return g.players.any((p) => p.id == player.id);
-          }),
-        )
-        .length;
-    final attendanceSummary = sessionCount > 0
-        ? l10n.players_attended_sessions(attendedSessions, sessionCount)
-        : l10n.players_no_session_data;
-
-    return PlayerProfileStats(
-      matchCount: matchCount,
-      uniquePartnerCount: partnerIds.length,
-      levelHistory: levelHistory,
-      topPartners: topPartners,
-      attendanceSummary: attendanceSummary,
-    );
-  }
+  /// Stats from persisted games and session logs (PLY-12) — synchronous
+  /// reads of the repository caches.
+  PlayerProfileStats _computeStats(Player player) => computePlayerProfileStats(
+    player: player,
+    games: GameRepository.instance.getAll(),
+    logs: SessionLogRepository.instance.getAll(),
+    roster: PlayerRepository.instance.listedPlayers(),
+    l10n: AppLocalizations.of(context)!,
+  );
 
   // ── Build ────────────────────────────────────────────────
 
@@ -246,9 +193,7 @@ class _PlayersPageState extends State<PlayersPage> {
         .where(
           (p) =>
               activeEloFilters.contains(p.elo) &&
-              (p.name().toUpperCase().contains(_query) ||
-                  p.elo.name.toUpperCase().contains(_query) ||
-                  (p.signInId?.toUpperCase().contains(_query) ?? false)),
+              p.name().toUpperCase().contains(_query),
         )
         .sortedBy<String>((p) => p.name())
         .toList();
@@ -349,7 +294,7 @@ class _PlayersPageState extends State<PlayersPage> {
                         if (isExpanded)
                           PlayerProfileCard(
                             player: player,
-                            stats: _computeStats(player, gameData),
+                            stats: _computeStats(player),
                             membership: player.membership,
                             onClose: () => _toggleProfile(player.id),
                             onDelete: () => _onDeletePlayer(player, gameData),
@@ -530,6 +475,7 @@ class _PlayersPageState extends State<PlayersPage> {
         firstName: firstName,
         lastName: lastName,
         elo: reg.tier.lowerBoundElo,
+        membership: MembershipStatus.casual,
       );
 
       try {

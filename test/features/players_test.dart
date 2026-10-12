@@ -4,9 +4,13 @@ import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/players/players.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/elo.dart';
+import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/pending_registration.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/model/session_log.dart';
+import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
+import 'package:good_bad_board/repository/session_log_repository.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:provider/provider.dart';
 
@@ -396,7 +400,7 @@ void main() {
       final player = _testPlayer('Alice', Elo.b1);
       const stats = PlayerProfileStats(
         matchCount: 42,
-        uniquePartnerCount: 15,
+        diversityPercent: 15,
         levelHistory: [],
         topPartners: [],
         attendanceSummary: 'Attended 5 of 10 sessions',
@@ -415,14 +419,14 @@ void main() {
       expect(find.text('B1'), findsOneWidget); // Current Level value
       expect(find.text('Current Level'), findsOneWidget);
       expect(find.text('42'), findsOneWidget); // Matches
-      expect(find.text('15'), findsOneWidget); // Diversity
+      expect(find.text('15%'), findsOneWidget); // Diversity
     });
 
     testWidgets('displays attendance summary', (tester) async {
       final player = _testPlayer('Alice', Elo.b1);
       const stats = PlayerProfileStats(
         matchCount: 10,
-        uniquePartnerCount: 5,
+        diversityPercent: 5,
         levelHistory: [],
         topPartners: [],
         attendanceSummary: 'Attended 5 of 10 sessions',
@@ -445,7 +449,7 @@ void main() {
       final player = _testPlayer('Alice', Elo.b1);
       const stats = PlayerProfileStats(
         matchCount: 10,
-        uniquePartnerCount: 5,
+        diversityPercent: 5,
         levelHistory: [],
         topPartners: [
           PartnerEntry('Bob Test', 8),
@@ -476,7 +480,7 @@ void main() {
       final player = _testPlayer('Alice', Elo.b1);
       const stats = PlayerProfileStats(
         matchCount: 10,
-        uniquePartnerCount: 5,
+        diversityPercent: 5,
         levelHistory: [Elo.c2, Elo.c1, Elo.b2, Elo.b1],
         topPartners: [],
         attendanceSummary: '',
@@ -499,7 +503,7 @@ void main() {
       final player = _testPlayer('Alice', Elo.b1);
       const stats = PlayerProfileStats(
         matchCount: 10,
-        uniquePartnerCount: 5,
+        diversityPercent: 5,
         levelHistory: [],
         topPartners: [],
         attendanceSummary: '',
@@ -523,7 +527,7 @@ void main() {
       final player = _testPlayer('Alice', Elo.b1);
       const stats = PlayerProfileStats(
         matchCount: 10,
-        uniquePartnerCount: 5,
+        diversityPercent: 5,
         levelHistory: [],
         topPartners: [],
         attendanceSummary: '',
@@ -816,7 +820,7 @@ void main() {
     });
 
     testWidgets(
-      'CHK-03: at capacity, check-in control is refused (no state change)',
+      'CHK-03: tapping the check-in control at capacity is refused (no state change)',
       (tester) async {
         // Capacity 4 — the smallest a session can be — plus a 5th player.
         final atCapacity = [
@@ -841,9 +845,13 @@ void main() {
         expect(gameData.checkedInCount, 4);
         expect(gameData.isAtCapacity, isTrue);
 
-        // Directly try to check in Carol via GameData (should fail)
-        final success = gameData.checkInPlayer(carol);
-        expect(success, isFalse);
+        // Tap Carol's check-in control (the only "Out" pill) — refused.
+        await tester.tap(find.text('Out'));
+        await tester.pump();
+        expect(
+          find.text('Session at capacity — cannot check in'),
+          findsOneWidget,
+        );
 
         // Carol is still not checked in
         expect(gameData.isPlayerCheckedIn(carol), isFalse);
@@ -868,7 +876,7 @@ void main() {
 
       // Initially no banner
       expect(
-        find.text('Session at capacity — new check-ins will join the waitlist'),
+        find.text('Session at capacity — new check-ins are blocked.'),
         findsNothing,
       );
 
@@ -883,7 +891,7 @@ void main() {
 
       // Banner now appears
       expect(
-        find.text('Session at capacity — new check-ins will join the waitlist'),
+        find.text('Session at capacity — new check-ins are blocked.'),
         findsOneWidget,
       );
     });
@@ -931,5 +939,203 @@ void main() {
         expect(gameData.checkedInCount, 0);
       },
     );
+
+    testWidgets('PLY-04: search matches the player name only', (tester) async {
+      final alice = _testPlayer('Alice', Elo.b1).copyWith(signInId: 'ZED99');
+      final bob = _testPlayer('Bob', Elo.a2);
+      await pumpPlayersPage(tester, initialPlayers: [alice, bob]);
+
+      await tester.enterText(find.byType(TextField), 'zed');
+      await tester.pumpAndSettle();
+      expect(find.text('Alice Test'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'a2');
+      await tester.pumpAndSettle();
+      expect(find.text('Bob Test'), findsNothing);
+    });
+
+    testWidgets('PLY-04: search is a case-insensitive substring match', (
+      tester,
+    ) async {
+      await pumpPlayersPage(
+        tester,
+        initialPlayers: [
+          _testPlayer('Alice', Elo.b1),
+          _testPlayer('Bob', Elo.a2),
+        ],
+      );
+
+      await tester.enterText(find.byType(TextField), 'LIC');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Alice Test'), findsOneWidget);
+      expect(find.text('Bob Test'), findsNothing);
+    });
+
+    testWidgets('PLY-04: clearing the search shows every player again', (
+      tester,
+    ) async {
+      await pumpPlayersPage(
+        tester,
+        initialPlayers: [
+          _testPlayer('Alice', Elo.b1),
+          _testPlayer('Bob', Elo.a2),
+        ],
+      );
+      await tester.enterText(find.byType(TextField), 'lic');
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bob Test'), findsOneWidget);
+    });
+
+    Future<void> openDeleteDialog(WidgetTester tester) async {
+      await tester.tap(find.text('Alice Test'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('PLY-07: delete shows a confirmation dialog', (tester) async {
+      await pumpPlayersPage(
+        tester,
+        initialPlayers: [_testPlayer('Alice', Elo.b1)],
+      );
+
+      await openDeleteDialog(tester);
+
+      expect(find.text('Delete player?'), findsOneWidget);
+    });
+
+    testWidgets('PLY-07: cancel keeps the player unchanged', (tester) async {
+      final alice = _testPlayer('Alice', Elo.b1);
+      await pumpPlayersPage(tester, initialPlayers: [alice]);
+      await openDeleteDialog(tester);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete player?'), findsNothing);
+      expect(find.text('Alice Test'), findsOneWidget);
+      expect(PlayerRepository.instance.byId(alice.id)!.isAnonymised, isFalse);
+    });
+
+    testWidgets('PLY-07: confirm anonymises the player and removes the row', (
+      tester,
+    ) async {
+      final alice = _testPlayer('Alice', Elo.b1);
+      await pumpPlayersPage(tester, initialPlayers: [alice]);
+      await openDeleteDialog(tester);
+
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Delete'));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      });
+      await tester.pumpAndSettle();
+
+      expect(PlayerRepository.instance.byId(alice.id)!.isAnonymised, isTrue);
+      expect(find.text('Alice Test'), findsNothing);
+    });
+
+    testWidgets('PLY-12: profile stats come from persisted games and logs', (
+      tester,
+    ) async {
+      final alice = _testPlayer('Alice', Elo.b1);
+      final others = [
+        _testPlayer('Bob', Elo.a2),
+        _testPlayer('Cat', Elo.b1),
+        _testPlayer('Dan', Elo.b1),
+      ];
+      await tester.runAsync(() async {
+        await PlayerRepository.instance.addAll([alice, ...others]);
+        await GameRepository.instance.add(Game.create([alice, ...others]));
+        await SessionLogRepository.instance.add(
+          SessionLog.create(
+            capacity: 20,
+            checkedInCount: 4,
+            waitlistCount: 0,
+            rerollCount: 0,
+            courtLevelGaps: const [1],
+            courtCount: 1,
+          ),
+        );
+      });
+      gameData = GameData();
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ChangeNotifierProvider.value(
+              value: gameData,
+              child: const PlayersPage(),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Alice Test'));
+      await tester.pumpAndSettle();
+
+      // 1 match; 3 of 3 possible partners = 100%.
+      expect(find.text('100%'), findsOneWidget);
+      expect(find.text('Attended 1 of 1 session'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(PlayerProfileCard),
+          matching: find.text('Bob Test'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'PLY-12: profile shows empty text before any session is saved',
+      (tester) async {
+        await pumpPlayersPage(
+          tester,
+          initialPlayers: [_testPlayer('Alice', Elo.b1)],
+        );
+
+        await tester.tap(find.text('Alice Test'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('No sessions logged yet'), findsOneWidget);
+      },
+    );
+
+    testWidgets('PLY-12: profile updates when a game is saved to the store', (
+      tester,
+    ) async {
+      final alice = _testPlayer('Alice', Elo.b1);
+      final others = [
+        _testPlayer('Bob', Elo.a2),
+        _testPlayer('Cat', Elo.b1),
+        _testPlayer('Dan', Elo.b1),
+      ];
+      await pumpPlayersPage(tester, initialPlayers: [alice, ...others]);
+      await tester.tap(find.text('Alice Test'));
+      await tester.pumpAndSettle();
+      expect(find.text('No sessions logged yet'), findsOneWidget);
+
+      await tester.runAsync(() async {
+        await GameRepository.instance.add(Game.create([alice, ...others]));
+        await SessionLogRepository.instance.add(
+          SessionLog.create(
+            capacity: 20,
+            checkedInCount: 4,
+            waitlistCount: 0,
+            rerollCount: 0,
+            courtLevelGaps: const [1],
+            courtCount: 1,
+          ),
+        );
+      });
+      await tester.pumpAndSettle();
+
+      expect(find.text('Attended 1 of 1 session'), findsOneWidget);
+    });
   });
 }

@@ -62,7 +62,10 @@ void main() {
     ) async {
       await tester.pumpWidget(wrap(const RegistrationPage()));
 
-      final submitFinder = find.widgetWithText(TextButton, 'Submit');
+      final submitFinder = find.widgetWithText(
+        TextButton,
+        'Submit for approval',
+      );
       expect(tester.widget<TextButton>(submitFinder).onPressed, isNull);
 
       await tester.enterText(find.byType(TextField).first, 'Jane Doe');
@@ -99,7 +102,10 @@ void main() {
         await tester.enterText(find.byType(TextField).last, 'jane@example.com');
         await tester.pump();
 
-        final submitFinder = find.widgetWithText(TextButton, 'Submit');
+        final submitFinder = find.widgetWithText(
+          TextButton,
+          'Submit for approval',
+        );
         final submitButton = tester.widget<TextButton>(submitFinder);
         expect(submitButton.onPressed, isNotNull);
 
@@ -124,7 +130,20 @@ void main() {
         await tester.pump();
 
         expect(find.text('Thanks, Jane!'), findsOneWidget);
-        expect(find.widgetWithText(TextButton, 'Submit'), findsNothing);
+        expect(
+          find.textContaining(
+            'may adjust your starting level after your first few sessions',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('signed up as Intermediate'),
+          findsOneWidget,
+        );
+        expect(
+          find.widgetWithText(TextButton, 'Submit for approval'),
+          findsNothing,
+        );
 
         final saved = PendingRegistrationRepository.instance.getAll();
         expect(saved, hasLength(1));

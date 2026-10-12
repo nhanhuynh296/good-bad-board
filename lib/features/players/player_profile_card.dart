@@ -7,12 +7,12 @@ import 'package:good_bad_board/model/player.dart';
 
 /// Summary statistics for a player's expandable profile card.
 ///
-/// Callers compute these from [GameData] history and pass them in as a
-/// snapshot — the profile card itself is a pure presentational widget.
+/// Callers compute these from persisted history (see
+/// `computePlayerProfileStats`) and pass them in as a snapshot — the profile card itself is a pure presentational widget.
 class PlayerProfileStats {
   const PlayerProfileStats({
     required this.matchCount,
-    required this.uniquePartnerCount,
+    required this.diversityPercent,
     required this.levelHistory,
     required this.topPartners,
     required this.attendanceSummary,
@@ -21,14 +21,15 @@ class PlayerProfileStats {
   /// Total number of games the player has participated in.
   final int matchCount;
 
-  /// Number of distinct partners played with.
-  final int uniquePartnerCount;
+  /// Distinct partners played with, as a whole percent of the other players
+  /// on the roster (0–100).
+  final int diversityPercent;
 
   /// Recent level trend ordered chronologically (oldest first). Each entry
   /// is the [Elo] value the player held at that point.
   final List<Elo> levelHistory;
 
-  /// Up to 5 most frequent partners, sorted by count descending.
+  /// Up to 3 most frequent partners, sorted by count descending.
   final List<PartnerEntry> topPartners;
 
   /// Human-readable attendance summary, e.g. "Attended 12 of last 20 sessions".
@@ -167,7 +168,7 @@ class PlayerProfileCard extends StatelessWidget {
               Expanded(
                 child: _StatTrioCell(
                   label: l10n.players_diversity,
-                  value: '${stats.uniquePartnerCount}',
+                  value: '${stats.diversityPercent}%',
                 ),
               ),
             ],

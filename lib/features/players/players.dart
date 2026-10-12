@@ -10,5 +10,6 @@ export 'capacity_bar.dart';
 export 'level_adjuster.dart';
 export 'player_row.dart';
 export 'player_profile_card.dart';
+export 'player_profile_stats.dart';
 export 'pending_registration.dart';
 export 'players_page.dart';
