@@ -446,7 +446,7 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 ```dart
 // A row within a CourtCard representing one of 4 positions.
 // Two states:
-//   - Occupied: player name (14px, 600) + level/ELO (13px, 800, accent)
+//   - Occupied: player name (14px, 600) + level tier (13px, 800, accent); no Elo on court
 //   - Empty: "Open slot" (13px, italic, #b3a891)
 // Row has border-top: 1px solid #f0e6d6.
 // When a waitlist selection is active, all slots get accent-tinted bg + cursor style.
@@ -506,7 +506,7 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 //   - placeOrSwap(courtId, slotIndex) → calls GameData.swapPlayer
 //   - reroll(courtId) → calls GameData reroll logic
 //   - swapHint text updates based on selection state
-// Desktop layout: RoundRotationBar → StatStrip → [Court Grid (2 cols) + WaitlistSidebar]
+// Desktop layout: RoundRotationBar → StatStrip → [Court Grid (fit to height, courtGridLayout) + WaitlistSidebar]
 // Non-desktop layout: RoundRotationBar → StatStrip → WaitlistChips → Court Grid (stacked)
 ```
 
@@ -583,7 +583,7 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 
 #### Navigation & layout (shared with Stage 2 shell)
 - [x] **NAV-06** — Stat strip reflow: desktop (≥1080px) 6 cols (Checked In, Remaining Slots, Waitlist, Avg Level, Avg Level Gap, Re-rolls); tablet (720–1079px) 3-per-row wrap; phone (<720px) 4 stats in 2×2 grid (Checked In, Waitlist, Avg Level, Remaining)
-- [x] **NAV-07** — Dashboard layout reflow: desktop (≥1080px, incl. iPad landscape 1194px) 2-col court grid + fixed-width waitlist sidebar; tablet/phone (<1080px) waitlist chips above courts, courts stacked (2 cols tablet, 1 col phone). The grid itself renders with `shrinkWrap` + `NeverScrollableScrollPhysics`, so **both** layouts wrap it in a `SingleChildScrollView` — without it, courts past the first row are unreachable on desktop
+- [x] **NAV-07** — Dashboard layout reflow: desktop (≥1080px, incl. iPad landscape 1194px) court grid + fixed-width waitlist sidebar; tablet/phone (<1080px) waitlist chips above courts, courts stacked (2 cols tablet, 1 col phone). Desktop: `courtGridLayout` (`lib/features/dashboard/court_grid_layout.dart`, ported from main's `getIdealNumberOfColumn`) picks the column count with the largest court that fits the free height and stretches rows to fill it; when nothing fits it uses the most columns and the grid scrolls itself. Stacked layouts keep `shrinkWrap` + `NeverScrollableScrollPhysics` inside the page `SingleChildScrollView`. Court slots are `Expanded`, so the card has no empty band below the last slot
 
 #### Round rotation (RND-01…11) — time-based mode only
 - [x] **RND-01** — Live `mm:ss` countdown, progress bar fill = remaining/D as percentage, updates at least once per second
@@ -726,9 +726,9 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 - [x] **PLY-13** — Add player: `AddPlayerDialog` closes itself and returns the player through `showDialog<Player>`; the caller only reads the result and awaits the repository write. Callers must never pop it — `showDialog` uses the root navigator while a page's context resolves to its `StatefulShellRoute` branch navigator, so popping from the caller unmounts the tab and blanks the screen. Covered by `integration_test/players_add_player_test.dart`
 
 #### Expandable profile (PLY-09…12)
-- [x] **PLY-09** — Tap name expands inline panel directly beneath row (not modal/drawer): membership status (+ "fee due" if Member with outstanding fee), 3 stat tiles (Current Level, Matches, Diversity %), level-progression sparkline, up to 3 most-frequent partners with match counts, session-attendance history summary (or "No sessions logged yet")
+- [x] **PLY-09** — Tap anywhere on the row (controls keep their own taps) expands inline panel directly beneath row; row + panel share one rounded `AppCard` (`player-accordion-panel`), the profile has no card chrome of its own; trailing arrow `expand_more` / `expand_less` (not modal/drawer): membership status (+ "fee due" if Member with outstanding fee), 3 stat tiles (Current Level, Matches, Diversity %), level-progression sparkline, up to 3 most-frequent partners with match counts, session-attendance history summary (or "No sessions logged yet")
 - [x] **PLY-10** — Only one profile expanded: tapping player B while A's profile open collapses A and expands B
-- [x] **PLY-11** — Collapse: via "✕" in profile panel or tapping same player's name again
+- [x] **PLY-11** — Collapse: via "✕" in profile panel or tapping same player's row again
 - [x] **PLY-12** — Profile stats computed from logged session history — unaffected by re-rolls or check-ins in the current live session until session is logged
 
 #### Quality gates

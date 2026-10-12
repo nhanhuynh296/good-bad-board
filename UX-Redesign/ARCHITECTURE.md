@@ -218,7 +218,7 @@ Card variant containing:
 Row within court card:
 ├── Occupied:
 │   ├── Player name (14px, 600)
-│   └── Level/ELO (13px, 800, accent color)
+│   └── Level tier, e.g. "Intermediate" (13px, 800, accent color; no Elo on court)
 └── Empty:
     └── "Open slot" (13px, italic, #b3a891)
 ```
@@ -288,7 +288,8 @@ current, #ffb38a for next) at full opacity; unselected = transparent border,
 #### PlayerRow
 ```
 Table list row with:
-├── Name (14px, 600, underlined on hover — tappable for profile)
+├── Whole row tappable for profile; trailing expand/collapse arrow
+├── Name (14px, 600, accent when profile is open)
 ├── ID code (12px, #b3a891)
 ├── Level adjuster: [−] button + value (13px, 800, accent) + [+] button
 │   └── Buttons: 20–22px square, bg=#f0e6d6, radius=6px
@@ -298,7 +299,7 @@ Table list row with:
 
 #### ExpandablePlayerProfile
 ```
-Expanded card below player row:
+Expanded panel below player row (row + panel share one rounded card):
 ├── Close button (✕)
 ├── Stat trio: Current Level | Matches | Diversity
 │   └── Each: value (18–20px, 800) + label (10px, 700, #8a7c68)
@@ -312,7 +313,7 @@ Expanded card below player row:
 Selectable player row:
 ├── Unselected: bg=transparent, cursor=pointer
 ├── Selected: bg=accent, color=white, radius=8px
-└── Content: position number + name + level
+└── Content: position number + name + level tier
 ```
 
 #### WaitlistChip (stacked/phone layout)
@@ -454,7 +455,7 @@ Desktop (≥1080px):
 ├────────────────────────────────────────────┤
 │ StatStrip (6 cols)                          │
 ├────────────────────────────┬───────────────┤
-│ Court Grid (2 cols)        │ Waitlist      │
+│ Court Grid (fit to height) │ Waitlist      │
 │                            │ Sidebar       │
 │  ┌──────┐ ┌──────┐        │ (270px)       │
 │  │Court1│ │Court2│        │               │
@@ -481,7 +482,7 @@ Tablet/Phone (<1080px):
 | Pattern | Desktop | Tablet | Phone |
 |---------|---------|--------|-------|
 | Stat Strip | 6 cols | 3 cols | 2 cols |
-| Court Grid | 2 cols | 2 cols | 1 col |
+| Court Grid | largest courts that fit the height, else scroll | 2 cols | 1 col |
 | Analytics Grid | 2 cols | 2 cols | 1 col |
 | KPI Row | 3–6 cols | 3 cols | 1–2 cols |
 | Two-Column Form | Row | Row | Column |

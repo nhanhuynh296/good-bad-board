@@ -104,13 +104,16 @@ Then only 4 stats are shown in a 2×2 grid: Checked In, Waitlist, Avg Level, Rem
 **NAV-07** — Dashboard layout reflow
 Given the Dashboard tab is active
 When viewport width is desktop (≥1080px, including the 1194px iPad-landscape reference)
-Then courts render as a 2-column grid alongside a fixed-width waitlist sidebar to its right.
+Then courts render as a grid alongside a fixed-width waitlist sidebar to its right. The grid
+uses the column count that gives the largest courts that fit the free height (as on main), and
+the courts grow to fill that height. A court is never narrower than 320px, never flatter than
+1.6:1 and never taller than it is wide. The 4 player slots share the card height, so there is no
+empty band below the last slot.
+When the courts cannot fit at that minimum size, the grid uses the most columns and **scrolls**,
+so every court stays reachable. The waitlist sidebar scrolls independently.
 When viewport width is tablet or phone (<1080px)
 Then the waitlist renders as a horizontally-wrapping chip row above the courts, and courts stack
-below it (2 columns on tablet, 1 column on phone).
-And at every width, when the courts are taller than the viewport (any session past the first grid
-row — i.e. more than 2 courts on desktop) the court grid **scrolls**, so every court stays
-reachable. The waitlist sidebar scrolls independently.
+below it at the minimum proportion (2 columns on tablet, 1 column on phone); the page scrolls.
 
 **NAV-08** — Table header rows hidden on phone
 Given the Players tab is active (with integrated check-in and capacity bar)
@@ -437,22 +440,24 @@ close it — a dialog opens on the root navigator while a caller's context resol
 navigator, so closing from the caller removes the tab and leaves a blank screen.
 
 **PLY-09** — Expand player profile
-Given a player's name is tapped
+Given a player's row is tapped anywhere outside its controls (level −/+, membership, check-in)
 When no other profile is currently expanded
 Then a panel expands inline directly beneath that row (not a modal/drawer — this design was
-explicitly chosen after modal/drawer positioning proved unreliable, see design history) showing:
+explicitly chosen after modal/drawer positioning proved unreliable, see design history). The row
+and the panel sit in one rounded panel, so they read as one accordion item. Each row has a
+trailing arrow: down when the profile is hidden, up when it is shown. The panel shows:
 membership status (plus "fee due" if a Member with an outstanding fee), 3 stat tiles (Current
 Level, Matches, Diversity %), a level-progression sparkline, up to 3 most-frequent playing partners
 with match counts, and a session-attendance history summary (or "No sessions logged yet" if none).
 
 **PLY-10** — Only one profile expanded at a time
 Given player A's profile is expanded
-When the organizer taps player B's name
+When the organizer taps player B's row
 Then A's profile collapses and B's profile expands in its place.
 
 **PLY-11** — Collapse profile
 Given a player's profile is expanded
-When the organizer taps the "✕" in the profile panel (or taps the same player's name again)
+When the organizer taps the "✕" in the profile panel (or taps the same player's row again)
 Then the panel collapses.
 
 **PLY-12** — Profile stats reflect session history, not live court state
