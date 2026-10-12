@@ -51,7 +51,9 @@ class PartnerEntry {
 /// - Most frequent partners list
 /// - Attendance history text
 ///
-/// Uses [AppCard] as its base container.
+/// Has no card chrome of its own: the Players page shows it inside the same
+/// rounded panel as its [PlayerRow], so the row and the profile read as one
+/// accordion item.
 class PlayerProfileCard extends StatelessWidget {
   const PlayerProfileCard({
     super.key,
@@ -73,7 +75,7 @@ class PlayerProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return AppCard(
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -7,8 +7,12 @@ import 'package:good_bad_board/model/player.dart';
 
 /// A single row in the players table.
 ///
-/// Renders five logical columns:
-/// - **Name** (14px, 600, underlined on hover — tappable to expand profile)
+/// The whole row is tappable and opens or closes the player profile below
+/// it. A trailing arrow shows whether the profile is open. The controls in
+/// the row keep their own taps.
+///
+/// Renders five logical columns plus the arrow:
+/// - **Name** (14px, 600, accent when the profile is open)
 /// - **ID** (12px, subtle — the player's sign-in code)
 /// - **Level** ([LevelAdjuster] with −/+ buttons)
 /// - **Membership** pill (cycles Member → Casual → Disabled → Member)
@@ -41,7 +45,7 @@ class PlayerRow extends StatelessWidget {
   /// Whether this player is checked in for the current session.
   final bool isCheckedIn;
 
-  /// Called when the player name is tapped to toggle profile expansion.
+  /// Called when the row is tapped to toggle profile expansion.
   final VoidCallback? onToggleProfile;
 
   /// Called when the level [+] button is tapped.
@@ -61,128 +65,106 @@ class PlayerRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final elo = player.elo;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isExpanded ? AppColors.pillBg.withValues(alpha: 0.4) : null,
-        border: const Border(
-          bottom: BorderSide(color: AppColors.cardBorder, width: 0.5),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // The trailing controls have fixed widths that, on a phone, add up
-          // to more than the row has — squeezing the name to nothing and
-          // overflowing. Give them their natural size there instead, so the
-          // name keeps what is left.
-          final compact = isPhone(constraints.maxWidth);
-          final gap = compact ? AppSpacing.sm : AppSpacing.md;
+    return Material(
+      color: isExpanded
+          ? AppColors.pillBg.withValues(alpha: 0.4)
+          : Colors.transparent,
+      child: InkWell(
+        onTap: onToggleProfile,
+        child: Container(
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: AppColors.cardBorder, width: 0.5),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // The trailing controls have fixed widths that, on a phone, add up
+              // to more than the row has — squeezing the name to nothing and
+              // overflowing. Give them their natural size there instead, so the
+              // name keeps what is left.
+              final compact = isPhone(constraints.maxWidth);
+              final gap = compact ? AppSpacing.sm : AppSpacing.md;
 
-          return Row(
-            children: [
-              // ── Name + ID ──────────────────────────────────
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _PlayerName(
-                      name: player.name(),
-                      isExpanded: isExpanded,
-                      onTap: onToggleProfile,
+              return Row(
+                children: [
+                  // ── Name + ID ──────────────────────────────────
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          player.name(),
+                          style: AppTypography.md.copyWith(
+                            color: isExpanded
+                                ? AppColors.accentPrimary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          player.signInId ?? '—',
+                          style: AppTypography.sm.copyWith(
+                            color: AppColors.textSubtle,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      player.signInId ?? '—',
-                      style: AppTypography.sm.copyWith(
-                        color: AppColors.textSubtle,
-                      ),
+                  ),
+                  SizedBox(width: gap),
+
+                  // ── Level Adjuster ─────────────────────────────
+                  SizedBox(
+                    width: compact ? null : 155,
+                    child: LevelAdjuster(
+                      currentLevel: elo,
+                      onDecrease: () => onLevelDown?.call(),
+                      onIncrease: () => onLevelUp?.call(),
                     ),
-                  ],
-                ),
-              ),
-              SizedBox(width: gap),
+                  ),
+                  SizedBox(width: gap),
 
-              // ── Level Adjuster ─────────────────────────────
-              SizedBox(
-                width: compact ? null : 155,
-                child: LevelAdjuster(
-                  currentLevel: elo,
-                  onDecrease: () => onLevelDown?.call(),
-                  onIncrease: () => onLevelUp?.call(),
-                ),
-              ),
-              SizedBox(width: gap),
+                  // ── Membership pill ─────────────────────────────
+                  SizedBox(
+                    width: compact ? null : 88,
+                    child: _MembershipPill(
+                      status: membership,
+                      onTap: onCycleMembership,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
 
-              // ── Membership pill ─────────────────────────────
-              SizedBox(
-                width: compact ? null : 88,
-                child: _MembershipPill(
-                  status: membership,
-                  onTap: onCycleMembership,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
+                  // ── Check-in toggle ────────────────────────────
+                  SizedBox(
+                    width: compact ? null : 76,
+                    child: _CompactToggle(
+                      value: isCheckedIn,
+                      onLabel: AppLocalizations.of(context)!.players_checkin_in,
+                      offLabel: AppLocalizations.of(
+                        context,
+                      )!.players_checkin_out,
+                      activeColor: AppColors.success,
+                      onChanged: onToggleCheckin,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
 
-              // ── Check-in toggle ────────────────────────────
-              SizedBox(
-                width: compact ? null : 76,
-                child: _CompactToggle(
-                  value: isCheckedIn,
-                  onLabel: AppLocalizations.of(context)!.players_checkin_in,
-                  offLabel: AppLocalizations.of(context)!.players_checkin_out,
-                  activeColor: AppColors.success,
-                  onChanged: onToggleCheckin,
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Tappable player name with underline-on-hover behaviour.
-///
-/// Visible underline indicates the name is tappable; always shown on mobile
-/// (no hover state), shown on hover for desktop.
-class _PlayerName extends StatefulWidget {
-  const _PlayerName({
-    required this.name,
-    required this.isExpanded,
-    required this.onTap,
-  });
-
-  final String name;
-  final bool isExpanded;
-  final VoidCallback? onTap;
-
-  @override
-  State<_PlayerName> createState() => _PlayerNameState();
-}
-
-class _PlayerNameState extends State<_PlayerName> {
-  bool _isHovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovering = true),
-      onExit: (_) => setState(() => _isHovering = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Text(
-          widget.name,
-          style: AppTypography.md.copyWith(
-            decoration: _isHovering
-                ? TextDecoration.underline
-                : TextDecoration.none,
-            color: widget.isExpanded
-                ? AppColors.accentPrimary
-                : AppColors.textPrimary,
+                  // ── Expand / collapse arrow ────────────────────
+                  Icon(
+                    isExpanded
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
+                    size: 20,
+                    color: isExpanded
+                        ? AppColors.accentPrimary
+                        : AppColors.textMuted,
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

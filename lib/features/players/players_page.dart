@@ -329,7 +329,7 @@ class _PlayersPageState extends State<PlayersPage> {
                     final canCheckIn =
                         player.membership != MembershipStatus.disabled;
 
-                    return Column(
+                    final item = Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         PlayerRow(
@@ -355,6 +355,21 @@ class _PlayersPageState extends State<PlayersPage> {
                             onDelete: () => _onDeletePlayer(player, gameData),
                           ),
                       ],
+                    );
+                    if (!isExpanded) return item;
+
+                    // An open row and its profile share one rounded panel,
+                    // so the corners of the row match the profile.
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: AppCard(
+                        key: const Key('player-accordion-panel'),
+                        padding: EdgeInsets.zero,
+                        borderRadius: AppRadii.lgRadius,
+                        child: item,
+                      ),
                     );
                   },
                 ),

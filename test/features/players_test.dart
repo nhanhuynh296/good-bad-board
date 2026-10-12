@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/players/players.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/elo.dart';
@@ -320,6 +321,71 @@ void main() {
       );
       await tester.tap(find.text('Out'));
       expect(newValue, isTrue);
+    });
+
+    Future<void> pumpRow(
+      WidgetTester tester, {
+      bool isExpanded = false,
+      VoidCallback? onToggleProfile,
+      VoidCallback? onLevelUp,
+    }) => tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: PlayerRow(
+            player: _testPlayer('Alice', Elo.b2),
+            isExpanded: isExpanded,
+            membership: MembershipStatus.member,
+            isCheckedIn: false,
+            onToggleProfile: onToggleProfile,
+            onLevelUp: onLevelUp,
+          ),
+        ),
+      ),
+    );
+
+    testWidgets('should_toggle_the_profile_when_the_row_is_tapped', (
+      tester,
+    ) async {
+      var toggled = false;
+      await pumpRow(tester, onToggleProfile: () => toggled = true);
+
+      // The sign-in ID is part of the row but not the name.
+      await tester.tap(find.text('—'));
+
+      expect(toggled, isTrue);
+    });
+
+    testWidgets('should_not_toggle_the_profile_when_a_control_is_tapped', (
+      tester,
+    ) async {
+      var toggled = false;
+      await pumpRow(
+        tester,
+        onToggleProfile: () => toggled = true,
+        onLevelUp: () {},
+      );
+
+      await tester.tap(find.text('+'));
+
+      expect(toggled, isFalse);
+    });
+
+    testWidgets('should_show_the_expand_arrow_when_the_profile_is_hidden', (
+      tester,
+    ) async {
+      await pumpRow(tester);
+
+      expect(find.byIcon(Icons.expand_more_rounded), findsOneWidget);
+    });
+
+    testWidgets('should_show_the_collapse_arrow_when_the_profile_is_shown', (
+      tester,
+    ) async {
+      await pumpRow(tester, isExpanded: true);
+
+      expect(find.byIcon(Icons.expand_less_rounded), findsOneWidget);
     });
   });
 
@@ -666,6 +732,47 @@ void main() {
         ),
       );
     }
+
+    testWidgets('should_show_the_open_row_and_its_profile_in_one_panel', (
+      tester,
+    ) async {
+      await pumpPlayersPage(
+        tester,
+        initialPlayers: [_testPlayer('Alice', Elo.b1)],
+      );
+
+      await tester.tap(find.text('Alice Test'));
+      await tester.pumpAndSettle();
+
+      final panel = find.ancestor(
+        of: find.byType(PlayerRow),
+        matching: find.byKey(const Key('player-accordion-panel')),
+      );
+      expect(
+        find.descendant(of: panel, matching: find.byType(PlayerProfileCard)),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('should_not_draw_a_separate_card_for_the_profile', (
+      tester,
+    ) async {
+      await pumpPlayersPage(
+        tester,
+        initialPlayers: [_testPlayer('Alice', Elo.b1)],
+      );
+
+      await tester.tap(find.text('Alice Test'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(PlayerProfileCard),
+          matching: find.byType(AppCard),
+        ),
+        findsNothing,
+      );
+    });
 
     testWidgets('CHK-01: capacity bar shows checked-in count and remaining', (
       tester,
