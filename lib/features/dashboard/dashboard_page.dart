@@ -585,43 +585,55 @@ class _ActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final saveVisible = showSave && hasActiveGame;
     final l10n = AppLocalizations.of(context)!;
-    return Row(
+    // A Wrap, so that long labels (e.g. French) move the court count to a
+    // second line on a phone instead of overflowing.
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: [
-        // Generate / Regenerate
-        if (showGenerate) ...[
-          _ActionButton(
-            label: hasActiveGame ? l10n.regenerate : l10n.generate_game,
-            icon: Icons.casino_rounded,
-            isPrimary: !hasActiveGame,
-            onTap: onMakeGame,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-        ],
-        // Save
-        if (saveVisible) ...[
-          _ActionButton(
-            key: const Key('dashboard-save-all'),
-            label: l10n.save,
-            icon: Icons.save_rounded,
-            isPrimary: true,
-            onTap: onSaveGame,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-        ],
-        const Spacer(),
-        // Court count
-        Text(l10n.dashboard_courts_label, style: AppTypography.helperBold),
-        const SizedBox(width: AppSpacing.sm),
-        _CourtCountButton(
-          icon: Icons.remove_rounded,
-          onTap: () => onCourtCountChanged(-1),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            // Generate / Regenerate
+            if (showGenerate)
+              _ActionButton(
+                label: hasActiveGame ? l10n.regenerate : l10n.generate_game,
+                icon: Icons.casino_rounded,
+                isPrimary: !hasActiveGame,
+                onTap: onMakeGame,
+              ),
+            // Save
+            if (saveVisible)
+              _ActionButton(
+                key: const Key('dashboard-save-all'),
+                label: l10n.save,
+                icon: Icons.save_rounded,
+                isPrimary: true,
+                onTap: onSaveGame,
+              ),
+          ],
         ),
-        const SizedBox(width: 6),
-        Text('$numberOfCourt', style: AppTypography.statValueSm),
-        const SizedBox(width: 6),
-        _CourtCountButton(
-          icon: Icons.add_rounded,
-          onTap: () => onCourtCountChanged(1),
+        // Court count
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.dashboard_courts_label, style: AppTypography.helperBold),
+            const SizedBox(width: AppSpacing.sm),
+            _CourtCountButton(
+              icon: Icons.remove_rounded,
+              onTap: () => onCourtCountChanged(-1),
+            ),
+            const SizedBox(width: 6),
+            Text('$numberOfCourt', style: AppTypography.statValueSm),
+            const SizedBox(width: 6),
+            _CourtCountButton(
+              icon: Icons.add_rounded,
+              onTap: () => onCourtCountChanged(1),
+            ),
+          ],
         ),
       ],
     );

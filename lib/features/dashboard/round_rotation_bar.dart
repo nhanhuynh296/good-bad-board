@@ -175,55 +175,58 @@ class RoundRotationBar extends StatelessWidget {
                 ),
               ),
 
-              // Right: countdown + buttons
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Countdown timer
-                  Text(
-                    remainingLabel,
-                    style: TextStyle(
-                      fontFamily: AppTypography.displayFont,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      color: countdownColor,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l10n.dashboard_until_rotation,
-                    style: const TextStyle(
-                      fontFamily: AppTypography.bodyFont,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.headerSub,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  // Action buttons
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Once a round is staged the next panel owns its own
-                      // controls, so this button is only offered while there
-                      // is nothing planned yet.
-                      if (!isStaged) ...[
-                        _GhostButton(
-                          label: l10n.dashboard_premake_next,
-                          onTap: onStageNext,
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      // Rotate now (always visible)
-                      _AccentButton(
-                        label: l10n.dashboard_rotate_now,
-                        onTap: onRotateNow,
+              // Right: countdown + buttons. Flexible so that long labels
+              // (e.g. French) wrap the buttons instead of overflowing.
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Countdown timer
+                    Text(
+                      remainingLabel,
+                      style: TextStyle(
+                        fontFamily: AppTypography.displayFont,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color: countdownColor,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.dashboard_until_rotation,
+                      style: const TextStyle(
+                        fontFamily: AppTypography.bodyFont,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.headerSub,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    // Action buttons
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        // Once a round is staged the next panel owns its own
+                        // controls, so this button is only offered while there
+                        // is nothing planned yet.
+                        if (!isStaged)
+                          _GhostButton(
+                            label: l10n.dashboard_premake_next,
+                            onTap: onStageNext,
+                          ),
+                        // Rotate now (always visible)
+                        _AccentButton(
+                          label: l10n.dashboard_rotate_now,
+                          onTap: onRotateNow,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
