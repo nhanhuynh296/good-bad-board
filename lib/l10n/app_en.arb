@@ -1069,11 +1069,16 @@
   "@dashboard_waitlist_empty": {
     "description": "Shown when the waitlist is empty"
   },
-  "dashboard_waitlist_hint_place": "Tap a court slot to place this player",
+  "dashboard_waitlist_hint_place": "Placing {name} — tap a court slot",
   "@dashboard_waitlist_hint_place": {
-    "description": "Hint when a waitlisted player is selected"
+    "description": "Hint when a waitlisted player is selected; name is the selected player",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
-  "dashboard_waitlist_hint_select": "Tap a player, then tap a court slot",
+  "dashboard_waitlist_hint_select": "Tap a waitlisted player, then a court slot to place or swap them in.",
   "@dashboard_waitlist_hint_select": {
     "description": "Hint explaining how to place a waitlisted player"
   },

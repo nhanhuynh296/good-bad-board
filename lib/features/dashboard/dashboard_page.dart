@@ -482,6 +482,8 @@ class _DashboardPageState extends State<DashboardPage> {
         WaitlistSidebar(
           players: waitlisted,
           selectedPlayerId: _selectedPlayerId,
+          selectedPlayerName: gameData.checkedInPlayers[_selectedPlayerId]
+              ?.name(),
           onPlayerSelect: _selectPlayer,
         ),
       ],
@@ -509,6 +511,8 @@ class _DashboardPageState extends State<DashboardPage> {
           WaitlistChips(
             players: waitlisted,
             selectedPlayerId: _selectedPlayerId,
+            selectedPlayerName: gameData.checkedInPlayers[_selectedPlayerId]
+                ?.name(),
             onPlayerSelect: _selectPlayer,
           ),
           const SizedBox(height: AppSpacing.lg),

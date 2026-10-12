@@ -425,6 +425,45 @@ void main() {
       expect(find.text('Alice Test'), findsOneWidget);
     });
 
+    testWidgets('should_name_the_selected_player_in_the_placing_hint', (
+      tester,
+    ) async {
+      final players = [testPlayer('Alice', Elo.b2)];
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: WaitlistSidebar(players: players, selectedPlayerId: 'Alice'),
+          ),
+        ),
+      );
+      expect(
+        find.text('Placing Alice Test — tap a court slot'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('should_show_the_idle_hint_when_nobody_is_selected', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: WaitlistSidebar(players: [testPlayer('Alice', Elo.b2)]),
+          ),
+        ),
+      );
+      expect(
+        find.text(
+          'Tap a waitlisted player, then a court slot to place or swap them in.',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('fires onPlayerSelect when tapped', (tester) async {
       Player? selected;
       final players = [testPlayer('Alice', Elo.b2)];

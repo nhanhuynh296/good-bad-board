@@ -98,10 +98,13 @@ void main() {
       // 5 players, 2 courts: 4 are drawn onto court 1 and one is left over.
       // Which one is a weighted random draw, so ask the state rather than
       // naming a player.
-      await selectWaitlistedPlayer(tester);
+      final player = await selectWaitlistedPlayer(tester);
 
       // Hint should indicate placement mode.
-      expect(find.textContaining('Tap a court slot'), findsOneWidget);
+      expect(
+        find.text('Placing ${player.name()} — tap a court slot'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -118,7 +121,7 @@ void main() {
       await selectWaitlistedPlayer(tester, index: 1);
 
       // Hint should still be showing placement mode.
-      expect(find.textContaining('Tap a court slot'), findsOneWidget);
+      expect(find.textContaining('— tap a court slot'), findsOneWidget);
     });
   });
 
@@ -135,7 +138,12 @@ void main() {
       await selectWaitlistPlayer(tester, player.name());
 
       // Hint should revert to the idle prompt.
-      expect(find.text('Tap a player, then tap a court slot'), findsOneWidget);
+      expect(
+        find.text(
+          'Tap a waitlisted player, then a court slot to place or swap them in.',
+        ),
+        findsOneWidget,
+      );
     });
   });
 

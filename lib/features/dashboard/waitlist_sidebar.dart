@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
@@ -16,6 +17,7 @@ class WaitlistSidebar extends StatelessWidget {
     super.key,
     required this.players,
     this.selectedPlayerId,
+    this.selectedPlayerName,
     this.onPlayerSelect,
   });
 
@@ -24,6 +26,10 @@ class WaitlistSidebar extends StatelessWidget {
 
   /// The currently selected player ID (for click-to-place).
   final String? selectedPlayerId;
+
+  /// Name shown in the placing hint. Falls back to the waitlisted player with
+  /// [selectedPlayerId] — pass it when the selection may be on a court.
+  final String? selectedPlayerName;
 
   /// Called when a player is tapped to begin the placement flow.
   final void Function(Player player)? onPlayerSelect;
@@ -73,7 +79,13 @@ class WaitlistSidebar extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               selectedPlayerId != null
-                  ? l10n.dashboard_waitlist_hint_place
+                  ? l10n.dashboard_waitlist_hint_place(
+                      selectedPlayerName ??
+                          players
+                              .firstWhereOrNull((p) => p.id == selectedPlayerId)
+                              ?.name() ??
+                          '',
+                    )
                   : l10n.dashboard_waitlist_hint_select,
               style: AppTypography.helper,
             ),
