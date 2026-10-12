@@ -94,4 +94,24 @@ void main() {
     expect(gameData.checkedInPlayers.containsKey(player.id), isFalse);
     expect(gameData.isPlayerCheckedIn(player), isFalse);
   });
+
+  test('should_promote_waitlisted_player_when_court_player_deleted', () async {
+    // Arrange — 4 on the court, a fifth on the waitlist.
+    final players = [
+      for (var i = 0; i < 5; i++)
+        Player.create(firstName: 'P$i', lastName: 'X', elo: Elo.b2),
+    ];
+    await PlayerRepository.instance.addAll(players);
+    final gameData = GameData()..setNumberOfCourt(1);
+    players.forEach(gameData.checkInPlayer);
+    await gameData.makeGame();
+    final onCourt = gameData.stagingMatches[0].players.first;
+
+    // Act
+    await gameData.deletePlayer(onCourt);
+
+    // Assert
+    expect(gameData.stagingMatches[0].playerIds, hasLength(4));
+    expect(gameData.waitlistedPlayers, isEmpty);
+  });
 }

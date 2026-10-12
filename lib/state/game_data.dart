@@ -364,11 +364,14 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Remove a playing who is currently in a session
+  /// Remove a playing who is currently in a session.
+  ///
+  /// A freed court slot is filled from the waitlist (WL-02).
   void removePlayer(Player player) {
     _checkedInPlayers.remove(player.id);
     gameContainingPlayer(player)?.playerIds.remove(player.id);
     _removeFromStagedLineup(player);
+    _autoPromoteFromWaitlist();
     notifyListeners();
   }
 
