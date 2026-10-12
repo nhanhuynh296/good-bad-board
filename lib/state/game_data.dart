@@ -703,8 +703,13 @@ class GameData extends ChangeNotifier {
 
   /// Removes [player] from the court they are on in the round on screen.
   void removePlayerFromCourt(Player player) {
-    final game = _onLineup(visibleMatches, () => gameContainingPlayer(player));
-    game?.playerIds.remove(player.id);
+    _onLineup(visibleMatches, () {
+      final game = gameContainingPlayer(player);
+      if (game == null) return;
+      // A saved lineup is already in the history — re-roll to end it first.
+      if (isCourtPlaying(stagingMatches.indexOf(game))) return;
+      game.playerIds.remove(player.id);
+    });
     notifyListeners();
   }
 
@@ -917,11 +922,24 @@ class GameData extends ChangeNotifier {
         targetCourt.playerIds.removeAt(sourceIndex);
         targetCourt.playerIds.add(player.id);
       }
-    } else {
-      // Different court or coming from waitlist
-      sourceCourt?.playerIds.remove(player.id);
+    } else if (sourceCourt != null) {
+      // Different court: a saved source lineup must not change either.
+      final sourceCourtIndex = stagingMatches.indexOf(sourceCourt);
+      if (isCourtPlaying(sourceCourtIndex)) return;
 
-      // Place in target slot, displacing any existing occupant
+      final sourceIndex = sourceCourt.playerIds.indexOf(player.id);
+      if (effectiveSlot < targetCourt.playerIds.length) {
+        // Swap: the occupant takes the moved player's old slot, so nobody
+        // drops to the waitlist.
+        sourceCourt.playerIds[sourceIndex] =
+            targetCourt.playerIds[effectiveSlot];
+        targetCourt.playerIds[effectiveSlot] = player.id;
+      } else {
+        sourceCourt.playerIds.removeAt(sourceIndex);
+        targetCourt.playerIds.add(player.id);
+      }
+    } else {
+      // From the waitlist: displace any existing occupant to the waitlist.
       if (effectiveSlot < targetCourt.playerIds.length) {
         targetCourt.playerIds[effectiveSlot] = player.id;
       } else {
