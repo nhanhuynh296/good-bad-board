@@ -614,7 +614,7 @@ re-roll when the game finishes → Save again.
 #### Courts (COURT-01…13)
 - [x] **COURT-01** — Each court shows: number, level-gap badge (0="Same level", N>0="N level gap"), up to 4 player rows (name + tier), "Open slot" italic for empty positions
 - [x] **COURT-02** — Re-roll: evaluates multiple random 4-player combos from court occupants + full checked-in waitlist pool, selects lowest level gap, returns others to waitlist, increments re-roll count. `GameData.rerollSampleCount` (100) weighted-random draws; gap = SkillTier spread, Elo spread breaks ties. `GameData(random:)` is injectable for tests. Tests: `test/game_data_reroll_test.dart`
-- [x] **COURT-03** — Re-roll no-op when court occupants + waitlist ≤ 4 players: nothing changes, no re-roll count increment. `GameData.canRerollCourt(i)`; the dashboard stays silent (no dialog, no SnackBar)
+- [x] **COURT-03** — Re-roll no-op when a full court's occupants + waitlist = 4 (or any court when < 4); a court with an open slot still fills from exactly 4: nothing changes, no re-roll count increment. `GameData.canRerollCourt(i)`; the dashboard stays silent (no dialog, no SnackBar)
 - [x] **COURT-04** — Selecting a waitlisted player: highlighted as "selected", hint reads "Placing {name} — tap a court slot", court slots become interactive. Sidebar and chips take `selectedPlayerName` (the selection can be a court player)
 - [x] **COURT-05** — Switching selection: tapping waitlisted player B while A selected moves selection to B directly
 - [x] **COURT-06** — Deselecting: tapping already-selected player clears selection, hint reverts to "Tap a waitlisted player, then a court slot to place or swap them in."

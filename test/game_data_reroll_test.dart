@@ -143,4 +143,39 @@ void main() {
     // Act + Assert
     expect(gameData.canRerollCourt(0), isTrue);
   });
+
+  test('should_fill_an_empty_court_when_four_players_wait', () async {
+    // Arrange — court 0 full, court 1 emptied so its 4 players wait.
+    final players = await playersWith(List.filled(8, Elo.b2));
+    final gameData = GameData(random: Random(1))..setNumberOfCourt(2);
+    for (final player in players) {
+      gameData.checkInPlayer(player);
+    }
+    await gameData.makeGame();
+    for (final id in gameData.stagingMatches[1].playerIds.toList()) {
+      gameData.removePlayerFromCourt(players.firstWhere((p) => p.id == id));
+    }
+
+    // Act
+    gameData.makeSingleCourt(1);
+
+    // Assert
+    expect(gameData.stagingMatches[1].playerIds, hasLength(4));
+  });
+
+  test('should_report_can_reroll_when_a_part_full_court_can_fill', () async {
+    // Arrange — court 1 keeps 2 players, the other 2 wait.
+    final players = await playersWith(List.filled(8, Elo.b2));
+    final gameData = GameData(random: Random(1))..setNumberOfCourt(2);
+    for (final player in players) {
+      gameData.checkInPlayer(player);
+    }
+    await gameData.makeGame();
+    for (final id in gameData.stagingMatches[1].playerIds.take(2).toList()) {
+      gameData.removePlayerFromCourt(players.firstWhere((p) => p.id == id));
+    }
+
+    // Act + Assert
+    expect(gameData.canRerollCourt(1), isTrue);
+  });
 }

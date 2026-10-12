@@ -283,10 +283,12 @@ seats those 4 on the court, returns everyone else in the pool to the waitlist, a
 club's re-roll count (visible in the stat strip and Analytics).
 
 **COURT-03** — Re-roll no-op when nobody else is available
-Given a court's occupants plus the full waitlist total 4 or fewer players
+Given a full court whose occupants plus the full waitlist total 4 players (or any court when the
+total is below 4)
 When the organizer taps "Re-roll ⟲" on that court
 Then nothing changes (no reshuffle, no re-roll count increment) — there is no one to rotate in.
 The dashboard stays silent: no dialog and no error message.
+A court with an open slot is still filled when the total is exactly 4.
 
 **COURT-04** — Selecting a waitlisted player to place/swap
 Given at least one player is on the waitlist

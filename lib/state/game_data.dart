@@ -465,11 +465,19 @@ class GameData extends ChangeNotifier {
 
   /// Whether re-rolling the court at [courtIndex] can change anything.
   ///
-  /// COURT-03: when the court's occupants plus the whole waitlist total 4 or
-  /// fewer, nobody can be rotated in.
+  /// COURT-03: a full court whose occupants plus the whole waitlist total 4
+  /// has nobody to rotate in. A court with an open slot can still be filled
+  /// from a pool of exactly 4.
   bool canRerollCourt(int courtIndex) =>
-      _onLineup(visibleMatches, () => _rerollPoolSize(courtIndex)) >
-      Game.playerPerCourt;
+      _onLineup(visibleMatches, () => _canReroll(courtIndex));
+
+  bool _canReroll(int courtIndex) {
+    final pool = _rerollPoolSize(courtIndex);
+    final inTargetCourt =
+        stagingMatches.elementAtOrNull(courtIndex)?.playerIds.length ?? 0;
+    if (pool < Game.playerPerCourt) return false;
+    return pool > Game.playerPerCourt || inTargetCourt < Game.playerPerCourt;
+  }
 
   /// Occupants of the court plus every player off all courts.
   int _rerollPoolSize(int courtIndex) {
@@ -499,7 +507,7 @@ class GameData extends ChangeNotifier {
       throw Exception('Invalid court index');
     }
     // COURT-03: no one to rotate in, so nothing changes and nothing counts.
-    if (_rerollPoolSize(courtIndex) <= Game.playerPerCourt) return;
+    if (!_canReroll(courtIndex)) return;
 
     // Free the court so its occupants join the pool.
     stagingMatches[courtIndex] = Game.create(List.empty());
