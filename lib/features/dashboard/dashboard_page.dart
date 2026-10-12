@@ -47,18 +47,39 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _onSlotTap(int courtIndex, int slotIndex) {
     final gameData = context.read<GameData>();
+    final court = gameData.visibleMatches[courtIndex];
+    final occupant = slotIndex < court.players.length
+        ? court.players[slotIndex]
+        : null;
     final player = _selectedPlayer;
     if (player == null) {
-      // Selection became stale (player was deleted); clear it.
+      // Nothing selected: tapping a court player selects them to move.
+      setState(() => _selectedPlayerId = occupant?.id);
+      return;
+    }
+    if (player.id == occupant?.id) {
       setState(() => _selectedPlayerId = null);
       return;
     }
 
+    // A player from the waitlist takes the slot; a player from another
+    // court swaps with the occupant.
     gameData.placePlayerInSlot(player, courtIndex, slotIndex);
 
     setState(() {
       _selectedPlayerId = null;
     });
+  }
+
+  void _onRemovePlayer(int courtIndex, int slotIndex) {
+    final gameData = context.read<GameData>();
+    final court = gameData.visibleMatches[courtIndex];
+    if (slotIndex >= court.players.length) return;
+    final player = court.players[slotIndex];
+    gameData.removePlayerFromCourt(player);
+    if (_selectedPlayerId == player.id) {
+      setState(() => _selectedPlayerId = null);
+    }
   }
 
   void _onReroll(int courtIndex) {
@@ -533,9 +554,13 @@ class _DashboardPageState extends State<DashboardPage> {
                   ? () => _onReroll(index)
                   : null,
               // A saved lineup is locked — re-roll the court to end the game.
-              onSlotTap: selectionActive && !isPlaying
+              // Tapping a court player selects them; tapping another slot
+              // then moves or swaps them.
+              onSlotTap: !isPlaying
                   ? (slotIndex) => _onSlotTap(index, slotIndex)
                   : null,
+              selectedPlayerId: _selectedPlayerId,
+              onRemovePlayer: (slotIndex) => _onRemovePlayer(index, slotIndex),
               // A plan has nothing to save — it is logged when it is played.
               onSave: isGameBased && !isNextRound
                   ? () => _onSaveCourt(index)

@@ -222,5 +222,6 @@
   "shell_more": "更多",
   "shell_navigate": "導航",
   "common_search_players": "搜尋球員…",
-  "common_toggle": "切換"
+  "common_toggle": "切換",
+  "dashboard_remove_from_court": "移出場地"
 }

@@ -1063,5 +1063,9 @@
   "common_toggle": "Toggle",
   "@common_toggle": {
     "description": "Default accessibility label of a toggle button"
+  },
+  "dashboard_remove_from_court": "Remove from court",
+  "@dashboard_remove_from_court": {
+    "description": "Tooltip of the button that moves a player from an incomplete court to the waitlist"
   }
 }

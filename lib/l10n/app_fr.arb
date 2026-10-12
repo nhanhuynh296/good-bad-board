@@ -222,5 +222,6 @@
   "shell_more": "Plus",
   "shell_navigate": "NAVIGATION",
   "common_search_players": "Rechercher des joueurs…",
-  "common_toggle": "Basculer"
+  "common_toggle": "Basculer",
+  "dashboard_remove_from_court": "Retirer du terrain"
 }

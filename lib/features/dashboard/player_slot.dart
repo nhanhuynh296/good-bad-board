@@ -13,13 +13,18 @@ import 'package:good_bad_board/model/player.dart';
 /// - **Empty**: "Open slot" (13px, italic, textSubtle)
 ///
 /// When [isSelectionActive] is true, the slot shows an accent-tinted
-/// background to indicate it is a valid drop target.
+/// background to indicate it is a valid drop target. A slot whose player is
+/// selected (to move them to another slot) shows a stronger tint.
+///
+/// When [onRemove] is set, an occupied slot shows a remove button.
 class PlayerSlot extends StatelessWidget {
   const PlayerSlot({
     super.key,
     this.player,
     this.isSelectionActive = false,
+    this.isSelected = false,
     this.onTap,
+    this.onRemove,
   });
 
   /// The player occupying this slot, or null if empty.
@@ -28,8 +33,14 @@ class PlayerSlot extends StatelessWidget {
   /// Whether a waitlist selection is currently active (makes slots tappable).
   final bool isSelectionActive;
 
+  /// Whether this slot's player is the one selected to move.
+  final bool isSelected;
+
   /// Called when the slot is tapped.
   final VoidCallback? onTap;
+
+  /// Called when the remove button is tapped. When null, no button shows.
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +56,9 @@ class PlayerSlot extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             border: const Border(top: BorderSide(color: AppColors.pillBg)),
-            color: isSelectionActive
+            color: isSelected
+                ? AppColors.accentPrimary.withValues(alpha: 0.18)
+                : isSelectionActive
                 ? AppColors.accentPrimary.withValues(alpha: 0.06)
                 : null,
           ),
@@ -82,6 +95,24 @@ class PlayerSlot extends StatelessWidget {
                     color: AppColors.accentPrimary,
                   ),
                 ),
+                if (onRemove != null) ...[
+                  const SizedBox(width: 4),
+                  IconButton(
+                    key: const Key('slot-remove-button'),
+                    onPressed: onRemove,
+                    tooltip: AppLocalizations.of(
+                      context,
+                    )!.dashboard_remove_from_court,
+                    icon: const Icon(Icons.close_rounded, size: 16),
+                    color: AppColors.textMuted,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+                ],
               ],
             ],
           ),

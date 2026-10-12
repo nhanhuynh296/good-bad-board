@@ -222,5 +222,6 @@
   "shell_more": "更多",
   "shell_navigate": "导航",
   "common_search_players": "搜索球员…",
-  "common_toggle": "切换"
+  "common_toggle": "切换",
+  "dashboard_remove_from_court": "移出场地"
 }

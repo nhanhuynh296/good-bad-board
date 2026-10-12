@@ -22,6 +22,8 @@ class CourtCard extends StatelessWidget {
     this.onReroll,
     this.onSlotTap,
     this.onSave,
+    this.selectedPlayerId,
+    this.onRemovePlayer,
   });
 
   /// 1-indexed court number displayed in the header.
@@ -61,7 +63,18 @@ class CourtCard extends StatelessWidget {
   /// When null, no save button is rendered.
   final VoidCallback? onSave;
 
+  /// The ID of the player selected to move, if they are on this court.
+  final String? selectedPlayerId;
+
+  /// Called with the 0-based slot index when a player's remove button is
+  /// tapped. The button shows only on an incomplete court that is not in
+  /// play.
+  final void Function(int slotIndex)? onRemovePlayer;
+
   static const _slotCount = 4;
+
+  bool get _showRemove =>
+      onRemovePlayer != null && !isPlaying && players.length < _slotCount;
 
   /// The save button only appears on a court that holds a full, savable
   /// lineup and is not already in play.
@@ -124,7 +137,12 @@ class CourtCard extends StatelessWidget {
               child: PlayerSlot(
                 player: i < players.length ? players[i] : null,
                 isSelectionActive: isSelectionActive,
+                isSelected:
+                    i < players.length && players[i].id == selectedPlayerId,
                 onTap: onSlotTap != null ? () => onSlotTap!(i) : null,
+                onRemove: _showRemove && i < players.length
+                    ? () => onRemovePlayer!(i)
+                    : null,
               ),
             ),
         ],

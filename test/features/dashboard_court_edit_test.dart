@@ -1,0 +1,128 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:good_bad_board/features/dashboard/dashboard.dart';
+import 'package:good_bad_board/l10n/app_localizations.dart';
+import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/repository/player_repository.dart';
+import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/state/persistent_setting.dart';
+import 'package:good_bad_board/state/timer_data.dart';
+import 'package:provider/provider.dart';
+
+import '../support/prefs_sandbox.dart';
+import '../support/repository_sandbox.dart';
+
+/// Editing courts by hand on the Dashboard: swap players between courts,
+/// remove a player from an incomplete court, and the warnings before a
+/// running round is thrown away.
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late RepositorySandbox sandbox;
+
+  setUp(() async {
+    mockPreferences({'gameType': 'timeBased'});
+    await PersistentSetting.instance.initialize();
+    sandbox = await RepositorySandbox.setUp('dashboard_court_edit_test');
+  });
+
+  tearDown(() => sandbox.tearDown());
+
+  Widget wrap(GameData gameData, TimerData timerData) => MultiProvider(
+    providers: [
+      ChangeNotifierProvider<GameData>.value(value: gameData),
+      ChangeNotifierProvider<TimerData>.value(value: timerData),
+      ChangeNotifierProvider<PersistentSetting>.value(
+        value: PersistentSetting.instance,
+      ),
+    ],
+    child: const MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: DashboardPage()),
+    ),
+  );
+
+  Future<GameData> seed(int total, int courts) async {
+    final gameData = GameData()..setNumberOfCourt(courts);
+    for (var i = 0; i < total; i++) {
+      final player = Player.create(
+        firstName: 'Player',
+        lastName: '$i',
+        elo: Elo.values[i % Elo.values.length],
+      );
+      PlayerRepository.instance.add(player);
+      gameData.checkInPlayer(player);
+    }
+    await gameData.makeGame();
+    return gameData;
+  }
+
+  void useDesktopSurface(WidgetTester tester) {
+    tester.view.physicalSize = const Size(1600, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+  }
+
+  Finder slotOf(Player player) => find.ancestor(
+    of: find.text(player.name()),
+    matching: find.byType(PlayerSlot),
+  );
+
+  group('Swap between courts', () {
+    testWidgets('should_swap_two_players_on_different_courts', (tester) async {
+      useDesktopSurface(tester);
+      final gameData = await seed(8, 2);
+      final a = gameData.stagingMatches[0].players[0];
+      final b = gameData.stagingMatches[1].players[0];
+      await tester.pumpWidget(wrap(gameData, TimerData()));
+
+      await tester.tap(slotOf(a));
+      await tester.pump();
+      await tester.tap(slotOf(b));
+      await tester.pump();
+
+      expect(gameData.stagingMatches[1].players[0], a);
+    });
+
+    testWidgets('should_clear_the_selection_when_the_same_slot_is_tapped', (
+      tester,
+    ) async {
+      useDesktopSurface(tester);
+      final gameData = await seed(8, 2);
+      final a = gameData.stagingMatches[0].players[0];
+      final b = gameData.stagingMatches[1].players[0];
+      await tester.pumpWidget(wrap(gameData, TimerData()));
+
+      await tester.tap(slotOf(a));
+      await tester.pump();
+      await tester.tap(slotOf(a));
+      await tester.pump();
+      await tester.tap(slotOf(b));
+      await tester.pump();
+
+      // b was selected, not swapped with a.
+      expect(gameData.stagingMatches[0].players[0], a);
+    });
+  });
+
+  group('Remove from an incomplete court', () {
+    testWidgets('should_send_the_player_to_the_waitlist', (tester) async {
+      useDesktopSurface(tester);
+      final gameData = await seed(8, 2);
+      gameData.removePlayerFromCourt(gameData.stagingMatches[0].players[3]);
+      final a = gameData.stagingMatches[0].players[0];
+      await tester.pumpWidget(wrap(gameData, TimerData()));
+
+      await tester.tap(
+        find.descendant(
+          of: slotOf(a),
+          matching: find.byKey(const Key('slot-remove-button')),
+        ),
+      );
+      await tester.pump();
+
+      expect(gameData.waitlistedPlayers, contains(a));
+    });
+  });
+}
