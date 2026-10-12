@@ -8,7 +8,8 @@ import 'package:good_bad_board/model/player.dart';
 ///
 /// Header row shows: "COURT N" title + [SpreadPill] + an optional PLAYING
 /// badge + re-roll and (game-based mode) save buttons.
-/// Body contains 4 [PlayerSlot] rows.
+/// Body contains 4 [PlayerSlot] rows that share the card height, so the
+/// card needs a bounded height (the dashboard grid gives one).
 class CourtCard extends StatelessWidget {
   const CourtCard({
     super.key,
@@ -73,7 +74,6 @@ class CourtCard extends StatelessWidget {
     return AppCard(
       padding: EdgeInsets.zero,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // ── Header ──────────────────────────────────────
@@ -117,11 +117,15 @@ class CourtCard extends StatelessWidget {
             ),
           ),
           // ── Player Slots ────────────────────────────────
+          // The slots share the card height, so the card has no empty band
+          // below the last slot when the grid makes it taller.
           for (var i = 0; i < _slotCount; i++)
-            PlayerSlot(
-              player: i < players.length ? players[i] : null,
-              isSelectionActive: isSelectionActive,
-              onTap: onSlotTap != null ? () => onSlotTap!(i) : null,
+            Expanded(
+              child: PlayerSlot(
+                player: i < players.length ? players[i] : null,
+                isSelectionActive: isSelectionActive,
+                onTap: onSlotTap != null ? () => onSlotTap!(i) : null,
+              ),
             ),
         ],
       ),

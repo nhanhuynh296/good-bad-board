@@ -387,18 +387,16 @@ class _DashboardPageState extends State<DashboardPage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Court grid. The grid itself does not scroll (shrinkWrap +
-        // NeverScrollableScrollPhysics), so past the first row of courts it
-        // would overflow the bounded height with no way to reach the rest.
+        // Court grid. The courts grow to fill the free height; when they
+        // cannot all fit at their minimum size, the grid scrolls.
         Expanded(
-          child: SingleChildScrollView(
-            child: _buildCourtGrid(
-              courts,
-              selectionActive,
-              gameData,
-              isGameBased,
-              isNextRound,
-            ),
+          child: _buildCourtGrid(
+            courts,
+            selectionActive,
+            gameData,
+            isGameBased,
+            isNextRound,
+            fitToHeight: true,
           ),
         ),
         const SizedBox(width: AppSpacing.xl),
@@ -443,6 +441,7 @@ class _DashboardPageState extends State<DashboardPage> {
             gameData,
             isGameBased,
             isNextRound,
+            fitToHeight: false,
           ),
         ],
       ),
@@ -456,8 +455,9 @@ class _DashboardPageState extends State<DashboardPage> {
     bool selectionActive,
     GameData gameData,
     bool isGameBased,
-    bool isNextRound,
-  ) {
+    bool isNextRound, {
+    required bool fitToHeight,
+  }) {
     // Show courts up to numberOfCourt (pad with empty if needed)
     final courtCount = gameData.numberOfCourt;
     final courts = <_CourtDisplay>[];
@@ -500,17 +500,23 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final crossAxisCount = isPhone(width) ? 1 : 2;
+        // The stacked layout scrolls as a whole page, so its grid has no
+        // height to fill: a height of 0 gives the minimum court proportion.
+        final layout = courtGridLayout(
+          width: constraints.maxWidth,
+          height: fitToHeight ? constraints.maxHeight : 0,
+          courtCount: courts.length,
+          gap: AppSpacing.lg,
+        );
 
         return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: !fitToHeight,
+          physics: fitToHeight ? null : const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
+            crossAxisCount: layout.columns,
             mainAxisSpacing: AppSpacing.lg,
             crossAxisSpacing: AppSpacing.lg,
-            childAspectRatio: 1.6,
+            mainAxisExtent: layout.courtHeight,
           ),
           itemCount: courts.length,
           itemBuilder: (context, index) {

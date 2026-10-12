@@ -109,6 +109,29 @@ void main() {
   });
 
   group('CourtCard', () {
+    testWidgets('should_end_the_last_slot_at_the_card_bottom', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: 500,
+                height: 400,
+                child: CourtCard(courtNumber: 1, players: []),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final lastSlot = tester.getRect(find.byType(PlayerSlot).last);
+      // The card border is 1 px wide.
+      expect(lastSlot.bottom, closeTo(400, 1.01));
+    });
+
     testWidgets('displays court number and 4 slots', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
