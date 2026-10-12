@@ -320,10 +320,38 @@ When the organizer taps an occupied slot on any court
 Then the two players trade places: the selected player takes the slot, and the slot's previous
 occupant is moved to the waitlist; the selection clears.
 
-**COURT-09** — Court slots inert with no selection
-Given no waitlisted player is currently selected
-When the organizer taps any court slot (empty or occupied)
-Then nothing happens.
+**COURT-09** — Empty court slots inert with no selection (changed 2026-10-12)
+Given no player is currently selected
+When the organizer taps an empty court slot
+Then nothing happens. (Tapping an occupied slot selects that player, see COURT-10.)
+
+**COURT-10** — Swapping players between courts (added 2026-10-12)
+Given a court that is not in play
+When the organizer taps an occupied slot
+Then that player is highlighted as selected (tapping the same slot again clears the selection).
+When the organizer then taps a slot on another court that is not in play
+Then the two players trade places; if the target slot is empty, the player moves there. Nobody
+drops to the waitlist, and the selection clears. A court in play (game-based, saved) cannot give
+or take a player.
+
+**COURT-11** — Removing a player from an incomplete court (added 2026-10-12)
+Given a court has fewer than 4 players and is not in play
+Then each player on it shows a remove (×) button.
+When the organizer taps it
+Then the player moves to the waitlist. Full courts and courts in play show no remove button.
+
+**COURT-12** — Warning before re-rolling a running court (added 2026-10-12)
+Given time-based mode and the round clock is running
+When the organizer taps "Re-roll ⟲" on a court with players
+Then a dialog "Discard this court's game?" explains that the game is not saved to history and that
+some players then get more court time. "Cancel" keeps the court; "Re-roll" re-rolls it.
+
+**COURT-13** — Warning before regenerating a running round (added 2026-10-12)
+Given time-based mode, the round clock is running and a lineup exists
+When the organizer taps "Regenerate"
+Then a dialog "Discard the current round?" explains that the round is not saved to history and that
+some players then get more court time. "Cancel" keeps the round; "Regenerate" makes a new one.
+(Restored from main's "Game is currently running" warning.)
 
 **WL-01** — Waitlist ordering & display
 Given one or more checked-in players are waitlisted
@@ -690,7 +718,7 @@ scrolling or overlapping controls at any width.
 | Navigation & responsive | NAV-01…08 |
 | Dashboard: round rotation (time-based) | RND-01…11 |
 | Dashboard: game-based mode | GB-01…07 |
-| Dashboard: courts & waitlist | COURT-01…09, WL-01…02 |
+| Dashboard: courts & waitlist | COURT-01…13, WL-01…02 |
 | Players (with integrated check-in) | PLY-01…12, CHK-01…06 |
 | Sessions | SESS-01…06 |
 | Schedule | SCHED-01 |

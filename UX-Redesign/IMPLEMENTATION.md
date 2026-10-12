@@ -579,7 +579,7 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 
 ### Acceptance Criteria
 
-> **UAT mapping:** NAV-06, NAV-07, RND-01…11, GB-01…07, COURT-01…09, WL-01, WL-02
+> **UAT mapping:** NAV-06, NAV-07, RND-01…11, GB-01…07, COURT-01…13, WL-01, WL-02
 
 #### Navigation & layout (shared with Stage 2 shell)
 - [x] **NAV-06** — Stat strip reflow: desktop (≥1080px) 6 cols (Checked In, Remaining Slots, Waitlist, Avg Level, Avg Level Gap, Re-rolls); tablet (720–1079px) 3-per-row wrap; phone (<720px) 4 stats in 2×2 grid (Checked In, Waitlist, Avg Level, Remaining)
@@ -611,7 +611,7 @@ re-roll when the game finishes → Save again.
 - [x] **GB-06** — A playing lineup is locked: `placePlayerInSlot` is a no-op for a playing court and its slots are not tappable
 - [x] **GB-07** — Re-roll ends the game: the court gets a new `Game` (so the playing flag clears by construction), drawn only from players not on any other court
 
-#### Courts (COURT-01…09)
+#### Courts (COURT-01…13)
 - [x] **COURT-01** — Each court shows: number, level-gap badge (0="Same level", N>0="N level gap"), up to 4 player rows (name + tier), "Open slot" italic for empty positions
 - [x] **COURT-02** — Re-roll: evaluates multiple random 4-player combos from court occupants + full checked-in waitlist pool, selects lowest level gap, returns others to waitlist, increments re-roll count
 - [x] **COURT-03** — Re-roll no-op when court occupants + waitlist ≤ 4 players: nothing changes, no re-roll count increment
@@ -620,7 +620,11 @@ re-roll when the game finishes → Save again.
 - [x] **COURT-06** — Deselecting: tapping already-selected player clears selection, hint reverts to "Tap a waitlisted player, then a court slot to place or swap them in."
 - [x] **COURT-07** — Placing selected player into empty "Open slot": seated, removed from waitlist, selection clears
 - [x] **COURT-08** — Swapping into occupied slot: two players trade places (selected takes slot, previous occupant → waitlist), selection clears
-- [x] **COURT-09** — Court slots inert with no selection: tapping any slot does nothing
+- [x] **COURT-09** — Empty slots inert with no selection; tapping an occupied slot selects that player (changed 2026-10-12)
+- [x] **COURT-10** — Swap between courts: select a court player, tap a slot on another idle court; `GameData.placePlayerInSlot` swaps the occupant into the source slot; a playing court cannot give or take a player. Tests: `test/game_data_court_swap_test.dart`, `test/features/dashboard_court_edit_test.dart`
+- [x] **COURT-11** — Remove (×) on each player of an incomplete idle court → waitlist; `removePlayerFromCourt` ignores playing courts
+- [x] **COURT-12** — Re-roll warning while the time-based clock runs (`dashboard_discard_court_*`)
+- [x] **COURT-13** — Regenerate warning while the time-based clock runs (`dashboard_discard_round_*`), restored from main
 
 #### Waitlist (WL-01…02)
 - [x] **WL-01** — Waitlist shows position number + name + level tier per entry; "No one waiting" when empty
