@@ -118,6 +118,8 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _onReroll(int courtIndex) async {
     final gameData = context.read<GameData>();
     final l10n = AppLocalizations.of(context)!;
+    // COURT-03: nobody to rotate in — stay quiet, nothing to confirm either.
+    if (!gameData.canRerollCourt(courtIndex)) return;
     final hasPlayers = gameData.visibleMatches[courtIndex].players.isNotEmpty;
     if (_isRoundRunning &&
         hasPlayers &&

@@ -42,6 +42,10 @@ void main() {
     () async {
       final gameData = GameData()..setNumberOfCourt(1);
       (await fourPlayers()).forEach(gameData.addFullPricedPlayer);
+      // A fifth player gives the re-roll someone to rotate in (COURT-03).
+      gameData.addFullPricedPlayer(
+        Player.create(firstName: 'Spare', lastName: 'One', elo: Elo.c2),
+      );
       await gameData.makeGame();
 
       expect(gameData.sessionRerollCount, 0);
@@ -53,18 +57,16 @@ void main() {
   );
 
   test(
-    'reroll counter does not increment on a no-op reroll (not enough players)',
+    'reroll counter does not increment on a no-op reroll (4 or fewer players)',
     () async {
       final gameData = GameData()..setNumberOfCourt(1);
       final players = await fourPlayers();
       players.forEach(gameData.addFullPricedPlayer);
       await gameData.makeGame();
 
-      // Drop to 3 total players (below Game.playerPerCourt) so the reroll
-      // has no eligible candidate pool and throws instead of executing.
-      gameData.removePlayer(players.first);
+      // Exactly 4 players: nobody to rotate in, so the reroll does nothing.
+      gameData.makeSingleCourt(0);
 
-      expect(() => gameData.makeSingleCourt(0), throwsException);
       expect(gameData.sessionRerollCount, 0);
     },
   );

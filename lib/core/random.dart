@@ -3,7 +3,12 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 
 extension Picker<E> on List<E> {
-  List<E> choices(List<double> weights, {int count = 1, bool replace = false}) {
+  List<E> choices(
+    List<double> weights, {
+    int count = 1,
+    bool replace = false,
+    Random? random,
+  }) {
     assert(
       weights.length == length,
       'List and weights must be of the same length.',
@@ -18,7 +23,7 @@ extension Picker<E> on List<E> {
 
     final availableWeights = List<double>.of(weights);
 
-    final random = Random();
+    final rng = random ?? Random();
     final pickedElements = <E>[];
 
     final availableElements = List<E>.of(this);
@@ -27,7 +32,7 @@ extension Picker<E> on List<E> {
           .map((weight) => weight / availableWeights.sum)
           .toList();
 
-      final randomValue = random.nextDouble();
+      final randomValue = rng.nextDouble();
       double cumulativeWeight = 0.0;
 
       for (var j = 0; j < availableElements.length; j++) {

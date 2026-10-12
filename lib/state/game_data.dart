@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/core/iterable_extension.dart';
 import 'package:good_bad_board/core/random.dart';
+import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/model/session_log.dart';
@@ -38,6 +39,14 @@ enum RoundView {
 }
 
 class GameData extends ChangeNotifier {
+  /// [random] feeds the weighted player draws; tests pass a seeded one.
+  GameData({Random? random}) : _random = random;
+
+  final Random? _random;
+
+  /// Number of random 4-player combinations a re-roll compares (COURT-02).
+  static const int rerollSampleCount = 100;
+
   /// Default session capacity (20 players).
   static const int defaultSessionCapacity = 20;
 
@@ -426,28 +435,59 @@ class GameData extends ChangeNotifier {
   void makeSingleCourt(int courtIndex) =>
       _onLineup(visibleMatches, () => _makeSingleCourt(courtIndex));
 
+  /// Whether re-rolling the court at [courtIndex] can change anything.
+  ///
+  /// COURT-03: when the court's occupants plus the whole waitlist total 4 or
+  /// fewer, nobody can be rotated in.
+  bool canRerollCourt(int courtIndex) =>
+      _onLineup(visibleMatches, () => _rerollPoolSize(courtIndex)) >
+      Game.playerPerCourt;
+
+  /// Occupants of the court plus every player off all courts.
+  int _rerollPoolSize(int courtIndex) {
+    final inTargetCourt =
+        stagingMatches.elementAtOrNull(courtIndex)?.playerIds.length ?? 0;
+    return _checkedInPlayers.length -
+        getPlayerFromGames(stagingMatches).length +
+        inTargetCourt;
+  }
+
+  /// Level gap of [players]: the [SkillTier] spread, then the finer Elo spread
+  /// to break ties inside one tier.
+  static (int, int) _levelGap(List<Player> players) {
+    final tiers = players.map((p) => p.elo.skillTier.index);
+    final elos = players.map((p) => p.elo.index);
+    return (
+      tiers.reduce(max) - tiers.reduce(min),
+      elos.reduce(max) - elos.reduce(min),
+    );
+  }
+
+  static bool _isLowerGap((int, int) a, (int, int) b) =>
+      a.$1 != b.$1 ? a.$1 < b.$1 : a.$2 < b.$2;
+
   void _makeSingleCourt(int courtIndex) {
     if (courtIndex >= numberOfCourt || courtIndex < 0) {
       throw Exception('Invalid court index');
     }
-    // available player should exclude the player in the current court itself
-    final numberOfPlayerInTargetCourt =
-        stagingMatches.elementAtOrNull(courtIndex)?.playerIds.length ?? 0;
-    // All player - all player on court + player on current court
-    final playerAvailable =
-        _checkedInPlayers.length -
-        getPlayerFromGames(stagingMatches).length +
-        numberOfPlayerInTargetCourt;
-    if (playerAvailable < Game.playerPerCourt) {
-      throw Exception(
-        'Not enough players, need at least ${Game.playerPerCourt}, got $playerAvailable',
-      );
-    }
+    // COURT-03: no one to rotate in, so nothing changes and nothing counts.
+    if (_rerollPoolSize(courtIndex) <= Game.playerPerCourt) return;
+
+    // Free the court so its occupants join the pool.
     stagingMatches[courtIndex] = Game.create(List.empty());
-    stagingMatches[courtIndex] = Game.create(
-      // Has to be toList(growable: true) as we need to add/remove player
-      _choosePlayer(Game.playerPerCourt).toList(growable: true),
-    );
+    // COURT-02: compare several weighted-random combinations and keep the one
+    // with the lowest level gap.
+    List<Player>? best;
+    (int, int)? bestGap;
+    for (var i = 0; i < rerollSampleCount; i++) {
+      final candidate = _choosePlayer(Game.playerPerCourt).toList();
+      final gap = _levelGap(candidate);
+      if (bestGap == null || _isLowerGap(gap, bestGap)) {
+        best = candidate;
+        bestGap = gap;
+      }
+    }
+    stagingMatches[courtIndex] = Game.create(best!);
     // The court now holds a brand-new Game, so any earlier PLAYING flag for
     // this court is gone — re-rolling is how a game-based round ends.
     _prunePlayingGameIds();
@@ -547,6 +587,7 @@ class GameData extends ChangeNotifier {
     return playerOffCourt.toUnmodifiableList().choices(
       weights,
       count: numberOfPlayers,
+      random: _random,
     );
   }
 
