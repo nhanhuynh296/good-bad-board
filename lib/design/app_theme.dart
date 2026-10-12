@@ -57,7 +57,7 @@ abstract class AppTheme {
     bool scaleFocusedBorder = false,
   }) {
     final greySide = _outlinedBorderSide.copyWith(color: AppColors.grey);
-    final redSide = _outlinedBorderSide.copyWith(color: Colors.red);
+    final redSide = _outlinedBorderSide.copyWith(color: AppColors.error);
     final focusedSide = scaleFocusedBorder
         ? _outlinedBorderSide.scale(1.5).copyWith(color: accentColor)
         : _outlinedBorderSide.copyWith(color: accentColor);
@@ -102,7 +102,7 @@ abstract class AppTheme {
         onSecondary: AppColors.white,
         tertiary: AppColors.pillBg,
         onTertiary: AppColors.textPrimary,
-        error: Colors.red,
+        error: AppColors.error,
         onError: AppColors.white,
         surface: AppColors.cardBg,
         onSurface: AppColors.textPrimary,
@@ -188,7 +188,7 @@ abstract class AppTheme {
         onSecondary: AppColors.black,
         tertiary: AppColors.darkCardBorder,
         onTertiary: AppColors.white,
-        error: Colors.red,
+        error: AppColors.error,
         onError: AppColors.white,
         surface: AppColors.darkCardBg,
         onSurface: AppColors.white,

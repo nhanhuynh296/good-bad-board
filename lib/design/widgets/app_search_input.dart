@@ -39,20 +39,12 @@ class AppSearchInput extends StatelessWidget {
 
   static const _errorBorder = OutlineInputBorder(
     borderRadius: AppRadii.mdRadius,
-    borderSide: BorderSide(color: Colors.red, width: 1),
+    borderSide: BorderSide(color: AppColors.error, width: 1),
   );
 
-  static const _inputStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: AppColors.textPrimary,
-  );
+  static const _inputStyle = AppTypography.input;
 
-  static const _hintStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
+  static final _hintStyle = AppTypography.input.copyWith(
     color: AppColors.textSubtle,
   );
 

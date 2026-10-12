@@ -110,6 +110,9 @@ abstract class AppColors {
   /// Delta negative red (#c2410c)
   static const Color deltaNegative = Color(0xFFC2410C);
 
+  /// Error / danger (#f44336)
+  static const Color error = Color(0xFFF44336);
+
   /// Overlay backdrop (rgba 20,16,12, 0.45)
   static const Color overlayBackdrop = Color(0x7314100C);
 
