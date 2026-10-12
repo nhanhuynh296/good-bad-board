@@ -177,6 +177,44 @@ void main() {
       expect(find.byIcon(Icons.refresh), findsOneWidget);
     });
 
+    testWidgets('should_size_the_icon_variant_as_a_22px_square', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(AppButton.icon(icon: Icons.refresh, onPressed: () {})),
+      );
+
+      expect(tester.getSize(find.byType(AppButton)), const Size.square(22));
+    });
+
+    testWidgets('should_round_the_icon_variant_by_6px', (tester) async {
+      await tester.pumpWidget(
+        wrap(AppButton.icon(icon: Icons.refresh, onPressed: () {})),
+      );
+
+      final style = tester.widget<TextButton>(find.byType(TextButton)).style!;
+      final shape = style.shape!.resolve({}) as RoundedRectangleBorder;
+      expect(shape.borderRadius, AppRadii.smRadius);
+    });
+
+    testWidgets('should_use_11px_text_for_the_secondary_variant', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(AppButton.secondary(label: 'Cancel', onPressed: () {})),
+      );
+
+      expect(tester.widget<Text>(find.text('Cancel')).style!.fontSize, 11);
+    });
+
+    testWidgets('should_use_12px_text_for_the_primary_variant', (tester) async {
+      await tester.pumpWidget(
+        wrap(AppButton.primary(label: 'Save', onPressed: () {})),
+      );
+
+      expect(tester.widget<Text>(find.text('Save')).style!.fontSize, 12);
+    });
+
     testWidgets('onPressed can be null', (tester) async {
       await tester.pumpWidget(wrap(AppButton.primary(label: 'Disabled')));
       expect(find.text('Disabled'), findsOneWidget);

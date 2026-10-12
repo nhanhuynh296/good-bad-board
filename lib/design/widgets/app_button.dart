@@ -112,8 +112,7 @@ class AppButton extends StatelessWidget {
 
   /// Square icon button with pill background.
   ///
-  /// The visual icon renders at 16×16px inside a 40×40px touch target
-  /// (meeting WCAG minimum touch-target size).
+  /// A 22×22px square with a 14px glyph (ARCHITECTURE.md §2.6).
   factory AppButton.icon({
     Key? key,
     required IconData icon,
@@ -141,6 +140,8 @@ class AppButton extends StatelessWidget {
   final BorderSide? border;
 
   static const _disabledOpacity = 0.38;
+  static const _iconBoxSize = 22.0;
+  static const _iconGlyphSize = 14.0;
 
   @override
   Widget build(BuildContext context) {
@@ -149,13 +150,12 @@ class AppButton extends StatelessWidget {
     final effectiveBorder = border ?? BorderSide.none;
 
     final child = isIcon
-        ? Icon(icon, color: foregroundColor, size: 16)
+        ? Icon(icon, color: foregroundColor, size: _iconGlyphSize)
         : Text(label!, style: textStyle.copyWith(color: foregroundColor));
 
     return SizedBox(
-      // Icon variant: visual 20×20 inside 40×40 touch target
-      width: isIcon ? 40 : null,
-      height: isIcon ? 40 : null,
+      width: isIcon ? _iconBoxSize : null,
+      height: isIcon ? _iconBoxSize : null,
       child: TextButton(
         onPressed: onPressed,
         style: ButtonStyle(
@@ -179,7 +179,7 @@ class AppButton extends StatelessWidget {
           ),
           padding: WidgetStatePropertyAll(padding),
           minimumSize: WidgetStatePropertyAll(
-            isIcon ? const Size.square(40) : Size.zero,
+            isIcon ? const Size.square(_iconBoxSize) : Size.zero,
           ),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
