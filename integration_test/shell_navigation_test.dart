@@ -1,8 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:good_bad_board/design/design.dart';
+import 'package:good_bad_board/shell/shell.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'helpers/test_utils.dart';
+
+/// The colour of the [label] text inside the phone bottom bar.
+Color? bottomBarLabelColor(WidgetTester tester, String label) {
+  final text = find.descendant(
+    of: find.byType(BottomTabBar),
+    matching: find.text(label),
+  );
+  return tester.widget<Text>(text).style?.color;
+}
+
+/// Every text shown in the top nav bar, in order.
+List<String> topNavLabels(WidgetTester tester) => tester
+    .widgetList<Text>(
+      find.descendant(of: find.byType(TopNavBar), matching: find.byType(Text)),
+    )
+    .map((t) => t.data!)
+    .toList();
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -23,11 +42,30 @@ void main() {
         'Settings',
       ];
       for (final label in tabs) {
-        expect(find.text(label), findsWidgets);
+        expect(
+          find.descendant(
+            of: find.byType(TopNavBar),
+            matching: find.text(label),
+          ),
+          findsOneWidget,
+        );
       }
 
       // Phone-only widgets should NOT be present.
       expect(find.byIcon(Icons.menu), findsNothing);
+
+      // Exactly the 5 tab labels sit in the top bar: no club name.
+      expect(topNavLabels(tester), [
+        'Dashboard',
+        'Players',
+        'Sessions',
+        'Analytics',
+        'Settings',
+      ]);
+
+      // Phone chrome is absent.
+      expect(find.byType(CompactHeader), findsNothing);
+      expect(find.byType(BottomTabBar), findsNothing);
     });
 
     testWidgets('tablet shows TopNavBar with all 5 tabs', (tester) async {
@@ -42,11 +80,30 @@ void main() {
         'Settings',
       ];
       for (final label in tabs) {
-        expect(find.text(label), findsWidgets);
+        expect(
+          find.descendant(
+            of: find.byType(TopNavBar),
+            matching: find.text(label),
+          ),
+          findsOneWidget,
+        );
       }
 
       // Phone-only widgets should NOT be present.
       expect(find.byIcon(Icons.menu), findsNothing);
+
+      // Exactly the 5 tab labels sit in the top bar: no club name.
+      expect(topNavLabels(tester), [
+        'Dashboard',
+        'Players',
+        'Sessions',
+        'Analytics',
+        'Settings',
+      ]);
+
+      // Phone chrome is absent.
+      expect(find.byType(CompactHeader), findsNothing);
+      expect(find.byType(BottomTabBar), findsNothing);
     });
   });
 
@@ -110,14 +167,60 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap "Sessions" in the sheet.
-      // The sheet renders Sessions as a text label; we need the one
-      // inside the sheet, not the hidden one from TopNavBar.
       await tester.tap(find.text('Sessions').last);
       await tester.pumpAndSettle();
 
       // Sessions page now renders actual SessionsPage content.
       // Look for "Round mode" which is a section title in SessionsPage.
       expect(find.text('Round mode'), findsOneWidget);
+
+      // The sheet is closed: its other entries are gone.
+      expect(find.byType(MoreBottomSheet), findsOneWidget);
+      expect(find.text('Analytics'), findsNothing);
+    });
+
+    testWidgets('selecting Players in the bottom bar switches tab directly', (
+      tester,
+    ) async {
+      setPhoneSize(tester);
+      await pumpApp(tester);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomTabBar),
+          matching: find.text('Players'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(bottomBarLabelColor(tester, 'Players'), AppColors.accentPrimary);
+      expect(bottomBarLabelColor(tester, 'Courts'), AppColors.textMuted);
+      expect(find.text('Analytics'), findsNothing);
+    });
+
+    testWidgets('selecting Courts in the bottom bar returns to Dashboard', (
+      tester,
+    ) async {
+      setPhoneSize(tester);
+      await pumpApp(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomTabBar),
+          matching: find.text('Players'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomTabBar),
+          matching: find.text('Courts'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(bottomBarLabelColor(tester, 'Courts'), AppColors.accentPrimary);
+      expect(bottomBarLabelColor(tester, 'Players'), AppColors.textMuted);
     });
 
     testWidgets('tapping backdrop closes More sheet without switching', (
@@ -135,8 +238,10 @@ void main() {
       await tester.tapAt(const Offset(195, 100));
       await tester.pumpAndSettle();
 
-      // We should still be on the Dashboard tab.
-      expect(find.text('Courts'), findsOneWidget);
+      // The sheet is closed and we are still on the Dashboard tab.
+      expect(find.text('Analytics'), findsNothing);
+      expect(bottomBarLabelColor(tester, 'Courts'), AppColors.accentPrimary);
+      expect(bottomBarLabelColor(tester, 'More'), AppColors.textMuted);
     });
   });
 
@@ -155,10 +260,26 @@ void main() {
       await tester.tap(find.text('Sessions').last);
       await tester.pumpAndSettle();
 
-      // "More" should still be visible in the bottom bar.
-      // On a secondary tab, the More button should be active
-      // (colored with accentPrimary). We verify the tab still exists.
-      expect(find.text('More'), findsOneWidget);
+      // On a secondary tab, More is active and the primary tabs are not.
+      expect(bottomBarLabelColor(tester, 'More'), AppColors.accentPrimary);
+      expect(bottomBarLabelColor(tester, 'Courts'), AppColors.textMuted);
+      expect(bottomBarLabelColor(tester, 'Players'), AppColors.textMuted);
+    });
+
+    testWidgets('More is not highlighted on a primary tab', (tester) async {
+      setPhoneSize(tester);
+      await pumpApp(tester);
+
+      // The router keeps its tab between tests, so select Courts first.
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomTabBar),
+          matching: find.text('Courts'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(bottomBarLabelColor(tester, 'More'), AppColors.textMuted);
     });
   });
 
