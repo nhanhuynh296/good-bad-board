@@ -14,14 +14,6 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Guard against an uninitialized repository in test environments.
-    int totalMembers;
-    try {
-      totalMembers = PlayerRepository.instance.listedPlayers().length;
-    } catch (_) {
-      totalMembers = 0;
-    }
-
     return SingleChildScrollView(
       padding: AppSpacing.desktopPadding,
       child: Align(
@@ -33,7 +25,14 @@ class SettingsPage extends StatelessWidget {
             children: [
               const _LanguageCard(),
               const SizedBox(height: AppSpacing.lg),
-              _MembershipCard(totalMembers: totalMembers),
+              ListenableBuilder(
+                listenable: PlayerRepository.instance.listenable,
+                builder: (context, _) => _MembershipCard(
+                  totalMembers: PlayerRepository.instance
+                      .listedPlayers()
+                      .length,
+                ),
+              ),
             ],
           ),
         ),

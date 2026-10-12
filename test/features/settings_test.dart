@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_bad_board/features/settings/settings.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
+import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 
 import '../support/prefs_sandbox.dart';
+import '../support/repository_sandbox.dart';
 
 Widget createTestWidget() => const MaterialApp(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -13,10 +16,15 @@ Widget createTestWidget() => const MaterialApp(
 );
 
 void main() {
+  late RepositorySandbox sandbox;
+
   setUp(() async {
     mockPreferences({});
     await PersistentSetting.instance.initialize();
+    sandbox = await RepositorySandbox.setUp('settings_test');
   });
+
+  tearDown(() => sandbox.tearDown());
 
   group('SET-02: Membership count', () {
     testWidgets('should display "Total members" count section', (tester) async {
@@ -27,6 +35,29 @@ void main() {
     testWidgets('should show zero members when no players', (tester) async {
       await tester.pumpWidget(createTestWidget());
       expect(find.text('0'), findsOneWidget);
+    });
+
+    testWidgets('should show the number of listed players', (tester) async {
+      await tester.runAsync(() => createTestPlayers(3));
+      await tester.pumpWidget(createTestWidget());
+
+      expect(find.text('3'), findsOneWidget);
+    });
+
+    testWidgets('should update the count when the roster changes', (
+      tester,
+    ) async {
+      await tester.runAsync(() => createTestPlayers(3));
+      await tester.pumpWidget(createTestWidget());
+
+      await tester.runAsync(
+        () => PlayerRepository.instance.add(
+          Player.create(firstName: 'New', lastName: 'One', elo: Elo.b1),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('4'), findsOneWidget);
     });
   });
 
