@@ -200,7 +200,7 @@ class GameData extends ChangeNotifier {
   bool get isStaged => _stagedLineup != null;
 
   /// Human-readable summary of the staged round (e.g.,
-  /// "16 players across 4 courts").
+  /// "16 players placed across 4 courts").
   String get stagedSummary {
     final staged = _stagedLineup;
     if (staged == null) return '';
@@ -209,7 +209,7 @@ class GameData extends ChangeNotifier {
       (sum, g) => sum + g.playerIds.length,
     );
     final courtCount = staged.where((g) => g.playerIds.isNotEmpty).length;
-    return '$playerCount players across $courtCount courts';
+    return '$playerCount players placed across $courtCount courts';
   }
 
   /// Which round the court grid is showing.
@@ -878,17 +878,18 @@ class GameData extends ChangeNotifier {
   /// [GameType] enum value.
   /// [duration] accepts either an [int] (minutes) or a [Duration].
   ///
-  /// The returned future completes when the template is on disk.
-  Future<void> saveTemplate(
+  /// The returned future completes when the template is on disk. It yields
+  /// `true` when a template was saved, `false` when the input was rejected.
+  Future<bool> saveTemplate(
     String name,
     dynamic mode,
     dynamic duration,
     int capacity,
     int courts,
-  ) {
-    if (name.trim().isEmpty) return Future.value();
+  ) async {
+    if (name.trim().isEmpty) return false;
     if (capacity < minSessionCapacity || courts < 1 || courts > 8) {
-      return Future.value();
+      return false;
     }
     final modeIndex = mode is GameType
         ? (mode == GameType.timeBased ? 1 : 0)
@@ -907,7 +908,8 @@ class GameData extends ChangeNotifier {
       ),
     );
     notifyListeners();
-    return written;
+    await written;
+    return true;
   }
 
   /// Applies the settings from [template] to the current session.

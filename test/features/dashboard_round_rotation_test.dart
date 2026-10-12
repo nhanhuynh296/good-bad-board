@@ -271,9 +271,8 @@ void main() {
         ),
       );
 
-      // The staged panel should include a progress indicator
-      // (striped/dashed bar that fills up rather than depletes)
-      expect(find.byType(LinearProgressIndicator), findsWidgets);
+      // The staged panel holds a striped bar that fills up, not a plain one.
+      expect(find.byType(StripedProgressBar), findsOneWidget);
     });
   });
 

@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/design/design.dart';
+import 'package:good_bad_board/features/dashboard/dashboard.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
+import 'package:good_bad_board/model/session_template.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
@@ -28,14 +32,10 @@ class SessionsPage extends StatefulWidget {
 
 class _SessionsPageState extends State<SessionsPage> {
   final TextEditingController _templateNameController = TextEditingController();
-  bool _isTimeBased = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _isTimeBased =
-        PersistentSetting.instance.getGameType() == GameType.timeBased;
-  }
+  /// Read from the setting, never cached: a template Load changes it too.
+  bool get _isTimeBased =>
+      PersistentSetting.instance.getGameType() == GameType.timeBased;
 
   @override
   void dispose() {
@@ -44,23 +44,59 @@ class _SessionsPageState extends State<SessionsPage> {
   }
 
   void _toggleMode(bool timeBased) {
-    setState(() => _isTimeBased = timeBased);
     PersistentSetting.instance.setGameType(
       timeBased ? GameType.timeBased : GameType.gameBased,
     );
+    // GB-01: game-based mode has no countdown, so stop one already running.
+    if (!timeBased) context.read<TimerData>().reset();
   }
 
-  void _saveTemplate(GameData gameData) {
-    final name = _templateNameController.text;
-    if (name.trim().isEmpty) return;
-    gameData.saveTemplate(
-      name,
+  Future<void> _saveTemplate(GameData gameData) async {
+    final saved = await gameData.saveTemplate(
+      _templateNameController.text,
       _isTimeBased ? 1 : 0,
       PersistentSetting.instance.getGameDuration(),
       gameData.sessionCapacity,
       gameData.numberOfCourt,
     );
-    _templateNameController.clear();
+    // Only a template that was saved clears the field.
+    if (saved && mounted) _templateNameController.clear();
+  }
+
+  /// Whether a change that reshuffles the lineup (court count, template Load)
+  /// may go ahead.
+  ///
+  /// When a time-based round is running and the lineup holds players, the
+  /// organizer first confirms throwing the round away — the same warning as
+  /// Regenerate on the Dashboard.
+  Future<bool> _confirmReshuffle(GameData gameData) async {
+    final running = _isTimeBased && context.read<TimerData>().isRunning;
+    if (!running || !gameData.wouldReshuffleLineup) return true;
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await confirmDiscard(
+      context,
+      title: l10n.dashboard_discard_round_title,
+      body: l10n.dashboard_discard_round_body,
+      confirmLabel: l10n.sessions_reshuffle_confirm,
+    );
+    return confirmed && mounted;
+  }
+
+  Future<bool> _changeCourts(GameData gameData, int courts) async {
+    if (!await _confirmReshuffle(gameData)) return false;
+    gameData.setNumberOfCourt(courts);
+    return true;
+  }
+
+  Future<void> _loadTemplate(
+    GameData gameData,
+    SessionTemplate template,
+  ) async {
+    final timerData = context.read<TimerData>();
+    if (!await _confirmReshuffle(gameData)) return;
+    gameData.loadTemplate(template);
+    // The template may switch to game-based mode (GB-01).
+    if (template.modeIndex != 1) timerData.reset();
   }
 
   @override
@@ -149,21 +185,26 @@ class _SessionsPageState extends State<SessionsPage> {
 
           // Session capacity
           _NumberField(
+            fieldKey: const Key('sessions-capacity-field'),
             label: l10n.sessions_capacity,
             value: gameData.sessionCapacity,
             min: GameData.minSessionCapacity,
             max: _maxSessionCapacity,
-            onChanged: (v) => gameData.setSessionCapacity(v),
+            onChanged: (v) {
+              gameData.setSessionCapacity(v);
+              return true;
+            },
           ),
           const SizedBox(height: AppSpacing.md),
 
           // Courts count
           _NumberField(
+            fieldKey: const Key('sessions-courts-field'),
             label: l10n.sessions_number_of_courts,
             value: gameData.numberOfCourt,
             min: _minCourts,
             max: _maxCourts,
-            onChanged: (v) => gameData.setNumberOfCourt(v),
+            onChanged: (v) => _changeCourts(gameData, v),
           ),
         ],
       ),
@@ -186,6 +227,7 @@ class _SessionsPageState extends State<SessionsPage> {
             children: [
               Expanded(
                 child: TextField(
+                  key: const Key('template-name'),
                   controller: _templateNameController,
                   decoration: InputDecoration(
                     hintText: l10n.sessions_template_name,
@@ -210,16 +252,31 @@ class _SessionsPageState extends State<SessionsPage> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      template.name,
-                      style: AppTypography.body.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          template.name,
+                          style: AppTypography.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          l10n.sessions_template_summary(
+                            template.courts,
+                            template.modeIndex == 1 ? 'timed' : 'game',
+                            template.capacity,
+                          ),
+                          style: AppTypography.helper.copyWith(
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   AppButton.secondary(
                     label: l10n.sessions_load,
-                    onPressed: () => gameData.loadTemplate(template),
+                    onPressed: () => _loadTemplate(gameData, template),
                   ),
                 ],
               ),
@@ -468,6 +525,7 @@ class _DurationFieldState extends State<_DurationField> {
 /// A labeled number input field.
 class _NumberField extends StatefulWidget {
   const _NumberField({
+    required this.fieldKey,
     required this.label,
     required this.value,
     required this.min,
@@ -475,6 +533,7 @@ class _NumberField extends StatefulWidget {
     required this.onChanged,
   });
 
+  final Key fieldKey;
   final String label;
   final int value;
 
@@ -484,7 +543,9 @@ class _NumberField extends StatefulWidget {
   /// Largest accepted value. A higher entry is lowered to this.
   final int max;
 
-  final ValueChanged<int> onChanged;
+  /// Applies the new value. Returns `false` when it was declined (for
+  /// example the organizer cancelled a confirmation).
+  final FutureOr<bool> Function(int value) onChanged;
 
   @override
   State<_NumberField> createState() => _NumberFieldState();
@@ -493,6 +554,7 @@ class _NumberField extends StatefulWidget {
 class _NumberFieldState extends State<_NumberField> {
   late final TextEditingController _controller;
   final FocusNode _focus = FocusNode();
+  bool _committing = false;
 
   @override
   void initState() {
@@ -525,11 +587,24 @@ class _NumberFieldState extends State<_NumberField> {
   /// Reads the field, clamps it to [_NumberField.min]…[_NumberField.max], and
   /// reflects the clamped number back so the box never shows a value the
   /// session did not accept.
-  void _commit() {
+  ///
+  /// An empty or non-numeric entry counts as "below the minimum" and is
+  /// raised to it (SESS-03). When [_NumberField.onChanged] declines the value,
+  /// the field goes back to the value the session still holds.
+  Future<void> _commit() async {
+    // Submitting and then losing focus must not ask twice.
+    if (_committing) return;
     final parsed = int.tryParse(_controller.text);
-    final value = (parsed ?? widget.value).clamp(widget.min, widget.max);
+    final value = (parsed ?? widget.min).clamp(widget.min, widget.max);
     _controller.text = value.toString();
-    if (value != widget.value) widget.onChanged(value);
+    if (value == widget.value) return;
+    _committing = true;
+    try {
+      final accepted = await widget.onChanged(value);
+      if (!accepted && mounted) _controller.text = widget.value.toString();
+    } finally {
+      _committing = false;
+    }
   }
 
   @override
@@ -545,6 +620,7 @@ class _NumberFieldState extends State<_NumberField> {
         SizedBox(
           width: 100,
           child: TextField(
+            key: widget.fieldKey,
             controller: _controller,
             focusNode: _focus,
             keyboardType: TextInputType.number,

@@ -194,6 +194,33 @@ void main() {
       expect(find.text('Discard this court\'s game?'), findsOneWidget);
     });
 
+    testWidgets('should_not_rotate_when_countdown_expires_in_game_based_mode', (
+      tester,
+    ) async {
+      useDesktopSurface(tester);
+      final gameData = await seed(8, 2);
+      final timer = TimerData();
+      await tester.pumpWidget(wrap(gameData, timer));
+      // Start a time-based round, then switch the session to game-based mode
+      // without stopping the clock.
+      await tester.tap(find.text('Regenerate'));
+      await tester.pump();
+      // Empty the courts, so a rotation would finish without a disk write.
+      for (final player in [...gameData.checkedInPlayers.values]) {
+        gameData.removePlayerFromCourt(player);
+      }
+      await PersistentSetting.instance.setGameType(GameType.gameBased);
+      await tester.pump(const Duration(seconds: 2));
+
+      // Act — the countdown runs out.
+      timer.updateDuration(const Duration(seconds: 1));
+      await tester.pump();
+
+      // Assert
+      expect(gameData.roundNumber, 1);
+      timer.reset();
+    });
+
     testWidgets('should_stay_quiet_when_re_roll_has_nobody_to_rotate_in', (
       tester,
     ) async {

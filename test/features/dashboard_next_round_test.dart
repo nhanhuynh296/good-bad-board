@@ -119,6 +119,19 @@ void main() {
     tester.binding.delayed(const Duration(seconds: 1));
   });
 
+  testWidgets('should_say_placed_in_the_staged_round_summary', (tester) async {
+    useDesktopSurface(tester);
+    final gameData = seed(8);
+    await gameData.makeGame();
+    await tester.pumpWidget(wrap(gameData, TimerData()));
+
+    await tester.tap(find.text('Pre-make next round'));
+    await tester.pump();
+
+    expect(find.text('4 players placed across 1 court'), findsOneWidget);
+    tester.binding.delayed(const Duration(seconds: 1));
+  });
+
   testWidgets('should_show_the_waitlist_for_the_round_on_screen', (
     tester,
   ) async {

@@ -307,6 +307,273 @@ void main() {
     });
   });
 
+  group('SessionsPage UAT gaps', () {
+    const capacityField = Key('sessions-capacity-field');
+    const courtsField = Key('sessions-courts-field');
+
+    /// Twelve checked-in players dealt over two courts.
+    Future<GameData> runningSession() async {
+      final gameData = GameData()..setNumberOfCourt(2);
+      for (final player in await createTestPlayers(12)) {
+        gameData.checkInPlayer(player);
+      }
+      await gameData.makeGame();
+      return gameData;
+    }
+
+    Future<void> saveTemplateOnDisk(
+      WidgetTester tester,
+      GameData gameData, {
+      required GameType mode,
+      required int capacity,
+      required int courts,
+    }) async {
+      await tester.runAsync(
+        () => gameData.saveTemplate(
+          'Saved',
+          mode,
+          const Duration(minutes: 15),
+          capacity,
+          courts,
+        ),
+      );
+      await tester.pump();
+    }
+
+    testWidgets('SESS-03: should_clamp_an_empty_capacity_up_to_four', (
+      tester,
+    ) async {
+      final gameData = GameData();
+      await tester.pumpWidget(createTestWidget(gameData: gameData));
+
+      await tester.enterText(find.byKey(capacityField), '');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      expect(gameData.sessionCapacity, 4);
+    });
+
+    testWidgets('SESS-03: should_show_the_clamped_capacity_in_the_field', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget());
+
+      await tester.enterText(find.byKey(capacityField), '');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      expect(find.widgetWithText(TextField, '4'), findsOneWidget);
+    });
+
+    testWidgets('SESS-05: should_summarise_a_saved_template', (tester) async {
+      final gameData = GameData();
+      await tester.pumpWidget(createTestWidget(gameData: gameData));
+
+      await saveTemplateOnDisk(
+        tester,
+        gameData,
+        mode: GameType.gameBased,
+        capacity: 20,
+        courts: 4,
+      );
+
+      expect(find.text('4 courts · game-based · cap 20'), findsOneWidget);
+    });
+
+    testWidgets('SESS-05: should_use_the_singular_for_one_court', (
+      tester,
+    ) async {
+      final gameData = GameData();
+      await tester.pumpWidget(createTestWidget(gameData: gameData));
+
+      await saveTemplateOnDisk(
+        tester,
+        gameData,
+        mode: GameType.timeBased,
+        capacity: 8,
+        courts: 1,
+      );
+
+      expect(find.text('1 court · time-based · cap 8'), findsOneWidget);
+    });
+
+    testWidgets('SESS-05: should_clear_the_name_after_a_successful_save', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.enterText(find.byKey(const Key('template-name')), 'Friday');
+
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Save current'));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      });
+      await tester.pump();
+
+      expect(find.widgetWithText(TextField, 'Friday'), findsNothing);
+    });
+
+    testWidgets('SESS-05: should_keep_a_blank_name_when_saving', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.enterText(find.byKey(const Key('template-name')), '   ');
+
+      await tester.tap(find.text('Save current'));
+      await tester.pump();
+
+      expect(find.widgetWithText(TextField, '   '), findsOneWidget);
+    });
+
+    testWidgets('SESS-06: should_follow_the_mode_of_a_loaded_template', (
+      tester,
+    ) async {
+      final gameData = GameData();
+      await tester.pumpWidget(createTestWidget(gameData: gameData));
+      await saveTemplateOnDisk(
+        tester,
+        gameData,
+        mode: GameType.gameBased,
+        capacity: 12,
+        courts: 3,
+      );
+
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Load'));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      });
+      await tester.pump();
+
+      expect(
+        find.text('Game-based · save and re-roll each court by hand'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('SESS-04: should_ask_before_reshuffling_a_running_round', (
+      tester,
+    ) async {
+      final gameData = (await tester.runAsync(runningSession))!;
+      final timerData = TimerData()..isRunning = true;
+      await tester.pumpWidget(
+        createTestWidget(gameData: gameData, timerData: timerData),
+      );
+
+      await tester.enterText(find.byKey(courtsField), '3');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Discard the current round?'), findsOneWidget);
+    });
+
+    testWidgets('SESS-04: should_keep_the_court_count_when_cancelled', (
+      tester,
+    ) async {
+      final gameData = (await tester.runAsync(runningSession))!;
+      final timerData = TimerData()..isRunning = true;
+      await tester.pumpWidget(
+        createTestWidget(gameData: gameData, timerData: timerData),
+      );
+      await tester.enterText(find.byKey(courtsField), '3');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(gameData.numberOfCourt, 2);
+    });
+
+    testWidgets('SESS-04: should_restore_the_field_when_cancelled', (
+      tester,
+    ) async {
+      final gameData = (await tester.runAsync(runningSession))!;
+      final timerData = TimerData()..isRunning = true;
+      await tester.pumpWidget(
+        createTestWidget(gameData: gameData, timerData: timerData),
+      );
+      await tester.enterText(find.byKey(courtsField), '3');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<TextField>(find.byKey(courtsField)).controller!.text,
+        '2',
+      );
+    });
+
+    testWidgets('SESS-04: should_reshuffle_when_confirmed', (tester) async {
+      final gameData = (await tester.runAsync(runningSession))!;
+      final timerData = TimerData()..isRunning = true;
+      await tester.pumpWidget(
+        createTestWidget(gameData: gameData, timerData: timerData),
+      );
+      await tester.enterText(find.byKey(courtsField), '3');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Reshuffle'));
+      await tester.pumpAndSettle();
+
+      expect(gameData.waitlistedPlayers, isEmpty);
+    });
+
+    testWidgets('SESS-04: should_not_ask_when_no_round_is_running', (
+      tester,
+    ) async {
+      final gameData = (await tester.runAsync(runningSession))!;
+      await tester.pumpWidget(createTestWidget(gameData: gameData));
+
+      await tester.enterText(find.byKey(courtsField), '3');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Discard the current round?'), findsNothing);
+    });
+
+    testWidgets('SESS-06: should_keep_everything_when_load_is_cancelled', (
+      tester,
+    ) async {
+      final gameData = (await tester.runAsync(runningSession))!;
+      final timerData = TimerData()..isRunning = true;
+      await tester.pumpWidget(
+        createTestWidget(gameData: gameData, timerData: timerData),
+      );
+      await saveTemplateOnDisk(
+        tester,
+        gameData,
+        mode: GameType.gameBased,
+        capacity: 12,
+        courts: 3,
+      );
+
+      await tester.tap(find.text('Load'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(gameData.numberOfCourt, 2);
+    });
+
+    testWidgets(
+      'GB-01: should_stop_the_countdown_when_switching_to_game_based',
+      (tester) async {
+        final timerData = TimerData()..isRunning = true;
+        await tester.pumpWidget(createTestWidget(timerData: timerData));
+
+        await tester.runAsync(() async {
+          await tester.tap(find.text('Game-based'));
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        });
+        await tester.pump();
+
+        expect(timerData.isRunning, isFalse);
+      },
+    );
+  });
+
   group('SessionsPage responsive', () {
     // ---------------------------------------------------------------------------
     // Responsive: phone width (< 720 px)

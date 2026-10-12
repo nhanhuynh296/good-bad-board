@@ -843,6 +843,10 @@
   "@sessions_number_of_courts": {
     "description": "Label for the number of courts in use"
   },
+  "sessions_reshuffle_confirm": "Reshuffle",
+  "@sessions_reshuffle_confirm": {
+    "description": "Confirm button of the warning before a new court count or a loaded template reshuffles a running round"
+  },
   "sessions_rotation_duration": "Rotation duration",
   "@sessions_rotation_duration": {
     "description": "Label for the length of a timed rotation"
@@ -858,6 +862,21 @@
   "sessions_seconds_short": "sec",
   "@sessions_seconds_short": {
     "description": "Short unit label under the seconds field"
+  },
+  "sessions_template_summary": "{courts, plural, =1{1 court} other{{courts} courts}} · {mode, select, timed{time-based} other{game-based}} · cap {capacity}",
+  "@sessions_template_summary": {
+    "description": "One-line summary of a saved session template, e.g. '4 courts · game-based · cap 20'. mode is 'timed' or 'game'.",
+    "placeholders": {
+      "courts": {
+        "type": "int"
+      },
+      "mode": {
+        "type": "String"
+      },
+      "capacity": {
+        "type": "int"
+      }
+    }
   },
   "sessions_template_name": "Template name",
   "@sessions_template_name": {
@@ -940,9 +959,9 @@
       }
     }
   },
-  "dashboard_staged_summary": "{players} across {courts}",
+  "dashboard_staged_summary": "{players} placed across {courts}",
   "@dashboard_staged_summary": {
-    "description": "Summary of the pre-made next round, e.g. '16 players across 4 courts'. players is dashboard_player_count, courts is dashboard_court_count",
+    "description": "Summary of the pre-made next round, e.g. '16 players placed across 4 courts'. players is dashboard_player_count, courts is dashboard_court_count",
     "placeholders": {
       "players": {
         "type": "String"

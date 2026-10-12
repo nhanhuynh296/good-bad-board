@@ -93,27 +93,12 @@ class _DashboardPageState extends State<DashboardPage> {
     required String title,
     required String body,
     required String confirmLabel,
-  }) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmLabel),
-          ),
-        ],
-      ),
-    );
-    return confirmed ?? false;
-  }
+  }) => confirmDiscard(
+    context,
+    title: title,
+    body: body,
+    confirmLabel: confirmLabel,
+  );
 
   Future<void> _onReroll(int courtIndex) async {
     final gameData = context.read<GameData>();
@@ -279,10 +264,26 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-  void _onAutoRotate() => unawaited(_rotate());
+  /// Countdown expiry. A round that was started in time-based mode must not
+  /// rotate once the session has switched to game-based mode (GB-01).
+  void _onAutoRotate() {
+    if (!mounted || _isGameBased) return;
+    unawaited(_rotate());
+  }
 
-  void _onCourtCountChanged(int delta) {
+  Future<void> _onCourtCountChanged(int delta) async {
     final gameData = context.read<GameData>();
+    // A new court count reshuffles the lineup (SESS-04) — warn first when
+    // that would throw away a running round.
+    if (_isRoundRunning && gameData.wouldReshuffleLineup) {
+      final l10n = AppLocalizations.of(context)!;
+      final confirmed = await _confirmDiscard(
+        title: l10n.dashboard_discard_round_title,
+        body: l10n.dashboard_discard_round_body,
+        confirmLabel: l10n.sessions_reshuffle_confirm,
+      );
+      if (!confirmed || !mounted) return;
+    }
     gameData.setNumberOfCourt(gameData.numberOfCourt + delta);
   }
 

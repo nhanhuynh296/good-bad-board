@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/design/design.dart';
+import 'package:good_bad_board/features/dashboard/striped_progress_bar.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/state/game_data.dart';
 
@@ -299,14 +300,10 @@ class RoundRotationBar extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           // Striped progress bar (fills up)
-          ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(999)),
-            child: LinearProgressIndicator(
-              value: (stagedPct / 100.0).clamp(0.0, 1.0),
-              backgroundColor: const Color(0x24FFFFFF),
-              valueColor: const AlwaysStoppedAnimation<Color>(_amber),
-              minHeight: 8,
-            ),
+          StripedProgressBar(
+            value: (stagedPct / 100.0).clamp(0.0, 1.0),
+            color: _amber,
+            backgroundColor: const Color(0x24FFFFFF),
           ),
         ],
       ),
