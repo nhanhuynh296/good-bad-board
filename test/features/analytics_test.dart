@@ -68,7 +68,7 @@ void main() {
       expect(find.text('4 wks'), findsOneWidget);
       expect(find.text('12 wks'), findsOneWidget);
       expect(find.text('26 wks'), findsOneWidget);
-      expect(find.text('REGISTERED PLAYERS'), findsOneWidget);
+      expect(find.text('ACTIVE PLAYERS'), findsOneWidget);
     });
 
     testWidgets('reflows to a single column on phone width', (tester) async {

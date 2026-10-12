@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/l10n/skill_tier_l10n.dart';
@@ -49,34 +51,87 @@ class DateRange {
 
 DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-/// Groups [logs] by calendar day (one "session" per day). Multiple saved
-/// rounds on the same day are folded into a single representative snapshot:
-/// peak checked-in count, average waitlist, summed re-rolls, and all courts'
-/// level gaps concatenated.
-List<SessionLog> _sessionsByDay(Iterable<SessionLog> logs, DateRange range) {
+/// Elo steps per [SkillTier]. A [SessionLog] stores each court's level gap
+/// in [Elo] index steps (8-step scale); the UAT wants tier-gap (4 tiers), so
+/// a stored gap is divided by this. It is an approximation: the log keeps
+/// no player tiers, so a 1-step gap may or may not cross a tier boundary.
+final double _eloStepsPerTier = Elo.values.length / SkillTier.values.length;
+
+double _tierGap(num eloIndexGap) => eloIndexGap / _eloStepsPerTier;
+
+/// One day of play, folded from the [SessionLog]s saved that day.
+class _Session {
+  const _Session({
+    required this.date,
+    required this.capacity,
+    required this.checkedIn,
+    required this.waitlist,
+    required this.rerolls,
+    required this.courtCount,
+    required this.courtTierGaps,
+  });
+
+  final DateTime date;
+  final int capacity;
+  final int checkedIn;
+  final int waitlist;
+  final int rerolls;
+  final int courtCount;
+
+  /// Tier-gap of each court that held a game, in the order the log lists
+  /// them. The log has no court number, so position is the only identity.
+  final List<double> courtTierGaps;
+
+  /// Checked-in players over the session capacity (ANA-03).
+  double get attendanceRate =>
+      capacity <= 0 ? 0 : (checkedIn / capacity).clamp(0, 1).toDouble();
+
+  /// Checked-in players over court slots (courts x 4) (ANA-07).
+  double get fillRate {
+    final slots = courtCount * Game.playerPerCourt;
+    return slots <= 0 ? 0 : (checkedIn / slots).clamp(0, 1).toDouble();
+  }
+
+  /// Courts that held a game when the session was saved.
+  int get usedCourts => min(courtTierGaps.length, courtCount);
+
+  int get idleCourts => max(courtCount - courtTierGaps.length, 0);
+
+  double get averageTierGap =>
+      courtTierGaps.isEmpty ? 0 : courtTierGaps.average;
+}
+
+/// Groups [logs] by calendar day (one "session" per day). Several saves on
+/// the same day fold into one session: peak checked-in count, average
+/// waitlist, summed re-rolls, and each court position's gap averaged over
+/// the saves that list it.
+List<_Session> _sessionsByDay(Iterable<SessionLog> logs, DateRange range) {
   final inRange = logs.where((l) => range.contains(l.loggedAt));
   final byDay = groupBy(inRange, (SessionLog l) => _dateOnly(l.loggedAt));
-  final result = byDay.entries
+  return byDay.entries
       .map((entry) {
-        final dayLogs = entry.value;
-        final checkedIn = dayLogs.map((l) => l.checkedInCount).max;
-        final waitlist = dayLogs.map((l) => l.waitlistCount).average;
-        final rerolls = dayLogs.fold<int>(0, (sum, l) => sum + l.rerollCount);
-        final gaps = dayLogs.expand((l) => l.courtLevelGaps).toList();
+        final dayLogs = entry.value.sortedBy((l) => l.loggedAt);
         final last = dayLogs.last;
-        return SessionLog(
-          id: last.id,
-          loggedAt: entry.key,
+        final courts = dayLogs.map((l) => l.courtLevelGaps.length).max;
+        return _Session(
+          date: entry.key,
           capacity: last.capacity,
-          checkedInCount: checkedIn,
-          waitlistCount: waitlist.round(),
-          rerollCount: rerolls,
-          courtLevelGaps: gaps,
-          courtCount: last.courtCount,
+          checkedIn: dayLogs.map((l) => l.checkedInCount).max,
+          waitlist: dayLogs.map((l) => l.waitlistCount).average.round(),
+          rerolls: dayLogs.fold<int>(0, (sum, l) => sum + l.rerollCount),
+          courtCount: dayLogs.map((l) => l.courtCount).max,
+          courtTierGaps: [
+            for (var i = 0; i < courts; i++)
+              _tierGap(
+                dayLogs
+                    .where((l) => l.courtLevelGaps.length > i)
+                    .map((l) => l.courtLevelGaps[i])
+                    .average,
+              ),
+          ],
         );
       })
-      .sortedBy((l) => l.loggedAt);
-  return result;
+      .sortedBy((s) => s.date);
 }
 
 /// A single bar-chart data point.
@@ -114,59 +169,54 @@ class KpiEntry {
 
 // ── ANA-02: KPI strip ──────────────────────────────────────────────
 
+/// Retention is always measured over 4 weeks, whatever range is selected.
+const _retentionWeeks = 4;
+
 List<KpiEntry> computeKpis(
   List<Game> games,
   List<SessionLog> sessionLogs,
-  List<Player> allPlayers,
   DateRange range, {
   required AppLocalizations l10n,
 }) {
   final current = _sessionsByDay(sessionLogs, range);
   final prior = _sessionsByDay(sessionLogs, range.priorPeriod);
 
-  double avgAttendancePct(List<SessionLog> logs) =>
-      logs.isEmpty ? 0 : logs.map((l) => l.fillRate * 100).average;
+  double mean(List<_Session> sessions, double Function(_Session) pick) =>
+      sessions.isEmpty ? 0 : sessions.map(pick).average;
 
-  double avgWaitlist(List<SessionLog> logs) =>
-      logs.isEmpty ? 0 : logs.map((l) => l.waitlistCount.toDouble()).average;
+  final playersInRange = _playerIdsInRange(games, range).length;
+  final playersInPrior = _playerIdsInRange(games, range.priorPeriod).length;
+  final retention = _retentionPct(games, range.end);
+  final priorRetention = _retentionPct(games, range.start);
 
-  double avgRerolls(List<SessionLog> logs) =>
-      logs.isEmpty ? 0 : logs.map((l) => l.rerollCount.toDouble()).average;
-
-  double courtUtilPct(List<SessionLog> logs) =>
-      logs.isEmpty ? 0 : logs.map((l) => l.fillRate * 100).average;
-
-  final registeredPlayers = allPlayers.length;
-  final playersInRange = _playerIdsInGames(
-    games.where((g) => range.contains(g.createdDate)),
-  ).length;
-  final playersInPrior = _playerIdsInGames(
-    games.where((g) => range.priorPeriod.contains(g.createdDate)),
-  ).length;
-  final retentionPct = playersInPrior == 0
-      ? 0.0
-      : (playersInRange / playersInPrior * 100).clamp(0, 100);
-
-  String delta(double curr, double prev, String suffix) {
+  String delta(double curr, double prev, String suffix, [int digits = 1]) {
     final d = curr - prev;
     final sign = d >= 0 ? '+' : '';
-    return l10n.analytics_delta_vs_prior('$sign${d.toStringAsFixed(1)}$suffix');
+    return l10n.analytics_delta_vs_prior(
+      '$sign${d.toStringAsFixed(digits)}$suffix',
+    );
   }
 
-  final currAttendance = avgAttendancePct(current);
-  final priorAttendance = avgAttendancePct(prior);
-  final currWaitlist = avgWaitlist(current);
-  final priorWaitlist = avgWaitlist(prior);
-  final currRerolls = avgRerolls(current);
-  final priorRerolls = avgRerolls(prior);
-  final currUtil = courtUtilPct(current);
-  final priorUtil = courtUtilPct(prior);
+  final currAttendance = mean(current, (s) => s.attendanceRate * 100);
+  final priorAttendance = mean(prior, (s) => s.attendanceRate * 100);
+  final currWaitlist = mean(current, (s) => s.waitlist.toDouble());
+  final priorWaitlist = mean(prior, (s) => s.waitlist.toDouble());
+  final currRerolls = mean(current, (s) => s.rerolls.toDouble());
+  final priorRerolls = mean(prior, (s) => s.rerolls.toDouble());
+  final currUtil = mean(current, (s) => s.fillRate * 100);
+  final priorUtil = mean(prior, (s) => s.fillRate * 100);
 
   return [
     KpiEntry(
-      label: l10n.analytics_kpi_registered_players,
-      value: '$registeredPlayers',
-      contextLine: l10n.analytics_kpi_across_club,
+      label: l10n.analytics_kpi_active_players,
+      value: '$playersInRange',
+      contextLine: delta(
+        playersInRange.toDouble(),
+        playersInPrior.toDouble(),
+        '',
+        0,
+      ),
+      deltaPositive: playersInRange >= playersInPrior,
     ),
     KpiEntry(
       label: l10n.analytics_kpi_avg_attendance,
@@ -175,9 +225,10 @@ List<KpiEntry> computeKpis(
       deltaPositive: currAttendance >= priorAttendance,
     ),
     KpiEntry(
-      label: l10n.analytics_kpi_retention(_weeksInRange(range)),
-      value: '${retentionPct.toStringAsFixed(0)}%',
-      contextLine: l10n.analytics_kpi_retention_context,
+      label: l10n.analytics_kpi_retention(_retentionWeeks),
+      value: '${retention.toStringAsFixed(0)}%',
+      contextLine: delta(retention, priorRetention, '%'),
+      deltaPositive: retention >= priorRetention,
     ),
     KpiEntry(
       label: l10n.analytics_court_utilization,
@@ -200,11 +251,22 @@ List<KpiEntry> computeKpis(
   ];
 }
 
-Set<String> _playerIdsInGames(Iterable<Game> games) =>
-    games.expand((g) => g.playerIds).toSet();
+Set<String> _playerIdsInRange(Iterable<Game> games, DateRange range) => games
+    .where((g) => range.contains(g.createdDate))
+    .expand((g) => g.playerIds)
+    .toSet();
 
-int _weeksInRange(DateRange range) =>
-    (range.end.difference(range.start).inDays / 7).round();
+/// Share of the players seen in the 4 weeks before the 4 weeks ending at
+/// [asOf] who were seen again in those last 4 weeks.
+double _retentionPct(List<Game> games, DateTime asOf) {
+  const window = Duration(days: _retentionWeeks * 7);
+  final recent = DateRange(asOf.subtract(window), asOf);
+  final before = DateRange(recent.start.subtract(window), recent.start);
+  final base = _playerIdsInRange(games, before);
+  if (base.isEmpty) return 0;
+  final returned = base.intersection(_playerIdsInRange(games, recent));
+  return returned.length / base.length * 100;
+}
 
 // ── ANA-03: Attendance trend ───────────────────────────────────────
 
@@ -219,31 +281,37 @@ TrendResult computeAttendanceTrend(
   DateRange range, {
   required AppLocalizations l10n,
 }) {
-  final sessions = _sessionsByDay(sessionLogs, range);
-  final points = sessions
+  final points = _sessionsByDay(sessionLogs, range)
       .map(
         (s) => ChartPoint(
-          label: _shortDate(s.loggedAt, l10n),
-          value: s.fillRate,
-          valueLabel: '${(s.fillRate * 100).round()}%',
+          label: _shortDate(s.date, l10n),
+          value: s.attendanceRate,
+          valueLabel: '${(s.attendanceRate * 100).round()}%',
         ),
       )
       .toList();
 
-  if (points.length < 2) {
+  // Month over month: the last 4 weeks against the 4 weeks before them. The
+  // earlier month can lie outside [range], so it reads every log.
+  const month = Duration(days: 28);
+  final recentMonth = DateRange(range.end.subtract(month), range.end);
+  final previousMonth = DateRange(
+    recentMonth.start.subtract(month),
+    recentMonth.start,
+  );
+  final recent = _sessionsByDay(sessionLogs, recentMonth);
+  final previous = _sessionsByDay(sessionLogs, previousMonth);
+  if (recent.isEmpty || previous.isEmpty) {
     return TrendResult(
       points: points,
       note: l10n.analytics_not_enough_sessions,
     );
   }
-  final firstHalf = points.take(points.length ~/ 2).map((p) => p.value).average;
-  final secondHalf = points
-      .skip(points.length ~/ 2)
-      .map((p) => p.value)
-      .average;
-  final growth = firstHalf == 0
+  final recentAvg = recent.map((s) => s.attendanceRate).average;
+  final previousAvg = previous.map((s) => s.attendanceRate).average;
+  final growth = previousAvg == 0
       ? 0.0
-      : (secondHalf - firstHalf) / firstHalf * 100;
+      : (recentAvg - previousAvg) / previousAvg * 100;
   final sign = growth >= 0 ? '+' : '';
   return TrendResult(
     points: points,
@@ -262,9 +330,9 @@ TrendResult computeWaitlistPressure(
   final points = sessions
       .map(
         (s) => ChartPoint(
-          label: _shortDate(s.loggedAt, l10n),
-          value: s.waitlistCount.toDouble(),
-          valueLabel: '${s.waitlistCount}',
+          label: _shortDate(s.date, l10n),
+          value: s.waitlist.toDouble(),
+          valueLabel: '${s.waitlist}',
         ),
       )
       .toList();
@@ -278,6 +346,8 @@ TrendResult computeWaitlistPressure(
 
 // ── ANA-05/06: Matchmaking fairness ────────────────────────────────
 
+/// Per-session average of the courts' tier-gap. The log keeps no court
+/// number, so this is the mean over the courts that held a game that day.
 TrendResult computeLevelGapTrend(
   List<SessionLog> sessionLogs,
   DateRange range, {
@@ -287,27 +357,27 @@ TrendResult computeLevelGapTrend(
   final points = sessions
       .map(
         (s) => ChartPoint(
-          label: _shortDate(s.loggedAt, l10n),
-          value: s.averageLevelGap,
-          valueLabel: s.averageLevelGap.toStringAsFixed(1),
+          label: _shortDate(s.date, l10n),
+          value: s.averageTierGap,
+          valueLabel: s.averageTierGap.toStringAsFixed(1),
         ),
       )
       .toList();
-  String note = l10n.analytics_not_enough_sessions;
-  if (points.length >= 2) {
-    final firstHalf = points
-        .take(points.length ~/ 2)
-        .map((p) => p.value)
-        .average;
-    final secondHalf = points
-        .skip(points.length ~/ 2)
-        .map((p) => p.value)
-        .average;
-    note = secondHalf <= firstHalf
-        ? l10n.analytics_level_gap_down
-        : l10n.analytics_level_gap_up;
+  if (points.length < 2) {
+    return TrendResult(
+      points: points,
+      note: l10n.analytics_not_enough_sessions,
+    );
   }
-  return TrendResult(points: points, note: note);
+  final half = points.length ~/ 2;
+  final firstHalf = points.take(half).map((p) => p.value).average;
+  final secondHalf = points.skip(half).map((p) => p.value).average;
+  return TrendResult(
+    points: points,
+    note: secondHalf < firstHalf
+        ? l10n.analytics_level_gap_down
+        : l10n.analytics_level_gap_up,
+  );
 }
 
 class CourtGapSummary {
@@ -317,32 +387,50 @@ class CourtGapSummary {
     required this.isOverflowAbsorber,
   });
   final int courtNumber;
+
+  /// Average tier-gap of this court over the range.
   final double averageGap;
   final bool isOverflowAbsorber;
 }
+
+/// A court is flagged only when it ran a wider gap on at least this many
+/// sessions, so one odd night cannot flag it.
+const _minSessionsToFlagCourt = 3;
+
+/// ...and its average is above the club-wide average by this factor...
+const _overflowGapFactor = 1.25;
+
+/// ...and it was wider than its own session's average on at least this
+/// share of the sessions it appeared in.
+const _overflowConsistency = 0.6;
 
 List<CourtGapSummary> computeCourtGapComparison(
   List<SessionLog> sessionLogs,
   DateRange range,
 ) {
   final sessions = _sessionsByDay(sessionLogs, range);
-  final byCourtIndex = <int, List<int>>{};
+  final gapsByCourt = <int, List<double>>{};
+  final widerThanSession = <int, int>{};
   for (final s in sessions) {
-    for (var i = 0; i < s.courtLevelGaps.length; i++) {
-      (byCourtIndex[i] ??= []).add(s.courtLevelGaps[i]);
+    for (var i = 0; i < s.courtTierGaps.length; i++) {
+      (gapsByCourt[i] ??= []).add(s.courtTierGaps[i]);
+      if (s.courtTierGaps[i] > s.averageTierGap) {
+        widerThanSession[i] = (widerThanSession[i] ?? 0) + 1;
+      }
     }
   }
-  if (byCourtIndex.isEmpty) return [];
-  final overallAvg = byCourtIndex.values
-      .expand((v) => v)
-      .map((v) => v.toDouble())
-      .average;
-  return byCourtIndex.entries.sortedBy((e) => e.key).map((e) {
-    final avg = e.value.map((v) => v.toDouble()).average;
+  if (gapsByCourt.isEmpty) return [];
+  final overallAvg = gapsByCourt.values.expand((v) => v).average;
+  return gapsByCourt.entries.sortedBy((e) => e.key).map((e) {
+    final nights = e.value.length;
+    final consistent =
+        nights >= _minSessionsToFlagCourt &&
+        (widerThanSession[e.key] ?? 0) / nights >= _overflowConsistency;
+    final avg = e.value.average;
     return CourtGapSummary(
       courtNumber: e.key + 1,
       averageGap: avg,
-      isOverflowAbsorber: avg > overallAvg * 1.25,
+      isOverflowAbsorber: consistent && avg > overallAvg * _overflowGapFactor,
     );
   }).toList();
 }
@@ -351,12 +439,21 @@ List<CourtGapSummary> computeCourtGapComparison(
 
 class CourtUtilizationResult {
   const CourtUtilizationResult({
-    required this.points,
+    required this.courts,
     required this.fullFillRatePct,
     required this.avgIdleCourtsPerSession,
   });
-  final List<ChartPoint> points;
+
+  /// One point per court: the share of sessions in which that court held a
+  /// game when the session was saved.
+  final List<ChartPoint> courts;
+
+  /// Share of sessions where every court could be full-4 (checked-in
+  /// players >= courts x 4).
   final double fullFillRatePct;
+
+  /// Average courts without a game per session. This is a count, not a time:
+  /// the log has no court start and end times.
   final double avgIdleCourtsPerSession;
 }
 
@@ -366,23 +463,29 @@ CourtUtilizationResult computeCourtUtilization(
   required AppLocalizations l10n,
 }) {
   final sessions = _sessionsByDay(sessionLogs, range);
-  final points = sessions
-      .map(
-        (s) => ChartPoint(
-          label: _shortDate(s.loggedAt, l10n),
-          value: s.fillRate,
-          valueLabel: '${(s.fillRate * 100).round()}%',
-        ),
-      )
-      .toList();
+  final courtTotal = sessions.map((s) => s.courtCount).maxOrNull ?? 0;
+  // The log has no court number: court N is the Nth court that held a game.
+  final courts = [
+    for (var i = 0; i < courtTotal; i++)
+      () {
+        final existing = sessions.where((s) => s.courtCount > i);
+        final rate =
+            existing.where((s) => s.usedCourts > i).length / existing.length;
+        return ChartPoint(
+          label: l10n.court_n(i + 1),
+          value: rate,
+          valueLabel: '${(rate * 100).round()}%',
+        );
+      }(),
+  ];
   final fullFillRate = sessions.isEmpty
       ? 0.0
       : sessions.where((s) => s.fillRate >= 1.0).length / sessions.length * 100;
   final avgIdle = sessions.isEmpty
       ? 0.0
-      : sessions.map((s) => s.idleCourtSlots / Game.playerPerCourt).average;
+      : sessions.map((s) => s.idleCourts.toDouble()).average;
   return CourtUtilizationResult(
-    points: points,
+    courts: courts,
     fullFillRatePct: fullFillRate,
     avgIdleCourtsPerSession: avgIdle,
   );
@@ -396,28 +499,35 @@ TrendResult computeRerollsPerSession(
   required AppLocalizations l10n,
 }) {
   final sessions = _sessionsByDay(sessionLogs, range);
-  final points = sessions
-      .map(
-        (s) => ChartPoint(
-          label: _shortDate(s.loggedAt, l10n),
-          value: s.rerollCount.toDouble(),
-          valueLabel: '${s.rerollCount}',
-        ),
-      )
-      .toList();
-  if (points.isEmpty) {
+  if (sessions.isEmpty) {
     return TrendResult(
       points: const [],
       note: l10n.analytics_not_enough_sessions,
     );
   }
-  final avgRerolls = points.map((p) => p.value).average;
-  final highSpreadDays = sessions.where(
-    (s) => s.rerollCount > avgRerolls && s.averageLevelGap > 1.0,
-  );
-  final note = highSpreadDays.isNotEmpty
-      ? l10n.analytics_reroll_spikes
-      : l10n.analytics_reroll_steady;
+  final points = sessions
+      .map(
+        (s) => ChartPoint(
+          label: _shortDate(s.date, l10n),
+          value: s.rerolls.toDouble(),
+          valueLabel: '${s.rerolls}',
+        ),
+      )
+      .toList();
+  // A spike is a night with more re-rolls than average. It counts as
+  // high-attendance or high-spread when it is above the average too.
+  final avgRerolls = sessions.map((s) => s.rerolls).average;
+  final avgAttendance = sessions.map((s) => s.attendanceRate).average;
+  final avgGap = sessions.map((s) => s.averageTierGap).average;
+  final spikes = sessions.where((s) => s.rerolls > avgRerolls).toList();
+  final highAttendance = spikes.any((s) => s.attendanceRate > avgAttendance);
+  final highSpread = spikes.any((s) => s.averageTierGap > avgGap);
+  final note = switch ((highAttendance, highSpread)) {
+    (true, true) => l10n.analytics_reroll_spikes_both,
+    (true, false) => l10n.analytics_reroll_spikes_attendance,
+    (false, true) => l10n.analytics_reroll_spikes,
+    (false, false) => l10n.analytics_reroll_steady,
+  };
   return TrendResult(points: points, note: note);
 }
 

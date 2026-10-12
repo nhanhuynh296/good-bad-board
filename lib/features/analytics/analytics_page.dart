@@ -105,13 +105,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     final range = DateRange.lastWeeks(_selectedWeeks);
     final l10n = AppLocalizations.of(context)!;
 
-    final kpis = computeKpis(
-      _games,
-      _sessionLogs,
-      _allPlayers,
-      range,
-      l10n: l10n,
-    );
+    final kpis = computeKpis(_games, _sessionLogs, range, l10n: l10n);
     final attendance = computeAttendanceTrend(_sessionLogs, range, l10n: l10n);
     final waitlist = computeWaitlistPressure(_sessionLogs, range, l10n: l10n);
     final levelGapTrend = computeLevelGapTrend(_sessionLogs, range, l10n: l10n);

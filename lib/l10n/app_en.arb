@@ -11,7 +11,7 @@
       }
     }
   },
-  "analytics_attendance_change": "{change}% change over the period",
+  "analytics_attendance_change": "{change}% month over month",
   "@analytics_attendance_change": {
     "description": "Attendance chart note; change is a signed whole number (e.g. +12)",
     "placeholders": {
@@ -73,9 +73,9 @@
       }
     }
   },
-  "analytics_kpi_across_club": "across the club",
-  "@analytics_kpi_across_club": {
-    "description": "KPI context line under the registered players count"
+  "analytics_kpi_active_players": "Active players",
+  "@analytics_kpi_active_players": {
+    "description": "KPI tile label: players who played at least one game in the selected range"
   },
   "analytics_kpi_avg_attendance": "Avg attendance",
   "@analytics_kpi_avg_attendance": {
@@ -84,10 +84,6 @@
   "analytics_kpi_avg_waitlist": "Avg waitlist",
   "@analytics_kpi_avg_waitlist": {
     "description": "KPI tile label: average number of players on the waitlist"
-  },
-  "analytics_kpi_registered_players": "Registered players",
-  "@analytics_kpi_registered_players": {
-    "description": "KPI tile label: total number of registered players"
   },
   "analytics_kpi_rerolls_per_session": "Re-rolls / session",
   "@analytics_kpi_rerolls_per_session": {
@@ -102,10 +98,6 @@
       }
     }
   },
-  "analytics_kpi_retention_context": "players returning from prior period",
-  "@analytics_kpi_retention_context": {
-    "description": "KPI context line under the retention percentage"
-  },
   "analytics_level_distribution": "Level distribution",
   "@analytics_level_distribution": {
     "description": "Chart title"
@@ -118,7 +110,7 @@
   "@analytics_level_gap_trend": {
     "description": "Chart title"
   },
-  "analytics_level_gap_up": "Level gap is trending up — matchmaking fairness is slipping.",
+  "analytics_level_gap_up": "Level gap is not shrinking — matchmaking fairness is not improving.",
   "@analytics_level_gap_up": {
     "description": "Level-gap chart note when the gap is widening"
   },
@@ -213,6 +205,14 @@
   "analytics_reroll_spikes": "Re-roll spikes tend to line up with high level-spread nights.",
   "@analytics_reroll_spikes": {
     "description": "Re-roll chart note when spikes match high level-spread sessions"
+  },
+  "analytics_reroll_spikes_attendance": "Re-roll spikes tend to line up with high-attendance nights.",
+  "@analytics_reroll_spikes_attendance": {
+    "description": "Re-roll chart note when spikes match high-attendance nights only"
+  },
+  "analytics_reroll_spikes_both": "Re-roll spikes tend to line up with high-attendance, high level-spread nights.",
+  "@analytics_reroll_spikes_both": {
+    "description": "Re-roll chart note when spikes match nights with both high attendance and high level spread"
   },
   "analytics_reroll_steady": "Re-roll counts stay steady regardless of level spread.",
   "@analytics_reroll_steady": {
