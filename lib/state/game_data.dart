@@ -102,14 +102,35 @@ class GameData extends ChangeNotifier {
 
   int numberOfCourt = 2;
 
+  /// Sets the number of courts (SESS-04).
+  ///
+  /// When the current lineup has players, this is a full reshuffle of the
+  /// checked-in pool over the new count — the same assignment as [makeGame].
+  /// See [wouldReshuffleLineup].
   void setNumberOfCourt(int value) {
     if (value <= 0) return;
     numberOfCourt = value;
-    // Keep the pre-made round in step with the grid, so every court the
-    // organizer can see is one they can drop a player onto.
+    _applyCourtCount();
+    notifyListeners();
+  }
+
+  /// Whether a change of court count (or a template load) would replace the
+  /// current lineup: it holds players and there are enough to fill a court.
+  bool get wouldReshuffleLineup =>
+      hasAnyCourtLineup && _checkedInPlayers.length >= Game.playerPerCourt;
+
+  /// Brings the lineup in step with [numberOfCourt]. Does not notify.
+  void _applyCourtCount() {
+    if (wouldReshuffleLineup) {
+      _generateLineup();
+      // A pre-made round was built for the old count — plan it again.
+      if (_stagedLineup != null) _stagedLineup = _computeFreshLineup();
+      return;
+    }
+    // Nothing to redistribute. Keep the pre-made round in step with the grid,
+    // so every court the organizer can see is one they can drop a player onto.
     final staged = _stagedLineup;
     if (staged != null) _padToCourtCount(staged);
-    notifyListeners();
   }
 
   final List<GameContainer> history = [];
@@ -405,6 +426,13 @@ class GameData extends ChangeNotifier {
         'Not enough players, need at least ${Game.playerPerCourt}, got ${_checkedInPlayers.length}',
       );
     }
+    _generateLineup();
+    notifyListeners();
+  }
+
+  /// Unassigns every player and deals the checked-in pool across the courts,
+  /// level-balanced. Does not notify.
+  void _generateLineup() {
     stagingMatches = List.empty();
     final candidatePlayer = _choosePlayer().shuffled();
     assert(
@@ -423,13 +451,10 @@ class GameData extends ChangeNotifier {
     debugPrint(
       'Match elo spread: AVG: ${eloSpread(stagingMatches).average}, MAX ${eloSpread(stagingMatches).max}',
     );
-    if (stagingMatches.length < numberOfCourt) {
-      stagingMatches.addAll(
-        List.filled(numberOfCourt - stagingMatches.length, Game.create([])),
-      );
-    }
+    // One new Game per empty court — a shared instance would let a player
+    // placed on one empty court appear on all of them.
+    _padToCourtCount(stagingMatches);
     _prunePlayingGameIds();
-    notifyListeners();
   }
 
   /// Refresh one single court with new players.
@@ -896,6 +921,8 @@ class GameData extends ChangeNotifier {
       template.modeIndex == 1 ? GameType.timeBased : GameType.gameBased,
     );
     PersistentSetting.instance.setGameDuration(template.duration);
+    // SESS-06: same full reshuffle as a court-count change (SESS-04).
+    _applyCourtCount();
     notifyListeners();
   }
 

@@ -127,9 +127,13 @@ void main() {
   });
 
   group('Warnings', () {
-    Future<GameData> runningRound(WidgetTester tester, TimerData timer) async {
+    Future<GameData> runningRound(
+      WidgetTester tester,
+      TimerData timer, {
+      int players = 8,
+    }) async {
       useDesktopSurface(tester);
-      final gameData = await seed(8, 2);
+      final gameData = await seed(players, 2);
       // The clock counts down; no real timer is needed for the dialog.
       timer.isRunning = true;
       await tester.pumpWidget(wrap(gameData, timer));
@@ -181,12 +185,28 @@ void main() {
       tester,
     ) async {
       final timer = TimerData();
-      await runningRound(tester, timer);
+      // A ninth player gives the re-roll someone to rotate in (COURT-03).
+      await runningRound(tester, timer, players: 9);
 
       await tester.tap(find.text('Re-roll').first);
       await tester.pumpAndSettle();
 
       expect(find.text('Discard this court\'s game?'), findsOneWidget);
+    });
+
+    testWidgets('should_stay_quiet_when_re_roll_has_nobody_to_rotate_in', (
+      tester,
+    ) async {
+      final timer = TimerData();
+      // Exactly 8 players on 2 courts: the pool is 4, so nothing changes.
+      final gameData = await runningRound(tester, timer);
+
+      await tester.tap(find.text('Re-roll').first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(SnackBar), findsNothing);
+      expect(gameData.sessionRerollCount, 0);
     });
   });
 }
