@@ -23,7 +23,8 @@ class CourtGridLayout {
 /// [minAspectRatio] (width / height). When the courts fit, each row grows to
 /// fill the height, but a court never becomes taller than it is wide. When
 /// no column count fits, the grid uses the most columns at the minimum
-/// proportion and scrolls.
+/// proportion and scrolls. [maxColumnCount] caps the columns (the stacked
+/// layout uses 2 on tablet and 1 on phone).
 CourtGridLayout courtGridLayout({
   required double width,
   required double height,
@@ -31,9 +32,11 @@ CourtGridLayout courtGridLayout({
   double gap = 16,
   double minCourtWidth = 320,
   double minAspectRatio = 1.6,
+  int? maxColumnCount,
 }) {
   final count = max(1, courtCount);
-  final maxColumns = min(count, max(1, (width + gap) ~/ (minCourtWidth + gap)));
+  final fitting = max(1, (width + gap) ~/ (minCourtWidth + gap));
+  final maxColumns = min(min(count, fitting), maxColumnCount ?? count);
 
   double courtWidth(int columns) => (width - gap * (columns - 1)) / columns;
 

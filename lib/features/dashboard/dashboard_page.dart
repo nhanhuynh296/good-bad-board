@@ -375,7 +375,8 @@ class _DashboardPageState extends State<DashboardPage> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final width = constraints.maxWidth;
+              // Viewport width, not the width left after shell padding.
+              final width = MediaQuery.sizeOf(context).width;
 
               if (isDesktop(width)) {
                 return _buildDesktopLayout(
@@ -582,6 +583,9 @@ class _DashboardPageState extends State<DashboardPage> {
           height: fitToHeight ? constraints.maxHeight : 0,
           courtCount: courts.length,
           gap: AppSpacing.lg,
+          maxColumnCount: fitToHeight
+              ? null
+              : (isPhone(MediaQuery.sizeOf(context).width) ? 1 : 2),
         );
 
         return GridView.builder(

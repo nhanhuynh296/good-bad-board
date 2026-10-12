@@ -58,5 +58,16 @@ void main() {
 
       expect(layout.columns, 1);
     });
+
+    test('should_cap_the_columns_at_maxColumnCount', () {
+      final layout = courtGridLayout(
+        width: 1000,
+        height: 0,
+        courtCount: 8,
+        maxColumnCount: 2,
+      );
+
+      expect(layout.columns, 2);
+    });
   });
 }

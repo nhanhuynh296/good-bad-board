@@ -238,9 +238,9 @@ class _PlayersPageState extends State<PlayersPage> {
         const SizedBox(height: AppSpacing.md),
 
         // ── Table Header (hidden on phone) ──────────────
-        LayoutBuilder(
-          builder: (context, constraints) {
-            if (isPhone(constraints.maxWidth)) {
+        Builder(
+          builder: (context) {
+            if (isPhone(MediaQuery.sizeOf(context).width)) {
               return const SizedBox.shrink();
             }
             return _TableHeader();

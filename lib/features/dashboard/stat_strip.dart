@@ -72,9 +72,11 @@ class StatStrip extends StatelessWidget {
 
     return AppCard(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
+      // Breakpoints follow the viewport, not the width left after shell
+      // padding (UAT NAV-06).
+      child: Builder(
+        builder: (context) {
+          final width = MediaQuery.sizeOf(context).width;
 
           if (isDesktop(width)) {
             // 6 columns in one row
