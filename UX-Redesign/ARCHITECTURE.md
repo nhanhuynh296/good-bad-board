@@ -29,6 +29,7 @@
 | `color.success.bg` | `#e6f4ea` | Success chip background |
 | `color.warning.text` | `#a8481a` | Warning / at-capacity text |
 | `color.warning.bg` | `#fdeee4` | Warning background |
+| `color.error` | `#f44336` | Form error border and text (`AppColors.error`) |
 | `color.bar.secondary` | `#221d18` | Secondary chart bar color (dark) |
 | `color.bar.tertiary` | `#ffb38a` | Tertiary chart bar (light orange) |
 
@@ -61,13 +62,15 @@
 | Token | Size | Weight | Usage |
 |-------|------|--------|-------|
 | `text.xs` | 10px | 700 | Stat strip labels, KPI labels |
+| `text.kpiLabel` | 10.5px | 800 | Analytics KPI labels (`AppTypography.kpiLabel`) |
+| `text.input` | 14px | 500 | Text input value and hint (`AppTypography.input`) |
 | `text.xs2` | 11px | 600–700 | Helper text, hints, table headers, chart labels |
 | `text.sm` | 12px | 500–700 | Secondary info, tab buttons, chip text |
 | `text.base` | 13px | 500–600 | Body text, list items, form labels |
 | `text.md` | 14px | 600–700 | Player names, section titles |
 | `text.lg` | 15px | 700 | Card titles (Space Grotesk) |
 | `text.xl` | 16–19px | 700–800 | Stat values, header titles |
-| `text.2xl` | 20–22px | 700–800 | KPI values (dashboard), club name |
+| `text.2xl` | 20–22px | 700–800 | KPI values (dashboard) |
 | `text.3xl` | 24–26px | 700–800 | Page titles, large KPI values |
 
 ### 1.3 Spacing
@@ -380,7 +383,7 @@ Vertical list of selectable cards
 | `btn.success` | `#2ea043` | `white` | 6px | 5px 9–12px | 11px |
 | `btn.danger-outline` | transparent | `#a3a3a3` | 6px | 5px 9px | 11px |
 | `btn.ghost` | transparent | `#b3a891` | — | — | — |
-| `btn.icon` | `#f0e6d6` | `#221d18` | 6px | 20–22px square | 800 |
+| `btn.icon` | `#f0e6d6` | `#221d18` | 6px | 22px square, 14px glyph | 800 |
 
 ### 2.7 Charts & Data Viz
 
@@ -481,17 +484,20 @@ Tablet/Phone (<1080px):
 
 | Pattern | Desktop | Tablet | Phone |
 |---------|---------|--------|-------|
-| Stat Strip | 6 cols | 3 cols | 2 cols |
+| Stat Strip | 6 cols | 3 cols | 2 cols (4 stats) |
 | Court Grid | largest courts that fit the height, else scroll | 2 cols | 1 col |
-| Analytics Grid | 2 cols | 2 cols | 1 col |
-| KPI Row | 3–6 cols | 3 cols | 1–2 cols |
+| Analytics Grid | 2 cols | 1 col | 1 col |
+| KPI Row | 6 cols | 3 cols | 1 col |
 | Two-Column Form | Row | Row | Column |
-| Chart Grid | 2:1 | 1:1 | 1 col |
+| Chart Grid | 2:1 | 1 col | 1 col |
 | Player Row | fixed-width Level/Membership/Checked-in columns | fixed | intrinsic widths, so the name keeps the leftover space |
 
-The court grid is built with `shrinkWrap: true` + `NeverScrollableScrollPhysics`, so it never
-scrolls itself. Every layout that hosts it must supply the scrolling (a `SingleChildScrollView`),
-or courts past the first row cannot be reached.
+All breakpoints use the viewport width (`MediaQuery.sizeOf(context).width`), not the width left
+after the shell padding.
+
+On desktop the court grid fills the free height and scrolls itself when the courts do not fit
+(`courtGridLayout`). In the stacked layout (<1080px) the grid is shrink-wrapped and the page
+scroll view supplies the scrolling.
 
 ### 3.3 Navigation Patterns by Breakpoint
 

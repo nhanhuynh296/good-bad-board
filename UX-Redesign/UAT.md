@@ -89,6 +89,8 @@ the current tab highlighted; selecting a tab switches to it and closes the menu;
 
 **NAV-06** — Stat strip reflow
 Given the app is on the Dashboard/any tab
+(All breakpoints in NAV-06…08 and ANA-14 use the viewport width, not the width left after the shell
+padding.)
 When viewport width is desktop (≥1080px)
 Then the stat strip shows 6 cells in one row: Checked In, Remaining Slots, Waitlist, Avg Level, Avg
 Level Gap, Re-rolls.
@@ -284,6 +286,7 @@ club's re-roll count (visible in the stat strip and Analytics).
 Given a court's occupants plus the full waitlist total 4 or fewer players
 When the organizer taps "Re-roll ⟲" on that court
 Then nothing changes (no reshuffle, no re-roll count increment) — there is no one to rotate in.
+The dashboard stays silent: no dialog and no error message.
 
 **COURT-04** — Selecting a waitlisted player to place/swap
 Given at least one player is on the waitlist
@@ -436,7 +439,7 @@ Then the check-in is refused (no state change) — the UI must not allow bypassi
 **CHK-04** — At-capacity banner
 Given checked-in count ≥ session capacity
 When the Players tab is viewed
-Then a banner reads "Session at capacity — new check-ins will join the waitlist."
+Then a banner reads "Session at capacity — new check-ins are blocked." (CHK-03 refuses them.)
 
 **CHK-05** — Mark absent (check out) — inline in Players tab
 Given a player is checked in
@@ -475,6 +478,10 @@ trailing arrow: down when the profile is hidden, up when it is shown. The panel 
 membership status, 3 stat tiles (Current
 Level, Matches, Diversity %), a level-progression sparkline, up to 3 most-frequent playing partners
 with match counts, and a session-attendance history summary (or "No sessions logged yet" if none).
+Definitions: Matches = saved games that hold the player. Diversity % = distinct other players met in
+those games ÷ other listed players on the roster. Partners = every other player in a game (a game
+does not record who partnered whom). A session = one calendar day with a saved session log. The
+sparkline repeats the current level once per game, because no level history is stored.
 
 **PLY-10** — Only one profile expanded at a time
 Given player A's profile is expanded
@@ -490,7 +497,8 @@ Then the panel collapses.
 Given a player has historical session records
 Then "Matches," "Diversity," "top partners," and "attendance history" in their profile are computed
 from that player's logged session history — they are unaffected by re-rolls or check-ins happening
-in the *current* live session until that session is itself logged into history.
+in the *current* live session until that session is itself logged into history. They are read
+from the saved games and session logs, so they survive a restart and update when a round is saved.
 
 ---
 
@@ -522,7 +530,7 @@ When the organizer enters a number below 4 (or leaves the field empty or non-num
 Then the value is **clamped up to 4** — never raised back to the default of 20 — and the field
 shows the clamped number, so it never displays a value the session did not accept.
 The same applies to a session template that carries a capacity below 4 (SESS-06): loading it
-yields 4.
+yields 4. An empty or non-numeric "Number of courts" entry clamps to 1 in the same way.
 
 **SESS-04** — Courts count change
 Given the organizer changes "Number of courts" (range 1–8)
@@ -530,6 +538,10 @@ Then every currently checked-in player is unassigned and the whole checked-in po
 re-distributed across the new number of courts using the same level-sorted, courts-of-4 assignment
 logic as an initial session start — this is a full reshuffle, not an incremental add/remove of one
 court.
+When a time-based round is running and a court holds players, a "Discard the current round?"
+confirmation shows first, with a "Reshuffle" button; Cancel keeps everything, including the court
+count. When no court holds players, or fewer than 4 players are checked in, nothing is generated
+(the courts are only padded). A staged next round is planned again for the new count.
 
 **SESS-05** — Save a session template
 Given the organizer enters a non-blank template name and taps "Save current"
@@ -542,7 +554,8 @@ Given at least one saved template exists
 When the organizer taps "Load" on a template
 Then the session's round mode, duration, session capacity, and courts count are all overwritten
 from the template, and the same full-reshuffle behavior as SESS-04 is applied to redistribute
-currently checked-in players across the (possibly new) courts count.
+currently checked-in players across the (possibly new) courts count, with the same confirmation.
+Loading a game-based template stops the countdown (GB-01).
 
 ---
 
@@ -589,17 +602,22 @@ recommending capacity/schedule changes when average waitlist is high (≥ ~2.5/s
 reassuring note when it's low.
 
 **ANA-05** — Matchmaking fairness — level-gap trend
-Then a bar chart shows the average level-gap per court over the selected range (values expressed as
-tier-gap, e.g. "1.2," not raw ELO), with a note stating whether the trend is improving (gap
+Then a bar chart shows, per session, the mean level-gap of its courts over the selected range
+(values expressed as tier-gap, e.g. "1.2," not raw ELO; tier-gap = stored Elo-step gap ÷ 2), with a note stating whether the trend is improving (gap
 shrinking) or not.
 
 **ANA-06** — Matchmaking fairness — per-court comparison
 Then a horizontal bar-per-court list shows each court's average level-gap over the range, flagging
-courts that run consistently wider gaps (e.g. courts that regularly absorb overflow).
+courts that run consistently wider gaps (e.g. courts that regularly absorb overflow). A court is
+flagged when it appears in at least 3 sessions, is wider than its session's mean on at least 60% of
+them, and averages above 1.25× the club average. "Court N" is the Nth court that held a game in a
+session (session logs store no court number).
 
 **ANA-07** — Court utilization
-Then a horizontal bar-per-court list shows each court's fill rate; a summary line reports overall
-"full-4 fill rate" and average idle-court time per session.
+Then a horizontal bar-per-court list shows each court's fill rate (share of sessions in which that
+court held a game when the session was saved); a summary line reports overall "full-4 fill rate"
+(share of sessions with checked-in ≥ courts × 4) and the average number of idle courts per session.
+Idle-court *time* is not available: session logs store no court start/end times.
 
 **ANA-08** — Re-rolls per session
 Then a bar chart shows re-roll counts per session over the range, with a note connecting re-roll
@@ -608,8 +626,10 @@ spikes to high-attendance/high-level-spread nights.
 **ANA-09** — Level distribution
 Then a 4-bar chart shows player counts per tier (Amateur/Intermediate/Advanced/Professional) across
 the whole club, with a summary noting the median tier and overall trend direction, and — when
-applicable — a stagnation callout ("N players flat 6+ sessions") for players whose tier hasn't
-changed across their last 6 logged sessions.
+applicable — a stagnation callout ("N players flat 6+ sessions").
+Limit: no tier history is stored (see ANA-10). The trend direction compares the mean current tier of
+players active in the range with the prior range. Stagnation = 6+ sessions in the range; "tier
+unchanged" cannot be checked.
 
 **ANA-10** — removed. Games store player ids only (issue #42); "elo at play time" required two
 snapshots of the same player embedded in different games, which the removal of `Game.players` as
@@ -627,14 +647,16 @@ for a sample of players, tagged "connector" (high, bridges the club), "clique" (
 or "isolated" (very low) where applicable, with a summary note.
 
 **ANA-13** — New player integration
-Then a list shows recently joined players (within the configured "new" window) with when they
+Then a list shows recently joined players (within the "new" window, fixed at 60 days until a
+setting exists) with when they
 joined, sessions attended, and a "% of games played with regulars" status, styled favorably (≥50%)
 or as needing attention (<50%), with a contextual note.
 
 **ANA-14** — Responsive reflow
 Given the Analytics tab is active
-Then the KPI strip and chart grids reflow from 6/3/1.2-1-1 columns on desktop, to fewer columns on
-tablet, to a single column on phone — consistent with the breakpoints in §1.
+Then the KPI strip shows 6 columns on desktop, 3 on tablet and 1 on phone; chart rows are
+side by side on desktop and stack to a single column below desktop — consistent with the breakpoints
+in §1.
 
 ---
 
