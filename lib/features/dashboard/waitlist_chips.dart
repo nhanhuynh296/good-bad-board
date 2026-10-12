@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
+import 'package:good_bad_board/l10n/skill_tier_l10n.dart';
+import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/player.dart';
 
 /// Tablet/phone waitlist — a horizontal wrapping row of selectable chips.
@@ -60,7 +62,8 @@ class WaitlistChips extends StatelessWidget {
             final player = players[i];
             final isSelected = player.id == selectedPlayerId;
             final label =
-                '${i + 1}. ${player.name()} ${player.elo.toDisplayName()}';
+                '${i + 1}. ${player.name()} '
+                '${player.elo.skillTier.localizedLabel(AppLocalizations.of(context)!)}';
 
             return AppChip(
               label: label,

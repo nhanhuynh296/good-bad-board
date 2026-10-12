@@ -62,17 +62,28 @@ void main() {
       expect(find.text('Open slot'), findsOneWidget);
     });
 
-    testWidgets('shows player name and ELO when occupied', (tester) async {
-      final player = testPlayer('Alice', Elo.b1);
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: PlayerSlot(player: player)),
-        ),
-      );
+    Future<void> pumpSlot(WidgetTester tester, Player player) =>
+        tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: PlayerSlot(player: player)),
+          ),
+        );
+
+    testWidgets('shows player name when occupied', (tester) async {
+      await pumpSlot(tester, testPlayer('Alice', Elo.b1));
       expect(find.text('Alice Test'), findsOneWidget);
-      expect(find.text('B1'), findsOneWidget);
+    });
+
+    testWidgets('should_show_the_level_group_of_the_player', (tester) async {
+      await pumpSlot(tester, testPlayer('Alice', Elo.b1));
+      expect(find.text('Intermediate'), findsOneWidget);
+    });
+
+    testWidgets('should_not_show_the_elo_of_the_player', (tester) async {
+      await pumpSlot(tester, testPlayer('Alice', Elo.b1));
+      expect(find.text('B1'), findsNothing);
     });
 
     testWidgets('shows accent background when selection is active', (
@@ -435,6 +446,23 @@ void main() {
     });
   });
 
+  group('WaitlistSidebar tier', () {
+    testWidgets('should_show_the_level_group_of_a_waiting_player', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: WaitlistSidebar(players: [testPlayer('Alice', Elo.s1)]),
+          ),
+        ),
+      );
+      expect(find.text('Professional'), findsOneWidget);
+    });
+  });
+
   group('WaitlistChips', () {
     testWidgets('shows empty state when no players', (tester) async {
       await tester.pumpWidget(
@@ -457,7 +485,20 @@ void main() {
         ),
       );
       expect(find.textContaining('Alice Test'), findsOneWidget);
-      expect(find.textContaining('B2'), findsOneWidget);
+      expect(find.textContaining('Intermediate'), findsOneWidget);
+    });
+
+    testWidgets('should_not_show_the_elo_in_a_chip', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: WaitlistChips(players: [testPlayer('Alice', Elo.b2)]),
+          ),
+        ),
+      );
+      expect(find.textContaining('B2'), findsNothing);
     });
 
     testWidgets('fires onPlayerSelect when chip tapped', (tester) async {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
+import 'package:good_bad_board/l10n/skill_tier_l10n.dart';
+import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/player.dart';
 
 /// Desktop waitlist sidebar — a fixed 270px card listing waitlisted players.
@@ -137,7 +139,9 @@ class _WaitlistItem extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  player.elo.toDisplayName(),
+                  player.elo.skillTier.localizedLabel(
+                    AppLocalizations.of(context)!,
+                  ),
                   style: AppTypography.statLabel.copyWith(
                     color: isSelected
                         ? AppColors.white.withValues(alpha: 0.85)

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
+import 'package:good_bad_board/l10n/skill_tier_l10n.dart';
+import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/player.dart';
 
 /// A single player position within a [CourtCard].
 ///
 /// Two visual states:
-/// - **Occupied**: player name (14px, 600) + level/ELO (13px, 800, accent)
+/// - **Occupied**: player name (14px, 600) + level group (13px, 800,
+///   accent). The exact Elo stays hidden on court.
 /// - **Empty**: "Open slot" (13px, italic, textSubtle)
 ///
 /// When [isSelectionActive] is true, the slot shows an accent-tinted
@@ -69,7 +72,9 @@ class PlayerSlot extends StatelessWidget {
               if (player != null) ...[
                 const SizedBox(width: 8),
                 Text(
-                  player!.elo.toDisplayName(),
+                  player!.elo.skillTier.localizedLabel(
+                    AppLocalizations.of(context)!,
+                  ),
                   style: const TextStyle(
                     fontFamily: AppTypography.bodyFont,
                     fontSize: 13,
