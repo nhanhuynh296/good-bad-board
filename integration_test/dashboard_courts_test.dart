@@ -60,6 +60,13 @@ void main() {
       await tester.tap(rerollBtn.first);
       await tester.pumpAndSettle();
 
+      // The round clock runs, so the app warns first (COURT-12); confirm.
+      final confirm = find.widgetWithText(FilledButton, 'Re-roll');
+      if (confirm.evaluate().isNotEmpty) {
+        await tester.tap(confirm);
+        await tester.pumpAndSettle();
+      }
+
       // Re-roll count should increment (stat strip shows new count).
     });
   });
@@ -181,6 +188,8 @@ void main() {
   // ── COURT-09: Slots inert without selection ────────────────
 
   group('COURT-09 — Slots inert without selection', () {
+    // An occupied slot now selects its player (COURT-10); the lineup must
+    // still not change.
     testWidgets('tapping slot without selection does nothing', (tester) async {
       await setupWithNPlayers(tester, 5);
 

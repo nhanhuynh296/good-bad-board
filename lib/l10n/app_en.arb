@@ -1064,6 +1064,22 @@
   "@common_toggle": {
     "description": "Default accessibility label of a toggle button"
   },
+  "dashboard_discard_round_title": "Discard the current round?",
+  "@dashboard_discard_round_title": {
+    "description": "Title of the warning before Regenerate discards a running round"
+  },
+  "dashboard_discard_round_body": "The current round is not saved to history. Some players then get more court time than others.",
+  "@dashboard_discard_round_body": {
+    "description": "Body of the warning before Regenerate discards a running round"
+  },
+  "dashboard_discard_court_title": "Discard this court's game?",
+  "@dashboard_discard_court_title": {
+    "description": "Title of the warning before Re-roll discards a running court game"
+  },
+  "dashboard_discard_court_body": "This court's current game is not saved to history. Some players then get more court time than others.",
+  "@dashboard_discard_court_body": {
+    "description": "Body of the warning before Re-roll discards a running court game"
+  },
   "dashboard_remove_from_court": "Remove from court",
   "@dashboard_remove_from_court": {
     "description": "Tooltip of the button that moves a player from an incomplete court to the waitlist"

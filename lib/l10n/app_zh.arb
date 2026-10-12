@@ -223,5 +223,9 @@
   "shell_navigate": "导航",
   "common_search_players": "搜索球员…",
   "common_toggle": "切换",
+  "dashboard_discard_round_title": "放弃当前轮次？",
+  "dashboard_discard_round_body": "当前轮次不会保存到历史记录。部分球员的上场时间会因此多于其他球员。",
+  "dashboard_discard_court_title": "放弃此场地的比赛？",
+  "dashboard_discard_court_body": "此场地当前的比赛不会保存到历史记录。部分球员的上场时间会因此多于其他球员。",
   "dashboard_remove_from_court": "移出场地"
 }

@@ -125,4 +125,68 @@ void main() {
       expect(gameData.waitlistedPlayers, contains(a));
     });
   });
+
+  group('Warnings', () {
+    Future<GameData> runningRound(WidgetTester tester, TimerData timer) async {
+      useDesktopSurface(tester);
+      final gameData = await seed(8, 2);
+      // The clock counts down; no real timer is needed for the dialog.
+      timer.isRunning = true;
+      await tester.pumpWidget(wrap(gameData, timer));
+      return gameData;
+    }
+
+    testWidgets('should_warn_before_regenerating_a_running_round', (
+      tester,
+    ) async {
+      final timer = TimerData();
+      await runningRound(tester, timer);
+
+      await tester.tap(find.text('Regenerate'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Discard the current round?'), findsOneWidget);
+    });
+
+    testWidgets('should_keep_the_round_when_regenerate_is_cancelled', (
+      tester,
+    ) async {
+      final timer = TimerData();
+      final gameData = await runningRound(tester, timer);
+      final lineup = [...gameData.stagingMatches[0].players];
+
+      await tester.tap(find.text('Regenerate'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(gameData.stagingMatches[0].players, lineup);
+    });
+
+    testWidgets('should_not_warn_when_no_round_is_running', (tester) async {
+      useDesktopSurface(tester);
+      final gameData = await seed(8, 2);
+      final timer = TimerData();
+      await tester.pumpWidget(wrap(gameData, timer));
+
+      await tester.tap(find.text('Regenerate'));
+      await tester.pump();
+
+      expect(find.text('Discard the current round?'), findsNothing);
+      // Regenerate started the clock; stop it so no timer outlives the test.
+      timer.reset();
+    });
+
+    testWidgets('should_warn_before_re_rolling_a_court_in_a_running_round', (
+      tester,
+    ) async {
+      final timer = TimerData();
+      await runningRound(tester, timer);
+
+      await tester.tap(find.text('Re-roll').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Discard this court\'s game?'), findsOneWidget);
+    });
+  });
 }

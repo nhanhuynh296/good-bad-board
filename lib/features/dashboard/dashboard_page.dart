@@ -82,8 +82,53 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  void _onReroll(int courtIndex) {
+  /// Whether a time-based round is under way, so that a new lineup would
+  /// throw away games that are not in the history yet.
+  bool get _isRoundRunning =>
+      !_isGameBased && context.read<TimerData>().isRunning;
+
+  /// Asks the organizer to confirm before a running game is thrown away
+  /// (restored from main's "Game is currently running" warning).
+  Future<bool> _confirmDiscard({
+    required String title,
+    required String body,
+    required String confirmLabel,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
+  Future<void> _onReroll(int courtIndex) async {
     final gameData = context.read<GameData>();
+    final l10n = AppLocalizations.of(context)!;
+    final hasPlayers = gameData.visibleMatches[courtIndex].players.isNotEmpty;
+    if (_isRoundRunning &&
+        hasPlayers &&
+        gameData.roundView == RoundView.current) {
+      final confirmed = await _confirmDiscard(
+        title: l10n.dashboard_discard_court_title,
+        body: l10n.dashboard_discard_court_body,
+        confirmLabel: l10n.dashboard_reroll,
+      );
+      if (!confirmed || !mounted) return;
+    }
     try {
       gameData.makeSingleCourt(courtIndex);
     } on Exception catch (e) {
@@ -104,6 +149,15 @@ class _DashboardPageState extends State<DashboardPage> {
     final gameData = context.read<GameData>();
     final timerData = context.read<TimerData>();
     final isGameBased = _isGameBased;
+    if (_isRoundRunning && gameData.hasAnyCourtLineup) {
+      final l10n = AppLocalizations.of(context)!;
+      final confirmed = await _confirmDiscard(
+        title: l10n.dashboard_discard_round_title,
+        body: l10n.dashboard_discard_round_body,
+        confirmLabel: l10n.regenerate,
+      );
+      if (!confirmed || !mounted) return;
+    }
     try {
       await gameData.makeGame();
       if (!mounted) return;

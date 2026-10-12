@@ -223,5 +223,9 @@
   "shell_navigate": "導航",
   "common_search_players": "搜尋球員…",
   "common_toggle": "切換",
+  "dashboard_discard_round_title": "放棄目前輪次？",
+  "dashboard_discard_round_body": "目前輪次不會儲存到歷史紀錄。部分球員的上場時間會因此多於其他球員。",
+  "dashboard_discard_court_title": "放棄此場地的比賽？",
+  "dashboard_discard_court_body": "此場地目前的比賽不會儲存到歷史紀錄。部分球員的上場時間會因此多於其他球員。",
   "dashboard_remove_from_court": "移出場地"
 }
