@@ -49,7 +49,7 @@ class _PlayersPageState extends State<PlayersPage> {
 
   Set<Elo> _eloFilters = {};
 
-  String get _query => _searchController.text.toUpperCase();
+  String get _query => _searchController.text.trim().toUpperCase();
 
   bool _matchesQuery(Player p) =>
       p.name().toUpperCase().contains(_query) ||
@@ -234,50 +234,65 @@ class _PlayersPageState extends State<PlayersPage> {
   // ── Scanner ──────────────────────────────────────────────
 
   /// The search field got Enter. A barcode scanner types the sign-in ID and
-  /// then sends Enter, so the text is read as an ID: the one player with
-  /// that ID is checked in (never checked out), and the field is cleared
-  /// for the next scan. With no match the text stays, selected, so the next
-  /// scan replaces it.
+  /// then sends Enter. The one listed player is checked in or out (a player
+  /// whose sign-in ID equals the text wins over longer IDs that contain
+  /// it). With no or many listed players nobody changes. The text always
+  /// stays and is selected, so the list still shows the result and the next
+  /// scan replaces the text.
   void _onSearchSubmitted() {
     final typed = _searchController.text.trim();
     if (typed.isEmpty) return;
 
     final l10n = AppLocalizations.of(context)!;
-    final gameData = context.read<GameData>();
+    final listed = _listedPlayers();
     final wanted = typed.toLowerCase();
-    final matches = PlayerRepository.instance
-        .listedPlayers()
+    final exact = listed
         .where((p) => p.signInId?.trim().toLowerCase() == wanted)
         .toList();
 
-    if (matches.length != 1) {
-      _showSnackBar(
-        matches.isEmpty
-            ? l10n.players_scan_no_match(typed)
-            : l10n.players_scan_duplicate_id(typed, matches.length),
-      );
-      _searchController.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: _searchController.text.length,
-      );
-      _searchFocus.requestFocus();
-      return;
-    }
-
-    final player = matches.single;
     final String message;
-    if (player.membership == MembershipStatus.disabled) {
-      message = l10n.players_scan_disabled(player.name());
-    } else if (gameData.isPlayerCheckedIn(player)) {
-      message = l10n.players_scan_already_checked_in(player.name());
-    } else if (gameData.checkInPlayer(player)) {
-      message = l10n.players_scan_checked_in(player.name());
+    if (exact.length > 1) {
+      message = l10n.players_scan_duplicate_id(typed, exact.length);
+    } else if (exact.isEmpty && listed.isEmpty) {
+      message = l10n.players_scan_no_match(typed);
+    } else if (exact.isEmpty && listed.length > 1) {
+      message = l10n.players_scan_many_matches(listed.length);
     } else {
-      message = l10n.players_session_full_cannot_check_in;
+      message = _toggleByScan(exact.isEmpty ? listed.single : exact.single);
     }
     _showSnackBar(message);
-    setState(_searchController.clear);
+    _selectSearchText();
+  }
+
+  /// Checks [player] in or out for a scan and returns the message to show.
+  String _toggleByScan(Player player) {
+    final l10n = AppLocalizations.of(context)!;
+    final gameData = context.read<GameData>();
+    if (player.membership == MembershipStatus.disabled) {
+      return l10n.players_scan_disabled(player.name());
+    }
+    if (gameData.isPlayerCheckedIn(player)) {
+      gameData.checkOutPlayer(player);
+      return l10n.players_scan_checked_out(player.name());
+    }
+    if (gameData.checkInPlayer(player)) {
+      return l10n.players_scan_checked_in(player.name());
+    }
+    return l10n.players_session_full_cannot_check_in;
+  }
+
+  /// Keeps focus in the search field and selects all its text. It is done
+  /// again after the frame, since a focus change can move the selection.
+  void _selectSearchText() {
+    void selectAll() => _searchController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _searchController.text.length,
+    );
+    selectAll();
     _searchFocus.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) selectAll();
+    });
   }
 
   /// Saves a new sign-in ID for [player] (PLY-15). Returns an error message
@@ -315,22 +330,26 @@ class _PlayersPageState extends State<PlayersPage> {
     l10n: AppLocalizations.of(context)!,
   );
 
+  /// The players the list shows: the level filters and the search text
+  /// applied, sorted by name.
+  List<Player> _listedPlayers() {
+    final activeEloFilters = _eloFilters.isEmpty
+        ? Elo.values.toSet()
+        : _eloFilters;
+    return PlayerRepository.instance
+        .listedPlayers()
+        .where((p) => activeEloFilters.contains(p.elo) && _matchesQuery(p))
+        .sortedBy<String>((p) => p.name())
+        .toList();
+  }
+
   // ── Build ────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final gameData = context.watch<GameData>();
 
-    final allPlayers = PlayerRepository.instance.listedPlayers().toList();
-    final activeEloFilters = _eloFilters.isEmpty
-        ? Elo.values.toSet()
-        : _eloFilters;
-
-    // Apply filters
-    final filteredPlayers = allPlayers
-        .where((p) => activeEloFilters.contains(p.elo) && _matchesQuery(p))
-        .sortedBy<String>((p) => p.name())
-        .toList();
+    final filteredPlayers = _listedPlayers();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

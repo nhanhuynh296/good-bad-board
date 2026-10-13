@@ -514,21 +514,24 @@ Given the Players tab opens
 Then the search field is focused, so a barcode scanner can type into it. The field gets focus again
 after a row tap, a level chip, More, Add, a closed profile and a closed dialog, unless another text
 field (such as the Sign In ID field) has focus. A row tap also clears a half-typed query.
-When an ID is typed and Enter is sent (a scanner does this), and exactly one player has that exact
-sign-in ID (trimmed, case-insensitive)
-Then that player is checked in (the capacity and Disabled rules apply), a SnackBar reads "{name}
-checked in", and the field clears and keeps focus.
-When that player is already checked in
-Then a SnackBar reads "{name} is already checked in", nobody is checked out, and the field clears.
-When that player is Disabled
-Then a SnackBar reads "{name} is disabled — cannot check in", and the field clears.
-When the session is at capacity
-Then the existing capacity message shows, and the field clears.
-When no player has that exact ID
-Then the text stays and is selected, and a SnackBar reads "No player with ID {id}".
-When more than one listed player has that ID (duplicates already saved)
-Then nobody is checked in, the text stays and is selected, and a SnackBar reads "ID {id} is used by
-{count} players".
+When text is typed and Enter is sent (a scanner types the sign-in ID, then sends Enter)
+Then the target is the one player whose sign-in ID equals the text (trimmed, case-insensitive). If
+no ID equals the text, the target is the only player in the list (search and level chips applied),
+so a partial ID or a name also works when it leaves one result.
+And the target's check-in is toggled: checked in (the capacity and Disabled rules apply) or checked
+out. A SnackBar reads "{name} checked in" or "{name} checked out".
+And in every case below, the text stays, all of it is selected, and the field keeps focus. The list
+still shows the result, so the organizer can see the new state. The next scan replaces the text.
+When the target is Disabled
+Then nobody changes, and a SnackBar reads "{name} is disabled — cannot check in".
+When the session is at capacity and the target is not checked in
+Then nobody changes, and the existing capacity message shows.
+When the list is empty
+Then a SnackBar reads "No player with ID {id}".
+When the list shows more than one player and no ID equals the text
+Then nobody changes, and a SnackBar reads "{count} players match — nothing changed".
+When more than one listed player has that exact ID (duplicates already saved)
+Then nobody changes, and a SnackBar reads "ID {id} is used by {count} players".
 When Enter is sent while an IME composition is active
 Then nothing happens (Enter confirms the composition). Two fast scans in a row are both handled.
 When the field is empty and Enter is sent

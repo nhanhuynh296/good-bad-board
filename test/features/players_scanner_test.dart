@@ -98,9 +98,7 @@ void main() {
       expect(gameData.isPlayerCheckedIn(alice), isTrue);
     });
 
-    testWidgets('should_clear_the_search_field_after_a_successful_scan', (
-      tester,
-    ) async {
+    testWidgets('should_keep_the_scanned_text_after_a_scan', (tester) async {
       await pumpPage(
         tester,
         players: [_player('Alice', Elo.b1, signInId: 'A100')],
@@ -108,7 +106,38 @@ void main() {
 
       await scan(tester, 'A100');
 
-      expect(editable(tester).controller.text, isEmpty);
+      expect(editable(tester).controller.text, 'A100');
+    });
+
+    testWidgets('should_select_all_the_text_after_a_scan', (tester) async {
+      await pumpPage(
+        tester,
+        players: [_player('Alice', Elo.b1, signInId: 'A100')],
+      );
+
+      await scan(tester, 'A100');
+      await tester.pump();
+
+      expect(
+        editable(tester).controller.selection,
+        const TextSelection(baseOffset: 0, extentOffset: 4),
+      );
+    });
+
+    testWidgets('should_keep_the_one_result_listed_after_a_scan', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        players: [
+          _player('Alice', Elo.b1, signInId: 'A100'),
+          _player('Bob', Elo.a2, signInId: 'B200'),
+        ],
+      );
+
+      await scan(tester, 'A100');
+
+      expect(find.byType(PlayerRow), findsOneWidget);
     });
 
     testWidgets('should_keep_focus_in_the_search_field_after_a_scan', (
@@ -160,7 +189,7 @@ void main() {
       expect(gameData.isPlayerCheckedIn(alice), isTrue);
     });
 
-    testWidgets('should_not_check_out_a_player_who_is_already_checked_in', (
+    testWidgets('should_check_out_a_player_who_is_already_checked_in', (
       tester,
     ) async {
       final alice = _player('Alice', Elo.b1, signInId: 'A100');
@@ -170,12 +199,10 @@ void main() {
 
       await scan(tester, 'A100');
 
-      expect(gameData.isPlayerCheckedIn(alice), isTrue);
+      expect(gameData.isPlayerCheckedIn(alice), isFalse);
     });
 
-    testWidgets('should_say_already_checked_in_and_clear_the_field', (
-      tester,
-    ) async {
+    testWidgets('should_say_checked_out_after_a_second_scan', (tester) async {
       final alice = _player('Alice', Elo.b1, signInId: 'A100');
       await pumpPage(tester, players: [alice]);
       gameData.checkInPlayer(alice);
@@ -183,8 +210,7 @@ void main() {
 
       await scan(tester, 'A100');
 
-      expect(find.text('Alice Test is already checked in'), findsOneWidget);
-      expect(editable(tester).controller.text, isEmpty);
+      expect(find.text('Alice Test checked out'), findsOneWidget);
     });
 
     testWidgets('should_keep_the_text_and_say_no_player_when_id_unknown', (
@@ -201,15 +227,66 @@ void main() {
       expect(editable(tester).controller.text, 'ZZZ');
     });
 
-    testWidgets('should_not_match_an_id_that_is_only_part_of_another', (
-      tester,
-    ) async {
+    testWidgets('should_toggle_the_one_result_of_a_partial_id', (tester) async {
       final alice = _player('Alice', Elo.b1, signInId: 'A100');
-      await pumpPage(tester, players: [alice]);
+      await pumpPage(tester, players: [alice, _player('Bob', Elo.a2)]);
 
       await scan(tester, 'A10');
 
-      expect(gameData.isPlayerCheckedIn(alice), isFalse);
+      expect(gameData.isPlayerCheckedIn(alice), isTrue);
+    });
+
+    testWidgets('should_toggle_the_one_result_of_a_name', (tester) async {
+      final alice = _player('Alice', Elo.b1);
+      await pumpPage(tester, players: [alice, _player('Bob', Elo.a2)]);
+
+      await scan(tester, 'ali');
+
+      expect(gameData.isPlayerCheckedIn(alice), isTrue);
+    });
+
+    testWidgets('should_change_nobody_when_many_results_are_listed', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        players: [
+          _player('Alice', Elo.b1, signInId: 'A100'),
+          _player('Alan', Elo.a2, signInId: 'A200'),
+        ],
+      );
+
+      await scan(tester, 'A');
+
+      expect(gameData.checkedInCount, 0);
+    });
+
+    testWidgets('should_say_how_many_match_when_many_results_are_listed', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        players: [
+          _player('Alice', Elo.b1, signInId: 'A100'),
+          _player('Alan', Elo.a2, signInId: 'A200'),
+        ],
+      );
+
+      await scan(tester, 'A');
+
+      expect(find.text('2 players match — nothing changed'), findsOneWidget);
+    });
+
+    testWidgets('should_toggle_the_exact_id_when_another_id_starts_with_it', (
+      tester,
+    ) async {
+      final alice = _player('Alice', Elo.b1, signInId: '12');
+      final bob = _player('Bob', Elo.a2, signInId: '123');
+      await pumpPage(tester, players: [alice, bob]);
+
+      await scan(tester, '12');
+
+      expect([alice, bob].map(gameData.isPlayerCheckedIn), [isTrue, isFalse]);
     });
 
     testWidgets('should_refuse_the_scan_when_the_session_is_at_capacity', (
@@ -239,7 +316,7 @@ void main() {
       );
     });
 
-    testWidgets('should_clear_the_field_when_the_session_is_at_capacity', (
+    testWidgets('should_keep_the_text_when_the_session_is_at_capacity', (
       tester,
     ) async {
       final full = [
@@ -261,7 +338,7 @@ void main() {
 
       await scan(tester, 'C300');
 
-      expect(editable(tester).controller.text, isEmpty);
+      expect(editable(tester).controller.text, 'C300');
     });
 
     testWidgets('should_not_check_in_a_disabled_player_by_scan', (

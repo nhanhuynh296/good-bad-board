@@ -726,12 +726,21 @@
       }
     }
   },
-  "players_scan_already_checked_in": "{name} is already checked in",
-  "@players_scan_already_checked_in": {
-    "description": "Toast when a scanned sign-in ID belongs to a player who is already checked in",
+  "players_scan_checked_out": "{name} checked out",
+  "@players_scan_checked_out": {
+    "description": "Toast when Enter in the Players search checks out the one listed player",
     "placeholders": {
       "name": {
         "type": "String"
+      }
+    }
+  },
+  "players_scan_many_matches": "{count, plural, =1{1 player matches — nothing changed} other{{count} players match — nothing changed}}",
+  "@players_scan_many_matches": {
+    "description": "Toast when Enter in the Players search lists more than one player, so nobody is checked in or out",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
