@@ -14,6 +14,15 @@ enum GameType {
   };
 }
 
+/// Release flag for game-based mode.
+///
+/// Off in the release build: the app always runs time-based and the mode
+/// toggle is hidden. All game-based code stays. Tests that cover it set this
+/// to `true`. The saved `gameType` setting is never rewritten by this flag.
+abstract final class GameMode {
+  static bool enabled = false;
+}
+
 class PersistentSetting extends ChangeNotifier {
   PersistentSetting._init();
 
@@ -71,11 +80,16 @@ class PersistentSetting extends ChangeNotifier {
     );
   }
 
-  GameType getGameType() => GameType.values.firstWhere(
-    (element) =>
-        element.name == sharedPreference.getString(Setting.gameType.name),
-    orElse: () => GameType.timeBased,
-  );
+  /// The round mode. Always time-based while [GameMode.enabled] is off, even
+  /// when a game-based mode is saved.
+  GameType getGameType() {
+    if (!GameMode.enabled) return GameType.timeBased;
+    return GameType.values.firstWhere(
+      (element) =>
+          element.name == sharedPreference.getString(Setting.gameType.name),
+      orElse: () => GameType.timeBased,
+    );
+  }
 
   Future<void> setLanguage(Locale locale) async {
     await sharedPreference.setStringList(Setting.language.name, [

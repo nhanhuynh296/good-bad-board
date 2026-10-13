@@ -887,6 +887,18 @@
       }
     }
   },
+  "sessions_template_summary_no_mode": "{courts, plural, =1{1 court} other{{courts} courts}} · cap {capacity}",
+  "@sessions_template_summary_no_mode": {
+    "description": "One-line summary of a saved session template without the round mode, e.g. '4 courts · cap 20'.",
+    "placeholders": {
+      "courts": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      }
+    }
+  },
   "sessions_template_name": "Template name",
   "@sessions_template_name": {
     "description": "Hint text for the new template name field"

@@ -181,6 +181,7 @@
   "sessions_save_current": "儲存目前設定",
   "sessions_seconds_short": "秒",
   "sessions_template_summary": "{courts, plural, other{{courts} 個場地}} · {mode, select, timed{計時制} other{按局制}} · 容量 {capacity}",
+  "sessions_template_summary_no_mode": "{courts, plural, other{{courts} 個場地}} · 容量 {capacity}",
   "sessions_template_name": "範本名稱",
   "sessions_templates": "場次範本",
   "sessions_time_based": "按時間",

@@ -96,7 +96,7 @@ class _SessionsPageState extends State<SessionsPage> {
     if (!await _confirmReshuffle(gameData)) return;
     gameData.loadTemplate(template);
     // The template may switch to game-based mode (GB-01).
-    if (template.modeIndex != 1) timerData.reset();
+    if (GameMode.enabled && template.modeIndex != 1) timerData.reset();
   }
 
   @override
@@ -146,36 +146,36 @@ class _SessionsPageState extends State<SessionsPage> {
           Text(l10n.sessions_round_mode, style: AppTypography.cardTitle),
           const SizedBox(height: AppSpacing.md),
 
-          // Toggle buttons
-          Row(
-            children: [
-              _ModeToggle(
-                label: l10n.sessions_game_based,
-                isSelected: !_isTimeBased,
-                onTap: () => _toggleMode(false),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              _ModeToggle(
-                label: l10n.sessions_time_based,
-                isSelected: _isTimeBased,
-                onTap: () => _toggleMode(true),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-
-          // Description
-          Text(
-            _isTimeBased
-                ? l10n.sessions_time_based_description(
-                    PersistentSetting.instance
-                        .getGameDuration()
-                        .toDisplayString(),
-                  )
-                : l10n.sessions_game_based_description,
-            style: AppTypography.body.copyWith(color: AppColors.textMuted),
-          ),
-          const SizedBox(height: AppSpacing.lg),
+          // Toggle buttons and description (hidden in the release build).
+          if (GameMode.enabled) ...[
+            Row(
+              children: [
+                _ModeToggle(
+                  label: l10n.sessions_game_based,
+                  isSelected: !_isTimeBased,
+                  onTap: () => _toggleMode(false),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                _ModeToggle(
+                  label: l10n.sessions_time_based,
+                  isSelected: _isTimeBased,
+                  onTap: () => _toggleMode(true),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _isTimeBased
+                  ? l10n.sessions_time_based_description(
+                      PersistentSetting.instance
+                          .getGameDuration()
+                          .toDisplayString(),
+                    )
+                  : l10n.sessions_game_based_description,
+              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
 
           // Duration control (time-based only)
           if (_isTimeBased) ...[
@@ -262,11 +262,16 @@ class _SessionsPageState extends State<SessionsPage> {
                           ),
                         ),
                         Text(
-                          l10n.sessions_template_summary(
-                            template.courts,
-                            template.modeIndex == 1 ? 'timed' : 'game',
-                            template.capacity,
-                          ),
+                          GameMode.enabled
+                              ? l10n.sessions_template_summary(
+                                  template.courts,
+                                  template.modeIndex == 1 ? 'timed' : 'game',
+                                  template.capacity,
+                                )
+                              : l10n.sessions_template_summary_no_mode(
+                                  template.courts,
+                                  template.capacity,
+                                ),
                           style: AppTypography.helper.copyWith(
                             color: AppColors.textMuted,
                           ),

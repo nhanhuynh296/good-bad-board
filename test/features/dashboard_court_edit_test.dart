@@ -209,6 +209,8 @@ void main() {
       for (final player in [...gameData.checkedInPlayers.values]) {
         gameData.removePlayerFromCourt(player);
       }
+      GameMode.enabled = true;
+      addTearDown(() => GameMode.enabled = false);
       await PersistentSetting.instance.setGameType(GameType.gameBased);
       await tester.pump(const Duration(seconds: 2));
 

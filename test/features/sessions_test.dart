@@ -30,12 +30,17 @@ void main() {
   late RepositorySandbox sandbox;
 
   setUp(() async {
+    // Game-based mode is hidden in the release build; these tests cover it.
+    GameMode.enabled = true;
     mockPreferences({});
     await PersistentSetting.instance.initialize();
     sandbox = await RepositorySandbox.setUp('sessions_test');
   });
 
-  tearDown(() => sandbox.tearDown());
+  tearDown(() {
+    GameMode.enabled = false;
+    sandbox.tearDown();
+  });
 
   group('SessionsPage round mode', () {
     // ---------------------------------------------------------------------------

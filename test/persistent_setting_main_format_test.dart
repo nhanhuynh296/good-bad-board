@@ -9,6 +9,7 @@ import 'support/prefs_sandbox.dart';
 /// read those keys, or every club loses its settings on upgrade.
 void main() {
   setUp(() async {
+    GameMode.enabled = true;
     mockPreferences({
       'gameType': 'gameBased',
       'gameDuration': 2100,
@@ -18,6 +19,8 @@ void main() {
     });
     await PersistentSetting.instance.initialize();
   });
+
+  tearDown(() => GameMode.enabled = false);
 
   test('should_read_game_type_written_by_main', () {
     expect(PersistentSetting.instance.getGameType(), GameType.gameBased);

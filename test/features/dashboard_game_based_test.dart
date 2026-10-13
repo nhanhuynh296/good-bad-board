@@ -26,11 +26,16 @@ void main() {
   }
 
   setUp(() async {
+    // Game-based mode is hidden in the release build; these tests cover it.
+    GameMode.enabled = true;
     await setMode('gameBased');
     sandbox = await RepositorySandbox.setUp('dashboard_game_based_test');
   });
 
-  tearDown(() => sandbox.tearDown());
+  tearDown(() {
+    GameMode.enabled = false;
+    sandbox.tearDown();
+  });
 
   Widget wrap(GameData gameData, TimerData timerData) => MultiProvider(
     providers: [
