@@ -163,4 +163,48 @@ void main() {
       isNull,
     );
   });
+
+  group('F2 template Load reaches the countdown', () {
+    Future<void> loadTemplate(
+      WidgetTester tester,
+      GameData gameData,
+      Duration duration,
+    ) async {
+      await tester.runAsync(
+        () =>
+            gameData.saveTemplate('Short', GameType.timeBased, duration, 16, 4),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Load'));
+      await tester.pump();
+    }
+
+    testWidgets('should_set_timer_duration_when_template_loads', (
+      tester,
+    ) async {
+      mockPreferences({});
+      await PersistentSetting.instance.initialize();
+      final gameData = GameData();
+      final timer = TimerData();
+      await tester.pumpWidget(wrap(gameData, timer));
+
+      await loadTemplate(tester, gameData, const Duration(minutes: 5));
+
+      expect(timer.duration, const Duration(minutes: 5));
+    });
+
+    testWidgets('should_set_remaining_when_template_loads_and_timer_stopped', (
+      tester,
+    ) async {
+      mockPreferences({});
+      await PersistentSetting.instance.initialize();
+      final gameData = GameData();
+      final timer = TimerData();
+      await tester.pumpWidget(wrap(gameData, timer));
+
+      await loadTemplate(tester, gameData, const Duration(minutes: 5));
+
+      expect(timer.remainingLabel, '05:00');
+    });
+  });
 }

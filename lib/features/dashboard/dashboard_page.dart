@@ -5,12 +5,18 @@ import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/dashboard/dashboard.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
+import 'package:good_bad_board/l10n/skill_tier_l10n.dart';
+import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:provider/provider.dart';
+
+/// Court-count range, the same as on the Sessions tab.
+const int _minCourts = 1;
+const int _maxCourts = 8;
 
 /// The Dashboard tab — court grid, waitlist, stat strip, and all game
 /// interactions (place/swap, re-roll, make game, save).
@@ -118,6 +124,8 @@ class _DashboardPageState extends State<DashboardPage> {
     }
     try {
       gameData.makeSingleCourt(courtIndex);
+      // The re-roll moved players, so a pick may no longer be where it was.
+      setState(() => _selectedPlayerId = null);
     } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -273,6 +281,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _onCourtCountChanged(int delta) async {
     final gameData = context.read<GameData>();
+    final target = gameData.numberOfCourt + delta;
+    // Same range as the Sessions tab (1 to 8).
+    if (target < _minCourts || target > _maxCourts) return;
     // A new court count reshuffles the lineup (SESS-04) — warn first when
     // that would throw away a running round.
     if (_isRoundRunning && gameData.wouldReshuffleLineup) {
@@ -284,7 +295,9 @@ class _DashboardPageState extends State<DashboardPage> {
       );
       if (!confirmed || !mounted) return;
     }
-    gameData.setNumberOfCourt(gameData.numberOfCourt + delta);
+    gameData.setNumberOfCourt(target);
+    // The courts changed under the pick, so the hint would be out of date.
+    setState(() => _selectedPlayerId = null);
   }
 
   @override
@@ -315,10 +328,12 @@ class _DashboardPageState extends State<DashboardPage> {
           .map((p) => p.elo.index)
           .toList();
       final avg = allElos.reduce((a, b) => a + b) / allElos.length;
-      // Map back to closest Elo name
+      // Map back to the closest Elo, then show its tier name (as the courts do)
       const eloValues = Elo.values;
       final closest = eloValues[(avg.round()).clamp(0, eloValues.length - 1)];
-      avgLevel = closest.toDisplayName();
+      avgLevel = closest.skillTier.localizedLabel(
+        AppLocalizations.of(context)!,
+      );
     } else {
       avgLevel = '—';
     }
@@ -327,7 +342,7 @@ class _DashboardPageState extends State<DashboardPage> {
     String avgLevelGap;
     final gaps = visibleMatches
         .where((g) => g.players.length >= 2)
-        .map((g) => g.eloGap())
+        .map((g) => g.tierGap())
         .toList();
     if (gaps.isNotEmpty) {
       final avgGap = gaps.reduce((a, b) => a + b) / gaps.length;
@@ -551,7 +566,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _CourtDisplay(
           courtNumber: i + 1,
           players: game.players,
-          spreadLevel: game.eloGap(),
+          spreadLevel: game.tierGap(),
         ),
       );
     }

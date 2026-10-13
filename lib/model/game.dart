@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:uuid/uuid.dart';
@@ -51,6 +54,16 @@ abstract class Game with _$Game {
     if (players.length < 2) return 0;
     final sortedPlayers = players.sortedBy((player) => player.elo.index);
     return (sortedPlayers.last.elo.index - sortedPlayers.first.elo.index).abs();
+  }
+
+  /// Gap between the highest and lowest [SkillTier] on the court (0 to 3).
+  ///
+  /// For display only (UAT glossary: "level gap"). Session logs store
+  /// [eloGap], which analytics divides by 2, so do not store this value.
+  int tierGap() {
+    if (players.length < 2) return 0;
+    final tiers = players.map((player) => player.elo.skillTier.index);
+    return tiers.reduce(max) - tiers.reduce(min);
   }
 
   Iterable<int> elos() {

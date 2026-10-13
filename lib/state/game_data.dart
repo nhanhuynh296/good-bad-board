@@ -127,10 +127,25 @@ class GameData extends ChangeNotifier {
       if (_stagedLineup != null) _stagedLineup = _computeFreshLineup();
       return;
     }
-    // Nothing to redistribute. Keep the pre-made round in step with the grid,
-    // so every court the organizer can see is one they can drop a player onto.
+    // Nothing to redistribute. A court beyond the new count leaves the grid,
+    // so its players go back to the waitlist (they are no longer on a court).
+    _dropCourtsBeyondCount();
+    // Keep the pre-made round in step with the grid, so every court the
+    // organizer can see is one they can drop a player onto.
     final staged = _stagedLineup;
     if (staged != null) _padToCourtCount(staged);
+  }
+
+  /// Removes the courts beyond [numberOfCourt] from both rounds.
+  void _dropCourtsBeyondCount() {
+    if (stagingMatches.length > numberOfCourt) {
+      stagingMatches = stagingMatches.take(numberOfCourt).toList();
+      _prunePlayingGameIds();
+    }
+    final staged = _stagedLineup;
+    if (staged != null && staged.length > numberOfCourt) {
+      _stagedLineup = staged.take(numberOfCourt).toList();
+    }
   }
 
   final List<GameContainer> history = [];
@@ -457,8 +472,15 @@ class GameData extends ChangeNotifier {
   /// Refresh one single court with new players.
   ///
   /// Applies to whichever round is on screen — see [visibleMatches].
-  void makeSingleCourt(int courtIndex) =>
-      _onLineup(visibleMatches, () => _makeSingleCourt(courtIndex));
+  void makeSingleCourt(int courtIndex) {
+    // Only a re-roll on the live round counts (F6); the pre-made next round
+    // is a plan, not a played round.
+    final onLiveRound = identical(visibleMatches, stagingMatches);
+    _onLineup(
+      visibleMatches,
+      () => _makeSingleCourt(courtIndex, countsAsReroll: onLiveRound),
+    );
+  }
 
   /// Whether re-rolling the court at [courtIndex] can change anything.
   ///
@@ -499,7 +521,7 @@ class GameData extends ChangeNotifier {
   static bool _isLowerGap((int, int) a, (int, int) b) =>
       a.$1 != b.$1 ? a.$1 < b.$1 : a.$2 < b.$2;
 
-  void _makeSingleCourt(int courtIndex) {
+  void _makeSingleCourt(int courtIndex, {required bool countsAsReroll}) {
     if (courtIndex >= numberOfCourt || courtIndex < 0) {
       throw Exception('Invalid court index');
     }
@@ -524,12 +546,12 @@ class GameData extends ChangeNotifier {
     // The court now holds a brand-new Game, so any earlier PLAYING flag for
     // this court is gone — re-rolling is how a game-based round ends.
     _prunePlayingGameIds();
-    _sessionRerollCount++;
+    if (countsAsReroll) _sessionRerollCount++;
     notifyListeners();
   }
 
   Future<void> saveCurrentGame() async {
-    if (stagingMatches.isEmpty) throw Exception("No game to save");
+    if (!hasAnyCourtLineup) throw Exception("No game to save");
     final invalidGames = stagingMatches.where(
       (match) => match.playerIds.isNotEmpty && !match.isPlayable(),
     );
@@ -540,7 +562,12 @@ class GameData extends ChangeNotifier {
     }
     await _logRound(stagingMatches);
 
-    stagingMatches = List.empty(growable: false);
+    // Every court stays on the grid, empty, so a slot tap after Save finds a
+    // court. The pre-made round was built for the saved lineup: drop it.
+    stagingMatches = [];
+    _padToCourtCount(stagingMatches);
+    _stagedLineup = null;
+    _roundView = RoundView.current;
     _prunePlayingGameIds();
     notifyListeners();
   }

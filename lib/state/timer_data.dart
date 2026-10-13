@@ -97,33 +97,39 @@ class TimerData extends ChangeNotifier {
 
   /// Recalculates the countdown against a new duration.
   ///
+  /// A timer that is not running shows the new duration as its remaining
+  /// time at once, so the next start counts down from it.
+  ///
   /// If the new duration is shorter than the time already elapsed,
   /// remaining is clamped to zero and the timer fires immediately on
   /// the next tick (SESS-02).
   void updateDuration(Duration newDuration) {
-    if (newDuration == duration) return;
+    if (newDuration == duration && isRunning) return;
     final oldDuration = duration;
     duration = newDuration;
 
-    // Recalculate remaining: if running, adjust remaining proportionally
-    // (or clamp if new duration < elapsed).
-    if (isRunning) {
-      final elapsed = oldDuration - _remaining;
-      if (elapsed >= newDuration) {
-        // New duration is shorter than time already elapsed — expire now.
-        _remaining = Duration.zero;
-        _timer?.cancel();
-        _timer = null;
-        isRunning = false;
-        notifyListeners();
-        _onExpired?.call();
-        return;
-      }
-      _remaining = newDuration - elapsed;
+    if (!isRunning) {
+      _remaining = newDuration;
+      notifyListeners();
+      return;
+    }
+
+    // Running: keep the elapsed time (or expire now if the new duration is
+    // shorter than the time already elapsed).
+    final elapsed = oldDuration - _remaining;
+    if (elapsed >= newDuration) {
+      _remaining = Duration.zero;
       _timer?.cancel();
       _timer = null;
-      _startTicking();
+      isRunning = false;
+      notifyListeners();
+      _onExpired?.call();
+      return;
     }
+    _remaining = newDuration - elapsed;
+    _timer?.cancel();
+    _timer = null;
+    _startTicking();
     notifyListeners();
   }
 

@@ -95,6 +95,8 @@ class _SessionsPageState extends State<SessionsPage> {
     final timerData = context.read<TimerData>();
     if (!await _confirmReshuffle(gameData)) return;
     gameData.loadTemplate(template);
+    // The new round length must reach the countdown, running or not (F2).
+    timerData.updateDuration(template.duration);
     // The template may switch to game-based mode (GB-01).
     if (GameMode.enabled && template.modeIndex != 1) timerData.reset();
   }
