@@ -10,7 +10,11 @@ import 'package:good_bad_board/state/persistent_setting.dart';
 ///
 /// Implements SET-02, SET-04 and SET-05 from the UAT spec.
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, this.showSignupPreview = false});
+
+  /// SET-03 is hidden for this release: the signup page has no way back on
+  /// the desktop build. The /register route stays; tests turn this on.
+  final bool showSignupPreview;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +32,7 @@ class SettingsPage extends StatelessWidget {
               ListenableBuilder(
                 listenable: PlayerRepository.instance.listenable,
                 builder: (context, _) => _MembershipCard(
+                  showSignupPreview: showSignupPreview,
                   totalMembers: PlayerRepository.instance
                       .listedPlayers()
                       .length,
@@ -84,9 +89,13 @@ class _LanguageCard extends StatelessWidget {
 }
 
 class _MembershipCard extends StatelessWidget {
-  const _MembershipCard({required this.totalMembers});
+  const _MembershipCard({
+    required this.totalMembers,
+    required this.showSignupPreview,
+  });
 
   final int totalMembers;
+  final bool showSignupPreview;
 
   @override
   Widget build(BuildContext context) {
@@ -104,17 +113,19 @@ class _MembershipCard extends StatelessWidget {
           Text('$totalMembers', style: AppTypography.statValue),
           const SizedBox(height: AppSpacing.xl),
 
-          GestureDetector(
-            onTap: () => context.push('/register'),
-            child: Text(
-              l10n.settings_preview_signup,
-              style: AppTypography.body.copyWith(
-                color: AppColors.accentPrimary,
-                fontWeight: FontWeight.w600,
+          if (showSignupPreview) ...[
+            GestureDetector(
+              onTap: () => context.push('/register'),
+              child: Text(
+                l10n.settings_preview_signup,
+                style: AppTypography.body.copyWith(
+                  color: AppColors.accentPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
+          ],
 
           // ── Level calibration note (SET-04) ─────────
           Text(

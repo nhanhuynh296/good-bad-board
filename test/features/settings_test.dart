@@ -61,11 +61,22 @@ void main() {
     });
   });
 
-  group('Signup preview', () {
-    testWidgets('should display "Preview signup page →" link text', (
+  group('Signup preview (SET-03, hidden for this release)', () {
+    testWidgets('should_hide_signup_preview_link_by_default', (tester) async {
+      await tester.pumpWidget(createTestWidget());
+      expect(find.text('Preview signup page →'), findsNothing);
+    });
+
+    testWidgets('should_show_signup_preview_link_when_flag_is_on', (
       tester,
     ) async {
-      await tester.pumpWidget(createTestWidget());
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: SettingsPage(showSignupPreview: true)),
+        ),
+      );
       expect(find.text('Preview signup page →'), findsOneWidget);
     });
   });
