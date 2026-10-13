@@ -40,7 +40,7 @@
   "@analytics_court_utilization": {
     "description": "KPI tile label and chart title: share of court slots filled"
   },
-  "analytics_courts_absorb_overflow": "{count, plural, =1{Court {courts} regularly absorb overflow with wider gaps.} other{Courts {courts} regularly absorb overflow with wider gaps.}}",
+  "analytics_courts_absorb_overflow": "{count, plural, =1{Court {courts} regularly absorbs overflow with wider gaps.} other{Courts {courts} regularly absorb overflow with wider gaps.}}",
   "@analytics_courts_absorb_overflow": {
     "description": "Per-court fairness note; courts is a comma-separated list of court numbers, count is how many",
     "placeholders": {
@@ -61,7 +61,7 @@
       }
     }
   },
-  "analytics_joined_sessions": "Joined {date} · {count} sessions",
+  "analytics_joined_sessions": "{count, plural, =1{Joined {date} · 1 session} other{Joined {date} · {count} sessions}}",
   "@analytics_joined_sessions": {
     "description": "New player's join date (pre-formatted) and sessions attended",
     "placeholders": {
@@ -287,7 +287,7 @@
   "@analytics_session_history": {
     "description": "Card title: list of logged games"
   },
-  "analytics_stagnation": "{count} players flat 6+ sessions",
+  "analytics_stagnation": "{count, plural, =1{1 player flat 6+ sessions} other{{count} players flat 6+ sessions}}",
   "@analytics_stagnation": {
     "description": "Level distribution warning: number of players whose tier has not changed in their last 6 sessions",
     "placeholders": {
@@ -599,7 +599,7 @@
   },
   "players_diversity": "Diversity",
   "@players_diversity": {
-    "description": "Stat label: number of distinct partners played with"
+    "description": "Stat label: percent of possible partners played with (distinct partners over possible partners)"
   },
   "players_duplicate_name_in_file": "Duplicate name found in file",
   "@players_duplicate_name_in_file": {
