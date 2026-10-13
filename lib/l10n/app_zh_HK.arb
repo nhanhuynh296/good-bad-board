@@ -145,6 +145,7 @@
   "players_scan_checked_in": "{name} 已簽到",
   "players_scan_already_checked_in": "{name} 已經簽到",
   "players_scan_no_match": "冇 ID 為 {id} 嘅球員",
+  "players_scan_duplicate_id": "{count, plural, other{ID {id} 有 {count} 位球員使用}}",
   "players_scan_disabled": "{name} 已停用，無法簽到",
   "players_search_placeholder": "搜尋球員…",
   "players_select_elo": "請選擇等級分",

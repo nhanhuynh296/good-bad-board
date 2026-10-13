@@ -744,6 +744,18 @@
       }
     }
   },
+  "players_scan_duplicate_id": "{count, plural, =1{ID {id} is used by 1 player} other{ID {id} is used by {count} players}}",
+  "@players_scan_duplicate_id": {
+    "description": "Toast when more than one player has the scanned sign-in ID",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "players_scan_disabled": "{name} is disabled — cannot check in",
   "@players_scan_disabled": {
     "description": "Toast when a scanned sign-in ID belongs to a Disabled player",

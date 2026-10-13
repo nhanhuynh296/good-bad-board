@@ -20,6 +20,7 @@ class AppSearchInput extends StatelessWidget {
     this.focusNode,
     this.onChanged,
     this.onSubmitted,
+    this.onTapOutside,
     this.placeholder,
   });
 
@@ -29,6 +30,11 @@ class AppSearchInput extends StatelessWidget {
 
   /// Called when the user sends Enter (or the keyboard's done action).
   final ValueChanged<String>? onSubmitted;
+
+  /// Called when a pointer goes down outside the field. When set, the field
+  /// no longer gives up focus on its own (the desktop default); the caller
+  /// decides what happens to focus.
+  final TapRegionCallback? onTapOutside;
   final String? placeholder;
 
   static const _enabledBorder = OutlineInputBorder(
@@ -59,6 +65,7 @@ class AppSearchInput extends StatelessWidget {
       focusNode: focusNode,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
+      onTapOutside: onTapOutside,
       decoration: InputDecoration(
         hintText:
             placeholder ?? AppLocalizations.of(context)!.common_search_players,

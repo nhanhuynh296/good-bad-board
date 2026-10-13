@@ -468,7 +468,9 @@ Then a progress bar at the top shows checked-in ÷ session capacity, and text re
 Given a player is not checked in and the session is below capacity
 When the organizer taps their row (the row tap is the check-in toggle)
 Then the player becomes checked in; if any court has fewer than 4 occupants, they are placed on the
-first such court (by court index order); otherwise they are added to the waitlist.
+first such court (by court index order); otherwise they are added to the waitlist. In time mode a
+court with no players (for example after Save) is skipped, so a late player goes to the waitlist
+instead of standing alone on a court.
 
 **CHK-03** — At-capacity block
 Given checked-in count already equals session capacity
@@ -509,7 +511,9 @@ navigator, so closing from the caller removes the tab and leaves a blank screen.
 
 **PLY-14** — Barcode scan check-in
 Given the Players tab opens
-Then the search field is focused, so a barcode scanner can type into it.
+Then the search field is focused, so a barcode scanner can type into it. The field gets focus again
+after a row tap, a level chip, More, Add, a closed profile and a closed dialog, unless another text
+field (such as the Sign In ID field) has focus. A row tap also clears a half-typed query.
 When an ID is typed and Enter is sent (a scanner does this), and exactly one player has that exact
 sign-in ID (trimmed, case-insensitive)
 Then that player is checked in (the capacity and Disabled rules apply), a SnackBar reads "{name}
@@ -522,6 +526,11 @@ When the session is at capacity
 Then the existing capacity message shows, and the field clears.
 When no player has that exact ID
 Then the text stays and is selected, and a SnackBar reads "No player with ID {id}".
+When more than one listed player has that ID (duplicates already saved)
+Then nobody is checked in, the text stays and is selected, and a SnackBar reads "ID {id} is used by
+{count} players".
+When Enter is sent while an IME composition is active
+Then nothing happens (Enter confirms the composition). Two fast scans in a row are both handled.
 When the field is empty and Enter is sent
 Then nothing happens.
 
@@ -612,7 +621,7 @@ court.
 When a time-based round is running and a court holds players, a "Discard the current round?"
 confirmation shows first, with a "Reshuffle" button; Cancel keeps everything, including the court
 count. When no court holds players, or fewer than 4 players are checked in, nothing is generated
-(the courts are only padded); when the count is reduced, players on the removed courts return to the waitlist. A staged next round is planned again for the new count. A re-roll or a court-count change clears the selected player.
+(the courts are only padded, and a court added to the grid gets an empty slot, also after a Save or a template load); when the count is reduced, players on the removed courts return to the waitlist. A staged next round is planned again for the new count. A re-roll or a court-count change clears the selected player.
 
 **SESS-05** — Save a session template
 Given the organizer enters a non-blank template name and taps "Save current"

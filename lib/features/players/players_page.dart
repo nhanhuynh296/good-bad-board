@@ -47,9 +47,6 @@ class _PlayersPageState extends State<PlayersPage> {
   /// alive, so a change of this value is how the page knows it was opened.
   bool _tabActive = false;
 
-  /// When the last Enter was handled, so the Enter key and the keyboard's
-  /// done action do not scan the same text twice.
-  DateTime? _lastEnterAt;
   Set<Elo> _eloFilters = {};
 
   String get _query => _searchController.text.toUpperCase();
@@ -101,12 +98,39 @@ class _PlayersPageState extends State<PlayersPage> {
     if (active == _tabActive) return;
     _tabActive = active;
     if (active) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _tabActive) _searchFocus.requestFocus();
-      });
+      _focusSearchOnOpen(tries: 2);
     } else {
       _searchFocus.unfocus();
     }
+  }
+
+  /// Focuses the search field after the frame. Asked again on the next frame
+  /// [tries] times, since the tap that opened the tab can move focus after
+  /// the first ask.
+  void _focusSearchOnOpen({required int tries}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_tabActive) return;
+      final primary = FocusManager.instance.primaryFocus;
+      if (!_searchFocus.hasFocus && primary?.context?.widget is! EditableText) {
+        _searchFocus.requestFocus();
+      }
+      if (tries > 1) _focusSearchOnOpen(tries: tries - 1);
+    });
+    WidgetsBinding.instance.scheduleFrame();
+  }
+
+  /// Gives the search field focus again, so the next scan has somewhere to
+  /// go. Runs after the frame, when a closed dialog or profile has given up
+  /// its focus. It does nothing when the tab is hidden, when another text
+  /// field (the Sign In ID field) has focus, or when a dialog has focus.
+  void _refocusSearch() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_tabActive || _searchFocus.hasFocus) return;
+      final primary = FocusManager.instance.primaryFocus;
+      if (primary?.context?.widget is EditableText) return;
+      if (primary != null && !FocusScope.of(context).hasFocus) return;
+      _searchFocus.requestFocus();
+    });
   }
 
   @override
@@ -159,6 +183,7 @@ class _PlayersPageState extends State<PlayersPage> {
         context: context,
         builder: (_) => const _ConfirmDisableDialog(),
       );
+      _refocusSearch();
       if (confirmed != true) return;
     }
     gameData.setMembership(player, next);
@@ -172,17 +197,23 @@ class _PlayersPageState extends State<PlayersPage> {
       context: context,
       builder: (_) => _ConfirmDeleteDialog(playerName: player.name()),
     );
+    _refocusSearch();
     if (confirmed != true) return;
 
     await gameData.deletePlayer(player);
     if (!mounted) return;
     setState(() => _profileOpenId = null);
+    _refocusSearch();
     context.showToast(
       AppLocalizations.of(context)!.players_deleted_toast(player.name()),
     );
   }
 
   void _toggleCheckedIn(Player player, GameData gameData) {
+    // A half-typed query is stale once the organizer picks a row.
+    if (_searchController.text.isNotEmpty) {
+      setState(_searchController.clear);
+    }
     if (gameData.isPlayerCheckedIn(player)) {
       gameData.checkOutPlayer(player);
     } else if (!gameData.checkInPlayer(player)) {
@@ -208,14 +239,6 @@ class _PlayersPageState extends State<PlayersPage> {
   /// for the next scan. With no match the text stays, selected, so the next
   /// scan replaces it.
   void _onSearchSubmitted() {
-    final now = DateTime.now();
-    final last = _lastEnterAt;
-    if (last != null &&
-        now.difference(last) < const Duration(milliseconds: 150)) {
-      return;
-    }
-    _lastEnterAt = now;
-
     final typed = _searchController.text.trim();
     if (typed.isEmpty) return;
 
@@ -228,7 +251,11 @@ class _PlayersPageState extends State<PlayersPage> {
         .toList();
 
     if (matches.length != 1) {
-      _showSnackBar(l10n.players_scan_no_match(typed));
+      _showSnackBar(
+        matches.isEmpty
+            ? l10n.players_scan_no_match(typed)
+            : l10n.players_scan_duplicate_id(typed, matches.length),
+      );
       _searchController.selection = TextSelection(
         baseOffset: 0,
         extentOffset: _searchController.text.length,
@@ -338,6 +365,7 @@ class _PlayersPageState extends State<PlayersPage> {
           searchController: _searchController,
           searchFocus: _searchFocus,
           onSearchSubmitted: _onSearchSubmitted,
+          onTapOutside: _refocusSearch,
           showImport: widget.showImportButton,
           onSearchChanged: () => setState(() {}),
           eloFilters: _eloFilters,
@@ -458,6 +486,7 @@ class _PlayersPageState extends State<PlayersPage> {
     setState(() {
       _profileOpenId = _profileOpenId == playerId ? null : playerId;
     });
+    _refocusSearch();
   }
 
   void _onEloFilterToggled(Elo elo, bool selected) {
@@ -486,6 +515,7 @@ class _PlayersPageState extends State<PlayersPage> {
       context: context,
       builder: (_) => const AddPlayerDialog(),
     );
+    _refocusSearch();
     if (result == null) return;
 
     await PlayerRepository.instance.add(result);
@@ -553,6 +583,7 @@ class _PlayersPageState extends State<PlayersPage> {
       builder: (_) =>
           PlayerBulkEdit(players: newPlayers.toList(growable: false)),
     );
+    _refocusSearch();
     if (confirmedSelection != true) return;
     if (!mounted) return;
 
@@ -656,6 +687,7 @@ class _SearchAndActionsBar extends StatelessWidget {
     required this.searchController,
     required this.searchFocus,
     required this.onSearchSubmitted,
+    required this.onTapOutside,
     required this.showImport,
     required this.onSearchChanged,
     required this.eloFilters,
@@ -667,6 +699,7 @@ class _SearchAndActionsBar extends StatelessWidget {
   final TextEditingController searchController;
   final FocusNode searchFocus;
   final VoidCallback onSearchSubmitted;
+  final VoidCallback onTapOutside;
   final bool showImport;
   final VoidCallback onSearchChanged;
   final Set<Elo> eloFilters;
@@ -689,6 +722,11 @@ class _SearchAndActionsBar extends StatelessWidget {
               // as the key, others as the done action; the page handles both.
               child: Focus(
                 onKeyEvent: (_, event) {
+                  // Enter confirms an IME composition; it is not a scan.
+                  final composing = searchController.value.composing;
+                  if (composing.isValid && !composing.isCollapsed) {
+                    return KeyEventResult.ignored;
+                  }
                   final isEnter =
                       event.logicalKey == LogicalKeyboardKey.enter ||
                       event.logicalKey == LogicalKeyboardKey.numpadEnter;
@@ -702,6 +740,7 @@ class _SearchAndActionsBar extends StatelessWidget {
                   controller: searchController,
                   focusNode: searchFocus,
                   onSubmitted: (_) => onSearchSubmitted(),
+                  onTapOutside: (_) => onTapOutside(),
                   onChanged: (_) => onSearchChanged(),
                   placeholder: l10n.players_search_placeholder,
                 ),

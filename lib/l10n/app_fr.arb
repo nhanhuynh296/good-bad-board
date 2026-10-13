@@ -145,6 +145,7 @@
   "players_scan_checked_in": "{name} est enregistré(e)",
   "players_scan_already_checked_in": "{name} est déjà présent(e)",
   "players_scan_no_match": "Aucun joueur avec l'identifiant {id}",
+  "players_scan_duplicate_id": "{count, plural, =1{L'identifiant {id} est utilisé par 1 joueur} other{L'identifiant {id} est utilisé par {count} joueurs}}",
   "players_scan_disabled": "{name} est désactivé(e) — enregistrement impossible",
   "players_search_placeholder": "Rechercher des joueurs…",
   "players_select_elo": "Veuillez choisir un niveau Elo",

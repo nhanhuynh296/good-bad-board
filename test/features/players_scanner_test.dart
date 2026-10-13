@@ -718,4 +718,190 @@ void main() {
       expect(find.text('LEVEL PROGRESSION'), findsNothing);
     });
   });
+
+  group('R1 — scanner keeps focus after clicks', () {
+    // Flutter only unfocuses a text field on an outside tap on desktop.
+    final desktop = TargetPlatformVariant.only(TargetPlatform.windows);
+
+    /// A scanner types into whatever has focus, then sends Enter. This
+    /// sets the text and sends the key, so a field without focus gets nothing.
+    Future<void> scanWithKeys(WidgetTester tester, String id) async {
+      editable(tester).controller.text = id;
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+    }
+
+    bool searchHasFocus(WidgetTester tester) =>
+        editable(tester).focusNode.hasFocus;
+
+    testWidgets('should_refocus_the_search_after_a_row_tap', (tester) async {
+      await pumpPage(tester, players: [_player('Alice', Elo.b1)]);
+
+      await tester.tap(find.text('Alice Test'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(searchHasFocus(tester), isTrue);
+    }, variant: desktop);
+
+    testWidgets('should_check_in_by_scan_after_a_row_tap', (tester) async {
+      final bob = _player('Bob', Elo.a2, signInId: 'B200');
+      await pumpPage(tester, players: [_player('Alice', Elo.b1), bob]);
+      await tester.tap(find.text('Alice Test'));
+      await tester.pump();
+      await tester.pump();
+
+      await scanWithKeys(tester, 'B200');
+
+      expect(gameData.isPlayerCheckedIn(bob), isTrue);
+    }, variant: desktop);
+
+    testWidgets('should_clear_a_stale_query_on_a_row_tap', (tester) async {
+      await pumpPage(tester, players: [_player('Alice', Elo.b1)]);
+      await tester.enterText(searchField, 'Ali');
+      await tester.pump();
+
+      await tester.tap(find.text('Alice Test'));
+      await tester.pump();
+
+      expect(editable(tester).controller.text, isEmpty);
+    }, variant: desktop);
+
+    testWidgets('should_refocus_the_search_after_a_level_chip_tap', (
+      tester,
+    ) async {
+      await pumpPage(tester, players: [_player('Alice', Elo.b1)]);
+
+      await tester.tap(find.text(Elo.b1.toDisplayName()).first);
+      await tester.pump();
+      await tester.pump();
+
+      expect(searchHasFocus(tester), isTrue);
+    }, variant: desktop);
+
+    testWidgets('should_refocus_the_search_after_a_profile_is_closed', (
+      tester,
+    ) async {
+      await pumpPage(tester, players: [_player('Alice', Elo.b1)]);
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+
+      expect(searchHasFocus(tester), isTrue);
+    }, variant: desktop);
+
+    testWidgets('should_scan_after_a_profile_is_opened_and_closed', (
+      tester,
+    ) async {
+      final alice = _player('Alice', Elo.b1, signInId: 'A100');
+      await pumpPage(tester, players: [alice]);
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+
+      await scanWithKeys(tester, 'A100');
+
+      expect(gameData.isPlayerCheckedIn(alice), isTrue);
+    }, variant: desktop);
+
+    testWidgets('should_refocus_the_search_after_the_add_dialog_closes', (
+      tester,
+    ) async {
+      await pumpPage(tester, players: [_player('Alice', Elo.b1)]);
+      await tester.tap(find.text('Add'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('add-player-cancel')));
+      await tester.pumpAndSettle();
+
+      expect(searchHasFocus(tester), isTrue);
+    }, variant: desktop);
+
+    testWidgets('should_not_steal_focus_while_the_add_dialog_is_open', (
+      tester,
+    ) async {
+      await pumpPage(tester, players: [_player('Alice', Elo.b1)]);
+
+      await tester.tap(find.text('Add'));
+      await tester.pumpAndSettle();
+
+      expect(searchHasFocus(tester), isFalse);
+    }, variant: desktop);
+
+    testWidgets('should_not_steal_focus_from_the_sign_in_id_field', (
+      tester,
+    ) async {
+      await pumpPage(tester, players: [_player('Alice', Elo.b1)]);
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('player-sign-in-id-field')));
+      await tester.pumpAndSettle();
+
+      expect(searchHasFocus(tester), isFalse);
+    });
+  });
+
+  group('R4 — Enter handling', () {
+    testWidgets('should_check_in_both_players_of_two_fast_scans', (
+      tester,
+    ) async {
+      final alice = _player('Alice', Elo.b1, signInId: 'A100');
+      final bob = _player('Bob', Elo.a2, signInId: 'B200');
+      await pumpPage(tester, players: [alice, bob]);
+
+      await scan(tester, 'A100');
+      await scan(tester, 'B200');
+
+      expect(
+        [alice, bob].map(gameData.isPlayerCheckedIn),
+        everyElement(isTrue),
+      );
+    });
+
+    testWidgets('should_ignore_enter_while_an_ime_composition_is_active', (
+      tester,
+    ) async {
+      final alice = _player('Alice', Elo.b1, signInId: 'ni');
+      await pumpPage(tester, players: [alice]);
+      editable(tester).controller.value = const TextEditingValue(
+        text: 'ni',
+        selection: TextSelection.collapsed(offset: 2),
+        composing: TextRange(start: 0, end: 2),
+      );
+      await tester.showKeyboard(searchField);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+
+      expect(gameData.isPlayerCheckedIn(alice), isFalse);
+    });
+  });
+
+  group('R5 — duplicate sign-in IDs', () {
+    testWidgets('should_say_the_id_is_used_by_two_players', (tester) async {
+      await pumpPage(
+        tester,
+        players: [
+          _player('Alice', Elo.b1, signInId: 'D1'),
+          _player('Bob', Elo.a2, signInId: 'd1'),
+        ],
+      );
+
+      await scan(tester, 'D1');
+
+      expect(find.text('ID D1 is used by 2 players'), findsOneWidget);
+    });
+
+    testWidgets('should_check_nobody_in_when_the_id_is_shared', (tester) async {
+      final alice = _player('Alice', Elo.b1, signInId: 'D1');
+      final bob = _player('Bob', Elo.a2, signInId: 'D1');
+      await pumpPage(tester, players: [alice, bob]);
+
+      await scan(tester, 'D1');
+
+      expect(gameData.checkedInCount, 0);
+    });
+  });
 }

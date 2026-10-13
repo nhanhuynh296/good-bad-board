@@ -145,6 +145,7 @@
   "players_scan_checked_in": "{name} 已签到",
   "players_scan_already_checked_in": "{name} 已经签到",
   "players_scan_no_match": "没有 ID 为 {id} 的球员",
+  "players_scan_duplicate_id": "{count, plural, other{ID {id} 被 {count} 名球员使用}}",
   "players_scan_disabled": "{name} 已停用，无法签到",
   "players_search_placeholder": "搜索球员…",
   "players_select_elo": "请选择等级分",
