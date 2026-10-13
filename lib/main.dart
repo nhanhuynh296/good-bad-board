@@ -32,10 +32,14 @@ class AppLoader extends StatefulWidget {
 class _AppLoaderState extends State<AppLoader> {
   late final Future completer;
 
+  /// The data folder, once known. Shown on the error screen.
+  String? _dataPath;
+
   Future<void> loading() async {
     await PersistentSetting.instance.initialize();
 
     final rootDir = await widget.dataRoot.resolve();
+    _dataPath = rootDir;
     PlayerRepository.instance = await PlayerRepository.initialize(
       rootDir: rootDir,
     );
@@ -68,12 +72,46 @@ class _AppLoaderState extends State<AppLoader> {
       child: FutureBuilder(
         future: completer,
         builder: (context, snapshot) {
-          if (snapshot.hasError) debugPrint(snapshot.error!.toString());
+          if (snapshot.hasError) {
+            debugPrint(snapshot.error!.toString());
+            // Show a plain error and write nothing: a half-loaded app
+            // could overwrite good data (PERSISTENCE.md §3.1).
+            return _LoadErrorApp(path: _dataPath ?? '?');
+          }
           if (snapshot.connectionState == ConnectionState.done) {
             return const MyApp();
           }
           return const CircularProgressIndicator();
         },
+      ),
+    );
+  }
+}
+
+/// Shown when start-up loading fails. It has no router and no providers.
+class _LoadErrorApp extends StatelessWidget {
+  const _LoadErrorApp({required this.path});
+
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: lightTheme,
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Builder(
+              builder: (context) => Text(
+                AppLocalizations.of(context)!.app_load_error(path),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

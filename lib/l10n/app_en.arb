@@ -353,6 +353,15 @@
   "@anonymised_player": {
     "description": "Placeholder shown in place of the name of a Player who has been anonymised (deleted)"
   },
+  "app_load_error": "Cannot load the data files. The app did not change anything. Check the data folder: {path}",
+  "@app_load_error": {
+    "description": "Start-up error screen; path is the data folder",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "app_name": "Badminton Game Generator",
   "are_you_sure_you_want_to_delete_this_player": "Are you sure you want to delete this player?",
   "@are_you_sure_you_want_to_delete_this_player": {

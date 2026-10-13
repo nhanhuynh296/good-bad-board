@@ -59,6 +59,7 @@
   "analytics_weeks_short": "{weeks} sem.",
   "analytics_weeks_since_seen": "absent depuis {weeks} sem.",
   "anonymised_player": "Joueur supprimé",
+  "app_load_error": "Impossible de charger les fichiers de données. L'application n'a rien modifié. Vérifiez le dossier de données : {path}",
   "app_name": "Générateur de matchs de badminton",
   "are_you_sure_you_want_to_delete_this_player": "Êtes-vous sûr de vouloir supprimer ce joueur ?",
   "are_you_sure_you_want_to_exit": "Êtes-vous sûr de vouloir quitter ?",

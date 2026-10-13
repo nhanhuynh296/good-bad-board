@@ -59,6 +59,7 @@
   "analytics_weeks_short": "{weeks}週",
   "analytics_weeks_since_seen": "已經 {weeks} 個星期冇出現",
   "anonymised_player": "已刪除球員",
+  "app_load_error": "無法載入資料檔案。應用程式未作任何更改。請檢查資料夾：{path}",
   "app_name": "羽毛球比賽生成器",
   "are_you_sure_you_want_to_delete_this_player": "確定刪除此球員？",
   "are_you_sure_you_want_to_exit": "確定退出？",
