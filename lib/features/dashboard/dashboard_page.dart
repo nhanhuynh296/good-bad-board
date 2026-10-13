@@ -336,72 +336,77 @@ class _DashboardPageState extends State<DashboardPage> {
       avgLevelGap = '—';
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // ── Stat Strip ────────────────────────────────────
-        StatStrip(
-          checkedIn: '${gameData.checkedInPlayers.length}',
-          remainingSlots: '$remainingSlots',
-          waitlist: '${waitlisted.length}',
-          avgLevel: avgLevel,
-          avgLevelGap: avgLevelGap,
-          rerolls: '${gameData.sessionRerollCount}',
-        ),
+    final header = <Widget>[
+      // ── Stat Strip ────────────────────────────────────
+      StatStrip(
+        checkedIn: '${gameData.checkedInPlayers.length}',
+        remainingSlots: '$remainingSlots',
+        waitlist: '${waitlisted.length}',
+        avgLevel: avgLevel,
+        avgLevelGap: avgLevelGap,
+        rerolls: '${gameData.sessionRerollCount}',
+      ),
+      const SizedBox(height: AppSpacing.lg),
+
+      // ── Action Bar (Generate / Save / Courts) ─────────
+      _ActionBar(
+        hasActiveGame: hasActiveGame,
+        numberOfCourt: gameData.numberOfCourt,
+        // Game-based generates every court once, at the start of the
+        // session; after that each court is driven on its own. Neither
+        // button belongs to the pre-made round: it is not the round being
+        // played, and "Cancel next" then "Pre-make next round" replaces it.
+        showGenerate:
+            !isNextRound && (!isGameBased || !gameData.hasAnyCourtLineup),
+        // Game-based saves court by court, so there is no global save.
+        showSave: !isGameBased && !isNextRound,
+        onMakeGame: _onMakeGame,
+        onSaveGame: _onSaveGame,
+        onCourtCountChanged: _onCourtCountChanged,
+      ),
+
+      // ── Round Rotation Bar (time-based only) ──────────
+      if (hasActiveGame && !isGameBased) ...[
         const SizedBox(height: AppSpacing.lg),
-
-        // ── Action Bar (Generate / Save / Courts) ─────────
-        _ActionBar(
-          hasActiveGame: hasActiveGame,
-          numberOfCourt: gameData.numberOfCourt,
-          // Game-based generates every court once, at the start of the
-          // session; after that each court is driven on its own. Neither
-          // button belongs to the pre-made round: it is not the round being
-          // played, and "Cancel next" then "Pre-make next round" replaces it.
-          showGenerate:
-              !isNextRound && (!isGameBased || !gameData.hasAnyCourtLineup),
-          // Game-based saves court by court, so there is no global save.
-          showSave: !isGameBased && !isNextRound,
-          onMakeGame: _onMakeGame,
-          onSaveGame: _onSaveGame,
-          onCourtCountChanged: _onCourtCountChanged,
-        ),
-
-        // ── Round Rotation Bar (time-based only) ──────────
-        if (hasActiveGame && !isGameBased) ...[
-          const SizedBox(height: AppSpacing.lg),
-          _buildRoundRotationBar(gameData),
-        ],
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Main Content (responsive) ─────────────────────
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // Viewport width, not the width left after shell padding.
-              final width = MediaQuery.sizeOf(context).width;
-
-              if (isDesktop(width)) {
-                return _buildDesktopLayout(
-                  visibleMatches,
-                  waitlisted,
-                  gameData,
-                  isGameBased,
-                  isNextRound,
-                );
-              } else {
-                return _buildStackedLayout(
-                  visibleMatches,
-                  waitlisted,
-                  gameData,
-                  isGameBased,
-                  isNextRound,
-                );
-              }
-            },
-          ),
-        ),
+        _buildRoundRotationBar(gameData),
       ],
+      const SizedBox(height: AppSpacing.lg),
+    ];
+
+    // Viewport width, not the width left after shell padding.
+    if (isDesktop(MediaQuery.sizeOf(context).width)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ...header,
+          Expanded(
+            child: _buildDesktopLayout(
+              visibleMatches,
+              waitlisted,
+              gameData,
+              isGameBased,
+              isNextRound,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Stacked layout: the whole page scrolls (UAT NAV-07).
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ...header,
+          ..._buildStackedLayout(
+            visibleMatches,
+            waitlisted,
+            gameData,
+            isGameBased,
+            isNextRound,
+          ),
+        ],
+      ),
     );
   }
 
@@ -493,7 +498,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // ── Tablet/Phone: Waitlist Chips + Court Grid ──────────
 
-  Widget _buildStackedLayout(
+  List<Widget> _buildStackedLayout(
     List<Game> courts,
     List<Player> waitlisted,
     GameData gameData,
@@ -504,31 +509,26 @@ class _DashboardPageState extends State<DashboardPage> {
         _selectedPlayerId != null &&
         gameData.checkedInPlayers.containsKey(_selectedPlayerId);
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Waitlist chips
-          WaitlistChips(
-            players: waitlisted,
-            selectedPlayerId: _selectedPlayerId,
-            selectedPlayerName: gameData.checkedInPlayers[_selectedPlayerId]
-                ?.name(),
-            onPlayerSelect: _selectPlayer,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          // Court grid
-          _buildCourtGrid(
-            courts,
-            selectionActive,
-            gameData,
-            isGameBased,
-            isNextRound,
-            fitToHeight: false,
-          ),
-        ],
+    return [
+      // Waitlist chips
+      WaitlistChips(
+        players: waitlisted,
+        selectedPlayerId: _selectedPlayerId,
+        selectedPlayerName: gameData.checkedInPlayers[_selectedPlayerId]
+            ?.name(),
+        onPlayerSelect: _selectPlayer,
       ),
-    );
+      const SizedBox(height: AppSpacing.lg),
+      // Court grid
+      _buildCourtGrid(
+        courts,
+        selectionActive,
+        gameData,
+        isGameBased,
+        isNextRound,
+        fitToHeight: false,
+      ),
+    ];
   }
 
   // ── Court Grid ─────────────────────────────────────────

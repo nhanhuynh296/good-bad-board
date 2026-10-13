@@ -139,4 +139,40 @@ void main() {
     expect(tester.takeException(), isNull);
     tester.binding.delayed(const Duration(seconds: 1));
   });
+
+  testWidgets('should_scroll_whole_page_to_last_court_on_phone', (
+    tester,
+  ) async {
+    // Arrange — phone: stat strip, bars, chips and courts share one scroll.
+    tester.view.physicalSize = const Size(390, 700);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final gameData = seed(20, 4);
+    await gameData.makeGame();
+    await tester.pumpWidget(wrap(gameData, TimerData()));
+    final statStripTop = tester.getTopLeft(find.byType(StatStrip)).dy;
+
+    // Act
+    await tester.dragUntilVisible(
+      find.text('COURT 4'),
+      find.byType(SingleChildScrollView).first,
+      const Offset(0, -150),
+    );
+    await tester.pump();
+
+    // Assert — the last court is on screen and the stat strip scrolled away.
+    expect(
+      tester.getBottomLeft(find.text('COURT 4')).dy,
+      lessThanOrEqualTo(700),
+    );
+    expect(
+      tester.getTopLeft(find.byType(StatStrip)).dy,
+      lessThan(statStripTop),
+    );
+    expect(tester.takeException(), isNull);
+    tester.binding.delayed(const Duration(seconds: 1));
+  });
 }

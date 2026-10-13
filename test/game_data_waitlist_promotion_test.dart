@@ -1,4 +1,3 @@
-import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/state/game_data.dart';
