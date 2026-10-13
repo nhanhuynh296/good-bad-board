@@ -389,10 +389,7 @@ class GameData extends ChangeNotifier {
   ///
   /// A freed court slot is filled from the waitlist (WL-02).
   void removePlayer(Player player) {
-    _checkedInPlayers.remove(player.id);
-    gameContainingPlayer(player)?.playerIds.remove(player.id);
-    _removeFromStagedLineup(player);
-    _autoPromoteFromWaitlist();
+    _removeAndRefillCourt(player);
     notifyListeners();
   }
 
@@ -857,23 +854,32 @@ class GameData extends ChangeNotifier {
   /// (or waitlist), and their checked-in status is cleared. Triggers WL-02
   /// auto-promotion if a court slot opens up.
   void checkOutPlayer(Player player) {
-    _checkedInPlayers.remove(player.id);
-    gameContainingPlayer(player)?.playerIds.remove(player.id);
-    _removeFromStagedLineup(player);
-    _autoPromoteFromWaitlist();
+    _removeAndRefillCourt(player);
     notifyListeners();
   }
 
-  /// Fills open court slots with the highest-level waitlisted players.
-  void _autoPromoteFromWaitlist() {
-    for (final game in stagingMatches) {
-      while (game.playerIds.length < Game.playerPerCourt) {
-        final candidates = waitlistedPlayers.toList();
-        if (candidates.isEmpty) return;
-        // Highest level (index) first
-        candidates.sort((a, b) => b.elo.index.compareTo(a.elo.index));
-        game.playerIds.add(candidates.first.id);
-      }
+  /// Takes [player] out of the session and refills the court they left.
+  void _removeAndRefillCourt(Player player) {
+    final freedCourt = gameContainingPlayer(player);
+    _checkedInPlayers.remove(player.id);
+    freedCourt?.playerIds.remove(player.id);
+    _removeFromStagedLineup(player);
+    if (freedCourt != null) _autoPromoteFromWaitlist(freedCourt);
+  }
+
+  /// Fills open slots on [court] with the highest-level waitlisted players
+  /// (WL-03).
+  ///
+  /// Only the court that lost a player is refilled. Other open courts stay
+  /// open, and a court that is playing keeps its saved lineup.
+  void _autoPromoteFromWaitlist(Game court) {
+    if (isCourtPlaying(stagingMatches.indexOf(court))) return;
+    while (court.playerIds.length < Game.playerPerCourt) {
+      final candidates = waitlistedPlayers.toList();
+      if (candidates.isEmpty) return;
+      // Highest level (index) first
+      candidates.sort((a, b) => b.elo.index.compareTo(a.elo.index));
+      court.playerIds.add(candidates.first.id);
     }
   }
 
