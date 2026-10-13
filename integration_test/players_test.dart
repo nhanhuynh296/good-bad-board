@@ -66,6 +66,19 @@ void main() {
       expect(find.text('Player5 Test'), findsNothing);
     });
 
+    testWidgets('search field has focus when the Players tab opens', (
+      tester,
+    ) async {
+      await setupWithPlayers(tester, desktopSize);
+      await navigateToTab(tester, playersTabIndex);
+      await tester.pumpAndSettle();
+
+      final field = tester.widget<EditableText>(
+        find.byType(EditableText).first,
+      );
+      expect(field.focusNode.hasFocus, isTrue);
+    });
+
     testWidgets('clearing search shows all players', (tester) async {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
@@ -113,12 +126,11 @@ void main() {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
 
-      // The Active/Inactive toggle was replaced by a membership pill plus a
-      // separate check-in toggle, so a row carries both.
+      // A row carries a membership pill and a check state icon.
       expect(find.byType(PlayerRow), findsWidgets);
       expect(find.text('Member'), findsWidgets);
       // setupWithPlayers checks every seeded player in.
-      expect(find.text('In'), findsWidgets);
+      expect(find.byIcon(Icons.check_circle), findsWidgets);
     });
   });
 
@@ -140,24 +152,37 @@ void main() {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
 
-      // Check-in toggle shows "In" or "Out". setupWithPlayers checks every
-      // seeded player in, so every row shows "In".
-      expect(find.text('In'), findsWidgets);
+      // A checked-in row shows a check circle. setupWithPlayers checks every
+      // seeded player in, so every row shows one.
+      expect(find.byIcon(Icons.check_circle), findsWidgets);
+    });
+
+    testWidgets('tapping a row checks the player out, and in again', (
+      tester,
+    ) async {
+      await setupWithPlayers(tester, desktopSize);
+      await navigateToTab(tester, playersTabIndex);
+      final before = find.byIcon(Icons.check_circle).evaluate().length;
+
+      await tester.tap(find.text('Player0 Test').first);
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.check_circle).evaluate().length, before - 1);
+
+      await tester.tap(find.text('Player0 Test').first);
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.check_circle).evaluate().length, before);
     });
   });
 
   // ── PLY-09/10/11: Expandable profile ───────────────────────
 
   group('PLY-09/10/11 — Expandable profile', () {
-    testWidgets('tapping name expands profile with stats', (tester) async {
+    testWidgets('tapping More expands profile with stats', (tester) async {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
 
-      // Tap player name to expand profile.
-      // Use .first since Player0 appears only in the Players list at
-      // this point (not on the Dashboard since we haven't generated
-      // games — just added to session).
-      await tester.tap(find.text('Player0 Test').first);
+      // Tap More on the first row to expand its profile.
+      await tester.tap(find.text('More').first);
       await tester.pumpAndSettle();
 
       // Profile should show stat tiles.
@@ -168,24 +193,24 @@ void main() {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
 
-      await tester.tap(find.text('Player0 Test').first);
+      await tester.tap(find.text('More').at(0));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Player1 Test').first);
+      await tester.tap(find.text('More').at(1));
       await tester.pumpAndSettle();
 
       // Only one profile expanded.
       expect(find.text('Current Level'), findsOneWidget);
     });
 
-    testWidgets('tapping same name collapses profile', (tester) async {
+    testWidgets('tapping same More collapses profile', (tester) async {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
 
-      await tester.tap(find.text('Player0 Test').first);
+      await tester.tap(find.text('More').first);
       await tester.pumpAndSettle();
       expect(find.text('Current Level'), findsOneWidget);
 
-      await tester.tap(find.text('Player0 Test').first);
+      await tester.tap(find.text('More').first);
       await tester.pumpAndSettle();
       expect(find.text('Current Level'), findsNothing);
     });
@@ -198,7 +223,7 @@ void main() {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
 
-      await tester.tap(find.text('Player0 Test').first);
+      await tester.tap(find.text('More').first);
       await tester.pumpAndSettle();
 
       expect(find.text('Current Level'), findsOneWidget);
@@ -216,7 +241,8 @@ void main() {
       expect(find.text('NAME / ID'), findsWidgets);
       expect(find.text('LEVEL'), findsWidgets);
       expect(find.text('MEMBERSHIP'), findsWidgets);
-      expect(find.text('CHECKED IN'), findsWidgets);
+      // The check state is the row itself, so there is no column for it.
+      expect(find.text('CHECKED IN'), findsNothing);
     });
 
     testWidgets('table header hidden on phone', (tester) async {

@@ -713,6 +713,46 @@
       }
     }
   },
+  "players_more": "More",
+  "@players_more": {
+    "description": "Button on a player row that opens or closes the profile"
+  },
+  "players_scan_checked_in": "{name} checked in",
+  "@players_scan_checked_in": {
+    "description": "Toast after a scanned sign-in ID checks a player in",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_already_checked_in": "{name} is already checked in",
+  "@players_scan_already_checked_in": {
+    "description": "Toast when a scanned sign-in ID belongs to a player who is already checked in",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_no_match": "No player with ID {id}",
+  "@players_scan_no_match": {
+    "description": "Toast when no player has the entered sign-in ID",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_disabled": "{name} is disabled — cannot check in",
+  "@players_scan_disabled": {
+    "description": "Toast when a scanned sign-in ID belongs to a Disabled player",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "players_search_placeholder": "Search players…",
   "@players_search_placeholder": {
     "description": "Placeholder for the player search field"
@@ -937,6 +977,22 @@
   "settings_total_members": "Total members",
   "@settings_total_members": {
     "description": "Label above the total member count"
+  },
+  "players_sign_in_id_taken": "Sign In ID \"{id}\" is already used by {name}",
+  "@players_sign_in_id_taken": {
+    "description": "Error when a sign-in ID is already used by another player",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_sign_in_id_saved": "Sign In ID saved",
+  "@players_sign_in_id_saved": {
+    "description": "Toast after the sign-in ID of a player is saved"
   },
   "sign_in_id": "Sign In ID",
   "skill_gap_n": "Skill Gap: {gap}",

@@ -19,12 +19,16 @@ class AppSearchInput extends StatelessWidget {
     this.controller,
     this.focusNode,
     this.onChanged,
+    this.onSubmitted,
     this.placeholder,
   });
 
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final ValueChanged<String>? onChanged;
+
+  /// Called when the user sends Enter (or the keyboard's done action).
+  final ValueChanged<String>? onSubmitted;
   final String? placeholder;
 
   static const _enabledBorder = OutlineInputBorder(
@@ -54,6 +58,7 @@ class AppSearchInput extends StatelessWidget {
       controller: controller,
       focusNode: focusNode,
       onChanged: onChanged,
+      onSubmitted: onSubmitted,
       decoration: InputDecoration(
         hintText:
             placeholder ?? AppLocalizations.of(context)!.common_search_players,

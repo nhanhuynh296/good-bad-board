@@ -25,6 +25,7 @@ class AppButton extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
     this.textStyle = AppTypography.button,
     this.border,
+    this.trailingIcon,
   }) : assert(
          label != null || icon != null,
          'Either label or icon must be provided',
@@ -40,15 +41,19 @@ class AppButton extends StatelessWidget {
   }
 
   /// Pill-background secondary button.
+  ///
+  /// [trailingIcon] adds a small glyph after the label, e.g. a chevron.
   factory AppButton.secondary({
     Key? key,
     required String label,
     VoidCallback? onPressed,
+    IconData? trailingIcon,
   }) {
     return AppButton(
       key: key,
       label: label,
       onPressed: onPressed,
+      trailingIcon: trailingIcon,
       backgroundColor: AppColors.pillBg,
       foregroundColor: AppColors.textPrimary,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -139,9 +144,28 @@ class AppButton extends StatelessWidget {
   final TextStyle textStyle;
   final BorderSide? border;
 
+  /// Optional glyph shown after [label].
+  final IconData? trailingIcon;
+
   static const _disabledOpacity = 0.38;
   static const _iconBoxSize = 22.0;
   static const _iconGlyphSize = 14.0;
+
+  Widget _labelWithTrailingIcon() {
+    final text = Text(
+      label!,
+      style: textStyle.copyWith(color: foregroundColor),
+    );
+    if (trailingIcon == null) return text;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        text,
+        const SizedBox(width: 2),
+        Icon(trailingIcon, color: foregroundColor, size: 16),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +175,7 @@ class AppButton extends StatelessWidget {
 
     final child = isIcon
         ? Icon(icon, color: foregroundColor, size: _iconGlyphSize)
-        : Text(label!, style: textStyle.copyWith(color: foregroundColor));
+        : _labelWithTrailingIcon();
 
     return SizedBox(
       width: isIcon ? _iconBoxSize : null,

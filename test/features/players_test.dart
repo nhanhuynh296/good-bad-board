@@ -240,7 +240,9 @@ void main() {
       expect(find.text('Member'), findsNothing);
     });
 
-    testWidgets('shows In/Out based on check-in status', (tester) async {
+    testWidgets('shows a check circle when the player is checked in', (
+      tester,
+    ) async {
       final player = _testPlayer('Alice', Elo.b2);
       await tester.pumpWidget(
         MaterialApp(
@@ -256,10 +258,10 @@ void main() {
           ),
         ),
       );
-      expect(find.text('In'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
-    testWidgets('fires onToggleProfile when name tapped', (tester) async {
+    testWidgets('fires onToggleProfile when More tapped', (tester) async {
       var toggled = false;
       final player = _testPlayer('Alice', Elo.b2);
       await tester.pumpWidget(
@@ -277,7 +279,7 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.text('Alice Test'));
+      await tester.tap(find.text('More'));
       expect(toggled, isTrue);
     });
 
@@ -305,8 +307,8 @@ void main() {
       expect(cycled, isTrue);
     });
 
-    testWidgets('fires onToggleCheckin with correct value', (tester) async {
-      bool? newValue;
+    testWidgets('fires onToggleCheckin when the row is tapped', (tester) async {
+      var toggled = false;
       final player = _testPlayer('Alice', Elo.b2);
       await tester.pumpWidget(
         MaterialApp(
@@ -318,19 +320,20 @@ void main() {
               isExpanded: false,
               membership: MembershipStatus.member,
               isCheckedIn: false,
-              onToggleCheckin: (v) => newValue = v,
+              onToggleCheckin: () => toggled = true,
             ),
           ),
         ),
       );
-      await tester.tap(find.text('Out'));
-      expect(newValue, isTrue);
+      await tester.tap(find.text('Alice Test'));
+      expect(toggled, isTrue);
     });
 
     Future<void> pumpRow(
       WidgetTester tester, {
       bool isExpanded = false,
       VoidCallback? onToggleProfile,
+      VoidCallback? onToggleCheckin,
       VoidCallback? onLevelUp,
     }) => tester.pumpWidget(
       MaterialApp(
@@ -343,17 +346,18 @@ void main() {
             membership: MembershipStatus.member,
             isCheckedIn: false,
             onToggleProfile: onToggleProfile,
+            onToggleCheckin: onToggleCheckin,
             onLevelUp: onLevelUp,
           ),
         ),
       ),
     );
 
-    testWidgets('should_toggle_the_profile_when_the_row_is_tapped', (
+    testWidgets('should_toggle_check_in_when_the_row_is_tapped', (
       tester,
     ) async {
       var toggled = false;
-      await pumpRow(tester, onToggleProfile: () => toggled = true);
+      await pumpRow(tester, onToggleCheckin: () => toggled = true);
 
       // The sign-in ID is part of the row but not the name.
       await tester.tap(find.text('—'));
@@ -361,17 +365,30 @@ void main() {
       expect(toggled, isTrue);
     });
 
-    testWidgets('should_not_toggle_the_profile_when_a_control_is_tapped', (
+    testWidgets('should_not_toggle_the_profile_when_the_row_is_tapped', (
+      tester,
+    ) async {
+      var opened = false;
+      await pumpRow(tester, onToggleProfile: () => opened = true);
+
+      await tester.tap(find.text('Alice Test'));
+
+      expect(opened, isFalse);
+    });
+
+    testWidgets('should_not_toggle_check_in_when_a_control_is_tapped', (
       tester,
     ) async {
       var toggled = false;
       await pumpRow(
         tester,
-        onToggleProfile: () => toggled = true,
+        onToggleCheckin: () => toggled = true,
+        onToggleProfile: () {},
         onLevelUp: () {},
       );
 
       await tester.tap(find.text('+'));
+      await tester.tap(find.text('More'));
 
       expect(toggled, isFalse);
     });
@@ -474,7 +491,7 @@ void main() {
       expect(find.text('Carol Test'), findsOneWidget);
     });
 
-    testWidgets('shows level progression section when history available', (
+    testWidgets('hides the level progression block even when history exists', (
       tester,
     ) async {
       final player = _testPlayer('Alice', Elo.b1);
@@ -496,7 +513,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text('LEVEL PROGRESSION'), findsOneWidget);
+      expect(find.text('LEVEL PROGRESSION'), findsNothing);
     });
 
     testWidgets('hides level progression when no history', (tester) async {
@@ -705,6 +722,17 @@ void main() {
     Future<void> flushPendingWrites(WidgetTester tester) =>
         tester.pump(const Duration(milliseconds: 50));
 
+    /// Taps the "More" button of the row that shows [name].
+    Future<void> tapMore(WidgetTester tester, String name) => tester.tap(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text(name),
+          matching: find.byType(PlayerRow),
+        ),
+        matching: find.text('More'),
+      ),
+    );
+
     /// Helper to create a test fixture with real GameData + PlayerRepository.
     Future<void> pumpPlayersPage(
       WidgetTester tester, {
@@ -769,7 +797,7 @@ void main() {
         initialPlayers: [_testPlayer('Alice', Elo.b1)],
       );
 
-      await tester.tap(find.text('Alice Test'));
+      await tapMore(tester, 'Alice Test');
       await tester.pumpAndSettle();
 
       final panel = find.ancestor(
@@ -790,7 +818,7 @@ void main() {
         initialPlayers: [_testPlayer('Alice', Elo.b1)],
       );
 
-      await tester.tap(find.text('Alice Test'));
+      await tapMore(tester, 'Alice Test');
       await tester.pumpAndSettle();
 
       expect(
@@ -823,9 +851,7 @@ void main() {
       expect(find.text('1 / 20 · 19 left'), findsOneWidget);
     });
 
-    testWidgets('CHK-02: tapping check-in control checks the player in', (
-      tester,
-    ) async {
+    testWidgets('CHK-02: tapping the row checks the player in', (tester) async {
       final player = _testPlayer('Alice', Elo.b1);
       await pumpPlayersPage(tester, initialPlayers: [player]);
 
@@ -834,17 +860,17 @@ void main() {
 
       // Find and tap the "check-in" control in PlayerRow
       // PlayerRow renders either "In" or "Out" pill depending on check-in state
-      expect(find.text('Out'), findsOneWidget);
-      await tester.tap(find.text('Out'));
+      expect(find.byIcon(Icons.check_circle), findsNothing);
+      await tester.tap(find.text('Alice Test'));
       await tester.pumpAndSettle();
 
       // Player is now checked in
       expect(gameData.isPlayerCheckedIn(player), isTrue);
-      expect(find.text('In'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
     testWidgets(
-      'CHK-03: tapping the check-in control at capacity is refused (no state change)',
+      'CHK-03: tapping the row at capacity is refused (no state change)',
       (tester) async {
         // Capacity 4 — the smallest a session can be — plus a 5th player.
         final atCapacity = [
@@ -869,8 +895,8 @@ void main() {
         expect(gameData.checkedInCount, 4);
         expect(gameData.isAtCapacity, isTrue);
 
-        // Tap Carol's check-in control (the only "Out" pill) — refused.
-        await tester.tap(find.text('Out'));
+        // Tap Carol's row — refused.
+        await tester.tap(find.text('Carol Test'));
         await tester.pump();
         expect(
           find.text('Session at capacity — cannot check in'),
@@ -920,7 +946,7 @@ void main() {
       );
     });
 
-    testWidgets('CHK-05: tapping again on checked-in player checks them out', (
+    testWidgets('CHK-05: tapping a checked-in row checks the player out', (
       tester,
     ) async {
       final player = _testPlayer('Alice', Elo.b1);
@@ -930,49 +956,52 @@ void main() {
       gameData.checkInPlayer(player);
       await tester.pumpAndSettle();
       expect(gameData.isPlayerCheckedIn(player), isTrue);
-      expect(find.text('In'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
 
       // Tap again to check out
-      await tester.tap(find.text('In'));
+      await tester.tap(find.text('Alice Test'));
       await tester.pumpAndSettle();
 
       // Player is now checked out
       expect(gameData.isPlayerCheckedIn(player), isFalse);
-      expect(find.text('Out'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsNothing);
     });
 
-    testWidgets(
-      'CHK-06: disabled players do not have an enabled check-in control',
-      (tester) async {
-        final player = _testPlayer('Alice', Elo.b1);
-        await pumpPlayersPage(tester, initialPlayers: [player]);
+    testWidgets('CHK-06: tapping a disabled player row does nothing', (
+      tester,
+    ) async {
+      final player = _testPlayer('Alice', Elo.b1);
+      await pumpPlayersPage(tester, initialPlayers: [player]);
 
-        // Initially Member — check-in control is enabled
-        expect(find.text('Out'), findsOneWidget);
+      // Initially Member — the row shows an empty ring
+      expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
 
-        // Disable the player's membership
-        gameData.setMembership(player, MembershipStatus.disabled);
-        await flushPendingWrites(tester);
-        await tester.pumpAndSettle();
+      // Disable the player's membership
+      gameData.setMembership(player, MembershipStatus.disabled);
+      await flushPendingWrites(tester);
+      await tester.pumpAndSettle();
 
-        // Control is now disabled — tapping does not check them in
-        expect(find.text('Out'), findsOneWidget);
-        await tester.tap(find.text('Out'));
-        await tester.pumpAndSettle();
-        expect(gameData.isPlayerCheckedIn(player), isFalse);
-        expect(gameData.checkedInCount, 0);
-      },
-    );
+      // Row is now disabled — tapping does not check them in
+      expect(find.byIcon(Icons.block), findsOneWidget);
+      await tester.tap(find.text('Alice Test'));
+      await tester.pumpAndSettle();
+      expect(gameData.isPlayerCheckedIn(player), isFalse);
+      expect(gameData.checkedInCount, 0);
+    });
 
-    testWidgets('PLY-04: search matches the player name only', (tester) async {
+    testWidgets('PLY-04: search matches the name or the sign-in ID', (
+      tester,
+    ) async {
       final alice = _testPlayer('Alice', Elo.b1).copyWith(signInId: 'ZED99');
       final bob = _testPlayer('Bob', Elo.a2);
       await pumpPlayersPage(tester, initialPlayers: [alice, bob]);
 
       await tester.enterText(find.byType(TextField), 'zed');
       await tester.pumpAndSettle();
-      expect(find.text('Alice Test'), findsNothing);
+      expect(find.text('Alice Test'), findsOneWidget);
+      expect(find.text('Bob Test'), findsNothing);
 
+      // The level is not searched.
       await tester.enterText(find.byType(TextField), 'a2');
       await tester.pumpAndSettle();
       expect(find.text('Bob Test'), findsNothing);
@@ -1016,7 +1045,7 @@ void main() {
     });
 
     Future<void> openDeleteDialog(WidgetTester tester) async {
-      await tester.tap(find.text('Alice Test'));
+      await tester.tap(find.text('More'));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.delete_outline));
       await tester.pumpAndSettle();
@@ -1100,7 +1129,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Alice Test'));
+      await tapMore(tester, 'Alice Test');
       await tester.pumpAndSettle();
 
       // 1 match; 3 of 3 possible partners = 100%.
@@ -1123,7 +1152,7 @@ void main() {
           initialPlayers: [_testPlayer('Alice', Elo.b1)],
         );
 
-        await tester.tap(find.text('Alice Test'));
+        await tapMore(tester, 'Alice Test');
         await tester.pumpAndSettle();
 
         expect(find.text('No sessions logged yet'), findsOneWidget);
@@ -1140,7 +1169,7 @@ void main() {
         _testPlayer('Dan', Elo.b1),
       ];
       await pumpPlayersPage(tester, initialPlayers: [alice, ...others]);
-      await tester.tap(find.text('Alice Test'));
+      await tapMore(tester, 'Alice Test');
       await tester.pumpAndSettle();
       expect(find.text('No sessions logged yet'), findsOneWidget);
 

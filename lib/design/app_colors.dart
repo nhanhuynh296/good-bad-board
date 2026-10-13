@@ -52,6 +52,9 @@ abstract class AppColors {
   /// Success chip background (#e6f4ea)
   static const Color successBg = Color(0xFFE6F4EA);
 
+  /// Checked-in player row on hover (#d8eddd)
+  static const Color successBgHover = Color(0xFFD8EDDD);
+
   // ── Warning ──────────────────────────────────────────────
   /// Warning / at-capacity text (#a8481a)
   static const Color warningText = Color(0xFFA8481A);

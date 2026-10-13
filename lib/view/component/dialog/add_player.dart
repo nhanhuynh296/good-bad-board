@@ -1,6 +1,8 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/player.dart';
+import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/view/component/button.dart';
 import 'package:good_bad_board/view/component/dialog/toasts.dart';
@@ -32,6 +34,27 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
     _formKey.currentState?.reset();
   }
 
+  /// Why the new player cannot be added, or null when they can: the same
+  /// name, or the same sign-in ID, as a player already listed.
+  String? _duplicateMessage() {
+    final l10n = AppLocalizations.of(context)!;
+    final name = '$firstName $lastName'.toLowerCase();
+    final listed = PlayerRepository.instance.listedPlayers().toList();
+    final sameName = listed.firstWhereOrNull(
+      (p) => p.name().trim().toLowerCase() == name,
+    );
+    if (sameName != null) {
+      return l10n.players_already_exists(sameName.name());
+    }
+    final id = signInId?.toLowerCase();
+    if (id == null) return null;
+    final sameId = listed.firstWhereOrNull(
+      (p) => p.signInId?.trim().toLowerCase() == id,
+    );
+    if (sameId == null) return null;
+    return l10n.players_sign_in_id_taken(signInId!, sameId.name());
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -49,10 +72,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
                 labelText: AppLocalizations.of(context)!.first_name,
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (value == null || value.trim().isEmpty) {
                   return AppLocalizations.of(context)!.players_enter_first_name;
                 }
-                firstName = value;
+                firstName = value.trim();
                 return null;
               },
             ),
@@ -63,10 +86,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
                 labelText: AppLocalizations.of(context)!.last_name,
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (value == null || value.trim().isEmpty) {
                   return AppLocalizations.of(context)!.players_enter_last_name;
                 }
-                lastName = value;
+                lastName = value.trim();
                 return null;
               },
             ),
@@ -99,7 +122,8 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               ),
               textInputAction: TextInputAction.next,
               validator: (value) {
-                signInId = value;
+                final trimmed = value?.trim() ?? '';
+                signInId = trimmed.isEmpty ? null : trimmed;
                 return null;
               },
             ),
@@ -130,6 +154,10 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               context.showErrorToast(
                 AppLocalizations.of(context)!.players_fill_all_fields,
               );
+              return;
+            }
+            if (_duplicateMessage() case final message?) {
+              context.showErrorToast(message);
               return;
             }
             // This context sits below the dialog route on the root Navigator,

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/l10n/membership_l10n.dart';
@@ -48,7 +47,7 @@ class PartnerEntry {
 /// Shows:
 /// - Membership label + close button
 /// - Stat trio: Current Level | Matches | Diversity
-/// - Level progression sparkline
+/// - Sign-in ID field with a Save button
 /// - Most frequent partners list
 /// - Attendance history text
 ///
@@ -63,6 +62,7 @@ class PlayerProfileCard extends StatelessWidget {
     this.membership = MembershipStatus.member,
     this.onClose,
     this.onDelete,
+    this.onSaveSignInId,
   });
 
   final Player player;
@@ -72,6 +72,11 @@ class PlayerProfileCard extends StatelessWidget {
 
   /// Called when the delete ("remove from club") action is tapped.
   final VoidCallback? onDelete;
+
+  /// Called with the typed text when the sign-in ID is saved. Returns an
+  /// error message to show, or null when saved. Without it the profile shows
+  /// no sign-in ID field.
+  final String? Function(String text)? onSaveSignInId;
 
   @override
   Widget build(BuildContext context) {
@@ -175,11 +180,14 @@ class PlayerProfileCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // ── Level Progression Sparkline ─────────────────
-          if (stats.levelHistory.isNotEmpty) ...[
-            _SectionLabel(l10n.players_level_progression),
-            const SizedBox(height: AppSpacing.sm),
-            _LevelSparkline(history: stats.levelHistory),
+          // ── Sign-in ID (PLY-15) ─────────────────────────
+          if (onSaveSignInId != null) ...[
+            _SignInIdEditor(
+              // A new key when the saved ID changes, so the field shows it.
+              key: ValueKey('${player.id}:${player.signInId}'),
+              initialValue: player.signInId ?? '',
+              onSave: onSaveSignInId!,
+            ),
             const SizedBox(height: AppSpacing.lg),
           ],
 
@@ -251,123 +259,70 @@ class _StatTrioCell extends StatelessWidget {
   }
 }
 
-/// Horizontal sparkline showing recent Elo level trend as coloured bars.
+/// Text field and Save button for the sign-in ID of a player (PLY-15).
 ///
-/// Each bar represents one historical data point; the bar colour indicates the
-/// Elo tier using [AppColors.accentPrimary] luminance variants.
-class _LevelSparkline extends StatelessWidget {
-  const _LevelSparkline({required this.history});
+/// [onSave] gets the typed text and returns an error message to show under
+/// the field, or null when the ID was saved.
+class _SignInIdEditor extends StatefulWidget {
+  const _SignInIdEditor({
+    super.key,
+    required this.initialValue,
+    required this.onSave,
+  });
 
-  final List<Elo> history;
+  final String initialValue;
+  final String? Function(String text) onSave;
 
-  /// Map the 8 Elo tiers to progressively darker accent shades.
-  static final List<Color> _tierColors = [
-    // c2 (lowest) → lightest
-    AppColors.barTertiary,
-    const Color(0xFFFDC4A0),
-    const Color(0xFFFDA876),
-    const Color(0xFFFD8D4D),
-    AppColors.accentPrimary,
-    const Color(0xFFCC5522),
-    const Color(0xFF994019),
-    // s1 (highest) → darkest
-    AppColors.headerBg,
-  ];
+  @override
+  State<_SignInIdEditor> createState() => _SignInIdEditorState();
+}
+
+class _SignInIdEditorState extends State<_SignInIdEditor> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initialValue,
+  );
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() => setState(() => _error = widget.onSave(_controller.text));
 
   @override
   Widget build(BuildContext context) {
-    // Show at most the last 20 data points
-    final subset = history.length > 20
-        ? history.sublist(history.length - 20)
-        : history;
-    final maxIndex = Elo.values.length - 1;
-    if (maxIndex <= 0) return const SizedBox(height: 40);
-
-    return SizedBox(
-      height: 40,
-      child: CustomPaint(
-        size: Size.infinite,
-        painter: _SparklinePainter(
-          values: subset.map((e) => e.index / maxIndex).toList(),
-          colors: subset
-              .map((e) => _tierColors[e.index.clamp(0, _tierColors.length - 1)])
-              .toList(),
+    final l10n = AppLocalizations.of(context)!;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextField(
+            key: const Key('player-sign-in-id-field'),
+            controller: _controller,
+            style: AppTypography.input,
+            onSubmitted: (_) => _save(),
+            decoration: InputDecoration(
+              labelText: l10n.sign_in_id,
+              errorText: _error,
+              errorMaxLines: 2,
+              isDense: true,
+            ),
+          ),
         ),
-      ),
+        const SizedBox(width: AppSpacing.sm),
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: AppButton.secondary(
+            key: const Key('player-sign-in-id-save'),
+            label: l10n.save,
+            onPressed: _save,
+          ),
+        ),
+      ],
     );
   }
-}
-
-/// Paints a small bar chart with a connecting polyline overlay.
-class _SparklinePainter extends CustomPainter {
-  _SparklinePainter({required this.values, required this.colors});
-
-  final List<double> values; // 0.0 – 1.0
-  final List<Color> colors;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (values.isEmpty) return;
-
-    final barWidth = ((size.width / values.length) - 2).clamp(0.0, size.width);
-    const barRadius = 3.0;
-    final maxBarHeight = size.height * 0.8;
-
-    for (var i = 0; i < values.length; i++) {
-      final barHeight = (values[i] * 0.6 + 0.4) * maxBarHeight;
-      final x = i * (barWidth + 2) + 1;
-      final y = size.height - barHeight;
-
-      final paint = Paint()..color = colors[i];
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(x, y, barWidth, barHeight),
-          const Radius.circular(barRadius),
-        ),
-        paint,
-      );
-    }
-
-    // Connecting polyline
-    if (values.length < 2) return;
-
-    final linePaint = Paint()
-      ..color = AppColors.accentPrimary
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    final path = Path();
-    for (var i = 0; i < values.length; i++) {
-      final barHeight = (values[i] * 0.6 + 0.4) * maxBarHeight;
-      final x = i * (barWidth + 2) + 1 + barWidth / 2;
-      final y = size.height - barHeight;
-
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    canvas.drawPath(path, linePaint);
-
-    // Endpoint dot
-    if (values.isNotEmpty) {
-      final lastBarHeight = (values.last * 0.6 + 0.4) * maxBarHeight;
-      final lastX = (values.length - 1) * (barWidth + 2) + 1 + barWidth / 2;
-      final lastY = size.height - lastBarHeight;
-
-      canvas.drawCircle(
-        Offset(lastX, lastY),
-        3.5,
-        Paint()..color = AppColors.accentPrimary,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SparklinePainter oldDelegate) =>
-      !listEquals(oldDelegate.values, values) ||
-      !listEquals(oldDelegate.colors, colors);
 }
 
 /// Small uppercase section label used within [PlayerProfileCard].

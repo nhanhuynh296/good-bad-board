@@ -72,6 +72,8 @@ class _AdjustButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onTap;
 
+  static void _doNothing() {}
+
   @override
   Widget build(BuildContext context) {
     return Opacity(
@@ -80,7 +82,14 @@ class _AdjustButton extends StatelessWidget {
         color: AppColors.pillBg,
         borderRadius: AppRadii.smRadius,
         child: InkWell(
-          onTap: enabled ? onTap : null,
+          // A dimmed button still takes the tap (and does nothing): with a
+          // null handler the tap would fall through to the row behind it
+          // and toggle the check-in.
+          onTap: enabled ? onTap : _doNothing,
+          overlayColor: enabled
+              ? null
+              : const WidgetStatePropertyAll(Colors.transparent),
+          mouseCursor: enabled ? null : SystemMouseCursors.basic,
           borderRadius: AppRadii.smRadius,
           child: Container(
             width: 22,

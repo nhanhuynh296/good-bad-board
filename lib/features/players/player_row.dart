@@ -7,16 +7,21 @@ import 'package:good_bad_board/model/player.dart';
 
 /// A single row in the players table.
 ///
-/// The whole row is tappable and opens or closes the player profile below
-/// it. A trailing arrow shows whether the profile is open. The controls in
-/// the row keep their own taps.
+/// The whole row is a toggle: tapping it checks the player in or out (see
+/// [onToggleCheckin]). A Disabled player cannot be checked in, so tapping
+/// their row does nothing. The controls inside the row keep their own taps
+/// and never toggle the check-in. The "More" button opens or closes the
+/// player profile below the row.
 ///
-/// Renders five logical columns plus the arrow:
-/// - **Name** (14px, 600, accent when the profile is open)
-/// - **ID** (12px, subtle — the player's sign-in code)
-/// - **Level** ([LevelAdjuster] with −/+ buttons)
-/// - **Membership** pill (cycles Member → Casual → Disabled → Member)
-/// - **Checked In** toggle (In / Out)
+/// Look (UX-Redesign/ARCHITECTURE.md, player row):
+/// - Checked in: [AppColors.successBg] fill, 1px [AppColors.success] border
+///   at 45% alpha, 4px [AppColors.deltaPositive] bar on the left, a filled
+///   check circle, and a bold name.
+/// - Not checked in: an empty ring in [AppColors.inputBorder].
+/// - Disabled: no bar, subtle text, a block icon and a forbidden cursor.
+///
+/// Columns: leading icon, **Name + ID**, **Level** ([LevelAdjuster]),
+/// **Membership** pill (cycles Member → Casual → Disabled → Member), **More**.
 ///
 /// The row is designed for desktop-width tables. On narrower screens the
 /// parent should wrap it in a horizontal [SingleChildScrollView].
@@ -34,6 +39,16 @@ class PlayerRow extends StatelessWidget {
     this.onToggleCheckin,
   });
 
+  /// Width of the "More" column. The table header uses the same width.
+  static const double moreColumnWidth = 100;
+
+  /// Width of the leading check icon plus the gap after it. The table header
+  /// uses this to line its first label up with the player name.
+  static const double leadingWidth = 30;
+
+  /// Width of the left accent bar.
+  static const double barWidth = 4;
+
   final Player player;
 
   /// Whether the profile card below this row is expanded.
@@ -45,7 +60,7 @@ class PlayerRow extends StatelessWidget {
   /// Whether this player is checked in for the current session.
   final bool isCheckedIn;
 
-  /// Called when the row is tapped to toggle profile expansion.
+  /// Called when the "More" button is tapped, to open or close the profile.
   final VoidCallback? onToggleProfile;
 
   /// Called when the level [+] button is tapped.
@@ -58,115 +73,160 @@ class PlayerRow extends StatelessWidget {
   /// status (see [MembershipStatus.next]).
   final VoidCallback? onCycleMembership;
 
-  /// Called when the check-in toggle changes.
-  final ValueChanged<bool>? onToggleCheckin;
+  /// Called when the row is tapped, to check the player in or out. Not
+  /// called for a Disabled player.
+  final VoidCallback? onToggleCheckin;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final elo = player.elo;
+    final isDisabled = membership == MembershipStatus.disabled;
+    final checked = isCheckedIn && !isDisabled;
 
-    return Material(
-      color: isExpanded
-          ? AppColors.pillBg.withValues(alpha: 0.4)
-          : Colors.transparent,
-      child: InkWell(
-        onTap: onToggleProfile,
-        child: Container(
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.cardBorder, width: 0.5),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: LayoutBuilder(
-            builder: (context, _) {
-              // The trailing controls have fixed widths that, on a phone, add up
-              // to more than the row has — squeezing the name to nothing and
-              // overflowing. Give them their natural size there instead, so the
-              // name keeps what is left.
-              // Viewport width, like the table header, so the columns agree
-              // (UAT NAV-08).
-              final compact = isPhone(MediaQuery.sizeOf(context).width);
-              final gap = compact ? AppSpacing.sm : AppSpacing.md;
+    final background = checked
+        ? AppColors.successBg
+        : isExpanded
+        ? AppColors.pillBg.withValues(alpha: 0.4)
+        : Colors.transparent;
+    final hover = isDisabled
+        ? Colors.transparent
+        : checked
+        ? AppColors.successBgHover
+        : AppColors.cardBg;
 
-              return Row(
-                children: [
-                  // ── Name + ID ──────────────────────────────────
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+    const sideNone = BorderSide(color: Colors.transparent);
+    final border = checked
+        ? Border.all(color: AppColors.success.withValues(alpha: 0.45))
+        : const Border(
+            left: sideNone,
+            top: sideNone,
+            right: sideNone,
+            bottom: BorderSide(color: AppColors.cardBorder, width: 0.5),
+          );
+
+    final nameColor = isDisabled
+        ? AppColors.textSubtle
+        : isExpanded
+        ? AppColors.accentPrimary
+        : AppColors.textPrimary;
+
+    return Semantics(
+      key: const Key('player-row-toggle'),
+      container: true,
+      button: true,
+      checked: checked,
+      enabled: !isDisabled,
+      child: Material(
+        color: background,
+        child: InkWell(
+          onTap: isDisabled ? null : onToggleCheckin,
+          hoverColor: hover,
+          mouseCursor: isDisabled
+              ? SystemMouseCursors.forbidden
+              : SystemMouseCursors.click,
+          child: Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(border: border),
+                padding: const EdgeInsets.fromLTRB(barWidth + 12, 8, 12, 8),
+                child: LayoutBuilder(
+                  builder: (context, _) {
+                    // The trailing controls have fixed widths that, on a
+                    // phone, add up to more than the row has — squeezing the
+                    // name to nothing and overflowing. Give them their
+                    // natural size there instead, so the name keeps what is
+                    // left. Viewport width, like the table header, so the
+                    // columns agree (UAT NAV-08).
+                    final compact = isPhone(MediaQuery.sizeOf(context).width);
+                    final gap = compact ? AppSpacing.sm : AppSpacing.md;
+
+                    return Row(
                       children: [
-                        Text(
-                          player.name(),
-                          style: AppTypography.md.copyWith(
-                            color: isExpanded
-                                ? AppColors.accentPrimary
-                                : AppColors.textPrimary,
+                        // ── Check state icon ─────────────────────
+                        _CheckIcon(checked: checked, disabled: isDisabled),
+                        const SizedBox(width: leadingWidth - 20),
+
+                        // ── Name + ID ────────────────────────────
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                player.name(),
+                                style: AppTypography.md.copyWith(
+                                  color: nameColor,
+                                  fontWeight: checked
+                                      ? FontWeight.w700
+                                      : FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                player.signInId ?? '—',
+                                style: AppTypography.sm.copyWith(
+                                  color: AppColors.textSubtle,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          player.signInId ?? '—',
-                          style: AppTypography.sm.copyWith(
-                            color: AppColors.textSubtle,
+                        SizedBox(width: gap),
+
+                        // ── Level Adjuster ───────────────────────
+                        SizedBox(
+                          width: compact ? null : 155,
+                          child: LevelAdjuster(
+                            currentLevel: elo,
+                            onDecrease: () => onLevelDown?.call(),
+                            onIncrease: () => onLevelUp?.call(),
+                          ),
+                        ),
+                        SizedBox(width: gap),
+
+                        // ── Membership pill ───────────────────────
+                        SizedBox(
+                          width: compact ? null : 88,
+                          child: _MembershipPill(
+                            status: membership,
+                            onTap: onCycleMembership,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+
+                        // ── More (opens the profile) ─────────────
+                        SizedBox(
+                          width: compact ? null : moreColumnWidth,
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: AppButton.secondary(
+                              label: l10n.players_more,
+                              trailingIcon: isExpanded
+                                  ? Icons.expand_less_rounded
+                                  : Icons.expand_more_rounded,
+                              onPressed: onToggleProfile,
+                            ),
                           ),
                         ),
                       ],
-                    ),
+                    );
+                  },
+                ),
+              ),
+              if (checked)
+                const Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: barWidth,
+                  child: ColoredBox(
+                    key: Key('player-row-bar'),
+                    color: AppColors.deltaPositive,
                   ),
-                  SizedBox(width: gap),
-
-                  // ── Level Adjuster ─────────────────────────────
-                  SizedBox(
-                    width: compact ? null : 155,
-                    child: LevelAdjuster(
-                      currentLevel: elo,
-                      onDecrease: () => onLevelDown?.call(),
-                      onIncrease: () => onLevelUp?.call(),
-                    ),
-                  ),
-                  SizedBox(width: gap),
-
-                  // ── Membership pill ─────────────────────────────
-                  SizedBox(
-                    width: compact ? null : 88,
-                    child: _MembershipPill(
-                      status: membership,
-                      onTap: onCycleMembership,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-
-                  // ── Check-in toggle ────────────────────────────
-                  SizedBox(
-                    width: compact ? null : 76,
-                    child: _CompactToggle(
-                      value: isCheckedIn,
-                      onLabel: AppLocalizations.of(context)!.players_checkin_in,
-                      offLabel: AppLocalizations.of(
-                        context,
-                      )!.players_checkin_out,
-                      activeColor: AppColors.success,
-                      onChanged: onToggleCheckin,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-
-                  // ── Expand / collapse arrow ────────────────────
-                  Icon(
-                    isExpanded
-                        ? Icons.expand_less_rounded
-                        : Icons.expand_more_rounded,
-                    size: 20,
-                    color: isExpanded
-                        ? AppColors.accentPrimary
-                        : AppColors.textMuted,
-                  ),
-                ],
-              );
-            },
+                ),
+            ],
           ),
         ),
       ),
@@ -174,54 +234,29 @@ class PlayerRow extends StatelessWidget {
   }
 }
 
-/// A compact pill-shaped toggle used in [PlayerRow].
-///
-/// Renders as a small rounded button with short text labels (e.g., "Active"
-/// / "Inactive"). Uses green-on-grey colouring like [AppToggleButton] but in
-/// a reduced footprint suitable for table rows.
-class _CompactToggle extends StatelessWidget {
-  const _CompactToggle({
-    required this.value,
-    required this.onLabel,
-    required this.offLabel,
-    required this.activeColor,
-    this.onChanged,
-  });
+/// The 20px state icon at the start of a [PlayerRow].
+class _CheckIcon extends StatelessWidget {
+  const _CheckIcon({required this.checked, required this.disabled});
 
-  final bool value;
-  final String onLabel;
-  final String offLabel;
-  final Color activeColor;
-  final ValueChanged<bool>? onChanged;
-
-  static const _textStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-  );
+  final bool checked;
+  final bool disabled;
 
   @override
   Widget build(BuildContext context) {
-    final isOn = value;
-    final bgColor = isOn ? activeColor : AppColors.toggleOff;
-    final textColor = isOn ? AppColors.white : AppColors.toggleOffText;
-    final label = isOn ? onLabel : offLabel;
-
-    return Material(
-      color: bgColor,
-      borderRadius: AppRadii.smRadius,
-      child: InkWell(
-        onTap: onChanged != null ? () => onChanged!(!value) : null,
-        borderRadius: AppRadii.smRadius,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: _textStyle.copyWith(color: textColor),
-          ),
-        ),
-      ),
+    if (disabled) {
+      return const Icon(Icons.block, size: 20, color: AppColors.textSubtle);
+    }
+    if (checked) {
+      return const Icon(
+        Icons.check_circle,
+        size: 20,
+        color: AppColors.deltaPositive,
+      );
+    }
+    return const Icon(
+      Icons.radio_button_unchecked,
+      size: 20,
+      color: AppColors.inputBorder,
     );
   }
 }

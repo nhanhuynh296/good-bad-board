@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/importer.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/players/capacity_bar.dart';
@@ -27,7 +28,11 @@ import 'package:provider/provider.dart';
 /// Reads player data from [PlayerRepository] and session state from [GameData].
 /// Check-in behavior is wired directly to [GameData] (CHK-01…06 acceptance criteria).
 class PlayersPage extends StatefulWidget {
-  const PlayersPage({super.key});
+  const PlayersPage({super.key, this.showImportButton = false});
+
+  /// Shows the CSV "Import" button. Off for the current release; the import
+  /// code stays so it can come back.
+  final bool showImportButton;
 
   @override
   State<PlayersPage> createState() => _PlayersPageState();
@@ -36,9 +41,22 @@ class PlayersPage extends StatefulWidget {
 class _PlayersPageState extends State<PlayersPage> {
   // ── Search & Filter ──────────────────────────────────────
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
+
+  /// Whether this tab is the one on screen. The shell keeps hidden tabs
+  /// alive, so a change of this value is how the page knows it was opened.
+  bool _tabActive = false;
+
+  /// When the last Enter was handled, so the Enter key and the keyboard's
+  /// done action do not scan the same text twice.
+  DateTime? _lastEnterAt;
   Set<Elo> _eloFilters = {};
 
   String get _query => _searchController.text.toUpperCase();
+
+  bool _matchesQuery(Player p) =>
+      p.name().toUpperCase().contains(_query) ||
+      (p.signInId ?? '').toUpperCase().contains(_query);
 
   // ── Profile Expansion ────────────────────────────────────
   String? _profileOpenId;
@@ -74,6 +92,24 @@ class _PlayersPageState extends State<PlayersPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The scanner types into the search field, so it takes focus when the
+    // tab opens. It gives focus up when the tab is hidden, so keys typed on
+    // another tab do not land here.
+    final active = TickerMode.valuesOf(context).enabled;
+    if (active == _tabActive) return;
+    _tabActive = active;
+    if (active) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _tabActive) _searchFocus.requestFocus();
+      });
+    } else {
+      _searchFocus.unfocus();
+    }
+  }
+
+  @override
   void dispose() {
     GameRepository.instance.listenable.removeListener(_onHistoryChanged);
     SessionLogRepository.instance.listenable.removeListener(_onHistoryChanged);
@@ -81,6 +117,7 @@ class _PlayersPageState extends State<PlayersPage> {
       _reloadPendingRegistrations,
     );
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -148,21 +185,95 @@ class _PlayersPageState extends State<PlayersPage> {
   void _toggleCheckedIn(Player player, GameData gameData) {
     if (gameData.isPlayerCheckedIn(player)) {
       gameData.checkOutPlayer(player);
+    } else if (!gameData.checkInPlayer(player)) {
+      _showSnackBar(
+        AppLocalizations.of(context)!.players_session_full_cannot_check_in,
+      );
+    }
+  }
+
+  void _showSnackBar(String message) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
+  }
+
+  // ── Scanner ──────────────────────────────────────────────
+
+  /// The search field got Enter. A barcode scanner types the sign-in ID and
+  /// then sends Enter, so the text is read as an ID: the one player with
+  /// that ID is checked in (never checked out), and the field is cleared
+  /// for the next scan. With no match the text stays, selected, so the next
+  /// scan replaces it.
+  void _onSearchSubmitted() {
+    final now = DateTime.now();
+    final last = _lastEnterAt;
+    if (last != null &&
+        now.difference(last) < const Duration(milliseconds: 150)) {
+      return;
+    }
+    _lastEnterAt = now;
+
+    final typed = _searchController.text.trim();
+    if (typed.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final gameData = context.read<GameData>();
+    final wanted = typed.toLowerCase();
+    final matches = PlayerRepository.instance
+        .listedPlayers()
+        .where((p) => p.signInId?.trim().toLowerCase() == wanted)
+        .toList();
+
+    if (matches.length != 1) {
+      _showSnackBar(l10n.players_scan_no_match(typed));
+      _searchController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _searchController.text.length,
+      );
+      _searchFocus.requestFocus();
+      return;
+    }
+
+    final player = matches.single;
+    final String message;
+    if (player.membership == MembershipStatus.disabled) {
+      message = l10n.players_scan_disabled(player.name());
+    } else if (gameData.isPlayerCheckedIn(player)) {
+      message = l10n.players_scan_already_checked_in(player.name());
+    } else if (gameData.checkInPlayer(player)) {
+      message = l10n.players_scan_checked_in(player.name());
     } else {
-      final success = gameData.checkInPlayer(player);
-      if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.players_session_full_cannot_check_in,
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+      message = l10n.players_session_full_cannot_check_in;
+    }
+    _showSnackBar(message);
+    setState(_searchController.clear);
+    _searchFocus.requestFocus();
+  }
+
+  /// Saves a new sign-in ID for [player] (PLY-15). Returns an error message
+  /// when the ID is already used by another listed player, otherwise saves
+  /// it and returns null. Empty text means no ID. No other field changes.
+  String? _onSaveSignInId(Player player, String text) {
+    final l10n = AppLocalizations.of(context)!;
+    final id = text.trim();
+    if (id.isNotEmpty) {
+      final taken = PlayerRepository.instance.listedPlayers().firstWhereOrNull(
+        (p) =>
+            p.id != player.id &&
+            p.signInId?.trim().toLowerCase() == id.toLowerCase(),
+      );
+      if (taken != null) {
+        return l10n.players_sign_in_id_taken(id, taken.name());
       }
     }
+    context.read<GameData>().onUpdatePlayer(
+      player.copyWith(signInId: id.isEmpty ? null : id),
+    );
+    _showSnackBar(l10n.players_sign_in_id_saved);
+    return null;
   }
 
   // ── Profile Stats ────────────────────────────────────────
@@ -190,11 +301,7 @@ class _PlayersPageState extends State<PlayersPage> {
 
     // Apply filters
     final filteredPlayers = allPlayers
-        .where(
-          (p) =>
-              activeEloFilters.contains(p.elo) &&
-              p.name().toUpperCase().contains(_query),
-        )
+        .where((p) => activeEloFilters.contains(p.elo) && _matchesQuery(p))
         .sortedBy<String>((p) => p.name())
         .toList();
 
@@ -229,6 +336,9 @@ class _PlayersPageState extends State<PlayersPage> {
         // ── Search + Actions Bar ──────────────────────────
         _SearchAndActionsBar(
           searchController: _searchController,
+          searchFocus: _searchFocus,
+          onSearchSubmitted: _onSearchSubmitted,
+          showImport: widget.showImportButton,
           onSearchChanged: () => setState(() {}),
           eloFilters: _eloFilters,
           onEloFilterToggled: _onEloFilterToggled,
@@ -288,7 +398,7 @@ class _PlayersPageState extends State<PlayersPage> {
                           onCycleMembership: () =>
                               _onCycleMembership(player, gameData),
                           onToggleCheckin: canCheckIn
-                              ? (_) => _toggleCheckedIn(player, gameData)
+                              ? () => _toggleCheckedIn(player, gameData)
                               : null,
                         ),
                         if (isExpanded)
@@ -298,6 +408,8 @@ class _PlayersPageState extends State<PlayersPage> {
                             membership: player.membership,
                             onClose: () => _toggleProfile(player.id),
                             onDelete: () => _onDeletePlayer(player, gameData),
+                            onSaveSignInId: (text) =>
+                                _onSaveSignInId(player, text),
                           ),
                       ],
                     );
@@ -313,7 +425,24 @@ class _PlayersPageState extends State<PlayersPage> {
                         key: const Key('player-accordion-panel'),
                         padding: EdgeInsets.zero,
                         borderRadius: AppRadii.lgRadius,
-                        child: item,
+                        // The green bar of a checked-in row runs down the
+                        // open profile too.
+                        child: Stack(
+                          children: [
+                            item,
+                            if (_isCheckedIn(player, gameData) && canCheckIn)
+                              const Positioned(
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                width: PlayerRow.barWidth,
+                                child: ColoredBox(
+                                  key: Key('player-panel-bar'),
+                                  color: AppColors.deltaPositive,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -525,6 +654,9 @@ class _PlayersPageState extends State<PlayersPage> {
 class _SearchAndActionsBar extends StatelessWidget {
   const _SearchAndActionsBar({
     required this.searchController,
+    required this.searchFocus,
+    required this.onSearchSubmitted,
+    required this.showImport,
     required this.onSearchChanged,
     required this.eloFilters,
     required this.onEloFilterToggled,
@@ -533,6 +665,9 @@ class _SearchAndActionsBar extends StatelessWidget {
   });
 
   final TextEditingController searchController;
+  final FocusNode searchFocus;
+  final VoidCallback onSearchSubmitted;
+  final bool showImport;
   final VoidCallback onSearchChanged;
   final Set<Elo> eloFilters;
   final void Function(Elo elo, bool selected) onEloFilterToggled;
@@ -550,10 +685,26 @@ class _SearchAndActionsBar extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: AppSearchInput(
-                controller: searchController,
-                onChanged: (_) => onSearchChanged(),
-                placeholder: l10n.players_search_placeholder,
+              // A scanner sends Enter after the ID. Some platforms deliver it
+              // as the key, others as the done action; the page handles both.
+              child: Focus(
+                onKeyEvent: (_, event) {
+                  final isEnter =
+                      event.logicalKey == LogicalKeyboardKey.enter ||
+                      event.logicalKey == LogicalKeyboardKey.numpadEnter;
+                  if (isEnter && event is KeyDownEvent) {
+                    onSearchSubmitted();
+                    return KeyEventResult.handled;
+                  }
+                  return KeyEventResult.ignored;
+                },
+                child: AppSearchInput(
+                  controller: searchController,
+                  focusNode: searchFocus,
+                  onSubmitted: (_) => onSearchSubmitted(),
+                  onChanged: (_) => onSearchChanged(),
+                  placeholder: l10n.players_search_placeholder,
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -562,12 +713,14 @@ class _SearchAndActionsBar extends StatelessWidget {
               icon: Icons.person_add_rounded,
               onTap: onAddPlayer,
             ),
-            const SizedBox(width: AppSpacing.xs),
-            _ActionButton(
-              label: l10n.players_import,
-              icon: Icons.upload_file_rounded,
-              onTap: onImportCsv,
-            ),
+            if (showImport) ...[
+              const SizedBox(width: AppSpacing.xs),
+              _ActionButton(
+                label: l10n.players_import,
+                icon: Icons.upload_file_rounded,
+                onTap: onImportCsv,
+              ),
+            ],
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -642,7 +795,14 @@ class _TableHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      // Lines up with the row: its 1px border, accent bar and padding on
+      // the left, its border and padding on the right.
+      padding: const EdgeInsets.fromLTRB(
+        1 + PlayerRow.barWidth + 12 + PlayerRow.leadingWidth,
+        6,
+        1 + 12,
+        6,
+      ),
       child: Row(
         children: [
           Expanded(flex: 3, child: _HeaderLabel(l10n.players_header_name_id)),
@@ -650,8 +810,7 @@ class _TableHeader extends StatelessWidget {
           SizedBox(width: 155, child: _HeaderLabel(l10n.players_level)),
           const SizedBox(width: AppSpacing.md),
           SizedBox(width: 88, child: _HeaderLabel(l10n.players_membership)),
-          const SizedBox(width: AppSpacing.sm),
-          SizedBox(width: 76, child: _HeaderLabel(l10n.players_checked_in)),
+          const SizedBox(width: AppSpacing.sm + PlayerRow.moreColumnWidth),
         ],
       ),
     );
