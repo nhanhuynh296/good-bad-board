@@ -737,6 +737,30 @@ void main() {
       );
     }
 
+    testWidgets('should_use_wide_row_layout_when_viewport_is_740_wide', (
+      tester,
+    ) async {
+      // Arrange — header shows at 740 px; the row must match it (NAV-08).
+      tester.view.physicalSize = const Size(740, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpPlayersPage(
+        tester,
+        initialPlayers: [_testPlayer('Alice', Elo.b1)],
+      );
+
+      // Act
+      final levelColumn = find
+          .ancestor(
+            of: find.byType(LevelAdjuster),
+            matching: find.byType(SizedBox),
+          )
+          .first;
+
+      // Assert
+      expect(tester.getSize(levelColumn).width, 155);
+    });
+
     testWidgets('should_show_the_open_row_and_its_profile_in_one_panel', (
       tester,
     ) async {

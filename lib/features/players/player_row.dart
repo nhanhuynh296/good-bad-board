@@ -79,12 +79,14 @@ class PlayerRow extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: LayoutBuilder(
-            builder: (context, constraints) {
+            builder: (context, _) {
               // The trailing controls have fixed widths that, on a phone, add up
               // to more than the row has — squeezing the name to nothing and
               // overflowing. Give them their natural size there instead, so the
               // name keeps what is left.
-              final compact = isPhone(constraints.maxWidth);
+              // Viewport width, like the table header, so the columns agree
+              // (UAT NAV-08).
+              final compact = isPhone(MediaQuery.sizeOf(context).width);
               final gap = compact ? AppSpacing.sm : AppSpacing.md;
 
               return Row(
