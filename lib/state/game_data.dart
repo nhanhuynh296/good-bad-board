@@ -135,6 +135,12 @@ class GameData extends ChangeNotifier {
     // Nothing to redistribute. A court beyond the new count leaves the grid,
     // so its players go back to the waitlist (they are no longer on a court).
     _dropCourtsBeyondCount();
+    // A court added to a grid that already shows courts (after Save, say)
+    // needs a slot to take a tap and a re-roll.
+    if (stagingMatches.isNotEmpty) {
+      stagingMatches = [...stagingMatches];
+      _padToCourtCount(stagingMatches);
+    }
     // Keep the pre-made round in step with the grid, so every court the
     // organizer can see is one they can drop a player onto.
     final staged = _stagedLineup;
@@ -853,7 +859,9 @@ class GameData extends ChangeNotifier {
   /// is required.
   ///
   /// On successful check-in the player is placed on the first non-full court
-  /// (by index order). If all courts are full the player is waitlisted.
+  /// (by index order). If all courts are full the player is waitlisted. In
+  /// time mode a court with no players is skipped: after Save the courts are
+  /// empty, and a late player must not stand alone on one.
   bool checkInPlayer(Player player) {
     // Disabled players cannot be checked in
     if (player.membership == MembershipStatus.disabled) return false;
@@ -867,7 +875,10 @@ class GameData extends ChangeNotifier {
     _checkedInPlayers[player.id] = player;
 
     // Try to place on the first non-full court
+    final skipEmpty =
+        PersistentSetting.instance.getGameType() == GameType.timeBased;
     for (final game in stagingMatches) {
+      if (skipEmpty && game.playerIds.isEmpty) continue;
       if (game.playerIds.length < Game.playerPerCourt) {
         game.playerIds.add(player.id);
         notifyListeners();
