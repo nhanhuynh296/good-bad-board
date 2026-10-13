@@ -198,13 +198,22 @@ List<KpiEntry> computeKpis(
   final retention = _retentionPct(games, range.end);
   final priorRetention = _retentionPct(games, range.start);
 
-  String delta(double curr, double prev, String suffix, [int digits = 1]) {
+  /// Shown instead of a delta when there is nothing to compare with.
+  const noDelta = '—';
+
+  String delta(double curr, double? prev, String suffix, [int digits = 1]) {
+    if (prev == null) return noDelta;
     final d = curr - prev;
     final sign = d >= 0 ? '+' : '';
     return l10n.analytics_delta_vs_prior(
       '$sign${d.toStringAsFixed(digits)}$suffix',
     );
   }
+
+  // A session average is only a fair comparison when both periods have
+  // sessions. Otherwise the empty one reads as 0 and gives a fake delta.
+  final comparable = current.isNotEmpty && prior.isNotEmpty;
+  double? priorIfComparable(double value) => comparable ? value : null;
 
   final currAttendance = mean(current, (s) => s.attendanceRate * 100);
   final priorAttendance = mean(prior, (s) => s.attendanceRate * 100);
@@ -215,13 +224,13 @@ List<KpiEntry> computeKpis(
   final currUtil = mean(current, (s) => s.fillRate * 100);
   final priorUtil = mean(prior, (s) => s.fillRate * 100);
 
-  return [
+  final entries = [
     KpiEntry(
       label: l10n.analytics_kpi_active_players,
       value: '$playersInRange',
       contextLine: delta(
         playersInRange.toDouble(),
-        playersInPrior.toDouble(),
+        playersInPrior == 0 ? null : playersInPrior.toDouble(),
         '',
         0,
       ),
@@ -230,33 +239,47 @@ List<KpiEntry> computeKpis(
     KpiEntry(
       label: l10n.analytics_kpi_avg_attendance,
       value: '${currAttendance.toStringAsFixed(0)}%',
-      contextLine: delta(currAttendance, priorAttendance, '%'),
+      contextLine: delta(
+        currAttendance,
+        priorIfComparable(priorAttendance),
+        '%',
+      ),
       deltaPositive: currAttendance >= priorAttendance,
     ),
     KpiEntry(
       label: l10n.analytics_kpi_retention(_retentionWeeks),
-      value: '${retention.toStringAsFixed(0)}%',
-      contextLine: delta(retention, priorRetention, '%'),
-      deltaPositive: retention >= priorRetention,
+      value: retention == null ? noDelta : '${retention.toStringAsFixed(0)}%',
+      contextLine: retention == null || priorRetention == null
+          ? noDelta
+          : delta(retention, priorRetention, '%'),
+      deltaPositive: (retention ?? 0) >= (priorRetention ?? 0),
     ),
     KpiEntry(
       label: l10n.analytics_court_utilization,
       value: '${currUtil.toStringAsFixed(0)}%',
-      contextLine: delta(currUtil, priorUtil, '%'),
+      contextLine: delta(currUtil, priorIfComparable(priorUtil), '%'),
       deltaPositive: currUtil >= priorUtil,
     ),
     KpiEntry(
       label: l10n.analytics_kpi_avg_waitlist,
       value: currWaitlist.toStringAsFixed(1),
-      contextLine: delta(currWaitlist, priorWaitlist, ''),
+      contextLine: delta(currWaitlist, priorIfComparable(priorWaitlist), ''),
       deltaPositive: currWaitlist <= priorWaitlist,
     ),
     KpiEntry(
       label: l10n.analytics_kpi_rerolls_per_session,
       value: currRerolls.toStringAsFixed(1),
-      contextLine: delta(currRerolls, priorRerolls, ''),
+      contextLine: delta(currRerolls, priorIfComparable(priorRerolls), ''),
       deltaPositive: currRerolls <= priorRerolls,
     ),
+  ];
+
+  // A dash is neutral: it is neither a good nor a bad change.
+  return [
+    for (final e in entries)
+      e.contextLine == noDelta
+          ? KpiEntry(label: e.label, value: e.value, contextLine: noDelta)
+          : e,
   ];
 }
 
@@ -267,12 +290,12 @@ Set<String> _playerIdsInRange(Iterable<Game> games, DateRange range) => games
 
 /// Share of the players seen in the 4 weeks before the 4 weeks ending at
 /// [asOf] who were seen again in those last 4 weeks.
-double _retentionPct(List<Game> games, DateTime asOf) {
+double? _retentionPct(List<Game> games, DateTime asOf) {
   const window = Duration(days: _retentionWeeks * 7);
   final recent = DateRange(asOf.subtract(window), asOf);
   final before = DateRange(recent.start.subtract(window), recent.start);
   final base = _playerIdsInRange(games, before);
-  if (base.isEmpty) return 0;
+  if (base.isEmpty) return null;
   final returned = base.intersection(_playerIdsInRange(games, recent));
   return returned.length / base.length * 100;
 }
@@ -345,7 +368,13 @@ TrendResult computeWaitlistPressure(
         ),
       )
       .toList();
-  final avg = points.isEmpty ? 0.0 : points.map((p) => p.value).average;
+  if (points.isEmpty) {
+    return TrendResult(
+      points: points,
+      note: l10n.analytics_not_enough_sessions,
+    );
+  }
+  final avg = points.map((p) => p.value).average;
   final avgLabel = avg.toStringAsFixed(1);
   final note = avg >= 2.5
       ? l10n.analytics_waitlist_high(avgLabel)
@@ -785,6 +814,9 @@ class NewPlayerEntry {
   final int sessionsAttended;
   final double pctWithRegulars;
   bool get isFavorable => pctWithRegulars >= 50;
+
+  /// A player with no games in the range has no mix to judge.
+  bool get needsAttention => sessionsAttended > 0 && !isFavorable;
 }
 
 /// New players are those who joined in the [newWindowDays] before

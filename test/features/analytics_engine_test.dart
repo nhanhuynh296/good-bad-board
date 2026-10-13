@@ -129,9 +129,65 @@ void main() {
     });
 
     test('should_compare_retention_with_the_prior_period', () {
-      final kpis = computeKpis([], [], range, l10n: l10n);
+      final a = _p('A', Elo.c2);
+      final games = [
+        _game([a], now.subtract(const Duration(days: 120))),
+        _game([a], now.subtract(const Duration(days: 100))),
+        _game([a], now.subtract(const Duration(days: 40))),
+        _game([a], now.subtract(const Duration(days: 5))),
+      ];
+      final kpis = computeKpis(games, [], range, l10n: l10n);
       final retention = kpis.firstWhere((k) => k.label.startsWith('Retention'));
       expect(retention.contextLine, '+0.0% vs prior period');
+    });
+
+    KpiEntry kpiByLabel(List<KpiEntry> kpis, String prefix) =>
+        kpis.firstWhere((k) => k.label.startsWith(prefix));
+
+    test('should_show_dash_for_retention_value_when_no_base_players', () {
+      final kpis = computeKpis([], [], range, l10n: l10n);
+      expect(kpiByLabel(kpis, 'Retention').value, '—');
+    });
+
+    test('should_show_dash_for_retention_delta_when_no_base_players', () {
+      final kpis = computeKpis([], [], range, l10n: l10n);
+      expect(kpiByLabel(kpis, 'Retention').contextLine, '—');
+    });
+
+    test('should_show_dash_for_active_players_delta_when_prior_is_empty', () {
+      final a = _p('A', Elo.c2);
+      final games = [
+        _game([a], now.subtract(const Duration(days: 3))),
+      ];
+      final kpis = computeKpis(games, [], range, l10n: l10n);
+      expect(kpis.first.contextLine, '—');
+    });
+
+    test('should_show_dash_for_session_deltas_when_prior_has_no_sessions', () {
+      final logs = [_log(loggedAt: now.subtract(const Duration(days: 3)))];
+      final kpis = computeKpis([], logs, range, l10n: l10n);
+      expect(
+        kpis
+            .skip(1)
+            .where((k) => !k.label.startsWith('Retention'))
+            .map((k) => k.contextLine),
+        everyElement('—'),
+      );
+    });
+
+    test('should_show_session_delta_when_prior_has_sessions', () {
+      final logs = [
+        _log(loggedAt: now.subtract(const Duration(days: 3)), waitlistCount: 4),
+        _log(
+          loggedAt: now.subtract(const Duration(days: 100)),
+          waitlistCount: 2,
+        ),
+      ];
+      final kpis = computeKpis([], logs, range, l10n: l10n);
+      expect(
+        kpiByLabel(kpis, 'Avg waitlist').contextLine,
+        '+2.0 vs prior period',
+      );
     });
   });
 
@@ -193,6 +249,11 @@ void main() {
   });
 
   group('ANA-04: Waitlist pressure', () {
+    test('should_say_not_enough_sessions_when_no_sessions_for_waitlist', () {
+      final result = computeWaitlistPressure([], range, l10n: l10n);
+      expect(result.note, l10n.analytics_not_enough_sessions);
+    });
+
     test('flags high waitlist pressure at >= 2.5 average', () {
       final logs = [
         _log(loggedAt: now.subtract(const Duration(days: 2)), waitlistCount: 3),
@@ -725,6 +786,29 @@ void main() {
       );
       expect(result.single.sessionsAttended, 2);
     });
+
+    test('should_not_need_attention_when_new_player_has_no_sessions', () {
+      final entry = NewPlayerEntry(
+        name: 'Idle',
+        joinDate: now,
+        sessionsAttended: 0,
+        pctWithRegulars: 0,
+      );
+      expect(entry.needsAttention, isFalse);
+    });
+
+    test(
+      'should_need_attention_when_played_below_50_percent_with_regulars',
+      () {
+        final entry = NewPlayerEntry(
+          name: 'Away',
+          joinDate: now,
+          sessionsAttended: 2,
+          pctWithRegulars: 10,
+        );
+        expect(entry.needsAttention, isTrue);
+      },
+    );
 
     test('should_mark_below_50_percent_as_needing_attention', () {
       final newbie = newcomer();

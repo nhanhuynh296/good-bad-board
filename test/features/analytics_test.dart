@@ -168,7 +168,7 @@ void main() {
       tester,
     ) async {
       await seedGames(tester);
-      await tester.pumpWidget(wrap(const AnalyticsPage()));
+      await tester.pumpWidget(wrap(const AnalyticsPage(showHiddenCards: true)));
       await tester.pumpAndSettle();
       final inMixingCard = find.descendant(
         of: find.byType(PlayerMixingCard),
@@ -325,6 +325,91 @@ void main() {
     });
   });
 
+  group('Release: hidden cards and grid rows', () {
+    Future<void> pump(WidgetTester tester, {bool showHidden = false}) async {
+      tester.view.physicalSize = const Size(1280, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        wrap(
+          AnalyticsPage(showHiddenCards: showHidden),
+          size: const Size(1280, 2400),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('should_hide_player_mixing_card_by_default', (tester) async {
+      await pump(tester);
+      expect(find.byType(PlayerMixingCard), findsNothing);
+    });
+
+    testWidgets('should_hide_court_gap_card_by_default', (tester) async {
+      await pump(tester);
+      expect(find.byType(CourtGapComparisonCard), findsNothing);
+    });
+
+    testWidgets('should_show_hidden_cards_when_flag_is_on', (tester) async {
+      await pump(tester, showHidden: true);
+      expect(find.byType(PlayerMixingCard), findsOneWidget);
+      expect(find.byType(CourtGapComparisonCard), findsOneWidget);
+    });
+
+    testWidgets('should_put_two_cards_in_every_chart_row', (tester) async {
+      await pump(tester);
+      final cards = [
+        AttendanceChart,
+        WaitlistPressureChart,
+        LevelGapTrendChart,
+        CourtUtilizationCard,
+        RerollChart,
+        LevelDistributionCard,
+        AtRiskPlayersCard,
+        NewPlayerIntegrationCard,
+      ];
+      final tops = <double, int>{};
+      for (final type in cards) {
+        final top = tester.getTopLeft(find.byType(type)).dy;
+        tops[top] = (tops[top] ?? 0) + 1;
+      }
+      expect(tops.values, everyElement(2));
+    });
+
+    testWidgets('should_not_show_stagnation_warning_on_level_distribution', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const LevelDistributionCard(
+            result: LevelDistributionResult(
+              points: [],
+              medianTierLabel: 'Amateur',
+              trendNote: null,
+              stagnationNote: '3 players flat 6+ sessions',
+            ),
+          ),
+        ),
+      );
+      expect(find.textContaining('flat 6+ sessions'), findsNothing);
+    });
+
+    testWidgets('should_keep_median_on_level_distribution', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const LevelDistributionCard(
+            result: LevelDistributionResult(
+              points: [],
+              medianTierLabel: 'Amateur',
+              trendNote: null,
+              stagnationNote: null,
+            ),
+          ),
+        ),
+      );
+      expect(find.textContaining('Amateur'), findsOneWidget);
+    });
+  });
+
   group('ANA-12/13: card details', () {
     testWidgets('should_show_the_mixing_tag_under_each_tagged_player', (
       tester,
@@ -406,6 +491,25 @@ void main() {
         find.textContaining('1 new player mostly plays away from regulars'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('should_not_warn_when_new_player_has_no_games', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          NewPlayerIntegrationCard(
+            entries: [
+              NewPlayerEntry(
+                name: 'Idle',
+                joinDate: DateTime(2026, 8, 1),
+                sessionsAttended: 0,
+                pctWithRegulars: 0,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.textContaining('pair them up'), findsNothing);
     });
 
     testWidgets('should_show_a_reassuring_note_when_all_mix_with_regulars', (

@@ -29,7 +29,11 @@ import 'package:good_bad_board/repository/session_log_repository.dart';
 /// entries (not the in-memory, per-app-run `GameData.history`) so trends
 /// survive app restarts.
 class AnalyticsPage extends StatefulWidget {
-  const AnalyticsPage({super.key});
+  const AnalyticsPage({super.key, this.showHiddenCards = false});
+
+  /// ANA-06 (court fairness) and ANA-12 (player mixing) are hidden for this
+  /// release. The engine and cards stay; tests turn this on.
+  final bool showHiddenCards;
 
   @override
   State<AnalyticsPage> createState() => _AnalyticsPageState();
@@ -103,11 +107,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         .where((g) => _range.contains(g.createdDate))
         .toList();
     _atRisk = computeAtRiskPlayers(gamesInRange, allPlayers, now: _range.end);
-    _mixing = computePlayerMixing(
-      gamesInRange,
-      resolvePlayer: PlayerRepository.instance.byId,
-      nameOf: (p) => playerDisplayName(p, l10n),
-    );
+    _mixing = widget.showHiddenCards
+        ? computePlayerMixing(
+            gamesInRange,
+            resolvePlayer: PlayerRepository.instance.byId,
+            nameOf: (p) => playerDisplayName(p, l10n),
+          )
+        : const [];
     _newPlayers = computeNewPlayerIntegration(
       playableGames,
       allPlayers,
@@ -141,6 +147,19 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     final gamesInRange = _games
         .where((g) => range.contains(g.createdDate))
         .toList();
+
+    final cards = <Widget>[
+      AttendanceChart(result: attendance),
+      WaitlistPressureChart(result: waitlist),
+      LevelGapTrendChart(result: levelGapTrend),
+      if (widget.showHiddenCards) CourtGapComparisonCard(courts: courtGaps),
+      CourtUtilizationCard(result: courtUtilization),
+      RerollChart(result: rerolls),
+      LevelDistributionCard(result: levelDistribution),
+      AtRiskPlayersCard(result: _atRisk),
+      if (widget.showHiddenCards) PlayerMixingCard(entries: _mixing),
+      NewPlayerIntegrationCard(entries: _newPlayers),
+    ];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: AppSpacing.xl),
@@ -178,50 +197,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           KpiStrip(kpis: kpis),
           const SizedBox(height: AppSpacing.lg),
 
-          // ── Row 1: Attendance + Waitlist (ANA-03/04) ─────────
-          _ChartRow(
-            children: [
-              AttendanceChart(result: attendance),
-              WaitlistPressureChart(result: waitlist),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // ── Row 2: Level gap trend + court fairness (ANA-05/06) ─
-          _ChartRow(
-            children: [
-              LevelGapTrendChart(result: levelGapTrend),
-              CourtGapComparisonCard(courts: courtGaps),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // ── Row 3: Court utilization + re-rolls (ANA-07/08) ──
-          _ChartRow(
-            children: [
-              CourtUtilizationCard(result: courtUtilization),
-              RerollChart(result: rerolls),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // ── Row 4: Level distribution + at-risk (ANA-09/11) ──
-          _ChartRow(
-            children: [
-              LevelDistributionCard(result: levelDistribution),
-              AtRiskPlayersCard(result: _atRisk),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // ── Row 5: Player mixing + new-player integration (ANA-12/13) ─
-          _ChartRow(
-            children: [
-              PlayerMixingCard(entries: _mixing),
-              NewPlayerIntegrationCard(entries: _newPlayers),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
+          // ── Chart grid: two cards per row (ANA-03…13) ────────
+          // Hidden cards are left out, so the rest are chunked in pairs and
+          // no row is left with a hole.
+          for (final row in _pairs(cards)) ...[
+            _ChartRow(children: row),
+            const SizedBox(height: AppSpacing.lg),
+          ],
 
           // ── Session history: per-game drill-down ─────────────
           SessionHistoryList(games: gamesInRange),
@@ -230,6 +212,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     );
   }
 }
+
+List<List<Widget>> _pairs(List<Widget> cards) => [
+  for (var i = 0; i < cards.length; i += 2)
+    cards.sublist(i, i + 2 > cards.length ? cards.length : i + 2),
+];
 
 /// A responsive row of chart cards — side by side on desktop, one column on
 /// tablet and phone, per ANA-14.
