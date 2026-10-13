@@ -357,6 +357,21 @@ void main() {
       expect(find.text('RE-ROLLS'), findsOneWidget);
     });
 
+    testWidgets('should_label_fourth_cell_remaining_on_phone', (tester) async {
+      tester.view.physicalSize = const Size(390, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: StatStrip()),
+        ),
+      );
+      expect(find.text('REMAINING'), findsOneWidget);
+      expect(find.text('REMAINING SLOTS'), findsNothing);
+    });
+
     testWidgets('displays provided values', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(

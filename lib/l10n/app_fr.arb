@@ -218,6 +218,7 @@
   "dashboard_spread": "{gap, plural, =0{Même niveau} =1{1 niveau d'écart} other{{gap} niveaux d'écart}}",
   "dashboard_stat_checked_in": "Présents",
   "dashboard_stat_remaining_slots": "Places restantes",
+  "dashboard_stat_remaining": "Restantes",
   "dashboard_waitlist": "Liste d'attente",
   "dashboard_stat_avg_level": "Niveau moyen",
   "dashboard_stat_avg_level_gap": "Écart moyen",

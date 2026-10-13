@@ -98,7 +98,10 @@ class StatStrip extends StatelessWidget {
               cells[0], // Checked In
               cells[2], // Waitlist
               cells[3], // Avg Level
-              cells[1], // Remaining Slots
+              AppStatCell(
+                label: l10n.dashboard_stat_remaining,
+                value: remainingSlots,
+              ),
             ];
             return Column(
               mainAxisSize: MainAxisSize.min,

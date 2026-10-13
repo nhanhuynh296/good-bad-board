@@ -218,6 +218,7 @@
   "dashboard_spread": "{gap, plural, =0{同一水平} other{相差{gap}级}}",
   "dashboard_stat_checked_in": "已签到",
   "dashboard_stat_remaining_slots": "剩余空位",
+  "dashboard_stat_remaining": "剩余",
   "dashboard_waitlist": "候补名单",
   "dashboard_stat_avg_level": "平均水平",
   "dashboard_stat_avg_level_gap": "平均水平差",
