@@ -367,7 +367,10 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
 
-      expect(find.widgetWithText(TextField, '4'), findsOneWidget);
+      expect(
+        tester.widget<TextField>(find.byKey(capacityField)).controller!.text,
+        '4',
+      );
     });
 
     testWidgets('SESS-05: should_summarise_a_saved_template', (tester) async {

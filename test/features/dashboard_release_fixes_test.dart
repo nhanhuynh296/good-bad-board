@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_bad_board/features/dashboard/dashboard.dart';
-import 'package:good_bad_board/features/dashboard/stat_strip.dart';
-import 'package:good_bad_board/features/dashboard/waitlist_sidebar.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/repository/player_repository.dart';

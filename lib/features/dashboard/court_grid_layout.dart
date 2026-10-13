@@ -25,6 +25,10 @@ class CourtGridLayout {
 /// no column count fits, the grid uses the most columns at the minimum
 /// proportion and scrolls. [maxColumnCount] caps the columns (the stacked
 /// layout uses 2 on tablet and 1 on phone).
+///
+/// [minCourtHeight] lets a court be flatter than [minAspectRatio] as long as
+/// it is at least this tall, so the desktop dashboard can fit 4 courts in a
+/// short window. Left at its default, the aspect ratio alone decides.
 CourtGridLayout courtGridLayout({
   required double width,
   required double height,
@@ -32,6 +36,7 @@ CourtGridLayout courtGridLayout({
   double gap = 16,
   double minCourtWidth = 320,
   double minAspectRatio = 1.6,
+  double minCourtHeight = double.infinity,
   int? maxColumnCount,
 }) {
   final count = max(1, courtCount);
@@ -46,7 +51,7 @@ CourtGridLayout courtGridLayout({
     final rows = (count / columns).ceil();
     final w = courtWidth(columns);
     final rowHeight = (height - gap * (rows - 1)) / rows;
-    if (rowHeight < w / minAspectRatio) continue;
+    if (rowHeight < min(w / minAspectRatio, minCourtHeight)) continue;
     final h = min(rowHeight, w);
     if (w * h > bestArea) {
       bestArea = w * h;

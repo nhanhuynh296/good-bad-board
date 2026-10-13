@@ -100,7 +100,12 @@ class GameData extends ChangeNotifier {
   List<SessionTemplate> get templates =>
       List.unmodifiable(SessionTemplateRepository.instance.getAll());
 
-  int numberOfCourt = 2;
+  /// Default number of courts for a fresh session (the club has 4).
+  static const int defaultCourtCount = 4;
+
+  /// Number of courts. Not persisted: every session starts at
+  /// [defaultCourtCount], and a template can set its own.
+  int numberOfCourt = defaultCourtCount;
 
   /// Sets the number of courts (SESS-04).
   ///

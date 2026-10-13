@@ -18,6 +18,10 @@ import 'package:provider/provider.dart';
 const int _minCourts = 1;
 const int _maxCourts = 8;
 
+/// Shortest court card the desktop grid accepts. A 4-slot card this tall
+/// still shows each slot in full (see the compact `CourtCard`).
+const double _minDesktopCourtHeight = 136;
+
 /// The Dashboard tab — court grid, waitlist, stat strip, and all game
 /// interactions (place/swap, re-roll, make game, save).
 ///
@@ -605,6 +609,11 @@ class _DashboardPageState extends State<DashboardPage> {
           height: fitToHeight ? constraints.maxHeight : 0,
           courtCount: courts.length,
           gap: AppSpacing.lg,
+          // On desktop a court may be flatter than the default, down to
+          // _minDesktopCourtHeight, so 4 courts fit a 1280x720 window.
+          minCourtHeight: fitToHeight
+              ? _minDesktopCourtHeight
+              : double.infinity,
           maxColumnCount: fitToHeight
               ? null
               : (isPhone(MediaQuery.sizeOf(context).width) ? 1 : 2),

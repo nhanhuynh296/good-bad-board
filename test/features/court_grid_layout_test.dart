@@ -69,5 +69,45 @@ void main() {
 
       expect(layout.columns, 2);
     });
+
+    test('should_scroll_four_courts_in_a_short_grid_by_default', () {
+      final layout = courtGridLayout(width: 938, height: 299, courtCount: 4);
+
+      expect(layout.scrolls, isTrue);
+    });
+
+    test('should_fit_four_flat_courts_when_a_min_court_height_allows_it', () {
+      // 2 x 2 courts, each 461 x 141: flatter than 1.6, taller than 140.
+      final layout = courtGridLayout(
+        width: 938,
+        height: 299,
+        courtCount: 4,
+        minCourtHeight: 140,
+      );
+
+      expect(layout.scrolls, isFalse);
+    });
+
+    test('should_use_two_columns_for_four_flat_courts', () {
+      final layout = courtGridLayout(
+        width: 938,
+        height: 299,
+        courtCount: 4,
+        minCourtHeight: 140,
+      );
+
+      expect(layout.columns, 2);
+    });
+
+    test('should_scroll_when_courts_are_shorter_than_the_min_court_height', () {
+      final layout = courtGridLayout(
+        width: 938,
+        height: 250,
+        courtCount: 4,
+        minCourtHeight: 140,
+      );
+
+      expect(layout.scrolls, isTrue);
+    });
   });
 }

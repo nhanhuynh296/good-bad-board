@@ -21,6 +21,7 @@ class PlayerSlot extends StatelessWidget {
   const PlayerSlot({
     super.key,
     this.player,
+    this.compact = false,
     this.isSelectionActive = false,
     this.isSelected = false,
     this.onTap,
@@ -29,6 +30,9 @@ class PlayerSlot extends StatelessWidget {
 
   /// The player occupying this slot, or null if empty.
   final Player? player;
+
+  /// Tighter padding, for a court card that is short on height.
+  final bool compact;
 
   /// Whether a waitlist selection is currently active (makes slots tappable).
   final bool isSelectionActive;
@@ -53,7 +57,10 @@ class PlayerSlot extends StatelessWidget {
         splashColor: AppColors.accentPrimary.withValues(alpha: 0.12),
         highlightColor: AppColors.accentPrimary.withValues(alpha: 0.06),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: compact ? 3 : 10,
+          ),
           decoration: BoxDecoration(
             border: const Border(top: BorderSide(color: AppColors.pillBg)),
             color: isSelected
@@ -107,9 +114,9 @@ class PlayerSlot extends StatelessWidget {
                     color: AppColors.textMuted,
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(
-                      width: 24,
-                      height: 24,
+                    constraints: BoxConstraints.tightFor(
+                      width: compact ? 18 : 24,
+                      height: compact ? 18 : 24,
                     ),
                   ),
                 ],

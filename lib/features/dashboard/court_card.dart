@@ -73,6 +73,10 @@ class CourtCard extends StatelessWidget {
 
   static const _slotCount = 4;
 
+  /// Below this card height the header and slots use tighter padding, so a
+  /// short window can still show 4 courts with 4 readable slots each.
+  static const _compactHeight = 200.0;
+
   bool get _showRemove =>
       onRemovePlayer != null && !isPlaying && players.length < _slotCount;
 
@@ -84,6 +88,13 @@ class CourtCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          _buildCard(l10n, compact: constraints.maxHeight < _compactHeight),
+    );
+  }
+
+  Widget _buildCard(AppLocalizations l10n, {required bool compact}) {
     return AppCard(
       padding: EdgeInsets.zero,
       child: Column(
@@ -91,7 +102,9 @@ class CourtCard extends StatelessWidget {
         children: [
           // ── Header ──────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
+            padding: compact
+                ? const EdgeInsets.fromLTRB(12, 6, 10, 4)
+                : const EdgeInsets.fromLTRB(16, 14, 12, 10),
             child: Row(
               children: [
                 Text(
@@ -136,6 +149,7 @@ class CourtCard extends StatelessWidget {
             Expanded(
               child: PlayerSlot(
                 player: i < players.length ? players[i] : null,
+                compact: compact,
                 isSelectionActive: isSelectionActive,
                 isSelected:
                     i < players.length && players[i].id == selectedPlayerId,
