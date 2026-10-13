@@ -19,10 +19,13 @@ prototype's logic and should be treated as acceptance values, not approximations
 | Skill tiers (index → label) | 0 Amateur · 1 Intermediate · 2 Advanced · 3 Professional |
 | Level gap (a group of players) | `max(tier index) − min(tier index)` across the group |
 | Level gap label | `0` → "Same level"; `N>0` → "N level gap" |
+| Level gap source | The court pill and the Avg Level Gap stat use the 4-tier gap (`Game.tierGap()`). This is display only. Session logs keep the Elo gap (`eloGap`). |
 | Court size | 4 players per court |
 | Default courts | 4 (organizer-adjustable, range **1–8**) |
 | Default session capacity | 20 (organizer-adjustable, minimum **4**) |
-| Default round mode | Game-based |
+| Default round mode | Time-based |
+| Round modes in the release build | Time-based only. Game-based mode is hidden behind `GameMode.enabled` (`false` in release). `getGameType()` then returns time-based. A stored game-based setting, or the mode in a template, is ignored. The stored `gameType` preference is never rewritten. |
+| Other release flags (code kept, hidden in UI) | `PlayersPage.showImportButton=false` (CSV Import button), `SettingsPage.showSignupPreview=false` (signup preview link), `AnalyticsPage.showHiddenCards=false` (per-court gap and player mixing cards) |
 | Default rotation duration | 20 min (organizer-adjustable **10–45 min, step 5**, time-based only) |
 | Minimum enforced round duration | 30 sec (floor, not reachable via the UI slider) |
 | Responsive breakpoints | Phone `< 720px` · Tablet `720–1079px` · Desktop `≥ 1080px` |
@@ -93,7 +96,7 @@ Given the app is on the Dashboard/any tab
 padding.)
 When viewport width is desktop (≥1080px)
 Then the stat strip shows 6 cells in one row: Checked In, Remaining Slots, Waitlist, Avg Level, Avg
-Level Gap, Re-rolls.
+Level Gap, Re-rolls. "Avg Level" shows a tier name (for example "Intermediate"), never an Elo code.
 When viewport width is tablet (720–1079px)
 Then the same 6 stats are shown, wrapped 3-per-row.
 When viewport width is phone (<720px)
@@ -104,11 +107,17 @@ Given the Dashboard tab is active
 When viewport width is desktop (≥1080px, including the 1194px iPad-landscape reference)
 Then courts render as a grid alongside a fixed-width waitlist sidebar to its right. The grid
 uses the column count that gives the largest courts that fit the free height (as on main), and
-the courts grow to fill that height. A court is never narrower than 320px, never flatter than
-1.6:1 and never taller than it is wide. The 4 player slots share the card height, so there is no
-empty band below the last slot.
-When the courts cannot fit at that minimum size, the grid uses the most columns and **scrolls**,
-so every court stays reachable. The waitlist sidebar scrolls independently.
+the courts grow to fill that height. A court is never narrower than 320px and never taller than it is wide.
+A court is normally not flatter than 1.6:1, but it may be flatter than that, down to a minimum
+height of 136px, so more courts fit. The 4 player slots share the card height, so there is no
+empty band below the last slot. A court card shorter than 200px uses compact padding.
+With 4 courts, all 4 are visible without scrolling at 1280x720, 1366x768, 1440x900 and 1920x1080
+(stat strip, action bar, rotation bar and waitlist sidebar shown).
+When the courts cannot fit at that minimum size (for example more than 4 courts), the grid uses
+the most columns and **scrolls**, so every court stays reachable. The waitlist sidebar scrolls
+independently.
+Known limit: with a pre-made next round staged, the rotation bar is taller, and the courts may
+scroll at 1280x720 and 1366x768.
 When viewport width is tablet or phone (<1080px)
 Then the waitlist renders as a horizontally-wrapping chip row above the courts, and courts stack
 below it at the minimum proportion (2 columns on tablet, 1 column on phone); the page scrolls.
@@ -116,12 +125,17 @@ below it at the minimum proportion (2 columns on tablet, 1 column on phone); the
 **NAV-08** — Table header rows hidden on phone
 Given the Players tab is active (with integrated check-in and capacity bar)
 When viewport width ≥ 720px
-Then a column-header row is shown above the list, reading NAME / ID · LEVEL · MEMBERSHIP ·
-CHECKED IN.
+Then a column-header row is shown above the list, reading NAME / ID · LEVEL · MEMBERSHIP
+and a blank More column. There is no "Checked in" header.
 When viewport width < 720px
 Then the header row is omitted; only data rows are shown, and each row fits the width without
-clipping its controls (the level, membership and check-in columns drop their fixed widths so the
+clipping its controls (the level, membership and More columns drop their fixed widths so the
 name keeps the remaining space).
+
+**START-01** — Data file fails to load at start-up
+Given a data file cannot be loaded when the app starts
+Then a plain error screen shows and names the data folder (`app_load_error`). The app writes
+nothing to disk (see PERSISTENCE.md §3.1).
 
 ---
 
@@ -158,6 +172,9 @@ assignments are recomputed (or the staged lineup is adopted — see RND-06), and
 restarts at the full duration.
 Note: a court holding fewer than 4 players is logged as it stands — the clock running out must
 never be blocked by a half-filled court. Saving by hand still refuses an unbalanced lineup.
+Global Save (time-based): Save logs the round, keeps one empty court per court, clears the staged
+next round, and returns to the current-round view. Save with no players on any court is refused
+("No game to save").
 
 **RND-05** — Pre-make next round
 Given a round is in progress and no round is currently staged
@@ -215,7 +232,7 @@ Then the staged lineup gains the extra empty courts, so every court on screen ca
 Given round mode is "Time-based"
 Then the round bar subtitle reads "Time-based · {mm:ss} rounds" and the Sessions tab's duration
 control is shown.
-Given round mode is "Game-based"
+Given round mode is "Game-based" (not reachable in the release build, see §1)
 Then no round bar is rendered at all and the Sessions tab's duration control is hidden.
 Note: switching mode does not by itself force an immediate rotation.
 
@@ -223,27 +240,34 @@ Note: switching mode does not by itself force an immediate rotation.
 
 ## 3a. Dashboard tab — game-based mode
 
+> **Release build:** GB-01…07 are hidden in the release build (`GameMode.enabled=false`).
+> They are covered by tests with the flag on.
+
 In game-based mode there is no clock. A committee member drives each court by hand:
 Regenerate → re-roll a court → Save → the court shows PLAYING → re-roll when the real game
 finishes → Save again.
 
 **GB-01** — No countdown
+*Hidden in release build (GameMode.enabled=false); covered by tests with the flag on.*
 Given round mode is "Game-based"
 When the Dashboard is viewed
 Then no round bar, countdown, "Rotate now", or "Pre-make next round" control is rendered, and no
 rotation timer is started.
 
 **GB-02** — Generate once
+*Hidden in release build (GameMode.enabled=false); covered by tests with the flag on.*
 Given round mode is "Game-based" and no court holds any player
 Then the "Generate Game" button is shown, and it fills every court in one action.
 Given at least one court holds players
 Then the Generate / Regenerate button is hidden — courts are driven individually from then on.
 
 **GB-03** — No global Save
+*Hidden in release build (GameMode.enabled=false); covered by tests with the flag on.*
 Given round mode is "Game-based"
 Then the Dashboard action bar shows no global "Save" button; saving happens per court.
 
 **GB-04** — Per-court Save
+*Hidden in release build (GameMode.enabled=false); covered by tests with the flag on.*
 Given a court holds a full lineup of 4 and is not already playing
 Then that court's header shows a "Save" button.
 When the organizer taps it
@@ -251,16 +275,19 @@ Then the match is written to history and the analytics session log, the four pla
 court, and the court is marked as playing.
 
 **GB-05** — PLAYING indication
+*Hidden in release build (GameMode.enabled=false); covered by tests with the flag on.*
 Given a court has been saved
 Then its header shows a "PLAYING" badge, its "Save" button is hidden, and its "Re-roll" button
 remains available.
 
 **GB-06** — A playing lineup is locked
+*Hidden in release build (GameMode.enabled=false); covered by tests with the flag on.*
 Given a court is playing
 When the organizer selects a waitlisted player and taps a slot on that court
 Then nothing changes — the saved lineup cannot be edited, because it is already recorded.
 
 **GB-07** — Re-roll ends the game
+*Hidden in release build (GameMode.enabled=false); covered by tests with the flag on.*
 Given a court is playing
 When the organizer taps "Re-roll" on it
 Then the PLAYING badge clears, four players are drawn from those not currently on any court, and
@@ -269,7 +296,7 @@ drawn into the new lineup.
 
 **COURT-01** — Court display
 Given the Dashboard is viewed
-Then each court shows its number, a level-gap badge (see §1 label rules) computed from its current
+Then each court shows its number, a level-gap badge (see §1 label rules; 4-tier gap, `Game.tierGap()`) computed from its current
 occupants, up to 4 player rows (each showing name + level tier), and empty slots labeled "Open
 slot" in italics for any unfilled positions.
 
@@ -280,7 +307,8 @@ When the organizer taps "Re-roll ⟲" on that court
 Then the app evaluates multiple random 4-player combinations drawn from that court's current
 occupants plus the entire checked-in waitlist, selects the combination with the lowest level gap,
 seats those 4 on the court, returns everyone else in the pool to the waitlist, and increments the
-club's re-roll count (visible in the stat strip and Analytics).
+club's re-roll count (visible in the stat strip and Analytics). The stat strip Re-rolls value counts only
+re-rolls on the current round, not on the pre-made next round.
 
 **COURT-03** — Re-roll no-op when nobody else is available
 Given a full court whose occupants plus the full waitlist total 4 players (or any court when the
@@ -377,6 +405,8 @@ refilled: it stays one player short, and its saved match does not change.
 
 ## 4. Players tab (includes integrated check-in — CHK-01…06)
 
+Note: the CSV Import button is hidden in the release build (`PlayersPage.showImportButton=false`). It has no UAT ID.
+
 **PLY-01** — Pending self-registration approvals
 Given one or more self-registrations are pending approval
 When the Players tab is viewed
@@ -398,8 +428,8 @@ Then the applicant is removed from the pending list; no player record is created
 **PLY-04** — Search/filter
 Given the search box contains text
 When the Players tab list renders
-Then only players whose name contains the search text (case-insensitive, substring match) are
-shown; clearing the box shows all players again.
+Then only players whose name OR sign-in ID contains the search text (case-insensitive, substring
+match) are shown; level is not searched. Clearing the box shows all players again.
 
 **PLY-05** — Level adjustment stepper
 Given a player row is shown
@@ -417,7 +447,7 @@ When the organizer taps their membership control
 Then it advances to "Disabled" — if the player is currently checked in, a confirmation dialog
 first warns that they'll be checked out and removed from their court/waitlist immediately (see
 WL-02 auto-promotion); if they're not checked in, no confirmation is needed. Disabled players
-stay in the Players list, but their check-in control is disabled (CHK-06).
+stay in the Players list, but their row ignores taps (CHK-06).
 Given a player's membership is "Disabled"
 When the organizer taps their membership control
 Then it advances back to "Member"; this does not automatically check them back in.
@@ -436,14 +466,14 @@ Then a progress bar at the top shows checked-in ÷ session capacity, and text re
 
 **CHK-02** — Mark present (check in) — inline in Players tab
 Given a player is not checked in and the session is below capacity
-When the organizer taps their check-in control
+When the organizer taps their row (the row tap is the check-in toggle)
 Then the player becomes checked in; if any court has fewer than 4 occupants, they are placed on the
 first such court (by court index order); otherwise they are added to the waitlist.
 
 **CHK-03** — At-capacity block
 Given checked-in count already equals session capacity
 When the organizer attempts to check in another player
-Then the check-in is refused (no state change) — the UI must not allow bypassing capacity from this control.
+Then the check-in is refused (no state change) and the capacity message shows — the UI must not allow bypassing capacity from the row tap.
 
 **CHK-04** — At-capacity banner
 Given checked-in count ≥ session capacity
@@ -452,17 +482,17 @@ Then a banner reads "Session at capacity — new check-ins are blocked." (CHK-03
 
 **CHK-05** — Mark absent (check out) — inline in Players tab
 Given a player is checked in
-When the organizer taps their check-in control again
+When the organizer taps their row again
 Then the player becomes not checked in, is removed from their court or the waitlist, and WL-02
 auto-promotion is triggered if this opened a court slot.
 
 **CHK-06** — Only non-Disabled players listed (can toggle check-in for Member/Casual players only)
 Given a player's membership is "Disabled"
-Then their check-in control is disabled or unavailable; only Member/Casual players can be checked in.
+Then their row ignores taps (no check-in, no hover); only Member/Casual players can be checked in.
 
 **PLY-08** — Check-in toggle from Players tab
 Given a player row is shown for a Member or Casual player
-Then the check-in control performs CHK-02/CHK-03/CHK-05 behavior directly (no separate Check-in tab).
+Then the row tap is the check-in toggle (tap = in, tap again = out) and performs CHK-02/CHK-03/CHK-05 behavior directly (no separate Check-in tab). There is no In/Out pill and no "Checked in" column.
 
 **PLY-13** — Add player
 Given the organizer taps "Add" on the Players tab
@@ -477,29 +507,59 @@ Note: the dialog closes itself, returning the new player through its own result.
 close it — a dialog opens on the root navigator while a caller's context resolves to the per-tab
 navigator, so closing from the caller removes the tab and leaves a blank screen.
 
+**PLY-14** — Barcode scan check-in
+Given the Players tab opens
+Then the search field is focused, so a barcode scanner can type into it.
+When an ID is typed and Enter is sent (a scanner does this), and exactly one player has that exact
+sign-in ID (trimmed, case-insensitive)
+Then that player is checked in (the capacity and Disabled rules apply), a SnackBar reads "{name}
+checked in", and the field clears and keeps focus.
+When that player is already checked in
+Then a SnackBar reads "{name} is already checked in", nobody is checked out, and the field clears.
+When that player is Disabled
+Then a SnackBar reads "{name} is disabled — cannot check in", and the field clears.
+When the session is at capacity
+Then the existing capacity message shows, and the field clears.
+When no player has that exact ID
+Then the text stays and is selected, and a SnackBar reads "No player with ID {id}".
+When the field is empty and Enter is sent
+Then nothing happens.
+
+**PLY-15** — Edit sign-in ID, and add-player checks
+Given a player's profile panel is open
+Then it shows a Sign In ID field and a Save button.
+When the organizer saves a changed ID
+Then the ID is trimmed and saved, and no other player field changes. An empty ID means no ID.
+When the ID is already used by another listed player
+Then the save is refused with a message that names that player.
+When a player is added (PLY-13)
+Then the name and the ID are trimmed. A blank name, a duplicate name, or a duplicate ID is refused.
+
 **PLY-09** — Expand player profile
-Given a player's row is tapped anywhere outside its controls (level −/+, membership, check-in)
-When no other profile is currently expanded
+Given a player row is shown
+When the organizer taps the "More" button (chevron down) and no other profile is currently expanded
 Then a panel expands inline directly beneath that row (not a modal/drawer — this design was
 explicitly chosen after modal/drawer positioning proved unreliable, see design history). The row
-and the panel sit in one rounded panel, so they read as one accordion item. Each row has a
-trailing arrow: down when the profile is hidden, up when it is shown. The panel shows:
+and the panel sit in one rounded panel, so they read as one accordion item. The More
+button shows a chevron down when the profile is hidden and up when it is shown. A row tap does
+not open the profile (it toggles check-in, PLY-08). More, level −/+ and membership taps never
+toggle check-in, and a dimmed −/+ does nothing. The panel shows:
 membership status, 3 stat tiles (Current
-Level, Matches, Diversity %), a level-progression sparkline, up to 3 most-frequent playing partners
+Level, Matches, Diversity %), a Sign In ID field with a Save button (PLY-15), up to 3 most-frequent playing partners
 with match counts, and a session-attendance history summary (or "No sessions logged yet" if none).
 Definitions: Matches = saved games that hold the player. Diversity % = distinct other players met in
 those games ÷ other listed players on the roster. Partners = every other player in a game (a game
 does not record who partnered whom). A session = one calendar day with a saved session log. The
-sparkline repeats the current level once per game, because no level history is stored.
+profile has no level progression sparkline, because no level history is stored.
 
 **PLY-10** — Only one profile expanded at a time
 Given player A's profile is expanded
-When the organizer taps player B's row
+When the organizer taps player B's More button
 Then A's profile collapses and B's profile expands in its place.
 
 **PLY-11** — Collapse profile
 Given a player's profile is expanded
-When the organizer taps the "✕" in the profile panel (or taps the same player's row again)
+When the organizer taps the "✕" in the profile panel (or taps the same player's More button again, now a chevron up)
 Then the panel collapses.
 
 **PLY-12** — Profile stats reflect session history, not live court state
@@ -515,9 +575,10 @@ from the saved games and session logs, so they survive a restart and update when
 
 **SESS-01** — Round mode selection
 Given the Sessions tab is active
-When the organizer selects "Game-based" or "Time-based"
-Then the active button is visually highlighted, the round-mode description text updates
-accordingly, and (per RND-09) the duration control shows only for Time-based.
+Then the release build is time-based only: the round-mode toggle and its description are hidden,
+and the duration field is always shown.
+Note: game-based selection (buttons, description, duration hidden per RND-09) exists in code behind
+`GameMode.enabled=false`. It is covered by tests with the flag on.
 
 **SESS-02** — Rotation duration (`mm:ss`)
 Given round mode is Time-based
@@ -525,9 +586,10 @@ When the organizer edits the minute or second field of the `mm:ss` duration cont
 Then: (a) clicking either field selects that whole segment so the next keystroke replaces it, and
 `Tab` moves focus from minutes to seconds; (b) minutes are clamped to 0–99 and seconds to 0–59;
 (c) a total of 0:00 is rejected and the previous duration is restored; (d) the Dashboard round
-countdown recalculates against the new duration on its next tick — including triggering an
+countdown recalculates against the new duration at once — including triggering an
 immediate rotation if the new duration is now less than the time already elapsed in the current
-round.
+round. When the timer is stopped, the remaining time becomes the new duration at once. Loading a
+template (SESS-06) applies the same rule.
 
 **SESS-03** — Session capacity change
 Given the organizer changes the "Session capacity" number field (minimum enforced value: 4)
@@ -542,7 +604,7 @@ The same applies to a session template that carries a capacity below 4 (SESS-06)
 yields 4. An empty or non-numeric "Number of courts" entry clamps to 1 in the same way.
 
 **SESS-04** — Courts count change
-Given the organizer changes "Number of courts" (range 1–8)
+Given the organizer changes "Number of courts" (range 1–8; the default is 4, `GameData.defaultCourtCount`, and it is not persisted; the Dashboard stepper is clamped to 1–8 too)
 Then every currently checked-in player is unassigned and the whole checked-in pool is
 re-distributed across the new number of courts using the same level-sorted, courts-of-4 assignment
 logic as an initial session start — this is a full reshuffle, not an incremental add/remove of one
@@ -550,21 +612,21 @@ court.
 When a time-based round is running and a court holds players, a "Discard the current round?"
 confirmation shows first, with a "Reshuffle" button; Cancel keeps everything, including the court
 count. When no court holds players, or fewer than 4 players are checked in, nothing is generated
-(the courts are only padded). A staged next round is planned again for the new count.
+(the courts are only padded); when the count is reduced, players on the removed courts return to the waitlist. A staged next round is planned again for the new count. A re-roll or a court-count change clears the selected player.
 
 **SESS-05** — Save a session template
 Given the organizer enters a non-blank template name and taps "Save current"
-Then a new template is added to the list capturing the current round mode, duration, session
-capacity, and courts count, summarized as e.g. "4 courts · game-based · cap 20"; the name field
+Then a new template is added to the list capturing the current duration, session
+capacity, and courts count, summarized as e.g. "4 courts · cap 20" (no mode); the name field
 clears. Saving with a blank/whitespace-only name is a no-op.
 
 **SESS-06** — Load a template
 Given at least one saved template exists
 When the organizer taps "Load" on a template
-Then the session's round mode, duration, session capacity, and courts count are all overwritten
-from the template, and the same full-reshuffle behavior as SESS-04 is applied to redistribute
+Then the session's duration, session capacity, and courts count are all overwritten
+from the template (the template round mode is ignored), and the same full-reshuffle behavior as SESS-04 is applied to redistribute
 currently checked-in players across the (possibly new) courts count, with the same confirmation.
-Loading a game-based template stops the countdown (GB-01).
+Loading a game-based template stops the countdown (GB-01; hidden in the release build, `GameMode.enabled=false`).
 
 ---
 
@@ -598,7 +660,7 @@ prior window for "vs. prior period" deltas.
 **ANA-02** — KPI strip
 Then 6 KPI tiles are shown: Active players, Avg attendance %, Retention (4wk) %, Court utilization
 %, Avg waitlist (per session), Re-rolls per session — each with a labeled value and a delta/context
-line vs. the prior period.
+line vs. the prior period. The delta line shows "—" when the prior period has no players or sessions. The Retention value and delta show "—" when there is no base.
 
 **ANA-03** — Attendance trend
 Then a per-session bar chart shows attendance rate (checked-in ÷ capacity) over the selected range,
@@ -608,7 +670,7 @@ month-over-month change.
 **ANA-04** — Waitlist pressure
 Then a bar chart shows waitlisted-player counts per session over the range, with a contextual note
 recommending capacity/schedule changes when average waitlist is high (≥ ~2.5/session) vs. a
-reassuring note when it's low.
+reassuring note when it's low. With no sessions, the card reads "Not enough sessions logged yet."
 
 **ANA-05** — Matchmaking fairness — level-gap trend
 Then a bar chart shows, per session, the mean level-gap of its courts over the selected range
@@ -616,6 +678,7 @@ Then a bar chart shows, per session, the mean level-gap of its courts over the s
 shrinking) or not.
 
 **ANA-06** — Matchmaking fairness — per-court comparison
+*Hidden in release build (`AnalyticsPage.showHiddenCards=false`).*
 Then a horizontal bar-per-court list shows each court's average level-gap over the range, flagging
 courts that run consistently wider gaps (e.g. courts that regularly absorb overflow). A court is
 flagged when it appears in at least 3 sessions, is wider than its session's mean on at least 60% of
@@ -634,11 +697,10 @@ spikes to high-attendance/high-level-spread nights.
 
 **ANA-09** — Level distribution
 Then a 4-bar chart shows player counts per tier (Amateur/Intermediate/Advanced/Professional) across
-the whole club, with a summary noting the median tier and overall trend direction, and — when
-applicable — a stagnation callout ("N players flat 6+ sessions").
+the whole club, with a summary noting the median tier and overall trend direction.
+The "N players flat 6+ sessions" warning is removed (bars, median and trend note stay).
 Limit: no tier history is stored (see ANA-10). The trend direction compares the mean current tier of
-players active in the range with the prior range. Stagnation = 6+ sessions in the range; "tier
-unchanged" cannot be checked.
+players active in the range with the prior range.
 
 **ANA-10** — removed. Games store player ids only (issue #42); "elo at play time" required two
 snapshots of the same player embedded in different games, which the removal of `Game.players` as
@@ -651,6 +713,7 @@ Then a list shows regular attendees (historically ≥2×/month) not seen in 3+ w
 usual frequency and time since last seen, plus a total "lapsed" count.
 
 **ANA-12** — Player mixing
+*Hidden in release build (`AnalyticsPage.showHiddenCards=false`).*
 Then a horizontal bar-per-player list shows a 0–1 mixing score (distinct partners ÷ games played)
 for a sample of players, tagged "connector" (high, bridges the club), "clique" (low, narrow circle),
 or "isolated" (very low) where applicable, with a summary note.
@@ -659,13 +722,16 @@ or "isolated" (very low) where applicable, with a summary note.
 Then a list shows recently joined players (within the "new" window, fixed at 60 days until a
 setting exists) with when they
 joined, sessions attended, and a "% of games played with regulars" status, styled favorably (≥50%)
-or as needing attention (<50%), with a contextual note.
+or as needing attention (<50%), with a contextual note. A new player with no games in the range is
+not counted in the "pair them up" warning, and the "playing alongside regulars" line is hidden if
+nobody played.
 
 **ANA-14** — Responsive reflow
 Given the Analytics tab is active
 Then the KPI strip shows 6 columns on desktop, 3 on tablet and 1 on phone; chart rows are
 side by side on desktop and stack to a single column below desktop — consistent with the breakpoints
-in §1.
+in §1. In the release build 8 cards are visible, 2 per row on desktop: Attendance + Waitlist,
+Level gap + Court utilization, Re-rolls + Level distribution, At-risk + New player integration.
 
 ---
 
@@ -683,6 +749,7 @@ Then a read-only total-members count is shown, computed live from the current pl
 fees-outstanding count is removed (2026-10-10): no fee data exists.
 
 **SET-03** — Signup preview
+*Hidden in release build (`SettingsPage.showSignupPreview=false`); the `/register` route is kept.*
 Then a "Preview signup page →" link opens the Self-Registration page. The invite link field is
 removed (2026-10-10): the app runs offline and has no server.
 
@@ -698,6 +765,8 @@ language and the choice stays after a restart (same `language` preference key as
 ---
 
 ## 9. Self-Registration (public page, linked from Settings)
+
+Note: REG-* is not reachable from the UI in the release build (the Settings link is hidden, SET-03). The `/register` route is kept.
 
 **REG-01** — Initial state
 Given a prospective member opens the self-registration link
@@ -744,15 +813,15 @@ scrolling or overlapping controls at any width.
 
 | Area | IDs |
 |---|---|
-| Navigation & responsive | NAV-01…08 |
+| Navigation & responsive | NAV-01…08, START-01 |
 | Dashboard: round rotation (time-based) | RND-01…11 |
-| Dashboard: game-based mode | GB-01…07 |
+| Dashboard: game-based mode | GB-01…07 (hidden in release) |
 | Dashboard: courts & waitlist | COURT-01…13, WL-01…02 |
-| Players (with integrated check-in) | PLY-01…12, CHK-01…06 |
+| Players (with integrated check-in) | PLY-01…15, CHK-01…06 |
 | Sessions | SESS-01…06 |
 | ~~Schedule~~ (removed) | ~~SCHED-01~~ |
 | Analytics | ANA-01…14 |
 | Settings | SET-01…05 |
 | Self-Registration | REG-01…07 |
 
-Total: **74** acceptance cases (Check-in folded into Players tab; ANA-10 removed, issue #42).
+Total: **77** acceptance cases (PLY-14, PLY-15 and START-01 added) (Check-in folded into Players tab; ANA-10 removed, issue #42).

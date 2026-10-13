@@ -291,14 +291,29 @@ current, #ffb38a for next) at full opacity; unselected = transparent border,
 #### PlayerRow
 ```
 Table list row with:
-├── Whole row tappable for profile; trailing expand/collapse arrow
-├── Name (14px, 600, accent when profile is open)
+├── Row tap = check-in toggle (tap = in / out); no In/Out pill, no "Checked in" column
+├── Leading icon (20px): checked in = check_circle deltaPositive #2e7d4f;
+│   unchecked = radio_button_unchecked in inputBorder #e2d8c8
+├── Name (14px, 600; w700 when checked in; accent when profile is open)
 ├── ID code (12px, #b3a891)
 ├── Level adjuster: [−] button + value (13px, 800, accent) + [+] button
-│   └── Buttons: 20–22px square, bg=#f0e6d6, radius=6px
+│   └── Buttons: 20–22px square, bg=#f0e6d6, radius=6px; a dimmed −/+ does nothing
 ├── Membership toggle (Member/Casual/Disabled)
-└── Check-in toggle (In/Check in)
+└── More button (column width 100): AppButton.secondary with a 16px trailing chevron
+    (new `trailingIcon` param); chevron down = profile hidden, up = shown
 ```
+
+Row states:
+
+| State | Fill | Border | Left bar | Hover |
+|---|---|---|---|---|
+| Checked in | `successBg` #e6f4ea | 1px `success` at 45% alpha | 4px `deltaPositive` #2e7d4f | `successBgHover` #d8eddd (new token) |
+| Unchecked | `cardBg` | none | none | `cardBg` |
+| Disabled | dimmed | none | none (no bar) | none; forbidden cursor |
+
+A disabled row uses `textSubtle` for text and `Icons.block` (`textSubtle`) as the leading icon.
+An open profile panel keeps the green bar when the player is checked in. The More, level and
+membership controls never toggle check-in.
 
 #### ExpandablePlayerProfile
 ```
@@ -306,7 +321,7 @@ Expanded panel below player row (row + panel share one rounded card):
 ├── Close button (✕)
 ├── Stat trio: Current Level | Matches | Diversity
 │   └── Each: value (18–20px, 800) + label (10px, 700, #8a7c68)
-├── Level progression sparkline (SVG polyline, accent stroke)
+├── Sign In ID field + Save button
 ├── Most frequent partners list (name + count)
 └── Attendance history text
 ```
@@ -332,6 +347,7 @@ Pill variant for horizontal waitlist:
 #### SearchInput
 ```
 Full-width text field
+├── onSubmitted callback (`AppSearchInput.onSubmitted`): used by the Players barcode scan (Enter)
 ├── padding: 10–14px
 ├── border: 1px solid #e2d8c8
 ├── radius: 8px
@@ -407,6 +423,7 @@ Horizontal fill bar
 ```
 
 #### Sparkline
+(Not used in the release build: the level progression sparkline is removed from the player profile.)
 ```
 SVG polyline for trend data
 ├── stroke: accent color, width: 2.5px
@@ -485,18 +502,18 @@ Tablet/Phone (<1080px):
 | Pattern | Desktop | Tablet | Phone |
 |---------|---------|--------|-------|
 | Stat Strip | 6 cols | 3 cols | 2 cols (4 stats) |
-| Court Grid | largest courts that fit the height, else scroll | 2 cols | 1 col |
-| Analytics Grid | 2 cols | 1 col | 1 col |
+| Court Grid | largest courts that fit the height (min court height 136px, 4 courts by default), else scroll | 2 cols | 1 col |
+| Analytics Grid | 2 cards per row | 1 col | 1 col |
 | KPI Row | 6 cols | 3 cols | 1 col |
 | Two-Column Form | Row | Row | Column |
 | Chart Grid | 2:1 | 1 col | 1 col |
-| Player Row | fixed-width Level/Membership/Checked-in columns | fixed | intrinsic widths, so the name keeps the leftover space |
+| Player Row | fixed-width Level/Membership/More columns | fixed | intrinsic widths, so the name keeps the leftover space |
 
 All breakpoints use the viewport width (`MediaQuery.sizeOf(context).width`), not the width left
 after the shell padding.
 
 On desktop the court grid fills the free height and scrolls itself when the courts do not fit
-(`courtGridLayout`). In the stacked layout (<1080px) the grid is shrink-wrapped and one page
+(`courtGridLayout`). A court may be flatter than 1.6:1 down to a minimum height of 136px (`minCourtHeight`), never under 320px wide. A court card shorter than 200px uses compact padding (`CourtCard`, `PlayerSlot`). The default court count is 4. In the stacked layout (<1080px) the grid is shrink-wrapped and one page
 scroll view holds the stat strip, the action and rotation bars, the chips and the courts.
 
 ### 3.3 Navigation Patterns by Breakpoint

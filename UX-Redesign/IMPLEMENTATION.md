@@ -62,6 +62,21 @@
 
 ---
 
+## Release Build Flags (batch 9b5ab49..692c492)
+
+Four flags keep code in the tree but hide it in the release UI. All four default to `false`. Tests set them on to cover the hidden code.
+
+| Flag | File | Effect when `false` |
+|------|------|---------------------|
+| `GameMode.enabled` | `lib/state/persistent_setting.dart` | `getGameType()` returns time-based. The stored `gameType` preference is never rewritten. The Sessions mode toggle is hidden. A template mode is ignored. GB-01…07 are hidden |
+| `PlayersPage.showImportButton` | `lib/features/players/players_page.dart` | CSV Import button hidden |
+| `SettingsPage.showSignupPreview` | `lib/features/settings/settings_page.dart` | "Preview signup page" link hidden. The `/register` route stays. REG-* is not reachable from the UI |
+| `AnalyticsPage.showHiddenCards` | `lib/features/analytics/analytics_page.dart` | ANA-06 (per-court comparison) and ANA-12 (player mixing) hidden |
+
+Other release changes: `Game.tierGap()` (4-tier gap, display only; logs keep `eloGap`); `GameData.defaultCourtCount` (4, not persisted); `NewPlayerEntry.needsAttention`; nullable retention in the KPI strip; `AppLoader` error screen (`app_load_error`). Release tests: `test/features/release_time_mode_test.dart`, `test/game_data_release_fixes_test.dart`, `test/features/dashboard_release_fixes_test.dart`, `test/features/dashboard_four_courts_fit_test.dart`, `test/timer_data_test.dart`, `test/app_loader_error_test.dart`, `test/features/players_scanner_test.dart`, `test/features/players_add_dialog_test.dart`.
+
+---
+
 ## Stage 0 — Design Token Foundation
 
 ### Goal
@@ -397,13 +412,14 @@ Build the responsive navigation shell. The app detects breakpoint and renders th
 
 ### Acceptance Criteria
 
-> **UAT mapping:** NAV-01, NAV-02, NAV-03, NAV-04, NAV-05
+> **UAT mapping:** NAV-01, NAV-02, NAV-03, NAV-04, NAV-05, START-01
 
 - [x] **NAV-01** — Desktop/tablet (≥720px): top header bar with session subtext and all 5 tabs visible (no club name); compact header and bottom bar not shown
 - [x] **NAV-02** — Phone (<720px): compact dark header with current tab label (no club name); 5-tab top row hidden
 - [x] **NAV-03** — Phone bottom tab bar (always shown on phone): 3 destinations — Courts (Dashboard), Players (with integrated check-in), More. Selecting More opens bottom sheet with Sessions/Analytics/Settings; tapping scrim closes sheet without switching
 - [x] **NAV-04** — "More" tab highlighted when current tab is Sessions, Analytics, or Settings (secondary tabs)
 - [x] **NAV-05** — Phone hamburger nav (no `phoneNav` setting; shown with the bottom tab bar): ☰ button in compact header, right-hand dark panel listing all 5 tabs, current tab highlighted, scrim closes without switching
+- [x] **START-01** — Start-up load error: when a data file fails to load, `AppLoader` (`lib/main.dart`) shows a plain error screen that names the data folder (l10n `app_load_error`). Nothing is written to disk. Test: `test/app_loader_error_test.dart`
 - [x] `flutter analyze --no-pub` passes
 - [x] Existing functionality (state management, routing) is not broken
 
@@ -579,26 +595,26 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 
 ### Acceptance Criteria
 
-> **UAT mapping:** NAV-06, NAV-07, RND-01…11, GB-01…07, COURT-01…13, WL-01, WL-02
+> **UAT mapping:** NAV-06, NAV-07, RND-01…11, GB-01…07 (hidden in release), COURT-01…13, WL-01, WL-02
 
 #### Navigation & layout (shared with Stage 2 shell)
-- [x] **NAV-06** — Stat strip reflow: desktop (≥1080px) 6 cols (Checked In, Remaining Slots, Waitlist, Avg Level, Avg Level Gap, Re-rolls); tablet (720–1079px) 3-per-row wrap; phone (<720px) 4 stats in 2×2 grid (Checked In, Waitlist, Avg Level, Remaining). Breakpoint from the viewport width (`MediaQuery.sizeOf`), not the content width. Phone 4th cell reads "Remaining" (`dashboard_stat_remaining`)
-- [x] **NAV-07** — Dashboard layout reflow: desktop (≥1080px, incl. iPad landscape 1194px) court grid + fixed-width waitlist sidebar; tablet/phone (<1080px) waitlist chips above courts, courts stacked (2 cols tablet, 1 col phone). Desktop: `courtGridLayout` (`lib/features/dashboard/court_grid_layout.dart`, ported from main's `getIdealNumberOfColumn`) picks the column count with the largest court that fits the free height and stretches rows to fill it; when nothing fits it uses the most columns and the grid scrolls itself. Stacked layouts keep `shrinkWrap` + `NeverScrollableScrollPhysics` inside the page `SingleChildScrollView`. Court slots are `Expanded`, so the card has no empty band below the last slot. Breakpoint from the viewport width; stacked grid caps columns with `courtGridLayout(maxColumnCount:)` (2 tablet, 1 phone). Tests: `test/features/dashboard_breakpoints_test.dart`. Stacked layout: the whole page scrolls (stat strip, bars, chips, courts)
+- [x] **NAV-06** — Stat strip reflow: desktop (≥1080px) 6 cols (Checked In, Remaining Slots, Waitlist, Avg Level, Avg Level Gap, Re-rolls); tablet (720–1079px) 3-per-row wrap; phone (<720px) 4 stats in 2×2 grid (Checked In, Waitlist, Avg Level, Remaining). Breakpoint from the viewport width (`MediaQuery.sizeOf`), not the content width. Phone 4th cell reads "Remaining" (`dashboard_stat_remaining`). "Avg Level" and "Avg Level Gap" use `Game.tierGap()`; Avg Level shows a tier name, not an Elo code
+- [x] **NAV-07** — Dashboard layout reflow: desktop (≥1080px, incl. iPad landscape 1194px) court grid + fixed-width waitlist sidebar; tablet/phone (<1080px) waitlist chips above courts, courts stacked (2 cols tablet, 1 col phone). Desktop: `courtGridLayout` (`lib/features/dashboard/court_grid_layout.dart`, ported from main's `getIdealNumberOfColumn`) picks the column count with the largest court that fits the free height and stretches rows to fill it; `courtGridLayout(minCourtHeight:)` (the desktop passes `_minDesktopCourtHeight` = 136px) lets a court be flatter than 1.6:1 down to that height, but never under 320px wide or taller than wide, so 4 courts fit at 1280x720, 1366x768, 1440x900 and 1920x1080 (`test/features/dashboard_four_courts_fit_test.dart`). `CourtCard` and `PlayerSlot` use compact padding when the card is under 200px tall (`compact`). When nothing fits it uses the most columns and the grid scrolls itself (more than 4 courts). Known limit: with a staged next round the rotation bar is taller, and the courts may scroll at 1280x720 and 1366x768. Stacked layouts keep `shrinkWrap` + `NeverScrollableScrollPhysics` inside the page `SingleChildScrollView`. Court slots are `Expanded`, so the card has no empty band below the last slot. Breakpoint from the viewport width; stacked grid caps columns with `courtGridLayout(maxColumnCount:)` (2 tablet, 1 phone). Tests: `test/features/dashboard_breakpoints_test.dart`. Stacked layout: the whole page scrolls (stat strip, bars, chips, courts)
 
 #### Round rotation (RND-01…11) — time-based mode only
 - [x] **RND-01** — Live `mm:ss` countdown, progress bar fill = remaining/D as percentage, updates at least once per second
 - [x] **RND-02** — Urgency styling when ≤60s: countdown text + progress bar switch to amber (#ffb38a)
 - [x] **RND-03** — Auto-rotation at 0:00: recomputes level-balanced court assignment from all checked-in players, increments round number, restarts countdown at full duration — no organizer action required
-- [x] **RND-04** — "Rotate now" triggers immediate rotation: the finished round is logged via `GameData._logRound` (history + `SessionLog`, incomplete courts included so a clock expiry is never blocked), round increments, courts recomputed (or staged lineup adopted per RND-06), countdown restarts. A half-made lineup can neither block nor break it: `_improveEloSpread` swaps only between courts holding a full `Game.playerPerCourt` (it addresses all four slots by index, so a short court used to throw `RangeError`), and the dashboard's rotate handler catches `Error` as well as `Exception` and restarts the clock either way — an auto-rotation that died would strand the session on a finished round
+- [x] **RND-04** — Global Save (`GameData.saveCurrentGame`) keeps one empty court per court, clears the staged next round (`_stagedLineup = null`), returns to `RoundView.current`, and throws "No game to save" when no court holds a player. "Rotate now" triggers immediate rotation: the finished round is logged via `GameData._logRound` (history + `SessionLog`, incomplete courts included so a clock expiry is never blocked), round increments, courts recomputed (or staged lineup adopted per RND-06), countdown restarts. A half-made lineup can neither block nor break it: `_improveEloSpread` swaps only between courts holding a full `Game.playerPerCourt` (it addresses all four slots by index, so a short court used to throw `RangeError`), and the dashboard's rotate handler catches `Error` as well as `Exception` and restarts the clock either way — an auto-rotation that died would strand the session on a finished round
 - [x] **RND-05** — "Pre-make next round": computes staged lineup without changing live courts; a "NEXT ROUND · READY" panel appears with summary ("N players placed across M courts"), a striped progress bar (`StripedProgressBar`, CustomPainter) that fills up, and the "Cancel next" button; the next round becomes the selected view so the courts show the plan
 - [x] **RND-06** — Staged round becomes live: when countdown hits 0:00 or "Rotate now" is tapped, the previously staged lineup — including the organizer's edits — is adopted (not recomputed), the staged panel disappears and the selector returns to the current round
 - [x] **RND-07** — Cancel staged: panel disappears, selector returns to the current round, "Pre-make next round" returns, live round unaffected
 - [x] **RND-08** — Only one staged round at a time: "Pre-make" hidden while staged round exists
-- [x] **RND-09** — Mode label: Time-based → "Time-based · {mm:ss} rounds"; Game-based renders no round bar at all. Switching mode does not force rotation
+- [x] **RND-09** — Mode label: Time-based → "Time-based · {mm:ss} rounds"; Game-based (hidden in release, `GameMode.enabled=false`) renders no round bar at all. Switching mode does not force rotation
 - [x] **RND-10** — Round selector: the two panels are radio buttons; the selected one is what the court grid, waitlist sidebar and stat strip show. The next round is fully editable (`GameData.visibleMatches` routes `placePlayerInSlot` / `makeSingleCourt` / `removePlayerFromCourt` through `_onLineup`), and `visibleWaitlistedPlayers` follows the round on screen so no player is double-booked or dropped. Court cards carry a NEXT badge; global Generate/Save are hidden on the next view
 - [x] **RND-11** — The staged lineup does not go stale: `checkOutPlayer` / `removePlayer` drop the player from it, `onUpdatePlayer` refreshes it, and `setNumberOfCourt` pads it
 
-#### Game-based mode (GB-01…07)
+#### Game-based mode (GB-01…07) — hidden in release build (`GameMode.enabled=false`); covered by tests with the flag on
 
 No clock. The committee drives each court: Regenerate → re-roll a court → Save → PLAYING →
 re-roll when the game finishes → Save again.
@@ -612,8 +628,8 @@ re-roll when the game finishes → Save again.
 - [x] **GB-07** — Re-roll ends the game: the court gets a new `Game` (so the playing flag clears by construction), drawn only from players not on any other court
 
 #### Courts (COURT-01…13)
-- [x] **COURT-01** — Each court shows: number, level-gap badge (0="Same level", N>0="N level gap"), up to 4 player rows (name + tier), "Open slot" italic for empty positions
-- [x] **COURT-02** — Re-roll: evaluates multiple random 4-player combos from court occupants + full checked-in waitlist pool, selects lowest level gap, returns others to waitlist, increments re-roll count. `GameData.rerollSampleCount` (100) weighted-random draws; gap = SkillTier spread, Elo spread breaks ties. `GameData(random:)` is injectable for tests. Tests: `test/game_data_reroll_test.dart`
+- [x] **COURT-01** — Each court shows: number, level-gap badge (0="Same level", N>0="N level gap"; value is `Game.tierGap()`, the 4-tier gap, display only), up to 4 player rows (name + tier), "Open slot" italic for empty positions
+- [x] **COURT-02** — Re-roll: evaluates multiple random 4-player combos from court occupants + full checked-in waitlist pool, selects lowest level gap, returns others to waitlist, increments re-roll count (the stat strip counts only re-rolls on the current round, not on the pre-made next round). `GameData.rerollSampleCount` (100) weighted-random draws; gap = SkillTier spread, Elo spread breaks ties. `GameData(random:)` is injectable for tests. Tests: `test/game_data_reroll_test.dart`
 - [x] **COURT-03** — Re-roll no-op when a full court's occupants + waitlist = 4 (or any court when < 4); a court with an open slot still fills from exactly 4: nothing changes, no re-roll count increment. `GameData.canRerollCourt(i)`; the dashboard stays silent (no dialog, no SnackBar)
 - [x] **COURT-04** — Selecting a waitlisted player: highlighted as "selected", hint reads "Placing {name} — tap a court slot", court slots become interactive. Sidebar and chips take `selectedPlayerName` (the selection can be a court player)
 - [x] **COURT-05** — Switching selection: tapping waitlisted player B while A selected moves selection to B directly
@@ -653,7 +669,7 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 |--------|------|-------|
 | Create | `lib/features/players/player_row.dart` | Table row for a single player |
 | Create | `lib/features/players/level_adjuster.dart` | +/- buttons with value display |
-| Create | `lib/features/players/player_profile_card.dart` | Expandable profile with stats + sparkline |
+| Create | `lib/features/players/player_profile_card.dart` | Expandable profile with stats and the Sign In ID field (no sparkline) |
 | Create | `lib/features/players/pending_registration.dart` | Pending approvals card |
 | Create | `lib/features/players/players_page.dart` | Full players page |
 | Create | `lib/features/players/players.dart` | Barrel export |
@@ -685,7 +701,7 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 // Displays:
 //   - Membership label + delete button + close button
 //   - Stat trio: Current Level | Matches | Diversity (each in a small card with value + label)
-//   - Level progression sparkline (polyline SVG → use CustomPaint or fl_chart)
+//   - (Level progression sparkline removed in release: no level history is stored)
 //   - Most frequent partners list (name + count)
 //   - Attendance history text
 // Uses AppCard as base.
@@ -712,7 +728,7 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 
 ### Acceptance Criteria
 
-> **UAT mapping:** PLY-01…12, NAV-08 (partial)
+> **UAT mapping:** PLY-01…15, NAV-08 (partial)
 
 #### Pending registrations (PLY-01…03)
 - [x] **PLY-01** — Pending card at top when ≥1 self-registration awaiting approval: name, estimated level, contact info, Approve/Reject buttons; hidden entirely when zero pending
@@ -720,24 +736,30 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 - [x] **PLY-03** — Reject: removes applicant from pending list; no player record created
 
 #### Player list & search (PLY-04, NAV-08)
-- [x] **PLY-04** — Search filters by name (case-insensitive substring match) in real time; clearing search box shows all players
+- [x] **PLY-04** — Search filters by name OR sign-in ID (case-insensitive substring match; level is not searched) in real time; clearing search box shows all players
 - [x] **NAV-08** — Table header row (Name/Level/Status/etc.) visible ≥720px; hidden <720px (only data rows). Breakpoint from the viewport width; `PlayerRow` compact layout also uses the viewport width, so header and rows agree
 
 #### Level, status, membership, check-in (PLY-05…08)
 - [x] **PLY-05** — Level ±1 of the 8 `Elo` levels per click, clamped [C2…S1]; "−" disabled (visually dimmed) at C2, "+" disabled at S1
 - [x] **PLY-06** — Membership cycles Member → Casual → Disabled → Member. Casual → Disabled while checked in requires confirmation (auto-checked-out, removed from court/waitlist, triggers WL-02 auto-promotion); not checked in needs no confirmation. Disabled → Member: no auto-check-in. Disabled players stay in the list with check-in disabled
 - [x] **PLY-07** — Delete player (profile card): confirmation dialog, then removal from the roster (record anonymised, ADR-0001); triggers checkout and WL-02 auto-promotion (`removePlayer` calls `_autoPromoteFromWaitlist`) if currently checked in
-- [x] **PLY-08** — Check-in toggle inline performs CHK-02/03/05 directly (no separate Check-in tab)
+- [x] **PLY-08** — The row tap is the check-in toggle (tap = in / out) and performs CHK-02/03/05 directly (no separate Check-in tab). Design in `lib/features/players/player_row.dart`: no In/Out pill and no "Checked in" column; Disabled rows ignore taps (CHK-06); at capacity the tap is refused with the capacity message (CHK-03). The header has Name/ID, Level, Membership and a blank More column (`PlayerRow.moreColumnWidth` = 100)
 - [x] **PLY-13** — Add player: `AddPlayerDialog` closes itself and returns the player through `showDialog<Player>`; the caller only reads the result and awaits the repository write. Callers must never pop it — `showDialog` uses the root navigator while a page's context resolves to its `StatefulShellRoute` branch navigator, so popping from the caller unmounts the tab and blanks the screen. Covered by `integration_test/players_add_player_test.dart`
 
 #### Expandable profile (PLY-09…12)
-- [x] **PLY-09** — Tap anywhere on the row (controls keep their own taps) expands inline panel directly beneath row; row + panel share one rounded `AppCard` (`player-accordion-panel`), the profile has no card chrome of its own; trailing arrow `expand_more` / `expand_less` (not modal/drawer): membership status, 3 stat tiles (Diversity % = distinct co-players ÷ other listed players) (Current Level, Matches, Diversity %), level-progression sparkline, up to 3 most-frequent partners with match counts, session-attendance history summary (or "No sessions logged yet")
-- [x] **PLY-10** — Only one profile expanded: tapping player B while A's profile open collapses A and expands B
-- [x] **PLY-11** — Collapse: via "✕" in profile panel or tapping same player's row again
+- [x] **PLY-09** — The "More" button (`AppButton.secondary` with a chevron `trailingIcon`, `players_more`) opens the inline panel directly beneath the row; a row tap does not open it (it toggles check-in). More, level −/+ and membership taps never toggle check-in; a dimmed −/+ does nothing. Row + panel share one rounded `AppCard` (`player-accordion-panel`), the profile has no card chrome of its own; chevron down when hidden, up when shown (not modal/drawer): membership status, 3 stat tiles (Diversity % = distinct co-players ÷ other listed players) (Current Level, Matches, Diversity %), up to 3 most-frequent partners with match counts, session-attendance history summary (or "No sessions logged yet"). The level progression sparkline is removed
+- [x] **PLY-10** — Only one profile expanded: tapping the More button of player B while A's profile open collapses A and expands B
+- [x] **PLY-11** — Collapse: via "✕" in profile panel or tapping the same player's More button again
 - [x] **PLY-12** — Profile stats computed from logged session history — unaffected by re-rolls or check-ins in the current live session until session is logged. `computePlayerProfileStats` (`lib/features/players/player_profile_stats.dart`) reads `GameRepository` + `SessionLogRepository` caches; `PlayersPage` listens to both. Not `GameData.history`
+
+#### Scanner and sign-in ID (PLY-14, PLY-15)
+- [x] **PLY-14** — Barcode scan check-in: the search field is focused when the Players tab opens (and gives up focus when the tab is hidden). `_onSearchSubmitted` in `players_page.dart` runs on Enter (`AppSearchInput.onSubmitted`, which also covers the keyboard done action); a 150 ms guard ignores a second Enter. Exactly one exact match (trimmed, case-insensitive sign-in ID) is checked in (capacity and Disabled rules apply): SnackBar `players_scan_checked_in`, the field clears and keeps focus. Already checked in: `players_scan_already_checked_in`, no check-out. Disabled: `players_scan_disabled`. At capacity: the capacity message. No match: text kept and selected, `players_scan_no_match`. Empty field: nothing. Test: `test/features/players_scanner_test.dart`
+- [x] **PLY-15** — Edit sign-in ID: the profile panel (`player_profile_card.dart`) has a Sign In ID field and Save; the value is trimmed, empty = no ID, an ID used by another listed player is refused with `players_sign_in_id_taken` (names that player), success shows `players_sign_in_id_saved`; no other field changes. Add player (`AddPlayerDialog`) trims name and ID, and refuses a blank name, a duplicate name and a duplicate ID. Test: `test/features/players_add_dialog_test.dart`
 
 #### Quality gates
 - [x] `flutter analyze --no-pub` passes
+
+Note: the CSV Import button is hidden in release (`PlayersPage.showImportButton=false`, no UAT ID). New l10n keys: `players_more`, `players_scan_checked_in`, `players_scan_already_checked_in`, `players_scan_no_match`, `players_scan_disabled`, `players_sign_in_id_taken`, `players_sign_in_id_saved`.
 
 ---
 
@@ -810,12 +832,12 @@ Implement the remaining tabs (Sessions, Settings). The Schedule tab was removed 
 > **CHK-01…06** (Check-in) are satisfied in the Players tab — see Stage 4 acceptance criteria. Check-in capacity bar, present/absent toggles, at-capacity banner, and WL-02 auto-promotion trigger are all integrated into `PlayersPage`.
 
 #### Sessions (SESS-01…06), plus RND-09 integration
-- [x] **SESS-01** — Round mode toggle: Game-based / Time-based buttons with highlight; description updates ("Time-based · {mm:ss} rounds" / "Game-based · save and re-roll each court by hand"); duration control visible only for Time-based (RND-09)
-- [x] **SESS-02** — `mm:ss` duration control: two digit fields in one box, clicking either selects the whole segment, `Tab` moves minutes → seconds; minutes clamped 0–99, seconds 0–59; a total of 0:00 restores the previous value; Dashboard countdown recalculates on next tick via `TimerData.updateDuration`, triggering immediate rotation if the new duration < time already elapsed
+- [x] **SESS-01** — Round mode toggle: Game-based / Time-based buttons with highlight; description updates; duration control visible only for Time-based (RND-09). **Hidden in release build (`GameMode.enabled=false`):** the toggle and description are not shown, the duration field is always shown, and tests cover the toggle with the flag on
+- [x] **SESS-02** — `mm:ss` duration control: two digit fields in one box, clicking either selects the whole segment, `Tab` moves minutes → seconds; minutes clamped 0–99, seconds 0–59; a total of 0:00 restores the previous value; Dashboard countdown recalculates at once via `TimerData.updateDuration`, triggering immediate rotation if the new duration < time already elapsed; a stopped timer takes the new duration as its remaining time (`_remaining = newDuration`); template Load applies the same rule (`test/timer_data_test.dart`)
 - [x] **SESS-03** — Session capacity change: stat strip / Check-in bar reflect immediately; a value below the minimum is **clamped up to 4** (`GameData.minSessionCapacity`), never raised back to the default of 20, and the number field writes the clamped value back so it cannot display a rejected number; no currently checked-in player bumped even if new capacity < current count — limit applies to future check-ins only. Empty/non-numeric courts entry clamps to 1
-- [x] **SESS-04** — Courts count change (1–8): full reshuffle — every checked-in player unassigned and redistributed across new court count using level-sorted courts-of-4 logic. Shared `confirmDiscard` (`lib/features/dashboard/discard_confirmation.dart`) asks first when a time-based round is running and `GameData.wouldReshuffleLineup`; Cancel keeps the count. No lineup is generated when no court holds players or <4 are checked in
-- [x] **SESS-05** — Save template: captures mode, duration (minutes **and** seconds), capacity, courts; blank/whitespace-only name is no-op; name field clears only when `saveTemplate` returns `true`; summary shown (e.g. "4 courts · game-based · cap 20")
-- [x] **SESS-06** — Load template: overwrites all 4 settings; triggers full reshuffle (same as SESS-04); same confirmation; the page reads the mode from settings, so the mode toggle follows Load
+- [x] **SESS-04** — Courts count change (1–8; default `GameData.defaultCourtCount` = 4, not persisted; Dashboard stepper clamped 1..8): full reshuffle — every checked-in player unassigned and redistributed across new court count using level-sorted courts-of-4 logic. Shared `confirmDiscard` (`lib/features/dashboard/discard_confirmation.dart`) asks first when a time-based round is running and `GameData.wouldReshuffleLineup`; Cancel keeps the count. No lineup is generated when no court holds players or <4 are checked in (reducing the count then returns players on removed courts to the waitlist, `_dropCourtsBeyondCount`). A re-roll or a court-count change clears the selected player
+- [x] **SESS-05** — Save template: captures duration (minutes **and** seconds), capacity, courts; blank/whitespace-only name is no-op; name field clears only when `saveTemplate` returns `true`; summary shown as "N courts · cap C" with no mode (`sessions_template_summary_no_mode`)
+- [x] **SESS-06** — Load template: overwrites duration, capacity and courts; the template mode is ignored in release; triggers full reshuffle (same as SESS-04); same confirmation
 
 #### Schedule (SCHED-01)
 - [x] ~~**SCHED-01**~~ **REMOVED 2026-10-10** — Schedule tab removed; session templates replace it. Was: read-only recurring session list: day, time window, descriptive note, "Auto check-in opens 30 min prior" badge per entry; no create/edit/delete controls in this build
@@ -823,7 +845,7 @@ Implement the remaining tabs (Sessions, Settings). The Schedule tab was removed 
 #### Settings (SET-01…05)
 - [x] ~~**SET-01**~~ **REMOVED 2026-10-10** (offline app, no notifications). Was: 3 independent notification toggles: Session reminders, Court assignment alerts, General announcements; each shows On/Off label
 - [x] **SET-02** — Membership summary: total members (read-only, computed live from player roster). Fees outstanding removed 2026-10-10 (no fee data). `ListenableBuilder` on `PlayerRepository.listenable`
-- [x] **SET-03** — Invite link removed 2026-10-10 (offline, no server). Keeps "Preview signup page →" link opening Self-Registration in new tab/window
+- [x] **SET-03** — Invite link removed 2026-10-10 (offline, no server). Keeps "Preview signup page →" link opening Self-Registration in new tab/window. **Hidden in release (`SettingsPage.showSignupPreview=false`);** the `/register` route is kept
 - [x] **SET-04** — Level calibration note: explanatory text that new players self-estimate and organizers may override from Players tab (ref. PLY-05)
 - [x] **SET-05** — Language picker (added 2026-10-10): chips with native language names; saves through `PersistentSetting.setLanguage`
 
@@ -911,22 +933,22 @@ Implement the Analytics tab with charts, KPI strip, and data tables. This tab ha
 
 #### Time range & KPI (ANA-01…02)
 - [x] **ANA-01** — Time-range switcher: 4 wks / 12 wks / 26 wks segmented control, defaults to 12 wks; selecting different range recomputes all charts/KPIs against that window with "vs. prior period" deltas. At-risk, Mixing and New-player cards also recompute on range change
-- [x] **ANA-02** — KPI strip: 6 tiles — Active players, Avg attendance %, Retention (4wk) %, Court utilization %, Avg waitlist (per session), Re-rolls per session — each with labeled value and delta/context line vs prior period. Active players = distinct players in games in the range. Retention = share of players seen in the 4 weeks before the last 4 who came back
+- [x] **ANA-02** — KPI strip: 6 tiles — Active players, Avg attendance %, Retention (4wk) %, Court utilization %, Avg waitlist (per session), Re-rolls per session — each with labeled value and delta/context line vs prior period. Active players = distinct players in games in the range. Retention = share of players seen in the 4 weeks before the last 4 who came back. Retention is nullable: the value and delta show "—" when there is no base. The delta line shows "—" when the prior period has no players or sessions
 
 #### Attendance & waitlist (ANA-03…04)
 - [x] **ANA-03** — Attendance trend: per-session bar chart of checkedIn ÷ capacity; most recent session visually emphasized; growth note (e.g. "+X%") summarizing month-over-month change. Month = last 28 days vs the 28 days before, read from all logs
-- [x] **ANA-04** — Waitlist pressure: per-session bar chart of waitlisted counts; contextual note recommending capacity/schedule changes when avg waitlist ≥ ~2.5/session
+- [x] **ANA-04** — Waitlist pressure: per-session bar chart of waitlisted counts; contextual note recommending capacity/schedule changes when avg waitlist ≥ ~2.5/session; with no sessions the card reads `analytics_not_enough_sessions` ("Not enough sessions logged yet.")
 
 #### Matchmaking fairness (ANA-05…06)
 - [x] **ANA-05** — Level-gap trend: per-session bar chart of average level-gap per court (expressed as tier-gap, e.g. "1.2"); note whether trend is improving (gap shrinking) or not. Per-session mean of court gaps; tier-gap = stored Elo-step gap ÷ 2
-- [x] **ANA-06** — Per-court comparison: horizontal bar per court showing average level-gap; flag courts with consistently wider gaps (overflow absorbers). Flag: ≥3 sessions (`_minSessionsToFlagCourt`), wider than session mean on ≥60% (`_overflowConsistency`), avg > 1.25× club avg (`_overflowGapFactor`). Same-day saves fold by court position (average)
+- [x] **ANA-06** — **Hidden in release (`AnalyticsPage.showHiddenCards=false`).** Per-court comparison: horizontal bar per court showing average level-gap; flag courts with consistently wider gaps (overflow absorbers). Flag: ≥3 sessions (`_minSessionsToFlagCourt`), wider than session mean on ≥60% (`_overflowConsistency`), avg > 1.25× club avg (`_overflowGapFactor`). Same-day saves fold by court position (average)
 
 #### Court utilization & re-rolls (ANA-07…08)
 - [~] **ANA-07** — Court utilization: horizontal bar per court showing fill rate (share of sessions the court held a game); summary line with overall "full-4 fill rate" and average idle courts per session. **Partial:** idle-court *time* and real court numbers need new session-log fields
 - [x] **ANA-08** — Re-rolls per session: bar chart with counts; note connecting spikes to high-attendance/high-level-spread nights
 
 #### Level distribution (ANA-09)
-- [~] **ANA-09** — Level distribution: 4-bar chart (Amateur/Intermediate/Advanced/Professional); summary with median tier and trend direction; stagnation callout ("N players flat 6+ sessions") when applicable. **Partial:** no tier history is stored, so the trend compares the current tier mix of active players with the prior range, and stagnation = 6+ sessions in range without a tier check
+- [~] **ANA-09** — Level distribution: 4-bar chart (Amateur/Intermediate/Advanced/Professional); summary with median tier and trend direction. The "N players flat 6+ sessions" warning is removed. **Partial:** no tier history is stored, so the trend compares the current tier mix of active players with the prior range
 - **ANA-10 removed** (issue #42) — "Top level movers" needed two `Player` snapshots for the same id
   embedded in different `Game`s to compute a delta. Moving `Game` to `playerIds: List<String>` makes
   that unrepresentable, and `GameRepository` already only ever resolved a historical roster to the
@@ -934,11 +956,11 @@ Implement the Analytics tab with charts, KPI strip, and data tables. This tab ha
 
 #### At-risk & mixing (ANA-11…13)
 - [x] **ANA-11** — At-risk players: regular attendees (historically ≥2×/month) not seen in 3+ weeks; usual frequency + time since last seen; total "lapsed" count
-- [x] **ANA-12** — Player mixing: horizontal bar per player showing 0–1 mixing score (distinct partners ÷ games played); tagged "connector" (high), "clique" (low), or "isolated" (very low); summary note. `MixingTag` enum shown under each name; >10 players → top 5 + bottom 5 (`sampleMixing`)
-- [x] **ANA-13** — New player integration: recently joined players with join date, sessions attended, "% of games with regulars"; styled favorable (≥50%) or needs-attention (<50%); contextual note. Window = `kNewPlayerWindowDays` (60, no setting yet); sessions attended = distinct days
+- [x] **ANA-12** — **Hidden in release (`AnalyticsPage.showHiddenCards=false`).** Player mixing: horizontal bar per player showing 0–1 mixing score (distinct partners ÷ games played); tagged "connector" (high), "clique" (low), or "isolated" (very low); summary note. `MixingTag` enum shown under each name; >10 players → top 5 + bottom 5 (`sampleMixing`)
+- [x] **ANA-13** — New player integration: recently joined players with join date, sessions attended, "% of games with regulars"; styled favorable (≥50%) or needs-attention (<50%); contextual note. Window = `kNewPlayerWindowDays` (60, no setting yet); sessions attended = distinct days. `NewPlayerEntry.needsAttention` = attended > 0 and not favorable; a new player with no games in range is not counted in the "pair them up" warning, and the "playing alongside regulars" line hides if nobody played
 
 #### Responsive & quality (ANA-14)
-- [x] **ANA-14** — Responsive reflow: KPI strip and chart grids reflow from multi-column desktop to single-column phone, consistent with breakpoints in §1. KPI strip 6/3/1 columns; chart rows stack below desktop; breakpoints from the viewport width (`MediaQuery.sizeOf`)
+- [x] **ANA-14** — Responsive reflow: KPI strip and chart grids reflow from multi-column desktop to single-column phone, consistent with breakpoints in §1. KPI strip 6/3/1 columns; chart rows stack below desktop; breakpoints from the viewport width (`MediaQuery.sizeOf`). Release: 8 visible cards, 2 per row — Attendance + Waitlist, Level gap + Court utilization, Re-rolls + Level distribution, At-risk + New player integration
 - [x] No chart library required — built with simple Flutter layout widgets (CustomPaint acceptable)
 - [x] `flutter analyze --no-pub` passes
 
@@ -1012,6 +1034,8 @@ Implement the self-registration page, integrate the new design system with the e
 ### Acceptance Criteria
 
 > **UAT mapping:** REG-01…07
+>
+> **Release note:** REG-* is not reachable from the UI in the release build (`SettingsPage.showSignupPreview=false`). The `/register` route is kept.
 
 #### Self-registration form (REG-01…05)
 - [x] **REG-01** — Initial state: full-name input, email/phone input, 4 level-tier options (Amateur/Intermediate/Advanced/Professional) with one-line descriptions; Intermediate pre-selected by default; "Submit for approval" disabled until both fields non-blank
