@@ -12,33 +12,30 @@ class KpiStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final crossAxisCount = isDesktop(width) ? 6 : (isTablet(width) ? 3 : 1);
+    // Window width, not the width left after shell padding (ANA-14).
+    final width = MediaQuery.sizeOf(context).width;
+    final crossAxisCount = isDesktop(width) ? 6 : (isTablet(width) ? 3 : 1);
 
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: AppSpacing.md,
-            crossAxisSpacing: AppSpacing.md,
-            // A fixed height, not an aspect ratio: at phone width a card is
-            // narrow, the context line wraps, and a ratio-based height
-            // overflows.
-            mainAxisExtent: 140,
-          ),
-          itemCount: kpis.length,
-          itemBuilder: (context, index) {
-            final kpi = kpis[index];
-            return AppKpiCard(
-              label: kpi.label,
-              value: kpi.value,
-              delta: kpi.contextLine,
-              deltaPositive: kpi.deltaPositive,
-            );
-          },
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        mainAxisSpacing: AppSpacing.md,
+        crossAxisSpacing: AppSpacing.md,
+        // A fixed height, not an aspect ratio: at phone width a card is
+        // narrow, the context line wraps, and a ratio-based height
+        // overflows.
+        mainAxisExtent: 140,
+      ),
+      itemCount: kpis.length,
+      itemBuilder: (context, index) {
+        final kpi = kpis[index];
+        return AppKpiCard(
+          label: kpi.label,
+          value: kpi.value,
+          delta: kpi.contextLine,
+          deltaPositive: kpi.deltaPositive,
         );
       },
     );

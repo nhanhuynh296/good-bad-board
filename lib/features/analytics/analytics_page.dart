@@ -150,7 +150,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           // ── Header: title + range switcher (ANA-01) ─────────
           LayoutBuilder(
             builder: (context, constraints) {
-              final stacked = isPhone(constraints.maxWidth);
+              final stacked = isPhone(MediaQuery.sizeOf(context).width);
               final title = AppSectionTitle(title: l10n.analytics_title);
               final switcher = AnalyticsRangeSwitcher(
                 selectedWeeks: _selectedWeeks,
@@ -242,7 +242,7 @@ class _ChartRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (!isDesktop(constraints.maxWidth)) {
+        if (!isDesktop(MediaQuery.sizeOf(context).width)) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

@@ -203,7 +203,9 @@ void main() {
       tester.view.physicalSize = Size(width, 2400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(wrap(const AnalyticsPage()));
+      await tester.pumpWidget(
+        wrap(const AnalyticsPage(), size: Size(width, 2400)),
+      );
       await tester.pumpAndSettle();
     }
 
@@ -251,6 +253,71 @@ void main() {
 
     testWidgets('should_stack_chart_cards_on_phone', (tester) async {
       await pumpAt(tester, 390);
+      expect(
+        leftOf(tester, WaitlistPressureChart),
+        leftOf(tester, AttendanceChart),
+      );
+    });
+  });
+
+  group('ANA-14: breakpoints use the window width, not the padded width', () {
+    // The shell pads the page (24 px desktop, 20 px tablet). The layout must
+    // still switch on the window width.
+    Future<void> pumpPadded(
+      WidgetTester tester,
+      double width,
+      double pad,
+    ) async {
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        wrap(
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: pad),
+            child: const AnalyticsPage(),
+          ),
+          size: Size(width, 2400),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    int kpiColumns(WidgetTester tester) => tester
+        .widgetList(find.byType(AppKpiCard))
+        .map((w) => tester.getTopLeft(find.byWidget(w)).dx)
+        .toSet()
+        .length;
+
+    double leftOf(WidgetTester tester, Type type) =>
+        tester.getTopLeft(find.byType(type)).dx;
+
+    testWidgets('should_show_6_kpi_columns_at_window_width_1100', (
+      tester,
+    ) async {
+      await pumpPadded(tester, 1100, 24);
+      expect(kpiColumns(tester), 6);
+    });
+
+    testWidgets('should_place_charts_side_by_side_at_window_width_1100', (
+      tester,
+    ) async {
+      await pumpPadded(tester, 1100, 24);
+      expect(
+        leftOf(tester, WaitlistPressureChart),
+        greaterThan(leftOf(tester, AttendanceChart)),
+      );
+    });
+
+    testWidgets('should_show_3_kpi_columns_at_window_width_740', (
+      tester,
+    ) async {
+      await pumpPadded(tester, 740, 20);
+      expect(kpiColumns(tester), 3);
+    });
+
+    testWidgets('should_stack_charts_at_window_width_740', (tester) async {
+      await pumpPadded(tester, 740, 20);
       expect(
         leftOf(tester, WaitlistPressureChart),
         leftOf(tester, AttendanceChart),
