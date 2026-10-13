@@ -507,7 +507,7 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 //   - reroll(courtId) → calls GameData reroll logic
 //   - swapHint text updates based on selection state
 // Desktop layout: RoundRotationBar → StatStrip → [Court Grid (fit to height, courtGridLayout) + WaitlistSidebar]
-// Non-desktop layout: RoundRotationBar → StatStrip → WaitlistChips → Court Grid (stacked)
+// Non-desktop layout: one page scroll view: RoundRotationBar → StatStrip → WaitlistChips → Court Grid (stacked)
 ```
 
 #### 3.8 — `RoundRotationBar`
@@ -582,8 +582,8 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 > **UAT mapping:** NAV-06, NAV-07, RND-01…11, GB-01…07, COURT-01…13, WL-01, WL-02
 
 #### Navigation & layout (shared with Stage 2 shell)
-- [x] **NAV-06** — Stat strip reflow: desktop (≥1080px) 6 cols (Checked In, Remaining Slots, Waitlist, Avg Level, Avg Level Gap, Re-rolls); tablet (720–1079px) 3-per-row wrap; phone (<720px) 4 stats in 2×2 grid (Checked In, Waitlist, Avg Level, Remaining). Breakpoint from the viewport width (`MediaQuery.sizeOf`), not the content width
-- [x] **NAV-07** — Dashboard layout reflow: desktop (≥1080px, incl. iPad landscape 1194px) court grid + fixed-width waitlist sidebar; tablet/phone (<1080px) waitlist chips above courts, courts stacked (2 cols tablet, 1 col phone). Desktop: `courtGridLayout` (`lib/features/dashboard/court_grid_layout.dart`, ported from main's `getIdealNumberOfColumn`) picks the column count with the largest court that fits the free height and stretches rows to fill it; when nothing fits it uses the most columns and the grid scrolls itself. Stacked layouts keep `shrinkWrap` + `NeverScrollableScrollPhysics` inside the page `SingleChildScrollView`. Court slots are `Expanded`, so the card has no empty band below the last slot. Breakpoint from the viewport width; stacked grid caps columns with `courtGridLayout(maxColumnCount:)` (2 tablet, 1 phone). Tests: `test/features/dashboard_breakpoints_test.dart`
+- [x] **NAV-06** — Stat strip reflow: desktop (≥1080px) 6 cols (Checked In, Remaining Slots, Waitlist, Avg Level, Avg Level Gap, Re-rolls); tablet (720–1079px) 3-per-row wrap; phone (<720px) 4 stats in 2×2 grid (Checked In, Waitlist, Avg Level, Remaining). Breakpoint from the viewport width (`MediaQuery.sizeOf`), not the content width. Phone 4th cell reads "Remaining" (`dashboard_stat_remaining`)
+- [x] **NAV-07** — Dashboard layout reflow: desktop (≥1080px, incl. iPad landscape 1194px) court grid + fixed-width waitlist sidebar; tablet/phone (<1080px) waitlist chips above courts, courts stacked (2 cols tablet, 1 col phone). Desktop: `courtGridLayout` (`lib/features/dashboard/court_grid_layout.dart`, ported from main's `getIdealNumberOfColumn`) picks the column count with the largest court that fits the free height and stretches rows to fill it; when nothing fits it uses the most columns and the grid scrolls itself. Stacked layouts keep `shrinkWrap` + `NeverScrollableScrollPhysics` inside the page `SingleChildScrollView`. Court slots are `Expanded`, so the card has no empty band below the last slot. Breakpoint from the viewport width; stacked grid caps columns with `courtGridLayout(maxColumnCount:)` (2 tablet, 1 phone). Tests: `test/features/dashboard_breakpoints_test.dart`. Stacked layout: the whole page scrolls (stat strip, bars, chips, courts)
 
 #### Round rotation (RND-01…11) — time-based mode only
 - [x] **RND-01** — Live `mm:ss` countdown, progress bar fill = remaining/D as percentage, updates at least once per second
@@ -628,6 +628,7 @@ re-roll when the game finishes → Save again.
 
 #### Waitlist (WL-01…02)
 - [x] **WL-01** — Waitlist shows position number + name + level tier per entry; "No one waiting" when empty
+- [x] **WL-03** — Promotion refills only the court that lost the player (`_removeAndRefillCourt` → `_autoPromoteFromWaitlist(court)`); a PLAYING court is never refilled. Tests: `test/game_data_waitlist_promotion_test.dart`
 - [x] **WL-02** — Auto-promotion on check-out: when a court slot opens (player checks out or set Disabled), highest-level waitlisted player(s) fill open slot(s), highest tier first — no organizer action required *(triggered by Stage 5 Check-in; logic lives in GameData)*
 
 #### Quality gates
@@ -720,7 +721,7 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 
 #### Player list & search (PLY-04, NAV-08)
 - [x] **PLY-04** — Search filters by name (case-insensitive substring match) in real time; clearing search box shows all players
-- [x] **NAV-08** — Table header row (Name/Level/Status/etc.) visible ≥720px; hidden <720px (only data rows). Breakpoint from the viewport width
+- [x] **NAV-08** — Table header row (Name/Level/Status/etc.) visible ≥720px; hidden <720px (only data rows). Breakpoint from the viewport width; `PlayerRow` compact layout also uses the viewport width, so header and rows agree
 
 #### Level, status, membership, check-in (PLY-05…08)
 - [x] **PLY-05** — Level ±1 of the 8 `Elo` levels per click, clamped [C2…S1]; "−" disabled (visually dimmed) at C2, "+" disabled at S1
@@ -937,7 +938,7 @@ Implement the Analytics tab with charts, KPI strip, and data tables. This tab ha
 - [x] **ANA-13** — New player integration: recently joined players with join date, sessions attended, "% of games with regulars"; styled favorable (≥50%) or needs-attention (<50%); contextual note. Window = `kNewPlayerWindowDays` (60, no setting yet); sessions attended = distinct days
 
 #### Responsive & quality (ANA-14)
-- [x] **ANA-14** — Responsive reflow: KPI strip and chart grids reflow from multi-column desktop to single-column phone, consistent with breakpoints in §1. KPI strip 6/3/1 columns; chart rows stack below desktop
+- [x] **ANA-14** — Responsive reflow: KPI strip and chart grids reflow from multi-column desktop to single-column phone, consistent with breakpoints in §1. KPI strip 6/3/1 columns; chart rows stack below desktop; breakpoints from the viewport width (`MediaQuery.sizeOf`)
 - [x] No chart library required — built with simple Flutter layout widgets (CustomPaint acceptable)
 - [x] `flutter analyze --no-pub` passes
 

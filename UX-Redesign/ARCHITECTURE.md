@@ -496,8 +496,8 @@ All breakpoints use the viewport width (`MediaQuery.sizeOf(context).width`), not
 after the shell padding.
 
 On desktop the court grid fills the free height and scrolls itself when the courts do not fit
-(`courtGridLayout`). In the stacked layout (<1080px) the grid is shrink-wrapped and the page
-scroll view supplies the scrolling.
+(`courtGridLayout`). In the stacked layout (<1080px) the grid is shrink-wrapped and one page
+scroll view holds the stat strip, the action and rotation bars, the chips and the courts.
 
 ### 3.3 Navigation Patterns by Breakpoint
 

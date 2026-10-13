@@ -364,7 +364,14 @@ Given a court is full and at least one player is waitlisted
 When any checked-in player on that (or any) court checks out (see CHK-02) or is set Disabled
 When a court slot opens up as a result
 Then the highest-level waitlisted player(s) are automatically promoted to fill the open slot(s),
-highest tier first, without organizer action.
+highest tier first, without organizer action. Only the court that lost the player is refilled
+(WL-03).
+
+**WL-03** — Promotion fills only the freed court
+Given a court player leaves (check-out, delete or set Disabled) and players are waitlisted
+Then only the court that lost the player is refilled from the waitlist, highest level first; other
+empty or part-full courts are not filled. A court that is PLAYING (saved game-based lineup) is never
+refilled: it stays one player short, and its saved match does not change.
 
 ---
 
@@ -417,7 +424,7 @@ Then it advances back to "Member"; this does not automatically check them back i
 
 **PLY-07** — Delete player
 Given a player's expanded profile card is shown
-When the organizer taps "Delete"
+When the organizer taps the delete (bin) icon
 Then a confirmation dialog warns the action cannot be undone; on confirm, the player is removed
 from the roster and, if currently checked in, from their court/waitlist (WL-02 auto-promotion
 triggered); on cancel, nothing changes. The player record is anonymised, not erased, so past games
