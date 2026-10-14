@@ -311,7 +311,7 @@ Row states:
 |---|---|---|---|---|
 | Checked in | `successBg` #e6f4ea | 1px `success` at 45% alpha | 4px `deltaPositive` #2e7d4f | `successBgHover` #d8eddd (new token) |
 | Unchecked | `cardBg` | none | none | `cardBg` |
-| Disabled | dimmed | none | none (no bar) | none; forbidden cursor |
+| Disabled | dimmed | none | none (no bar) | none; forbidden cursor; tap shows the disabled message |
 
 A disabled row uses `textSubtle` for text and has no icon.
 An open profile panel keeps the green bar when the player is checked in. The More, level and

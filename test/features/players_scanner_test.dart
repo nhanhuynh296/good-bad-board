@@ -439,7 +439,7 @@ void main() {
       expect(gameData.isPlayerCheckedIn(alice), isFalse);
     });
 
-    testWidgets('should_do_nothing_when_a_disabled_row_is_tapped', (
+    testWidgets('should_not_check_in_when_a_disabled_row_is_tapped', (
       tester,
     ) async {
       final dave = _player(
@@ -453,8 +453,28 @@ void main() {
       await tester.pump();
 
       expect(gameData.isPlayerCheckedIn(dave), isFalse);
-      expect(find.byType(SnackBar), findsNothing);
     });
+
+    // R45-38: a refused row tap shows the reason.
+    testWidgets(
+      'should_show_the_disabled_message_when_a_disabled_row_is_tapped',
+      (tester) async {
+        final dave = _player(
+          'Dave',
+          Elo.b1,
+          membership: MembershipStatus.disabled,
+        );
+        await pumpPage(tester, players: [dave]);
+
+        await tester.tap(find.text('Dave Test'));
+        await tester.pump();
+
+        expect(
+          find.text('Dave Test is disabled — cannot check in'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('should_show_the_capacity_message_when_row_tap_is_refused', (
       tester,

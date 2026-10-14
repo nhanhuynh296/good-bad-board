@@ -41,6 +41,17 @@ enum RoundView {
   next,
 }
 
+/// The outcome of [GameData.checkInPlayer] (R45-38).
+enum CheckInResult {
+  checkedIn,
+
+  /// The player's membership is [MembershipStatus.disabled].
+  disabled,
+
+  /// The session is at capacity.
+  sessionFull,
+}
+
 /// Release flag for the court-count controls (R45-36).
 ///
 /// Off in the release build: the club always uses
@@ -857,9 +868,9 @@ class GameData extends ChangeNotifier {
 
   /// Checks [player] into the session.
   ///
-  /// Returns `true` on success. Returns `false` if the player's membership
-  /// is [MembershipStatus.disabled], or if the session is at capacity (the
-  /// player is not yet checked in).
+  /// Returns [CheckInResult.checkedIn] on success, also when the player is
+  /// already checked in. Otherwise returns why the check-in was refused:
+  /// [CheckInResult.disabled] or [CheckInResult.sessionFull].
   ///
   /// Checking in is self-sufficient — the player is added to
   /// [checkedInPlayers] if not already present, no separate activation step
@@ -869,15 +880,21 @@ class GameData extends ChangeNotifier {
   /// (by index order). If all courts are full the player is waitlisted. In
   /// time mode a court with no players is skipped: after Save the courts are
   /// empty, and a late player must not stand alone on one.
-  bool checkInPlayer(Player player) {
+  CheckInResult checkInPlayer(Player player) {
     // Disabled players cannot be checked in
-    if (player.membership == MembershipStatus.disabled) return false;
+    if (player.membership == MembershipStatus.disabled) {
+      return CheckInResult.disabled;
+    }
 
     // Already checked in — no-op success
-    if (_checkedInPlayers.containsKey(player.id)) return true;
+    if (_checkedInPlayers.containsKey(player.id)) {
+      return CheckInResult.checkedIn;
+    }
 
     // At-capacity block: refuse new check-ins
-    if (_checkedInPlayers.length >= sessionCapacity) return false;
+    if (_checkedInPlayers.length >= sessionCapacity) {
+      return CheckInResult.sessionFull;
+    }
 
     _checkedInPlayers[player.id] = player;
 
@@ -889,13 +906,13 @@ class GameData extends ChangeNotifier {
       if (game.playerIds.length < Game.playerPerCourt) {
         game.playerIds.add(player.id);
         notifyListeners();
-        return true;
+        return CheckInResult.checkedIn;
       }
     }
 
     // All courts full — player is waitlisted
     notifyListeners();
-    return true;
+    return CheckInResult.checkedIn;
   }
 
   /// Checks [player] out of the session.

@@ -76,8 +76,8 @@ class PlayerRow extends StatelessWidget {
   /// status (see [MembershipStatus.next]).
   final VoidCallback? onCycleMembership;
 
-  /// Called when the row is tapped, to check the player in or out. Not
-  /// called for a Disabled player.
+  /// Called when the row is tapped, to check the player in or out. Also
+  /// called for a Disabled player, so the page can show why it is refused.
   final VoidCallback? onToggleCheckin;
 
   @override
@@ -123,8 +123,12 @@ class PlayerRow extends StatelessWidget {
       child: Material(
         color: background,
         child: InkWell(
-          onTap: isDisabled ? null : onToggleCheckin,
+          // A Disabled row still takes the tap, so the page can say why it
+          // cannot check in (R45-38). It shows no hover.
+          onTap: onToggleCheckin,
           hoverColor: hover,
+          splashColor: isDisabled ? Colors.transparent : null,
+          highlightColor: isDisabled ? Colors.transparent : null,
           mouseCursor: isDisabled
               ? SystemMouseCursors.forbidden
               : SystemMouseCursors.click,

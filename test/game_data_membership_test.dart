@@ -55,7 +55,7 @@ void main() {
 
       final result = gameData.checkInPlayer(player);
 
-      expect(result, isFalse);
+      expect(result, CheckInResult.disabled);
       expect(gameData.isPlayerCheckedIn(player), isFalse);
     });
 
@@ -69,7 +69,7 @@ void main() {
 
       final result = gameData.checkInPlayer(player);
 
-      expect(result, isTrue);
+      expect(result, CheckInResult.checkedIn);
       expect(gameData.isPlayerCheckedIn(player), isTrue);
       expect(gameData.checkedInPlayers, containsPair(player.id, player));
     });
@@ -166,13 +166,13 @@ void main() {
           membership: MembershipStatus.disabled,
         );
         final blockedResult = gameData.checkInPlayer(disabledPlayer);
-        expect(blockedResult, isFalse);
+        expect(blockedResult, CheckInResult.disabled);
 
         final reEnabledPlayer = disabledPlayer.copyWith(
           membership: MembershipStatus.member,
         );
         final allowedResult = gameData.checkInPlayer(reEnabledPlayer);
-        expect(allowedResult, isTrue);
+        expect(allowedResult, CheckInResult.checkedIn);
       },
     );
   });

@@ -447,7 +447,7 @@ When the organizer taps their membership control
 Then it advances to "Disabled" — if the player is currently checked in, a confirmation dialog
 first warns that they'll be checked out and removed from their court/waitlist immediately (see
 WL-02 auto-promotion); if they're not checked in, no confirmation is needed. Disabled players
-stay in the Players list, but their row ignores taps (CHK-06).
+stay in the Players list, but a tap on their row does not check them in (CHK-06).
 Given a player's membership is "Disabled"
 When the organizer taps their membership control
 Then it advances back to "Member"; this does not automatically check them back in.
@@ -490,7 +490,7 @@ auto-promotion is triggered if this opened a court slot.
 
 **CHK-06** — Only non-Disabled players listed (can toggle check-in for Member/Casual players only)
 Given a player's membership is "Disabled"
-Then their row ignores taps (no check-in, no hover); only Member/Casual players can be checked in.
+Then a tap on their row does not check them in, the row shows no hover, and a SnackBar reads "{name} is disabled — cannot check in" (R45-38); only Member/Casual players can be checked in.
 
 **PLY-08** — Check-in toggle from Players tab
 Given a player row is shown for a Member or Casual player

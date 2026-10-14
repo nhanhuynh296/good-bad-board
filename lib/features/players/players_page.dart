@@ -216,11 +216,20 @@ class _PlayersPageState extends State<PlayersPage> {
     }
     if (gameData.isPlayerCheckedIn(player)) {
       gameData.checkOutPlayer(player);
-    } else if (!gameData.checkInPlayer(player)) {
-      _showSnackBar(
-        AppLocalizations.of(context)!.players_session_full_cannot_check_in,
-      );
+      return;
     }
+    final refusal = _refusalMessage(gameData.checkInPlayer(player), player);
+    if (refusal != null) _showSnackBar(refusal);
+  }
+
+  /// Why a check-in was refused, or `null` when it was not (R45-38).
+  String? _refusalMessage(CheckInResult result, Player player) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (result) {
+      CheckInResult.checkedIn => null,
+      CheckInResult.disabled => l10n.players_scan_disabled(player.name()),
+      CheckInResult.sessionFull => l10n.players_session_full_cannot_check_in,
+    };
   }
 
   void _showSnackBar(String message) {
@@ -268,17 +277,12 @@ class _PlayersPageState extends State<PlayersPage> {
   String _toggleByScan(Player player) {
     final l10n = AppLocalizations.of(context)!;
     final gameData = context.read<GameData>();
-    if (player.membership == MembershipStatus.disabled) {
-      return l10n.players_scan_disabled(player.name());
-    }
     if (gameData.isPlayerCheckedIn(player)) {
       gameData.checkOutPlayer(player);
       return l10n.players_scan_checked_out(player.name());
     }
-    if (gameData.checkInPlayer(player)) {
-      return l10n.players_scan_checked_in(player.name());
-    }
-    return l10n.players_session_full_cannot_check_in;
+    return _refusalMessage(gameData.checkInPlayer(player), player) ??
+        l10n.players_scan_checked_in(player.name());
   }
 
   /// Keeps focus in the search field and selects all its text. It is done
@@ -428,9 +432,6 @@ class _PlayersPageState extends State<PlayersPage> {
                   itemBuilder: (context, index) {
                     final player = filteredPlayers[index];
                     final isExpanded = _profileOpenId == player.id;
-                    final canCheckIn =
-                        player.membership != MembershipStatus.disabled;
-
                     final item = Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -444,9 +445,8 @@ class _PlayersPageState extends State<PlayersPage> {
                           onLevelDown: () => _adjustLevel(player, false),
                           onCycleMembership: () =>
                               _onCycleMembership(player, gameData),
-                          onToggleCheckin: canCheckIn
-                              ? () => _toggleCheckedIn(player, gameData)
-                              : null,
+                          onToggleCheckin: () =>
+                              _toggleCheckedIn(player, gameData),
                         ),
                         if (isExpanded)
                           PlayerProfileCard(
@@ -477,7 +477,8 @@ class _PlayersPageState extends State<PlayersPage> {
                         child: Stack(
                           children: [
                             item,
-                            if (_isCheckedIn(player, gameData) && canCheckIn)
+                            if (_isCheckedIn(player, gameData) &&
+                                player.membership != MembershipStatus.disabled)
                               const Positioned(
                                 left: 0,
                                 top: 0,

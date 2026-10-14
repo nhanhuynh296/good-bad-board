@@ -39,7 +39,7 @@ void main() {
 
     final result = gameData.checkInPlayer(player);
 
-    expect(result, isTrue);
+    expect(result, CheckInResult.checkedIn);
     expect(gameData.checkedInCount, 1);
   });
 
@@ -95,7 +95,7 @@ void main() {
     gameData.addFullPricedPlayer(newPlayer);
     final result = gameData.checkInPlayer(newPlayer);
 
-    expect(result, isTrue);
+    expect(result, CheckInResult.checkedIn);
     final court = gameData.gameContainingPlayer(newPlayer);
     expect(court, isNotNull);
     expect(court!.players, contains(newPlayer));
@@ -124,7 +124,7 @@ void main() {
     gameData.addFullPricedPlayer(extraPlayer);
     final result = gameData.checkInPlayer(extraPlayer);
 
-    expect(result, isTrue);
+    expect(result, CheckInResult.checkedIn);
     expect(gameData.gameContainingPlayer(extraPlayer), isNull);
     expect(gameData.waitlistedPlayers, contains(extraPlayer));
   });
@@ -163,7 +163,7 @@ void main() {
 
     final result = gameData.checkInPlayer(extraPlayer);
 
-    expect(result, isFalse);
+    expect(result, CheckInResult.sessionFull);
     expect(gameData.checkedInCount, 4); // unchanged
     expect(gameData.isPlayerCheckedIn(extraPlayer), isFalse);
   });
@@ -181,7 +181,7 @@ void main() {
 
     final result = gameData.checkInPlayer(player);
 
-    expect(result, isTrue);
+    expect(result, CheckInResult.checkedIn);
     expect(gameData.isPlayerCheckedIn(player), isTrue);
   });
 
@@ -406,7 +406,7 @@ void main() {
     // Check in first 5
     for (var i = 0; i < 5; i++) {
       final result = gameData.checkInPlayer(players[i]);
-      expect(result, isTrue);
+      expect(result, CheckInResult.checkedIn);
     }
 
     expect(gameData.checkedInCount, 5);
@@ -495,7 +495,7 @@ void main() {
 
     final result = gameData.checkInPlayer(outsider);
 
-    expect(result, isTrue);
+    expect(result, CheckInResult.checkedIn);
     expect(gameData.checkedInCount, 1);
     expect(gameData.checkedInPlayers, containsPair(outsider.id, outsider));
   });
@@ -542,7 +542,7 @@ void main() {
 
     // Re-check-in
     final result = gameData.checkInPlayer(player);
-    expect(result, isTrue);
+    expect(result, CheckInResult.checkedIn);
     expect(gameData.isPlayerCheckedIn(player), isTrue);
     expect(gameData.checkedInCount, 4);
   });
