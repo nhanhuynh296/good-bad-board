@@ -80,7 +80,7 @@ All `@freezed` + `json_serializable` except `SessionTemplate`, which is hand-wri
 | `Game` | `lib/model/game.dart:16` | `players: List<Player>`, `id`, `createdDate`. Constants `playerPerCourt = 4`, `singlePlayerPerCourt = 2` |
 | `SessionLog` | `lib/model/session_log.dart:10` | `id`, `loggedAt`, `capacity`, `checkedInCount`, `waitlistCount`, `rerollCount`, `courtLevelGaps: List<int>`, `courtCount` |
 | `PendingRegistration` | `lib/model/pending_registration.dart:11` | `id`, `name` (single field), `contact`, `tier: SkillTier`, `submittedAt` |
-| `SessionTemplate` | `lib/model/session_template.dart` | `id`, `name`, `modeIndex`, `durationMinutes`, `durationSeconds`, `capacity`, `courts`. **Not freezed.** Stored in `session_templates.json` (was SharedPreferences) |
+| `SessionTemplate` | `lib/model/session_template.dart` | `id`, `name`, `gameType` (GameType name; legacy rows store `modeIndex`, 0 = game, 1 = time, still read), `durationMinutes`, `durationSeconds`, `capacity`, `courts`. **Not freezed.** Stored in `session_templates.json` (was SharedPreferences) |
 
 Enums: `Elo` (`player.dart:7`) has 8 values `c2,c1,b2,b1,a2,a1,s2,s1`. `MembershipStatus`
 (`player.dart:24`) is `member,casual,disabled`. `SkillTier` (`lib/model/elo.dart:7`) has 4 values

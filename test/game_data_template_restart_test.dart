@@ -28,7 +28,13 @@ void main() {
   }
 
   test('should_list_saved_template_after_restart', () async {
-    await GameData().saveTemplate('Tuesday', 0, 20, 16, 4);
+    await GameData().saveTemplate(
+      'Tuesday',
+      GameType.gameBased,
+      const Duration(minutes: 20),
+      16,
+      4,
+    );
     await restart();
 
     expect(GameData().templates.map((t) => t.name), ['Tuesday']);
@@ -36,8 +42,20 @@ void main() {
 
   test('should_not_list_deleted_template_after_restart', () async {
     final gameData = GameData();
-    await gameData.saveTemplate('Tuesday', 0, 20, 16, 4);
-    await gameData.saveTemplate('Thursday', 1, 20, 12, 3);
+    await gameData.saveTemplate(
+      'Tuesday',
+      GameType.gameBased,
+      const Duration(minutes: 20),
+      16,
+      4,
+    );
+    await gameData.saveTemplate(
+      'Thursday',
+      GameType.timeBased,
+      const Duration(minutes: 20),
+      12,
+      3,
+    );
     await gameData.deleteTemplate(0);
     await restart();
 

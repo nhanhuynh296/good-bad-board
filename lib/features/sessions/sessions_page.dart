@@ -57,7 +57,7 @@ class _SessionsPageState extends State<SessionsPage> {
   Future<void> _saveTemplate(GameData gameData) async {
     final saved = await gameData.saveTemplate(
       _templateNameController.text,
-      _isTimeBased ? 1 : 0,
+      _isTimeBased ? GameType.timeBased : GameType.gameBased,
       PersistentSetting.instance.getGameDuration(),
       gameData.sessionCapacity,
       gameData.numberOfCourt,
@@ -101,7 +101,9 @@ class _SessionsPageState extends State<SessionsPage> {
     // The new round length must reach the countdown, running or not (F2).
     timerData.updateDuration(template.duration);
     // The template may switch to game-based mode (GB-01).
-    if (GameMode.enabled && template.modeIndex != 1) timerData.reset();
+    if (GameMode.enabled && template.gameType == GameType.gameBased) {
+      timerData.reset();
+    }
   }
 
   @override
@@ -279,7 +281,9 @@ class _SessionsPageState extends State<SessionsPage> {
                           GameMode.enabled
                               ? l10n.sessions_template_summary(
                                   template.courts,
-                                  template.modeIndex == 1 ? 'timed' : 'game',
+                                  template.gameType == GameType.timeBased
+                                      ? 'timed'
+                                      : 'game',
                                   template.capacity,
                                 )
                               : l10n.sessions_template_summary_no_mode(

@@ -1,3 +1,4 @@
+import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:uuid/uuid.dart';
 
 /// A saved session configuration template.
@@ -10,8 +11,8 @@ class SessionTemplate {
 
   final String name;
 
-  /// 0 = gameBased, 1 = timeBased
-  final int modeIndex;
+  /// The round mode this template restores.
+  final GameType gameType;
 
   /// Whole-minute part of the rotation duration.
   final int durationMinutes;
@@ -31,7 +32,7 @@ class SessionTemplate {
   const SessionTemplate({
     required this.id,
     required this.name,
-    required this.modeIndex,
+    required this.gameType,
     required this.durationMinutes,
     this.durationSeconds = 0,
     required this.capacity,
@@ -41,7 +42,7 @@ class SessionTemplate {
   /// A new template with a fresh id.
   factory SessionTemplate.create({
     required String name,
-    required int modeIndex,
+    required GameType gameType,
     required int durationMinutes,
     int durationSeconds = 0,
     required int capacity,
@@ -49,7 +50,7 @@ class SessionTemplate {
   }) => SessionTemplate(
     id: const Uuid().v4(),
     name: name,
-    modeIndex: modeIndex,
+    gameType: gameType,
     durationMinutes: durationMinutes,
     durationSeconds: durationSeconds,
     capacity: capacity,
@@ -64,7 +65,7 @@ class SessionTemplate {
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
-    'modeIndex': modeIndex,
+    'gameType': gameType.name,
     'durationMinutes': durationMinutes,
     'durationSeconds': durationSeconds,
     'capacity': capacity,
@@ -76,11 +77,25 @@ class SessionTemplate {
     return SessionTemplate(
       id: json['id'] as String,
       name: json['name'] as String,
-      modeIndex: json['modeIndex'] as int,
+      gameType: _readGameType(json),
       durationMinutes: json['durationMinutes'] as int,
       durationSeconds: json['durationSeconds'] as int? ?? 0,
       capacity: json['capacity'] as int,
       courts: json['courts'] as int,
     );
+  }
+
+  /// Reads the stored [GameType] name. Templates written before R45-04 store
+  /// `modeIndex` instead (0 = gameBased, 1 = timeBased). An unknown name
+  /// reads as time-based, the release mode.
+  static GameType _readGameType(Map<String, dynamic> json) {
+    final name = json['gameType'] as String?;
+    if (name != null) {
+      return GameType.values.firstWhere(
+        (type) => type.name == name,
+        orElse: () => GameType.timeBased,
+      );
+    }
+    return json['modeIndex'] == 0 ? GameType.gameBased : GameType.timeBased;
   }
 }

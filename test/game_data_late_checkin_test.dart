@@ -78,7 +78,7 @@ void main() {
         final gameData = await savedSession(8, courts: 2);
         final template = SessionTemplate.create(
           name: 'T',
-          modeIndex: 1,
+          gameType: GameType.timeBased,
           durationMinutes: 20,
           durationSeconds: 0,
           capacity: 20,

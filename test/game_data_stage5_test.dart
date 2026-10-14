@@ -352,7 +352,7 @@ void main() {
       const SessionTemplate(
         id: 'tiny',
         name: 'Tiny',
-        modeIndex: 1,
+        gameType: GameType.timeBased,
         durationMinutes: 20,
         durationSeconds: 0,
         capacity: 2,
@@ -421,7 +421,13 @@ void main() {
       'name', () async {
     final gameData = GameData();
 
-    await gameData.saveTemplate('Tuesday Night', 0, 60, 12, 3);
+    await gameData.saveTemplate(
+      'Tuesday Night',
+      GameType.gameBased,
+      const Duration(minutes: 60),
+      12,
+      3,
+    );
 
     expect(gameData.templates, hasLength(1));
     expect(gameData.templates.first.name, 'Tuesday Night');
@@ -431,11 +437,23 @@ void main() {
       'name', () {
     final gameData = GameData();
 
-    gameData.saveTemplate('', 0, 60, 12, 3);
+    gameData.saveTemplate(
+      '',
+      GameType.gameBased,
+      const Duration(minutes: 60),
+      12,
+      3,
+    );
 
     expect(gameData.templates, isEmpty);
 
-    gameData.saveTemplate('   ', 0, 60, 12, 3);
+    gameData.saveTemplate(
+      '   ',
+      GameType.gameBased,
+      const Duration(minutes: 60),
+      12,
+      3,
+    );
 
     expect(gameData.templates, isEmpty);
   });
@@ -449,7 +467,7 @@ void main() {
     const template = SessionTemplate(
       id: 'weekend',
       name: 'Weekend Bash',
-      modeIndex: 1,
+      gameType: GameType.timeBased,
       durationMinutes: 90,
       capacity: 16,
       courts: 4,
@@ -563,9 +581,27 @@ void main() {
   test('should delete template at given index', () async {
     final gameData = GameData();
 
-    await gameData.saveTemplate('Template 1', 0, 30, 8, 2);
-    await gameData.saveTemplate('Template 2', 1, 60, 12, 3);
-    await gameData.saveTemplate('Template 3', 0, 45, 10, 2);
+    await gameData.saveTemplate(
+      'Template 1',
+      GameType.gameBased,
+      const Duration(minutes: 30),
+      8,
+      2,
+    );
+    await gameData.saveTemplate(
+      'Template 2',
+      GameType.timeBased,
+      const Duration(minutes: 60),
+      12,
+      3,
+    );
+    await gameData.saveTemplate(
+      'Template 3',
+      GameType.gameBased,
+      const Duration(minutes: 45),
+      10,
+      2,
+    );
 
     expect(gameData.templates, hasLength(3));
 

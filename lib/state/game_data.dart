@@ -941,16 +941,13 @@ class GameData extends ChangeNotifier {
   /// Saves a session template with the given configuration.
   ///
   /// [name] must be non-blank (whitespace-only names are rejected).
-  /// [mode] accepts either an [int] (0 = gameBased, 1 = timeBased) or a
-  /// [GameType] enum value.
-  /// [duration] accepts either an [int] (minutes) or a [Duration].
   ///
   /// The returned future completes when the template is on disk. It yields
   /// `true` when a template was saved, `false` when the input was rejected.
   Future<bool> saveTemplate(
     String name,
-    dynamic mode,
-    dynamic duration,
+    GameType mode,
+    Duration duration,
     int capacity,
     int courts,
   ) async {
@@ -958,18 +955,14 @@ class GameData extends ChangeNotifier {
     if (capacity < minSessionCapacity || courts < 1 || courts > 8) {
       return false;
     }
-    final modeIndex = mode is GameType
-        ? (mode == GameType.timeBased ? 1 : 0)
-        : mode as int;
-    final total = duration is Duration
-        ? duration
-        : Duration(minutes: duration as int);
     final written = SessionTemplateRepository.instance.add(
       SessionTemplate.create(
         name: name,
-        modeIndex: modeIndex,
-        durationMinutes: total.inMinutes,
-        durationSeconds: total.inSeconds.remainder(Duration.secondsPerMinute),
+        gameType: mode,
+        durationMinutes: duration.inMinutes,
+        durationSeconds: duration.inSeconds.remainder(
+          Duration.secondsPerMinute,
+        ),
         capacity: capacity,
         courts: courts,
       ),
@@ -988,9 +981,7 @@ class GameData extends ChangeNotifier {
     // Restore game type and duration from the template. The release build
     // ignores the template mode: it only runs time-based.
     if (GameMode.enabled) {
-      PersistentSetting.instance.setGameType(
-        template.modeIndex == 1 ? GameType.timeBased : GameType.gameBased,
-      );
+      PersistentSetting.instance.setGameType(template.gameType);
     }
     PersistentSetting.instance.setGameDuration(template.duration);
     // SESS-06: same full reshuffle as a court-count change (SESS-04).

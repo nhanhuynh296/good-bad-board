@@ -39,7 +39,7 @@ void main() {
 
   SessionTemplate template({required int courts}) => SessionTemplate.create(
     name: 'T',
-    modeIndex: 1,
+    gameType: GameType.timeBased,
     durationMinutes: 20,
     durationSeconds: 0,
     capacity: 20,

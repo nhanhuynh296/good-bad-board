@@ -85,7 +85,7 @@ void main() {
       const SessionTemplate(
         id: 't',
         name: 'Big night',
-        modeIndex: 1,
+        gameType: GameType.timeBased,
         durationMinutes: 10,
         capacity: 24,
         courts: 6,
