@@ -131,12 +131,33 @@ class _DashboardPageState extends State<DashboardPage> {
       // The re-roll moved players, so a pick may no longer be where it was.
       setState(() => _selectedPlayerId = null);
     } on Exception catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
+      _showError(e);
     }
+  }
+
+  /// Shows [error] as a localised toast. A [LineupError] gets its own
+  /// message; anything else gets one generic message, never its text.
+  void _showError(Object error) {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    final message = switch (error) {
+      NoCourts() => l10n.dashboard_error_no_courts,
+      NotEnoughPlayers(:final count) => l10n.dashboard_error_not_enough_players(
+        Game.playerPerCourt,
+        count,
+      ),
+      UnbalancedCourts(:final courtNumbers) =>
+        l10n.dashboard_error_unbalanced_courts(
+          courtNumbers.length,
+          courtNumbers.join(', '),
+          Game.playerPerCourt,
+        ),
+      NothingToSave() => l10n.dashboard_error_nothing_to_save,
+      _ => l10n.dashboard_error_generic,
+    };
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// Whether the session runs in game-based mode, where courts are saved and
@@ -170,11 +191,7 @@ class _DashboardPageState extends State<DashboardPage> {
       timerData.reset();
       timerData.start(onExpired: _onAutoRotate);
     } on Exception catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
+      _showError(e);
     }
   }
 
@@ -190,11 +207,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _selectedPlayerId = null;
       });
     } on Exception catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
+      _showError(e);
     }
   }
 
@@ -209,11 +222,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _selectedPlayerId = null;
       });
     } on Exception catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
+      _showError(e);
     }
   }
 
@@ -238,9 +247,7 @@ class _DashboardPageState extends State<DashboardPage> {
       // strand the session on a finished round with a stopped clock. Restart
       // the clock regardless so the round still turns over.
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      _showError(e);
       timerData.reset();
       timerData.start(onExpired: _onAutoRotate);
     }

@@ -1245,5 +1245,44 @@
   "dashboard_remove_from_court": "Remove from court",
   "@dashboard_remove_from_court": {
     "description": "Tooltip of the button that moves a player from an incomplete court to the waitlist"
+  },
+  "dashboard_error_no_courts": "Add a court first.",
+  "@dashboard_error_no_courts": {
+    "description": "Toast when Generate is pressed with no courts"
+  },
+  "dashboard_error_not_enough_players": "Check in at least {needed} players. {count} checked in.",
+  "@dashboard_error_not_enough_players": {
+    "description": "Toast when Generate is pressed with fewer checked-in players than one court needs",
+    "placeholders": {
+      "needed": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_error_unbalanced_courts": "{count, plural, =1{Court {courts} needs {needed} players.} other{Courts {courts} need {needed} players.}}",
+  "@dashboard_error_unbalanced_courts": {
+    "description": "Toast when Save is pressed and one or more courts do not have a full lineup. courts is a comma-separated list of court numbers",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "courts": {
+        "type": "String"
+      },
+      "needed": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_error_nothing_to_save": "No game to save.",
+  "@dashboard_error_nothing_to_save": {
+    "description": "Toast when Save is pressed and no court has players"
+  },
+  "dashboard_error_generic": "Something went wrong. Try again.",
+  "@dashboard_error_generic": {
+    "description": "Toast when a Dashboard action fails for an unexpected reason"
   }
 }

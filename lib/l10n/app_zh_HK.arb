@@ -248,5 +248,10 @@
   "dashboard_discard_round_body": "目前輪次不會儲存到歷史紀錄。部分球員的上場時間會因此多於其他球員。",
   "dashboard_discard_court_title": "放棄此場地的比賽？",
   "dashboard_discard_court_body": "此場地目前的比賽不會儲存到歷史紀錄。部分球員的上場時間會因此多於其他球員。",
-  "dashboard_remove_from_court": "移出場地"
+  "dashboard_remove_from_court": "移出場地",
+  "dashboard_error_no_courts": "請先加入場地。",
+  "dashboard_error_not_enough_players": "最少需要 {needed} 名球員簽到。已簽到 {count} 名。",
+  "dashboard_error_unbalanced_courts": "{count, plural, other{{courts}號場地需要 {needed} 名球員。}}",
+  "dashboard_error_nothing_to_save": "沒有可儲存的比賽。",
+  "dashboard_error_generic": "出現錯誤，請重試。"
 }

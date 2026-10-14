@@ -17,10 +17,13 @@ import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/session_template_repository.dart';
 import 'package:good_bad_board/repository/session_log_repository.dart';
+import 'package:good_bad_board/state/lineup_error.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
+
+export 'package:good_bad_board/state/lineup_error.dart';
 
 typedef GameContainer = List<Game>;
 
@@ -452,12 +455,9 @@ class GameData extends ChangeNotifier {
   }
 
   Future<void> makeGame() async {
-    if (numberOfCourt <= 0) throw Exception('There are no court available');
-    if (_checkedInPlayers.isEmpty) throw Exception('There are no player');
+    if (numberOfCourt <= 0) throw const NoCourts();
     if (_checkedInPlayers.length < Game.playerPerCourt) {
-      throw Exception(
-        'Not enough players, need at least ${Game.playerPerCourt}, got ${_checkedInPlayers.length}',
-      );
+      throw NotEnoughPlayers(count: _checkedInPlayers.length);
     }
     _generateLineup();
     notifyListeners();
@@ -572,14 +572,13 @@ class GameData extends ChangeNotifier {
   }
 
   Future<void> saveCurrentGame() async {
-    if (!hasAnyCourtLineup) throw Exception("No game to save");
-    final invalidGames = stagingMatches.where(
-      (match) => match.playerIds.isNotEmpty && !match.isPlayable(),
-    );
-    if (invalidGames.isNotEmpty) {
-      throw Exception(
-        'PLAYERS ARE NOT BALANCED ON COURT ${invalidGames.map((game) => stagingMatches.indexOf(game) + 1).join(', ')}',
-      );
+    if (!hasAnyCourtLineup) throw const NothingToSave();
+    final unbalanced = [
+      for (final (index, match) in stagingMatches.indexed)
+        if (match.playerIds.isNotEmpty && !match.isPlayable()) index + 1,
+    ];
+    if (unbalanced.isNotEmpty) {
+      throw UnbalancedCourts(courtNumbers: unbalanced);
     }
     await _logRound(stagingMatches);
 
@@ -614,11 +613,9 @@ class GameData extends ChangeNotifier {
   /// therefore excluded from other courts' re-rolls until this court is
   /// re-rolled, which is how the organizer signals the game has finished.
   Future<void> saveSingleGame(Game game) async {
-    if (game.playerIds.isEmpty) throw Exception("No game to save");
+    if (game.playerIds.isEmpty) throw const NothingToSave();
     if (!game.isPlayable()) {
-      throw Exception(
-        'PLAYERS ARE NOT BALANCED ON COURT ${stagingMatches.indexOf(game) + 1}',
-      );
+      throw UnbalancedCourts(courtNumbers: [stagingMatches.indexOf(game) + 1]);
     }
     history.add([game]);
     await GameRepository.instance.add(game);

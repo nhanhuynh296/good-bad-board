@@ -248,5 +248,10 @@
   "dashboard_discard_round_body": "当前轮次不会保存到历史记录。部分球员的上场时间会因此多于其他球员。",
   "dashboard_discard_court_title": "放弃此场地的比赛？",
   "dashboard_discard_court_body": "此场地当前的比赛不会保存到历史记录。部分球员的上场时间会因此多于其他球员。",
-  "dashboard_remove_from_court": "移出场地"
+  "dashboard_remove_from_court": "移出场地",
+  "dashboard_error_no_courts": "请先添加场地。",
+  "dashboard_error_not_enough_players": "至少需要 {needed} 名球员签到。已签到 {count} 名。",
+  "dashboard_error_unbalanced_courts": "{count, plural, other{{courts}号场地需要 {needed} 名球员。}}",
+  "dashboard_error_nothing_to_save": "没有可保存的比赛。",
+  "dashboard_error_generic": "出现错误，请重试。"
 }

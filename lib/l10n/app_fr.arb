@@ -248,5 +248,10 @@
   "dashboard_discard_round_body": "La manche en cours n'est pas enregistrée dans l'historique. Certains joueurs auront alors plus de temps de jeu que d'autres.",
   "dashboard_discard_court_title": "Abandonner la partie de ce terrain ?",
   "dashboard_discard_court_body": "La partie en cours sur ce terrain n'est pas enregistrée dans l'historique. Certains joueurs auront alors plus de temps de jeu que d'autres.",
-  "dashboard_remove_from_court": "Retirer du terrain"
+  "dashboard_remove_from_court": "Retirer du terrain",
+  "dashboard_error_no_courts": "Ajoutez d'abord un terrain.",
+  "dashboard_error_not_enough_players": "Enregistrez au moins {needed} joueurs. {count} présents.",
+  "dashboard_error_unbalanced_courts": "{count, plural, =1{Le terrain {courts} doit avoir {needed} joueurs.} other{Les terrains {courts} doivent avoir {needed} joueurs.}}",
+  "dashboard_error_nothing_to_save": "Aucune partie à enregistrer.",
+  "dashboard_error_generic": "Une erreur est survenue. Réessayez."
 }
