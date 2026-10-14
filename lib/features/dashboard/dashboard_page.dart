@@ -454,23 +454,28 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  /// The bar watches [TimerData] through its own [Consumer], so a tick
+  /// rebuilds only the bar, not the whole page (R45-03).
   Widget _buildRoundRotationBar(GameData gameData) {
-    final timerData = context.watch<TimerData>();
     final l10n = AppLocalizations.of(context)!;
-    return RoundRotationBar(
-      roundNumber: gameData.roundNumber,
-      modeLabel: _buildModeLabel(l10n),
-      remainingLabel: timerData.remainingLabel,
-      pct: timerData.pct,
-      isUrgent: timerData.isUrgent,
-      isStaged: gameData.isStaged,
-      stagedSummary: _buildStagedSummary(l10n, gameData),
-      stagedPct: 100.0 - timerData.pct, // fills up as main bar depletes
-      selectedView: gameData.roundView,
-      onSelectView: _onSelectView,
-      onRotateNow: _onRotateNow,
-      onStageNext: _onStageNext,
-      onCancelStaged: _onCancelStaged,
+    final modeLabel = _buildModeLabel(l10n);
+    final stagedSummary = _buildStagedSummary(l10n, gameData);
+    return Consumer<TimerData>(
+      builder: (context, timerData, _) => RoundRotationBar(
+        roundNumber: gameData.roundNumber,
+        modeLabel: modeLabel,
+        remainingLabel: timerData.remainingLabel,
+        pct: timerData.pct,
+        isUrgent: timerData.isUrgent,
+        isStaged: gameData.isStaged,
+        stagedSummary: stagedSummary,
+        stagedPct: 100.0 - timerData.pct, // fills up as main bar depletes
+        selectedView: gameData.roundView,
+        onSelectView: _onSelectView,
+        onRotateNow: _onRotateNow,
+        onStageNext: _onStageNext,
+        onCancelStaged: _onCancelStaged,
+      ),
     );
   }
 
