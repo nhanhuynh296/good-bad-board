@@ -204,6 +204,55 @@ void main() {
       final save = tester.getSize(_buttonOf('Save'));
       expect(save.height, field.height);
     });
+
+    testWidgets('should_make_the_membership_badge_as_tall_as_the_id_field', (
+      tester,
+    ) async {
+      await pumpProfile(tester);
+
+      final field = tester.getSize(
+        find.byKey(const Key('player-sign-in-id-field')),
+      );
+      final badge = tester.getSize(
+        find.byKey(const Key('player-profile-membership')),
+      );
+      expect(badge.height, field.height);
+    });
+
+    testWidgets('should_make_delete_and_close_as_tall_as_the_id_field', (
+      tester,
+    ) async {
+      await pumpProfile(tester);
+
+      final field = tester.getSize(
+        find.byKey(const Key('player-sign-in-id-field')),
+      );
+      final heights = [Icons.delete_outline, Icons.close]
+          .map(
+            (icon) => tester
+                .getSize(
+                  find
+                      .ancestor(
+                        of: find.byIcon(icon),
+                        matching: find.byType(InkWell),
+                      )
+                      .first,
+                )
+                .height,
+          )
+          .toSet();
+      expect(heights, {field.height});
+    });
+
+    testWidgets('should_put_the_close_button_at_the_right_edge', (
+      tester,
+    ) async {
+      await pumpProfile(tester);
+
+      final card = tester.getRect(find.byType(PlayerProfileCard));
+      final close = tester.getRect(find.byIcon(Icons.close));
+      expect(card.right - close.right, lessThan(40));
+    });
   });
 
   group('Sessions', () {

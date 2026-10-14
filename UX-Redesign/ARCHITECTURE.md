@@ -320,8 +320,8 @@ membership controls never toggle check-in.
 #### ExpandablePlayerProfile
 ```
 Expanded panel below player row (row + panel share one rounded card):
-├── Header row: membership badge, Sign In ID field (max 360px) + Save button
-│   (both 40px tall), then delete (bin) and close (✕) at the right
+├── Header row: membership badge, Sign In ID field (max 360px) + Save button,
+│   then delete (bin) and close (✕) at the right edge; all 40px tall
 ├── Stat trio: Current Level | Matches | Diversity
 │   └── Each: value (18–20px, 800) + label (10px, 700, #8a7c68)
 ├── Most frequent partners list (name + count)

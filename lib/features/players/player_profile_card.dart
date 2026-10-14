@@ -90,9 +90,12 @@ class PlayerProfileCard extends StatelessWidget {
           // ── Header row ──────────────────────────────────
           Row(
             children: [
-              // Membership badge
+              // Membership badge, as tall as the other header controls
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                key: const Key('player-profile-membership'),
+                height: _SignInIdEditor.height,
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: switch (membership) {
                     MembershipStatus.member => AppColors.pillBg,
@@ -115,21 +118,24 @@ class PlayerProfileCard extends StatelessWidget {
               // ── Sign-in ID (PLY-15) ───────────────────
               if (onSaveSignInId != null) ...[
                 const SizedBox(width: AppSpacing.md),
-                Flexible(
-                  flex: 2,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 360),
-                    child: _SignInIdEditor(
-                      // A new key when the saved ID changes, so the field
-                      // shows it.
-                      key: ValueKey('${player.id}:${player.signInId}'),
-                      initialValue: player.signInId ?? '',
-                      onSave: onSaveSignInId!,
+                // Expanded, so delete and close sit at the right edge.
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 360),
+                      child: _SignInIdEditor(
+                        // A new key when the saved ID changes, so the field
+                        // shows it.
+                        key: ValueKey('${player.id}:${player.signInId}'),
+                        initialValue: player.signInId ?? '',
+                        onSave: onSaveSignInId!,
+                      ),
                     ),
                   ),
                 ),
-              ],
-              const Spacer(),
+              ] else
+                const Spacer(),
               // Delete button
               Material(
                 color: Colors.transparent,
@@ -137,8 +143,8 @@ class PlayerProfileCard extends StatelessWidget {
                   onTap: onDelete,
                   borderRadius: AppRadii.smRadius,
                   child: Container(
-                    width: 28,
-                    height: 28,
+                    width: _SignInIdEditor.height,
+                    height: _SignInIdEditor.height,
                     alignment: Alignment.center,
                     child: const Icon(
                       Icons.delete_outline,
@@ -155,8 +161,8 @@ class PlayerProfileCard extends StatelessWidget {
                   onTap: onClose,
                   borderRadius: AppRadii.smRadius,
                   child: Container(
-                    width: 28,
-                    height: 28,
+                    width: _SignInIdEditor.height,
+                    height: _SignInIdEditor.height,
                     alignment: Alignment.center,
                     child: const Icon(
                       Icons.close,
