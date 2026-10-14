@@ -200,17 +200,18 @@ class _SessionsPageState extends State<SessionsPage> {
               return true;
             },
           ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Courts count
-          _NumberField(
-            fieldKey: const Key('sessions-courts-field'),
-            label: l10n.sessions_number_of_courts,
-            value: gameData.numberOfCourt,
-            min: _minCourts,
-            max: _maxCourts,
-            onChanged: (v) => _changeCourts(gameData, v),
-          ),
+          // Courts count, hidden in the release (R45-36)
+          if (CourtCount.editable) ...[
+            const SizedBox(height: AppSpacing.md),
+            _NumberField(
+              fieldKey: const Key('sessions-courts-field'),
+              label: l10n.sessions_number_of_courts,
+              value: gameData.numberOfCourt,
+              min: _minCourts,
+              max: _maxCourts,
+              onChanged: (v) => _changeCourts(gameData, v),
+            ),
+          ],
         ],
       ),
     );

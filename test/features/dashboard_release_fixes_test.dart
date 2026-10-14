@@ -20,12 +20,17 @@ void main() {
   late RepositorySandbox sandbox;
 
   setUp(() async {
+    // These tests cover court-count changes, hidden in the release.
+    CourtCount.editable = true;
     mockPreferences({});
     await PersistentSetting.instance.initialize();
     sandbox = await RepositorySandbox.setUp('dashboard_release_fixes_test');
   });
 
-  tearDown(() => sandbox.tearDown());
+  tearDown(() {
+    CourtCount.editable = false;
+    sandbox.tearDown();
+  });
 
   Widget wrap(GameData gameData, TimerData timerData) => MultiProvider(
     providers: [

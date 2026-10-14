@@ -12,12 +12,17 @@ void main() {
   late RepositorySandbox sandbox;
 
   setUp(() async {
+    // These tests cover court-count changes, hidden in the release.
+    CourtCount.editable = true;
     mockPreferences({});
     await PersistentSetting.instance.initialize();
     sandbox = await RepositorySandbox.setUp('court_count_test');
   });
 
-  tearDown(() => sandbox.tearDown());
+  tearDown(() {
+    CourtCount.editable = false;
+    sandbox.tearDown();
+  });
 
   Future<GameData> session(
     int total, {

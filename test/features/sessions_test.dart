@@ -32,6 +32,8 @@ void main() {
   setUp(() async {
     // Game-based mode is hidden in the release build; these tests cover it.
     GameMode.enabled = true;
+    // Court-count changes are hidden in the release; these tests cover them.
+    CourtCount.editable = true;
     mockPreferences({});
     await PersistentSetting.instance.initialize();
     sandbox = await RepositorySandbox.setUp('sessions_test');
@@ -39,6 +41,7 @@ void main() {
 
   tearDown(() {
     GameMode.enabled = false;
+    CourtCount.editable = false;
     sandbox.tearDown();
   });
 

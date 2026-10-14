@@ -736,25 +736,29 @@ class _ActionBar extends StatelessWidget {
               ),
           ],
         ),
-        // Court count
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.dashboard_courts_label, style: AppTypography.helperBold),
-            const SizedBox(width: AppSpacing.sm),
-            _CourtCountButton(
-              icon: Icons.remove_rounded,
-              onTap: () => onCourtCountChanged(-1),
-            ),
-            const SizedBox(width: 6),
-            Text('$numberOfCourt', style: AppTypography.statValueSm),
-            const SizedBox(width: 6),
-            _CourtCountButton(
-              icon: Icons.add_rounded,
-              onTap: () => onCourtCountChanged(1),
-            ),
-          ],
-        ),
+        // Court count, hidden in the release (R45-36)
+        if (CourtCount.editable)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.dashboard_courts_label,
+                style: AppTypography.helperBold,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _CourtCountButton(
+                icon: Icons.remove_rounded,
+                onTap: () => onCourtCountChanged(-1),
+              ),
+              const SizedBox(width: 6),
+              Text('$numberOfCourt', style: AppTypography.statValueSm),
+              const SizedBox(width: 6),
+              _CourtCountButton(
+                icon: Icons.add_rounded,
+                onTap: () => onCourtCountChanged(1),
+              ),
+            ],
+          ),
       ],
     );
   }

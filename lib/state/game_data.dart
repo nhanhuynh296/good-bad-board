@@ -38,6 +38,16 @@ enum RoundView {
   next,
 }
 
+/// Release flag for the court-count controls (R45-36).
+///
+/// Off in the release build: the club always uses
+/// [GameData.defaultCourtCount] courts, so the Dashboard stepper and the
+/// Sessions field are hidden and a template Load keeps the court count. The
+/// code stays. Tests that cover court changes set this to `true`.
+abstract final class CourtCount {
+  static bool editable = false;
+}
+
 class GameData extends ChangeNotifier {
   /// [random] feeds the weighted player draws; tests pass a seeded one.
   GameData({Random? random}) : _random = random;
@@ -974,7 +984,7 @@ class GameData extends ChangeNotifier {
     _sessionCapacity = template.capacity < minSessionCapacity
         ? minSessionCapacity
         : template.capacity;
-    numberOfCourt = template.courts;
+    if (CourtCount.editable) numberOfCourt = template.courts;
     // Restore game type and duration from the template. The release build
     // ignores the template mode: it only runs time-based.
     if (GameMode.enabled) {

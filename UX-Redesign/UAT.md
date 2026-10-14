@@ -617,6 +617,9 @@ The same applies to a session template that carries a capacity below 4 (SESS-06)
 yields 4. An empty or non-numeric "Number of courts" entry clamps to 1 in the same way.
 
 **SESS-04** — Courts count change
+Release note (R45-36, 2026-10-14): hidden in the release build (`CourtCount.editable=false`). The
+Dashboard stepper and the Sessions "Number of courts" field are not shown, and the club always
+uses 4 courts. The rules below apply when the flag is on.
 Given the organizer changes "Number of courts" (range 1–8; the default is 4, `GameData.defaultCourtCount`, and it is not persisted; the Dashboard stepper is clamped to 1–8 too)
 Then every currently checked-in player is unassigned and the whole checked-in pool is
 re-distributed across the new number of courts using the same level-sorted, courts-of-4 assignment
@@ -637,7 +640,8 @@ clears. Saving with a blank/whitespace-only name is a no-op.
 Given at least one saved template exists
 When the organizer taps "Load" on a template
 Then the session's duration, session capacity, and courts count are all overwritten
-from the template (the template round mode is ignored), and the same full-reshuffle behavior as SESS-04 is applied to redistribute
+from the template (the template round mode is ignored; in the release build the courts count is
+ignored too and stays 4, R45-36), and the same full-reshuffle behavior as SESS-04 is applied to redistribute
 currently checked-in players across the (possibly new) courts count, with the same confirmation.
 Loading a game-based template stops the countdown (GB-01; hidden in the release build, `GameMode.enabled=false`).
 
