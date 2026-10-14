@@ -364,6 +364,19 @@ bleeding, and keep the archived JSON.
 
 **FIXED.** `computePlayerMixing` and `computeNewPlayerIntegration` index games by player id once.
 
+Follow-up (2026-10-14), measured in debug mode with 245 players, 2 sessions a week, 90 games a
+session (one test-only benchmark, not in the repo):
+
+| Card computations, 26-week range | 1 year (9,360) | 5 years (46,800) |
+|---|---|---|
+| Before | 147 ms | 398 ms |
+| After | 72 ms | 147 ms |
+
+The changes: the Analytics page computes once per data, range or language change, and not while its
+tab is hidden (a Rotate now on the Dashboard no longer recomputes it); `gamesForRange` drops games
+that no card window reads; the level-distribution stagnation count keys days as ints. Release (AOT)
+builds were not measured.
+
 `computePlayerMixing` (`analytics_engine.dart:584-612`) re-scans every game for every player:
 
 ```dart

@@ -283,6 +283,19 @@ List<KpiEntry> computeKpis(
   ];
 }
 
+/// The games that the KPI and level cards can read for [range]: the range,
+/// its prior period, and the two retention windows before its start. Older
+/// games cannot change those results, so the page drops them first.
+List<Game> gamesForRange(List<Game> games, DateRange range) {
+  const retentionLookBack = Duration(days: _retentionWeeks * 7 * 2);
+  final priorStart = range.priorPeriod.start;
+  final retentionStart = range.start.subtract(retentionLookBack);
+  final from = priorStart.isBefore(retentionStart)
+      ? priorStart
+      : retentionStart;
+  return games.where((g) => !g.createdDate.isBefore(from)).toList();
+}
+
 Set<String> _playerIdsInRange(Iterable<Game> games, DateRange range) => games
     .where((g) => range.contains(g.createdDate))
     .expand((g) => g.playerIds)
@@ -652,13 +665,16 @@ LevelDistributionResult computeLevelDistribution(
   // Stagnation: players with 6+ sessions (days) in the range. With no tier
   // history, "tier unchanged" cannot be checked, so a tier change is not
   // detected.
-  final sessionsByPlayer = <String, Set<DateTime>>{};
+  // A day is an int key (yyyymmdd): cheaper to hash than a DateTime.
+  final sessionsByPlayer = <String, Set<int>>{};
   for (final g in games.where((g) => range.contains(g.createdDate))) {
+    final d = g.createdDate;
+    final day = d.year * 10000 + d.month * 100 + d.day;
     for (final id in g.playerIds) {
-      if (resolvePlayer(id) == null) continue;
-      (sessionsByPlayer[id] ??= {}).add(_dateOnly(g.createdDate));
+      (sessionsByPlayer[id] ??= {}).add(day);
     }
   }
+  sessionsByPlayer.removeWhere((id, _) => resolvePlayer(id) == null);
   final stagnantCount = sessionsByPlayer.values
       .where((days) => days.length >= _stagnationSessions)
       .length;

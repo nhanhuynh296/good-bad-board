@@ -10,7 +10,14 @@ import 'package:good_bad_board/model/game.dart';
 /// the selected time range — the per-session drill-down that the old
 /// PlayerStatisticPage used to provide before the Analytics tab replaced it.
 class SessionHistoryList extends StatelessWidget {
-  const SessionHistoryList({super.key, required this.games, this.limit = 30});
+  const SessionHistoryList({
+    super.key,
+    required this.games,
+    this.limit = defaultLimit,
+  });
+
+  /// How many games the list shows unless told otherwise.
+  static const int defaultLimit = 30;
 
   /// Games to display, in any order — sorted descending internally.
   final List<Game> games;

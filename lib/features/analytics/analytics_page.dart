@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/player_display.dart';
 import 'package:good_bad_board/design/design.dart';
@@ -15,8 +16,6 @@ import 'package:good_bad_board/features/analytics/reroll_chart.dart';
 import 'package:good_bad_board/features/analytics/session_history_list.dart';
 import 'package:good_bad_board/features/analytics/waitlist_pressure_chart.dart';
 import 'package:good_bad_board/model/game.dart';
-import 'package:good_bad_board/model/player.dart';
-import 'package:good_bad_board/model/session_log.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/repository/game_repository.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
@@ -35,24 +34,27 @@ class AnalyticsPage extends StatefulWidget {
   /// release. The engine and cards stay; tests turn this on.
   final bool showHiddenCards;
 
+  /// How many times any page computed its results. Tests read it.
+  @visibleForTesting
+  static int debugRecomputeCount = 0;
+
   @override
   State<AnalyticsPage> createState() => _AnalyticsPageState();
 }
 
 class _AnalyticsPageState extends State<AnalyticsPage> {
   int _selectedWeeks = 12;
-  late DateRange _range;
-  List<Game> _games = [];
-  List<SessionLog> _sessionLogs = [];
-  List<Player> _allPlayers = [];
 
-  // Results that need the resolved roster or an O(players × games) pass —
-  // computePlayerMixing in particular. They follow the selected range, so
-  // they are recomputed when the data reloads or the range changes, not on
-  // every rebuild.
-  AtRiskResult _atRisk = const AtRiskResult(entries: []);
-  List<MixingEntry> _mixing = const [];
-  List<NewPlayerEntry> _newPlayers = const [];
+  /// Results for the selected range. Null until the tab is first opened.
+  _AnalyticsResults? _results;
+
+  /// Whether this tab is on screen. The shell keeps hidden tabs alive and
+  /// turns their tickers off.
+  bool _tabActive = false;
+
+  /// Whether the data or the language changed since the last recompute.
+  bool _stale = true;
+  Locale? _locale;
 
   /// Fires after every write to either repository — persisted games and
   /// session logs are read fresh whenever they change, even though the
@@ -73,7 +75,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     super.didChangeDependencies();
     // Not initState: _recompute reads AppLocalizations.of(context), which
     // Flutter forbids before initState has completed.
-    _recompute();
+    _tabActive = TickerMode.valuesOf(context).enabled;
+    final locale = Localizations.localeOf(context);
+    if (locale != _locale) {
+      _locale = locale;
+      _stale = true;
+    }
+    if (_tabActive && _stale) _recompute();
   }
 
   @override
@@ -82,83 +90,99 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     super.dispose();
   }
 
-  void _reload() => setState(_recompute);
+  /// A save on another tab (Save, Rotate now) only marks the results stale.
+  /// They are recomputed when this tab opens, so the Dashboard does not
+  /// wait for the charts.
+  void _reload() {
+    if (!_tabActive) {
+      _stale = true;
+      return;
+    }
+    setState(_recompute);
+  }
 
   void _selectRange(int weeks) => setState(() {
     _selectedWeeks = weeks;
     _recompute();
   });
 
-  /// Reads are synchronous map lookups, so this can run directly from
-  /// [didChangeDependencies] — no loading spinner is ever needed.
+  /// Computes every card once per data, range or language change, never on
+  /// a plain rebuild. Reads are synchronous map lookups, so no loading
+  /// spinner is needed.
   void _recompute() {
+    AnalyticsPage.debugRecomputeCount++;
+    _stale = false;
+    final l10n = AppLocalizations.of(context)!;
+    final range = DateRange.lastWeeks(_selectedWeeks);
     final playableGames = GameRepository.instance
         .getAll()
         .where((g) => g.playerIds.isNotEmpty)
         .toList();
+    // Only the windows the cards read: the range, the prior period and the
+    // retention look-back. Older games cannot change the results.
+    final games = gamesForRange(playableGames, range);
     final logs = SessionLogRepository.instance.getAll().toList();
     final allPlayers = PlayerRepository.instance.listedPlayers().toList();
-    final l10n = AppLocalizations.of(context)!;
-    _games = playableGames;
-    _sessionLogs = logs;
-    _allPlayers = allPlayers;
-    _range = DateRange.lastWeeks(_selectedWeeks);
-    final gamesInRange = playableGames
-        .where((g) => _range.contains(g.createdDate))
+    final gamesInRange = games
+        .where((g) => range.contains(g.createdDate))
         .toList();
-    _atRisk = computeAtRiskPlayers(gamesInRange, allPlayers, now: _range.end);
-    _mixing = widget.showHiddenCards
-        ? computePlayerMixing(
-            gamesInRange,
-            resolvePlayer: PlayerRepository.instance.byId,
-            nameOf: (p) => playerDisplayName(p, l10n),
-          )
-        : const [];
-    _newPlayers = computeNewPlayerIntegration(
-      playableGames,
-      allPlayers,
-      range: _range,
+    _results = _AnalyticsResults(
+      kpis: computeKpis(games, logs, range, l10n: l10n),
+      attendance: computeAttendanceTrend(logs, range, l10n: l10n),
+      waitlist: computeWaitlistPressure(logs, range, l10n: l10n),
+      levelGapTrend: computeLevelGapTrend(logs, range, l10n: l10n),
+      courtGaps: computeCourtGapComparison(logs, range),
+      courtUtilization: computeCourtUtilization(logs, range, l10n: l10n),
+      rerolls: computeRerollsPerSession(logs, range, l10n: l10n),
+      levelDistribution: computeLevelDistribution(
+        allPlayers,
+        games,
+        range,
+        resolvePlayer: PlayerRepository.instance.byId,
+        l10n: l10n,
+      ),
+      atRisk: computeAtRiskPlayers(gamesInRange, allPlayers, now: range.end),
+      mixing: widget.showHiddenCards
+          ? computePlayerMixing(
+              gamesInRange,
+              resolvePlayer: PlayerRepository.instance.byId,
+              nameOf: (p) => playerDisplayName(p, l10n),
+            )
+          : const [],
+      // "Regular" counts games over the whole history, so this one gets
+      // every game.
+      newPlayers: computeNewPlayerIntegration(
+        playableGames,
+        allPlayers,
+        range: range,
+      ),
+      recentGames: gamesInRange
+          .sortedBy((g) => g.createdDate)
+          .reversed
+          .take(SessionHistoryList.defaultLimit)
+          .toList(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final range = _range;
+    final results = _results;
+    // Hidden and never opened: nothing to show yet.
+    if (results == null) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
 
-    final kpis = computeKpis(_games, _sessionLogs, range, l10n: l10n);
-    final attendance = computeAttendanceTrend(_sessionLogs, range, l10n: l10n);
-    final waitlist = computeWaitlistPressure(_sessionLogs, range, l10n: l10n);
-    final levelGapTrend = computeLevelGapTrend(_sessionLogs, range, l10n: l10n);
-    final courtGaps = computeCourtGapComparison(_sessionLogs, range);
-    final courtUtilization = computeCourtUtilization(
-      _sessionLogs,
-      range,
-      l10n: l10n,
-    );
-    final rerolls = computeRerollsPerSession(_sessionLogs, range, l10n: l10n);
-    final levelDistribution = computeLevelDistribution(
-      _allPlayers,
-      _games,
-      range,
-      resolvePlayer: PlayerRepository.instance.byId,
-      l10n: l10n,
-    );
-    final gamesInRange = _games
-        .where((g) => range.contains(g.createdDate))
-        .toList();
-
     final cards = <Widget>[
-      AttendanceChart(result: attendance),
-      WaitlistPressureChart(result: waitlist),
-      LevelGapTrendChart(result: levelGapTrend),
-      if (widget.showHiddenCards) CourtGapComparisonCard(courts: courtGaps),
-      CourtUtilizationCard(result: courtUtilization),
-      RerollChart(result: rerolls),
-      LevelDistributionCard(result: levelDistribution),
-      AtRiskPlayersCard(result: _atRisk),
-      if (widget.showHiddenCards) PlayerMixingCard(entries: _mixing),
-      NewPlayerIntegrationCard(entries: _newPlayers),
+      AttendanceChart(result: results.attendance),
+      WaitlistPressureChart(result: results.waitlist),
+      LevelGapTrendChart(result: results.levelGapTrend),
+      if (widget.showHiddenCards)
+        CourtGapComparisonCard(courts: results.courtGaps),
+      CourtUtilizationCard(result: results.courtUtilization),
+      RerollChart(result: results.rerolls),
+      LevelDistributionCard(result: results.levelDistribution),
+      AtRiskPlayersCard(result: results.atRisk),
+      if (widget.showHiddenCards) PlayerMixingCard(entries: results.mixing),
+      NewPlayerIntegrationCard(entries: results.newPlayers),
     ];
 
     return SingleChildScrollView(
@@ -194,7 +218,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           const SizedBox(height: AppSpacing.lg),
 
           // ── KPI strip (ANA-02) ───────────────────────────────
-          KpiStrip(kpis: kpis),
+          KpiStrip(kpis: results.kpis),
           const SizedBox(height: AppSpacing.lg),
 
           // ── Chart grid: two cards per row (ANA-03…13) ────────
@@ -206,11 +230,44 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           ],
 
           // ── Session history: per-game drill-down ─────────────
-          SessionHistoryList(games: gamesInRange),
+          SessionHistoryList(games: results.recentGames),
         ],
       ),
     );
   }
+}
+
+/// Everything the cards show, for one range.
+class _AnalyticsResults {
+  const _AnalyticsResults({
+    required this.kpis,
+    required this.attendance,
+    required this.waitlist,
+    required this.levelGapTrend,
+    required this.courtGaps,
+    required this.courtUtilization,
+    required this.rerolls,
+    required this.levelDistribution,
+    required this.atRisk,
+    required this.mixing,
+    required this.newPlayers,
+    required this.recentGames,
+  });
+
+  final List<KpiEntry> kpis;
+  final TrendResult attendance;
+  final TrendResult waitlist;
+  final TrendResult levelGapTrend;
+  final List<CourtGapSummary> courtGaps;
+  final CourtUtilizationResult courtUtilization;
+  final TrendResult rerolls;
+  final LevelDistributionResult levelDistribution;
+  final AtRiskResult atRisk;
+  final List<MixingEntry> mixing;
+  final List<NewPlayerEntry> newPlayers;
+
+  /// The most recent games in the range, newest first.
+  final List<Game> recentGames;
 }
 
 List<List<Widget>> _pairs(List<Widget> cards) => [

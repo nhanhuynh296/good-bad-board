@@ -932,7 +932,7 @@ Implement the Analytics tab with charts, KPI strip, and data tables. This tab ha
 > **UAT mapping:** ANA-01…14. No raw ELO is displayed — all metrics use the 4 named tiers and tier-gap only.
 
 #### Time range & KPI (ANA-01…02)
-- [x] **ANA-01** — Time-range switcher: 4 wks / 12 wks / 26 wks segmented control, defaults to 12 wks; selecting different range recomputes all charts/KPIs against that window with "vs. prior period" deltas. At-risk, Mixing and New-player cards also recompute on range change
+- [x] **ANA-01** — Time-range switcher: 4 wks / 12 wks / 26 wks segmented control, defaults to 12 wks; selecting different range recomputes all charts/KPIs against that window with "vs. prior period" deltas. At-risk, Mixing and New-player cards also recompute on range change. Speed (2026-10-14): `_recompute` builds every card once per data, range or language change, never on a plain rebuild. A save while the tab is hidden only marks the results stale; they recompute when the tab opens (`TickerMode`). `gamesForRange` drops games older than the prior period and the retention look-back before the KPI and level cards read them. Test: `test/features/analytics_speed_test.dart`
 - [x] **ANA-02** — KPI strip: 6 tiles — Active players, Avg attendance %, Retention (4wk) %, Court utilization %, Avg waitlist (per session), Re-rolls per session — each with labeled value and delta/context line vs prior period. Active players = distinct players in games in the range. Retention = share of players seen in the 4 weeks before the last 4 who came back. Retention is nullable: the value and delta show "—" when there is no base. The delta line shows "—" when the prior period has no players or sessions
 
 #### Attendance & waitlist (ANA-03…04)
