@@ -171,7 +171,12 @@ snapshot, exactly as a Save would), rotation happens immediately: round number i
 assignments are recomputed (or the staged lineup is adopted — see RND-06), and the countdown
 restarts at the full duration.
 Note: a court holding fewer than 4 players is logged as it stands — the clock running out must
-never be blocked by a half-filled court. Saving by hand still refuses an unbalanced lineup.
+never be blocked by a half-filled court. Saving by hand still refuses an unbalanced lineup, with
+the message "Court {n} needs 4 players." Generate with fewer than 4 checked-in players shows
+"Check in at least 4 players. {count} checked in." (R45-39). The buttons stay enabled.
+A double click on "Rotate now" logs the round once and increments the round number once. If the
+round cannot be written to disk, nothing changes, the SnackBar reads "Something went wrong. Try
+again.", and the countdown restarts (R45-01).
 Global Save (time-based): Save logs the round, keeps one empty court per court, clears the staged
 next round, and returns to the current-round view. Save with no players on any court is refused
 ("No game to save").

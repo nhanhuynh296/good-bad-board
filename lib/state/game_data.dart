@@ -22,6 +22,7 @@ import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
+import 'package:uuid/uuid.dart';
 
 export 'package:good_bad_board/state/lineup_error.dart';
 
@@ -372,16 +373,26 @@ class GameData extends ChangeNotifier {
   /// round exists it is adopted as edited; otherwise a fresh level-balanced
   /// court assignment is computed. The round number is always incremented and
   /// the grid returns to the live round.
-  Future<void> rotateNow() async {
-    // Every court that holds players is logged as played, including an
-    // incomplete one — the clock running out must never be blocked by a
-    // half-filled court. (Saving by hand still validates; see
-    // [saveCurrentGame].)
-    final finished = stagingMatches
-        .where((game) => game.playerIds.isNotEmpty)
-        .toList();
-    if (finished.isNotEmpty) {
-      await _logRound(finished);
+  ///
+  /// Runs one at a time (R45-01): a call made while a rotation is in flight
+  /// does nothing and returns `false`. If the write fails, the error goes to
+  /// the caller and the session is unchanged, so a retry logs the round once.
+  Future<bool> rotateNow() async {
+    if (_isRotating) return false;
+    _isRotating = true;
+    try {
+      // Every court that holds players is logged as played, including an
+      // incomplete one — the clock running out must never be blocked by a
+      // half-filled court. (Saving by hand still validates; see
+      // [saveCurrentGame].)
+      final finished = stagingMatches
+          .where((game) => game.playerIds.isNotEmpty)
+          .toList();
+      if (finished.isNotEmpty) {
+        await _logRound(finished);
+      }
+    } finally {
+      _isRotating = false;
     }
 
     if (_stagedLineup != null) {
@@ -397,7 +408,10 @@ class GameData extends ChangeNotifier {
     _roundNumber++;
     _prunePlayingGameIds();
     notifyListeners();
+    return true;
   }
+
+  bool _isRotating = false;
 
   /// Alias for [checkInPlayer] — the only door into session membership.
   ///
@@ -608,10 +622,14 @@ class GameData extends ChangeNotifier {
   ///
   /// Shared by [saveCurrentGame] (which validates first) and [rotateNow]
   /// (which does not — a rotation must never be blocked).
+  ///
+  /// Writes to disk first and adds to [history] last, so a failed write
+  /// leaves [history] unchanged (R45-01). A retry writes the same game ids
+  /// again, which replaces them on disk.
   Future<void> _logRound(GameContainer courts) async {
-    history.add(courts);
     await GameRepository.instance.addAll(courts);
     await _logSessionSnapshot(courts);
+    history.add(courts);
     debugPrint(
       'Average match every should have played: ${getCurrentPlayerAverageMatchPlayed().toStringAsFixed(2)}',
     );
@@ -628,9 +646,10 @@ class GameData extends ChangeNotifier {
     if (!game.isPlayable()) {
       throw UnbalancedCourts(courtNumbers: [stagingMatches.indexOf(game) + 1]);
     }
-    history.add([game]);
+    // Disk first, as in [_logRound] (R45-01).
     await GameRepository.instance.add(game);
     await _logSessionSnapshot(stagingMatches);
+    history.add([game]);
     _playingGameIds.add(game.id);
     notifyListeners();
     debugPrint(
@@ -641,7 +660,12 @@ class GameData extends ChangeNotifier {
   /// Builds and persists a [SessionLog] snapshot from the current live
   /// session state, then resets the per-round re-roll counter.
   Future<void> _logSessionSnapshot(GameContainer courts) async {
-    final log = SessionLog.create(
+    // A failed write leaves its row in the repository cache. The next
+    // snapshot reuses that id, so it replaces the row instead of adding a
+    // second one (R45-01).
+    final log = SessionLog(
+      id: _unsavedLogId ?? const Uuid().v4(),
+      loggedAt: DateTime.now(),
       capacity: sessionCapacity,
       checkedInCount: checkedInCount,
       waitlistCount: waitlistedPlayers.length,
@@ -652,9 +676,14 @@ class GameData extends ChangeNotifier {
           .toList(),
       courtCount: numberOfCourt,
     );
+    _unsavedLogId = log.id;
     await SessionLogRepository.instance.add(log);
+    _unsavedLogId = null;
     _sessionRerollCount = 0;
   }
+
+  /// The id of a session log whose write failed. See [_logSessionSnapshot].
+  String? _unsavedLogId;
 
   Iterable<Player> _choosePlayer([int? n]) {
     final numberOfPlayers =

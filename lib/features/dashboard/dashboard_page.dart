@@ -234,7 +234,8 @@ class _DashboardPageState extends State<DashboardPage> {
     final gameData = context.read<GameData>();
     final timerData = context.read<TimerData>();
     try {
-      await gameData.rotateNow();
+      // A rotation already in flight owns the clock (R45-01).
+      if (!await gameData.rotateNow()) return;
       if (!mounted) return;
       setState(() {
         _selectedPlayerId = null;
@@ -244,8 +245,9 @@ class _DashboardPageState extends State<DashboardPage> {
     } catch (e) {
       // Deliberately catches Error as well as Exception: this also runs from
       // the countdown's expiry callback, and a rotation that dies there would
-      // strand the session on a finished round with a stopped clock. Restart
-      // the clock regardless so the round still turns over.
+      // strand the session on a finished round with a stopped clock. A
+      // failed rotation changes nothing (R45-01), so restart the clock and
+      // the next expiry tries the same round again.
       if (!mounted) return;
       _showError(e);
       timerData.reset();
