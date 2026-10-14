@@ -63,8 +63,6 @@
   "app_name": "Générateur de matchs de badminton",
   "are_you_sure_you_want_to_delete_this_player": "Êtes-vous sûr de vouloir supprimer ce joueur ?",
   "are_you_sure_you_want_to_exit": "Êtes-vous sûr de vouloir quitter ?",
-  "auto_game": "Partie automatique",
-  "auto_game_status": "Génération automatique de parties : {status}",
   "break_": "Pause",
   "cancel": "Annuler",
   "coming_soon": "Bientôt disponible",

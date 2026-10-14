@@ -368,19 +368,6 @@
     "description": "Confirmation message when deleting a player"
   },
   "are_you_sure_you_want_to_exit": "Are you sure you want to exit?",
-  "auto_game": "Auto Game",
-  "@auto_game": {
-    "description": "Automatically generate games after a session ends"
-  },
-  "auto_game_status": "Auto game generation is {status}",
-  "@auto_game_status": {
-    "description": "Status of the auto game feature (On/Off)",
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "break_": "Break",
   "@break_": {
     "description": "Temporarily exclude a player from gameplay"

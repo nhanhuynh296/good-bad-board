@@ -2,7 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum Setting { background, gameType, gameDuration, language, autoMakegame }
+/// Saved setting keys. Main's `autoMakegame` key is no longer read or
+/// written; it stays on disk, so a rollback to main keeps its value.
+enum Setting { background, gameType, gameDuration, language }
 
 enum GameType {
   timeBased,
@@ -105,15 +107,6 @@ class PersistentSetting extends ChangeNotifier {
     final languageCode = localeString.elementAtOrNull(0) ?? 'en';
     final countryCode = localeString.elementAtOrNull(1);
     return Locale(languageCode, countryCode);
-  }
-
-  Future<void> setAutoMakeGame(bool value) async {
-    await sharedPreference.setBool(Setting.autoMakegame.name, value);
-    notifyListeners();
-  }
-
-  bool getAutoMakeGame() {
-    return sharedPreference.getBool(Setting.autoMakegame.name) ?? false;
   }
 
   Future<void> clear() async {

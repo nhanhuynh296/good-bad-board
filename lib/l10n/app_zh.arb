@@ -63,8 +63,6 @@
   "app_name": "羽毛球比赛生成器",
   "are_you_sure_you_want_to_delete_this_player": "确定删除此球员吗？",
   "are_you_sure_you_want_to_exit": "确定退出吗？",
-  "auto_game": "自动比赛",
-  "auto_game_status": "自动比赛生成：{status}",
   "break_": "休息",
   "cancel": "取消",
   "coming_soon": "即将推出",

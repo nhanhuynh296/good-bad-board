@@ -37,8 +37,21 @@ void main() {
     expect(PersistentSetting.instance.getLanguage(), const Locale('zh', 'HK'));
   });
 
-  test('should_read_auto_make_game_written_by_main', () {
-    expect(PersistentSetting.instance.getAutoMakeGame(), isTrue);
+  // R45-37: the new build has no auto make game setting, but it leaves
+  // main's key on disk, so a rollback to main keeps the value.
+  test('should_leave_main_auto_make_game_key_on_disk', () async {
+    await PersistentSetting.instance.setGameDuration(
+      const Duration(minutes: 10),
+    );
+
+    expect(
+      PersistentSetting.instance.sharedPreference.getBool('autoMakegame'),
+      isTrue,
+    );
+  });
+
+  test('should_have_no_auto_make_game_setting', () {
+    expect(Setting.values.map((s) => s.name), isNot(contains('autoMakegame')));
   });
 
   test('should_read_background_written_by_main', () {

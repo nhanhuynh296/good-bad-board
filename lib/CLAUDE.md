@@ -6,7 +6,7 @@ Three state objects are registered at the root in `lib/main.dart`:
 
 | Class | Scope | Purpose |
 |---|---|---|
-| `PersistentSetting` | Singleton | App settings persisted via `SharedPreferencesWithCache` (language, game type, game duration, auto-make-game toggle, court background) |
+| `PersistentSetting` | Singleton | App settings persisted via `SharedPreferencesWithCache` (language, game type, game duration, court background; main's auto-make-game key stays on disk, unread) |
 | `GameData` | Per-session | Core game logic: checked-in player roster, matchmaking, Elo optimization, staging/history of games |
 | `TimerData` | Per-session | Tracks elapsed time for the countdown timer on the game page |
 
