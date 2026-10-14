@@ -31,6 +31,9 @@ class SessionsPage extends StatefulWidget {
 }
 
 class _SessionsPageState extends State<SessionsPage> {
+  /// Height of the template name field and the template buttons.
+  static const double _controlHeight = 40;
+
   final TextEditingController _templateNameController = TextEditingController();
 
   /// Read from the setting, never cached: a template Load changes it too.
@@ -235,13 +238,21 @@ class _SessionsPageState extends State<SessionsPage> {
                     hintText: l10n.sessions_template_name,
                     isDense: true,
                     border: const OutlineInputBorder(),
+                    // 8 + 24 (16px text) + 8 = [_controlHeight].
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              AppButton.primary(
-                label: l10n.sessions_save_current,
-                onPressed: () => _saveTemplate(gameData),
+              SizedBox(
+                height: _controlHeight,
+                child: AppButton.primary(
+                  label: l10n.sessions_save_current,
+                  onPressed: () => _saveTemplate(gameData),
+                ),
               ),
             ],
           ),
@@ -281,9 +292,12 @@ class _SessionsPageState extends State<SessionsPage> {
                       ],
                     ),
                   ),
-                  AppButton.secondary(
-                    label: l10n.sessions_load,
-                    onPressed: () => _loadTemplate(gameData, template),
+                  SizedBox(
+                    height: _controlHeight,
+                    child: AppButton.secondary(
+                      label: l10n.sessions_load,
+                      onPressed: () => _loadTemplate(gameData, template),
+                    ),
                   ),
                 ],
               ),

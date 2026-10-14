@@ -240,7 +240,7 @@ void main() {
       expect(find.text('Member'), findsNothing);
     });
 
-    testWidgets('shows a check circle when the player is checked in', (
+    testWidgets('shows the accent bar when the player is checked in', (
       tester,
     ) async {
       final player = _testPlayer('Alice', Elo.b2);
@@ -258,7 +258,7 @@ void main() {
           ),
         ),
       );
-      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      expect(find.byKey(const Key('player-row-bar')), findsOneWidget);
     });
 
     testWidgets('fires onToggleProfile when More tapped', (tester) async {
@@ -860,13 +860,13 @@ void main() {
 
       // Find and tap the "check-in" control in PlayerRow
       // PlayerRow renders either "In" or "Out" pill depending on check-in state
-      expect(find.byIcon(Icons.check_circle), findsNothing);
+      expect(find.byKey(const Key('player-row-bar')), findsNothing);
       await tester.tap(find.text('Alice Test'));
       await tester.pumpAndSettle();
 
       // Player is now checked in
       expect(gameData.isPlayerCheckedIn(player), isTrue);
-      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      expect(find.byKey(const Key('player-row-bar')), findsOneWidget);
     });
 
     testWidgets(
@@ -956,7 +956,7 @@ void main() {
       gameData.checkInPlayer(player);
       await tester.pumpAndSettle();
       expect(gameData.isPlayerCheckedIn(player), isTrue);
-      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      expect(find.byKey(const Key('player-row-bar')), findsOneWidget);
 
       // Tap again to check out
       await tester.tap(find.text('Alice Test'));
@@ -964,7 +964,7 @@ void main() {
 
       // Player is now checked out
       expect(gameData.isPlayerCheckedIn(player), isFalse);
-      expect(find.byIcon(Icons.check_circle), findsNothing);
+      expect(find.byKey(const Key('player-row-bar')), findsNothing);
     });
 
     testWidgets('CHK-06: tapping a disabled player row does nothing', (
@@ -973,16 +973,12 @@ void main() {
       final player = _testPlayer('Alice', Elo.b1);
       await pumpPlayersPage(tester, initialPlayers: [player]);
 
-      // Initially Member — the row shows an empty ring
-      expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
-
       // Disable the player's membership
       gameData.setMembership(player, MembershipStatus.disabled);
       await flushPendingWrites(tester);
       await tester.pumpAndSettle();
 
       // Row is now disabled — tapping does not check them in
-      expect(find.byIcon(Icons.block), findsOneWidget);
       await tester.tap(find.text('Alice Test'));
       await tester.pumpAndSettle();
       expect(gameData.isPlayerCheckedIn(player), isFalse);

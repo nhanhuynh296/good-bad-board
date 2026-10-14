@@ -15,13 +15,13 @@ import 'package:good_bad_board/model/player.dart';
 ///
 /// Look (UX-Redesign/ARCHITECTURE.md, player row):
 /// - Checked in: [AppColors.successBg] fill, 1px [AppColors.success] border
-///   at 45% alpha, 4px [AppColors.deltaPositive] bar on the left, a filled
-///   check circle, and a bold name.
-/// - Not checked in: an empty ring in [AppColors.inputBorder].
-/// - Disabled: no bar, subtle text, a block icon and a forbidden cursor.
+///   at 45% alpha, 4px [AppColors.deltaPositive] bar on the left, and a bold
+///   name. No check icon: the colour shows the state.
+/// - Disabled: no bar, subtle text and a forbidden cursor.
 ///
-/// Columns: leading icon, **Name + ID**, **Level** ([LevelAdjuster]),
+/// Columns: **Name + ID** on one baseline, **Level** ([LevelAdjuster]),
 /// **Membership** pill (cycles Member → Casual → Disabled → Member), **More**.
+/// All controls are [controlHeight] tall.
 ///
 /// The row is designed for desktop-width tables. On narrower screens the
 /// parent should wrap it in a horizontal [SingleChildScrollView].
@@ -42,12 +42,15 @@ class PlayerRow extends StatelessWidget {
   /// Width of the "More" column. The table header uses the same width.
   static const double moreColumnWidth = 100;
 
-  /// Width of the leading check icon plus the gap after it. The table header
-  /// uses this to line its first label up with the player name.
-  static const double leadingWidth = 30;
-
   /// Width of the left accent bar.
   static const double barWidth = 4;
+
+  /// Distance from the row's left edge to the player name. The table header
+  /// uses this to line its first label up with the name.
+  static const double nameInset = barWidth + 12;
+
+  /// Height of every control in the row (level −/+, membership, More).
+  static const double controlHeight = 28;
 
   final Player player;
 
@@ -129,7 +132,7 @@ class PlayerRow extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(border: border),
-                padding: const EdgeInsets.fromLTRB(barWidth + 12, 8, 12, 8),
+                padding: const EdgeInsets.fromLTRB(nameInset, 8, 12, 8),
                 child: LayoutBuilder(
                   builder: (context, _) {
                     // The trailing controls have fixed widths that, on a
@@ -143,29 +146,30 @@ class PlayerRow extends StatelessWidget {
 
                     return Row(
                       children: [
-                        // ── Check state icon ─────────────────────
-                        _CheckIcon(checked: checked, disabled: isDisabled),
-                        const SizedBox(width: leadingWidth - 20),
-
-                        // ── Name + ID ────────────────────────────
+                        // ── Name + ID, on one baseline ───────────
                         Expanded(
                           flex: 3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
                             children: [
-                              Text(
-                                player.name(),
-                                style: AppTypography.md.copyWith(
-                                  color: nameColor,
-                                  fontWeight: checked
-                                      ? FontWeight.w700
-                                      : FontWeight.w600,
+                              Flexible(
+                                child: Text(
+                                  player.name(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.md.copyWith(
+                                    color: nameColor,
+                                    fontWeight: checked
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(
                                 player.signInId ?? '—',
+                                maxLines: 1,
                                 style: AppTypography.sm.copyWith(
                                   color: AppColors.textSubtle,
                                 ),
@@ -201,12 +205,15 @@ class PlayerRow extends StatelessWidget {
                           width: compact ? null : moreColumnWidth,
                           child: Align(
                             alignment: Alignment.centerRight,
-                            child: AppButton.secondary(
-                              label: l10n.players_more,
-                              trailingIcon: isExpanded
-                                  ? Icons.expand_less_rounded
-                                  : Icons.expand_more_rounded,
-                              onPressed: onToggleProfile,
+                            child: SizedBox(
+                              height: controlHeight,
+                              child: AppButton.secondary(
+                                label: l10n.players_more,
+                                trailingIcon: isExpanded
+                                    ? Icons.expand_less_rounded
+                                    : Icons.expand_more_rounded,
+                                onPressed: onToggleProfile,
+                              ),
                             ),
                           ),
                         ),
@@ -230,33 +237,6 @@ class PlayerRow extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// The 20px state icon at the start of a [PlayerRow].
-class _CheckIcon extends StatelessWidget {
-  const _CheckIcon({required this.checked, required this.disabled});
-
-  final bool checked;
-  final bool disabled;
-
-  @override
-  Widget build(BuildContext context) {
-    if (disabled) {
-      return const Icon(Icons.block, size: 20, color: AppColors.textSubtle);
-    }
-    if (checked) {
-      return const Icon(
-        Icons.check_circle,
-        size: 20,
-        color: AppColors.deltaPositive,
-      );
-    }
-    return const Icon(
-      Icons.radio_button_unchecked,
-      size: 20,
-      color: AppColors.inputBorder,
     );
   }
 }
@@ -293,7 +273,9 @@ class _MembershipPill extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppRadii.smRadius,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+          height: PlayerRow.controlHeight,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 9),
           child: Text(
             status.localizedLabel(AppLocalizations.of(context)!),
             textAlign: TextAlign.center,

@@ -60,7 +60,8 @@ class LevelAdjuster extends StatelessWidget {
   }
 }
 
-/// A 22×22 px square button used within [LevelAdjuster].
+/// A square button used within [LevelAdjuster], as tall as the other
+/// controls of a player row.
 class _AdjustButton extends StatelessWidget {
   const _AdjustButton({
     required this.label,
@@ -71,6 +72,8 @@ class _AdjustButton extends StatelessWidget {
   final String label;
   final bool enabled;
   final VoidCallback onTap;
+
+  static const double _size = 28;
 
   static void _doNothing() {}
 
@@ -92,8 +95,8 @@ class _AdjustButton extends StatelessWidget {
           mouseCursor: enabled ? null : SystemMouseCursors.basic,
           borderRadius: AppRadii.smRadius,
           child: Container(
-            width: 22,
-            height: 22,
+            width: _size,
+            height: _size,
             alignment: Alignment.center,
             child: Text(
               label,

@@ -494,7 +494,7 @@ Then their row ignores taps (no check-in, no hover); only Member/Casual players 
 
 **PLY-08** — Check-in toggle from Players tab
 Given a player row is shown for a Member or Casual player
-Then the row tap is the check-in toggle (tap = in, tap again = out) and performs CHK-02/CHK-03/CHK-05 behavior directly (no separate Check-in tab). There is no In/Out pill and no "Checked in" column.
+Then the row tap is the check-in toggle (tap = in, tap again = out) and performs CHK-02/CHK-03/CHK-05 behavior directly (no separate Check-in tab). There is no In/Out pill and no "Checked in" column. A checked-in row shows its state by colour only (green fill and left bar, no check icon). The name and the sign-in ID are on one line, and all row controls have the same height.
 
 **PLY-13** — Add player
 Given the organizer taps "Add" on the Players tab
@@ -539,7 +539,8 @@ Then nothing happens.
 
 **PLY-15** — Edit sign-in ID, and add-player checks
 Given a player's profile panel is open
-Then it shows a Sign In ID field and a Save button.
+Then it shows a Sign In ID field and a Save button on the top row of the panel, with the
+membership label on the left and the delete and close buttons on the right.
 When the organizer saves a changed ID
 Then the ID is trimmed and saved, and no other player field changes. An empty ID means no ID.
 When the ID is already used by another listed player
@@ -557,7 +558,7 @@ button shows a chevron down when the profile is hidden and up when it is shown. 
 not open the profile (it toggles check-in, PLY-08). More, level −/+ and membership taps never
 toggle check-in, and a dimmed −/+ does nothing. The panel shows:
 membership status, 3 stat tiles (Current
-Level, Matches, Diversity %), a Sign In ID field with a Save button (PLY-15), up to 3 most-frequent playing partners
+Level, Matches, Diversity %), a Sign In ID field with a Save button on its top row (PLY-15), up to 3 most-frequent playing partners
 with match counts, and a session-attendance history summary (or "No sessions logged yet" if none).
 Definitions: Matches = saved games that hold the player. Diversity % = distinct other players met in
 those games ÷ other listed players on the roster. Partners = every other player in a game (a game

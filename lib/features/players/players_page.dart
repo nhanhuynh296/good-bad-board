@@ -855,12 +855,7 @@ class _TableHeader extends StatelessWidget {
     return Padding(
       // Lines up with the row: its 1px border, accent bar and padding on
       // the left, its border and padding on the right.
-      padding: const EdgeInsets.fromLTRB(
-        1 + PlayerRow.barWidth + 12 + PlayerRow.leadingWidth,
-        6,
-        1 + 12,
-        6,
-      ),
+      padding: const EdgeInsets.fromLTRB(1 + PlayerRow.nameInset, 6, 1 + 12, 6),
       child: Row(
         children: [
           Expanded(flex: 3, child: _HeaderLabel(l10n.players_header_name_id)),

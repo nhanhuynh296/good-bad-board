@@ -45,9 +45,9 @@ class PartnerEntry {
 /// Expandable profile card displayed below a [PlayerRow].
 ///
 /// Shows:
-/// - Membership label + close button
+/// - Header row: membership label, sign-in ID field with a Save button,
+///   delete and close buttons
 /// - Stat trio: Current Level | Matches | Diversity
-/// - Sign-in ID field with a Save button
 /// - Most frequent partners list
 /// - Attendance history text
 ///
@@ -112,6 +112,23 @@ class PlayerProfileCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // ── Sign-in ID (PLY-15) ───────────────────
+              if (onSaveSignInId != null) ...[
+                const SizedBox(width: AppSpacing.md),
+                Flexible(
+                  flex: 2,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 360),
+                    child: _SignInIdEditor(
+                      // A new key when the saved ID changes, so the field
+                      // shows it.
+                      key: ValueKey('${player.id}:${player.signInId}'),
+                      initialValue: player.signInId ?? '',
+                      onSave: onSaveSignInId!,
+                    ),
+                  ),
+                ),
+              ],
               const Spacer(),
               // Delete button
               Material(
@@ -179,17 +196,6 @@ class PlayerProfileCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-
-          // ── Sign-in ID (PLY-15) ─────────────────────────
-          if (onSaveSignInId != null) ...[
-            _SignInIdEditor(
-              // A new key when the saved ID changes, so the field shows it.
-              key: ValueKey('${player.id}:${player.signInId}'),
-              initialValue: player.signInId ?? '',
-              onSave: onSaveSignInId!,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
 
           // ── Partners + Attendance ───────────────────────
           if (stats.topPartners.isNotEmpty) ...[
@@ -273,6 +279,9 @@ class _SignInIdEditor extends StatefulWidget {
   final String initialValue;
   final String? Function(String text) onSave;
 
+  /// Height of the field (without its error text) and of the Save button.
+  static const double height = 40;
+
   @override
   State<_SignInIdEditor> createState() => _SignInIdEditorState();
 }
@@ -304,21 +313,23 @@ class _SignInIdEditorState extends State<_SignInIdEditor> {
             style: AppTypography.input,
             onSubmitted: (_) => _save(),
             decoration: InputDecoration(
-              labelText: l10n.sign_in_id,
+              hintText: l10n.sign_in_id,
               errorText: _error,
               errorMaxLines: 2,
               isDense: true,
+              // 9.5 + 21 (14px text) + 9.5 = [_SignInIdEditor.height].
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 9.5,
+              ),
             ),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: AppButton.secondary(
-            key: const Key('player-sign-in-id-save'),
-            label: l10n.save,
-            onPressed: _save,
-          ),
+        SizedBox(
+          key: const Key('player-sign-in-id-save'),
+          height: _SignInIdEditor.height,
+          child: AppButton.secondary(label: l10n.save, onPressed: _save),
         ),
       ],
     );

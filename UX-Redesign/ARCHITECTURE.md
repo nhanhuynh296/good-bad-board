@@ -212,7 +212,7 @@ Card variant containing:
 ├── Header row:
 │   ├── "COURT N" (Space Grotesk, 15px, 700)
 │   ├── SpreadPill (11px, pill bg, radius 999px)
-│   └── ReRollButton (accent bg, 11px)
+│   └── ReRollButton (accent bg, 11px), at the right edge of the header
 └── 4× PlayerSlot rows
 ```
 
@@ -250,6 +250,7 @@ to make.
 │   ├── Radio header (conditional): dot + "CURRENT ROUND" (10px, 800)
 │   ├── "ROUND N" (Space Grotesk, 20px, 700, white) + mode label (12px, #c9c2b8)
 │   ├── Countdown timer (26px, 800, tabular-nums, white) + "until rotation" (11px, #c9c2b8)
+│   │   └── Countdown, label and buttons sit at the right edge of the bar
 │   ├── Action buttons (12px):
 │   │   ├── "Pre-make next round" — ghost button, shown when no round is staged
 │   │   └── "Rotate now →" — accent-filled primary button, always visible
@@ -292,15 +293,16 @@ current, #ffb38a for next) at full opacity; unselected = transparent border,
 ```
 Table list row with:
 ├── Row tap = check-in toggle (tap = in / out); no In/Out pill, no "Checked in" column
-├── Leading icon (20px): checked in = check_circle deltaPositive #2e7d4f;
-│   unchecked = radio_button_unchecked in inputBorder #e2d8c8
-├── Name (14px, 600; w700 when checked in; accent when profile is open)
-├── ID code (12px, #b3a891)
+├── No leading icon: the row colour shows the check-in state
+├── Name (14px, 600; w700 when checked in; accent when profile is open) and
+│   ID code (12px, #b3a891) on one line, on the same text baseline; starts at
+│   `PlayerRow.nameInset` (bar + 12px), and the table header label lines up with it
 ├── Level adjuster: [−] button + value (13px, 800, accent) + [+] button
-│   └── Buttons: 20–22px square, bg=#f0e6d6, radius=6px; a dimmed −/+ does nothing
+│   └── Buttons: 28px square, bg=#f0e6d6, radius=6px; a dimmed −/+ does nothing
 ├── Membership toggle (Member/Casual/Disabled)
 └── More button (column width 100): AppButton.secondary with a 16px trailing chevron
     (new `trailingIcon` param); chevron down = profile hidden, up = shown
+All row controls (−, +, membership, More) are `PlayerRow.controlHeight` = 28px tall.
 ```
 
 Row states:
@@ -311,17 +313,17 @@ Row states:
 | Unchecked | `cardBg` | none | none | `cardBg` |
 | Disabled | dimmed | none | none (no bar) | none; forbidden cursor |
 
-A disabled row uses `textSubtle` for text and `Icons.block` (`textSubtle`) as the leading icon.
+A disabled row uses `textSubtle` for text and has no icon.
 An open profile panel keeps the green bar when the player is checked in. The More, level and
 membership controls never toggle check-in.
 
 #### ExpandablePlayerProfile
 ```
 Expanded panel below player row (row + panel share one rounded card):
-├── Close button (✕)
+├── Header row: membership badge, Sign In ID field (max 360px) + Save button
+│   (both 40px tall), then delete (bin) and close (✕) at the right
 ├── Stat trio: Current Level | Matches | Diversity
 │   └── Each: value (18–20px, 800) + label (10px, 700, #8a7c68)
-├── Sign In ID field + Save button
 ├── Most frequent partners list (name + count)
 └── Attendance history text
 ```

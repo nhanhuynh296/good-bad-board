@@ -666,7 +666,9 @@ void main() {
       expect(material.color, AppColors.successBg);
     });
 
-    testWidgets('should_show_a_ban_icon_on_a_disabled_row', (tester) async {
+    testWidgets('should_show_the_name_in_subtle_text_on_a_disabled_row', (
+      tester,
+    ) async {
       await pumpPage(
         tester,
         players: [
@@ -674,7 +676,8 @@ void main() {
         ],
       );
 
-      expect(find.byIcon(Icons.block), findsOneWidget);
+      final name = tester.widget<Text>(find.text('Dave Test'));
+      expect(name.style?.color, AppColors.textSubtle);
     });
 
     testWidgets('should_hide_the_import_button_by_default', (tester) async {

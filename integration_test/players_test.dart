@@ -130,7 +130,7 @@ void main() {
       expect(find.byType(PlayerRow), findsWidgets);
       expect(find.text('Member'), findsWidgets);
       // setupWithPlayers checks every seeded player in.
-      expect(find.byIcon(Icons.check_circle), findsWidgets);
+      expect(find.byKey(const Key('player-row-bar')), findsWidgets);
     });
   });
 
@@ -154,7 +154,7 @@ void main() {
 
       // A checked-in row shows a check circle. setupWithPlayers checks every
       // seeded player in, so every row shows one.
-      expect(find.byIcon(Icons.check_circle), findsWidgets);
+      expect(find.byKey(const Key('player-row-bar')), findsWidgets);
     });
 
     testWidgets('tapping a row checks the player out, and in again', (
@@ -162,15 +162,18 @@ void main() {
     ) async {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
-      final before = find.byIcon(Icons.check_circle).evaluate().length;
+      final before = find.byKey(const Key('player-row-bar')).evaluate().length;
 
       await tester.tap(find.text('Player0 Test').first);
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.check_circle).evaluate().length, before - 1);
+      expect(
+        find.byKey(const Key('player-row-bar')).evaluate().length,
+        before - 1,
+      );
 
       await tester.tap(find.text('Player0 Test').first);
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.check_circle).evaluate().length, before);
+      expect(find.byKey(const Key('player-row-bar')).evaluate().length, before);
     });
   });
 

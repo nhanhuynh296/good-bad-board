@@ -112,15 +112,22 @@ class CourtCard extends StatelessWidget {
                   style: AppTypography.cardTitle,
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Flexible(child: SpreadPill(levelGap: spreadLevel)),
-                if (isNextRound) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  const _NextRoundBadge(),
-                ] else if (isPlaying) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  const _PlayingBadge(),
-                ],
-                const Spacer(),
+                // Expanded, so the action buttons sit at the right edge.
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(child: SpreadPill(levelGap: spreadLevel)),
+                      if (isNextRound) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        const _NextRoundBadge(),
+                      ] else if (isPlaying) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        const _PlayingBadge(),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
                 if (_showSave) ...[
                   _CourtActionButton(
                     key: const Key('court-save-button'),
