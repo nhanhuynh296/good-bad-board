@@ -722,7 +722,7 @@ historical rosters to the *current* player row, so the feature never showed a re
 production — see ADR-0001.
 
 **ANA-11** — At-risk players
-Then a list shows regular attendees (historically ≥2×/month) not seen in 3+ weeks, each with their
+Then a list shows regular attendees (historically ≥2 session days a month; two games on one day count once) not seen in 3+ weeks, each with their
 usual frequency and time since last seen, plus a total "lapsed" count.
 
 **ANA-12** — Player mixing

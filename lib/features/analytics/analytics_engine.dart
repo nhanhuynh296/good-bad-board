@@ -721,9 +721,11 @@ AtRiskResult computeAtRiskPlayers(
 
   final entries = <AtRiskEntry>[];
   for (final player in allPlayers) {
+    // One visit per session day: two games on one day count once.
     final dates =
         byPlayerId[player.id]
-            ?.map((r) => r.$2)
+            ?.map((r) => _dateOnly(r.$2))
+            .toSet()
             .sorted((a, b) => a.compareTo(b)) ??
         <DateTime>[];
     if (dates.isEmpty) continue;

@@ -26,6 +26,10 @@ Player? Function(String id) _resolverFor(List<Player> players) {
   return (id) => byId[id];
 }
 
+/// [day] at [hour] o'clock, so two games stay on one calendar day.
+DateTime _at(DateTime day, int hour) =>
+    DateTime(day.year, day.month, day.day, hour);
+
 SessionLog _log({
   required DateTime loggedAt,
   int capacity = 20,
@@ -652,6 +656,35 @@ void main() {
       final result = computeAtRiskPlayers(games, [regular], now: now);
       expect(result.lapsedCount, 1);
       expect(result.entries.first.weeksSinceLastSeen, greaterThanOrEqualTo(3));
+    });
+
+    // R45-05: frequency counts session days, not games.
+    test('should_not_flag_a_player_who_came_to_one_session_only', () {
+      final once = _p('Once', Elo.c2);
+      final day = now.subtract(const Duration(days: 28));
+      final games = [
+        _game([once], _at(day, 10)),
+        _game([once], _at(day, 11)),
+      ];
+
+      final result = computeAtRiskPlayers(games, [once], now: now);
+
+      expect(result.lapsedCount, 0);
+    });
+
+    test('should_count_two_games_on_one_day_as_one_visit', () {
+      final regular = _p('Regular', Elo.c2);
+      // 3 session days, 2 games each, in the 30 days before the gap.
+      final games = [
+        for (final d in [50, 40, 30])
+          for (final h in [10, 11])
+            _game([regular], _at(now.subtract(Duration(days: d)), h)),
+      ];
+
+      final result = computeAtRiskPlayers(games, [regular], now: now);
+
+      // 3 days over a 50-day span (1.67 months): 1.8 a month, not a regular.
+      expect(result.lapsedCount, 0);
     });
   });
 

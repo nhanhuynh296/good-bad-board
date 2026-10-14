@@ -955,7 +955,7 @@ Implement the Analytics tab with charts, KPI strip, and data tables. This tab ha
   *current* player row, so the feature never showed a real delta from production data. See ADR-0001.
 
 #### At-risk & mixing (ANA-11…13)
-- [x] **ANA-11** — At-risk players: regular attendees (historically ≥2×/month) not seen in 3+ weeks; usual frequency + time since last seen; total "lapsed" count
+- [x] **ANA-11** — At-risk players: regular attendees (historically ≥2 session days a month; two games on one day count once) not seen in 3+ weeks; usual frequency + time since last seen; total "lapsed" count
 - [x] **ANA-12** — **Hidden in release (`AnalyticsPage.showHiddenCards=false`).** Player mixing: horizontal bar per player showing 0–1 mixing score (distinct partners ÷ games played); tagged "connector" (high), "clique" (low), or "isolated" (very low); summary note. `MixingTag` enum shown under each name; >10 players → top 5 + bottom 5 (`sampleMixing`)
 - [x] **ANA-13** — New player integration: recently joined players with join date, sessions attended, "% of games with regulars"; styled favorable (≥50%) or needs-attention (<50%); contextual note. Window = `kNewPlayerWindowDays` (60, no setting yet); sessions attended = distinct days. `NewPlayerEntry.needsAttention` = attended > 0 and not favorable; a new player with no games in range is not counted in the "pair them up" warning, and the "playing alongside regulars" line hides if nobody played
 
