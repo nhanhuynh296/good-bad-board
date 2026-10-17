@@ -39,9 +39,9 @@
 
 ### Key architectural changes
 
-1. **Navigation**: flat route list → responsive 5-tab shell (TopNavBar / BottomTabBar / HamburgerMenu depending on breakpoint)
+1. **Navigation**: flat route list → responsive 5-tab shell (TopNavBar / BottomTabBar / HamburgerMenu depending on breakpoint). *Desktop superseded by Stage 8: Courts, Players, Sessions + ⋯ menu, and a session bar.*
 2. **File organization**: flat `lib/view/` → `lib/features/<feature>/` with barrel exports + `lib/design/` for shared tokens + `lib/shell/` for navigation
-3. **Visual language**: blue/gold with Gotham → warm neutral (#fffdfa / #221d18 / #ff6a2b) with Space Grotesk display + Inter body
+3. **Visual language**: blue/gold with Gotham → warm neutral (#fffdfa / #221d18 / #ff6a2b) with Space Grotesk display + Inter body. *Superseded by Stage 8: Source Sans 3 only.*
 4. **New concepts**: waitlist (separate from inactive players), session templates, self-registration with approval, analytics dashboard with charts
 5. **Drag-drop**: existing DragTarget system in GameMakerPage → replaced with click-to-select-then-click-to-place interaction (simpler, works better on tablet/phone)
 
@@ -59,6 +59,7 @@
 | 5 | Check-in, Sessions, Settings | Stages 1, 2 | Remaining tabs (check-in flow, round config, templates, settings). Schedule and notification toggles removed 2026-10-10 |
 | 6 | Analytics Dashboard | Stages 1, 2 | Analytics page with KPI strip, bar charts, progress bars, tables |
 | 7 | Self-Registration & Polish | All prior | Self-registration page, responsive polish, theme integration |
+| 8 | 2026-10-17 design build | Stages 0–7, Nathan review of the docs (R1-Q3) | Round lifecycle, Courts tab, shell + session bar, Players scan check-in, Source Sans 3 tokens (desktop) |
 
 ---
 
@@ -73,6 +74,8 @@ Five flags keep code in the tree but hide it in the release UI. All five default
 | `SettingsPage.showSignupPreview` | `lib/features/settings/settings_page.dart` | "Preview signup page" link hidden. The `/register` route stays. REG-* is not reachable from the UI |
 | `AnalyticsPage.showHiddenCards` | `lib/features/analytics/analytics_page.dart` | ANA-06 (per-court comparison) and ANA-12 (player mixing) hidden |
 | `CourtCount.editable` | `lib/state/game_data.dart` | Dashboard court stepper and Sessions "Number of courts" field hidden; template Load keeps 4 courts (R45-36) |
+
+Stage 8 (2026-10-17 design) adds no flag and changes none. `CourtCount.editable` stays `false` (R2-Q2) and `GameMode.enabled` stays `false`.
 
 Other release changes: `Game.tierGap()` (4-tier gap, display only; logs keep `eloGap`); `GameData.defaultCourtCount` (4, not persisted); `NewPlayerEntry.needsAttention`; nullable retention in the KPI strip; `AppLoader` error screen (`app_load_error`). Release tests: `test/features/release_time_mode_test.dart`, `test/game_data_release_fixes_test.dart`, `test/features/dashboard_release_fixes_test.dart`, `test/features/dashboard_four_courts_fit_test.dart`, `test/timer_data_test.dart`, `test/app_loader_error_test.dart`, `test/features/players_scanner_test.dart`, `test/features/players_add_dialog_test.dart`, `test/features/release_court_count_test.dart`.
 
@@ -119,7 +122,7 @@ Create `lib/design/` as the single source of truth for all visual tokens. Every 
 //   - All chart-neutral colors (#e8dcc8, #d9c7a8, #f0e6d6)
 ```
 
-#### 0.2 — `app_typography.dart`
+#### 0.2 — `app_typography.dart` — **Superseded (2026-10-17 design, Stage 8)**
 ```dart
 // Static const TextStyle for every entry in the type scale (Section 1.2).
 // Use the existing Google Fonts setup (NotoSans aliased as "Gotham") as the body font.
@@ -337,7 +340,7 @@ Build the responsive navigation shell. The app detects breakpoint and renders th
 
 ### Detailed Tasks
 
-#### 2.1 — `AppTabButton`
+#### 2.1 — `AppTabButton` — **Superseded (2026-10-17 design, Stage 8)**
 ```dart
 // A single tab pill.
 // Active: bg=accent, color=onAccent, radius=8px, padding=8px 12px, 12px
@@ -415,7 +418,7 @@ Build the responsive navigation shell. The app detects breakpoint and renders th
 
 > **UAT mapping:** NAV-01, NAV-02, NAV-03, NAV-04, NAV-05, START-01
 
-- [x] **NAV-01** — Desktop/tablet (≥720px): top header bar with session subtext and all 5 tabs visible (no club name); compact header and bottom bar not shown
+- [x] **NAV-01** — *(desktop superseded by Stage 8.6.1)* Desktop/tablet (≥720px): top header bar with session subtext and all 5 tabs visible (no club name); compact header and bottom bar not shown
 - [x] **NAV-02** — Phone (<720px): compact dark header with current tab label (no club name); 5-tab top row hidden
 - [x] **NAV-03** — Phone bottom tab bar (always shown on phone): 3 destinations — Courts (Dashboard), Players (with integrated check-in), More. Selecting More opens bottom sheet with Sessions/Analytics/Settings; tapping scrim closes sheet without switching
 - [x] **NAV-04** — "More" tab highlighted when current tab is Sessions, Analytics, or Settings (secondary tabs)
@@ -459,7 +462,7 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 
 ### Detailed Tasks
 
-#### 3.1 — `PlayerSlot`
+#### 3.1 — `PlayerSlot` — **Superseded (2026-10-17 design, Stage 8)**
 ```dart
 // A row within a CourtCard representing one of 4 positions.
 // Two states:
@@ -487,7 +490,7 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 // Props: courtNumber, players (list of 4 Player?), spreadLevel, onReroll, onSlotTap(int slotIndex), isSelectionActive
 ```
 
-#### 3.4 — `WaitlistSidebar`
+#### 3.4 — `WaitlistSidebar` — **Superseded (2026-10-17 design, Stage 8)**
 ```dart
 // Desktop: fixed 270px sidebar card.
 // Title: "Waitlist" (Space Grotesk 15px 700).
@@ -505,7 +508,7 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 // Props: same as WaitlistSidebar
 ```
 
-#### 3.6 — `StatStrip`
+#### 3.6 — `StatStrip` — **Superseded (2026-10-17 design, Stage 8)**
 ```dart
 // Responsive grid of AppStatCell widgets.
 // Desktop: 6 cols, Tablet: 3 cols, Phone: 2×2.
@@ -527,7 +530,7 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 // Non-desktop layout: one page scroll view: RoundRotationBar → StatStrip → WaitlistChips → Court Grid (stacked)
 ```
 
-#### 3.8 — `RoundRotationBar`
+#### 3.8 — `RoundRotationBar` — **Superseded (2026-10-17 design, Stage 8)**
 ```dart
 // A dark bar widget positioned between StatStrip and the court grid.
 // Displays round progress with a live countdown timer and rotation controls.
@@ -599,10 +602,12 @@ Implement the core Dashboard tab with the court grid, waitlist, stat strip, and 
 > **UAT mapping:** NAV-06, NAV-07, RND-01…11, GB-01…07 (hidden in release), COURT-01…13, WL-01, WL-02
 
 #### Navigation & layout (shared with Stage 2 shell)
-- [x] **NAV-06** — Stat strip reflow: desktop (≥1080px) 6 cols (Checked In, Remaining Slots, Waitlist, Avg Level, Avg Level Gap, Re-rolls); tablet (720–1079px) 3-per-row wrap; phone (<720px) 4 stats in 2×2 grid (Checked In, Waitlist, Avg Level, Remaining). Breakpoint from the viewport width (`MediaQuery.sizeOf`), not the content width. Phone 4th cell reads "Remaining" (`dashboard_stat_remaining`). "Avg Level" and "Avg Level Gap" use `Game.tierGap()`; Avg Level shows a tier name, not an Elo code
+- [x] **NAV-06** — *(desktop part superseded by Stage 8.5.1: no stat strip on desktop)* Stat strip reflow: desktop (≥1080px) 6 cols (Checked In, Remaining Slots, Waitlist, Avg Level, Avg Level Gap, Re-rolls); tablet (720–1079px) 3-per-row wrap; phone (<720px) 4 stats in 2×2 grid (Checked In, Waitlist, Avg Level, Remaining). Breakpoint from the viewport width (`MediaQuery.sizeOf`), not the content width. Phone 4th cell reads "Remaining" (`dashboard_stat_remaining`). "Avg Level" and "Avg Level Gap" use `Game.tierGap()`; Avg Level shows a tier name, not an Elo code
 - [x] **NAV-07** — Dashboard layout reflow: desktop (≥1080px, incl. iPad landscape 1194px) court grid + fixed-width waitlist sidebar; tablet/phone (<1080px) waitlist chips above courts, courts stacked (2 cols tablet, 1 col phone). Desktop: `courtGridLayout` (`lib/features/dashboard/court_grid_layout.dart`, ported from main's `getIdealNumberOfColumn`) picks the column count with the largest court that fits the free height and stretches rows to fill it; `courtGridLayout(minCourtHeight:)` (the desktop passes `_minDesktopCourtHeight` = 136px) lets a court be flatter than 1.6:1 down to that height, but never under 320px wide or taller than wide, so 4 courts fit at 1280x720, 1366x768, 1440x900 and 1920x1080 (`test/features/dashboard_four_courts_fit_test.dart`). `CourtCard` and `PlayerSlot` use compact padding when the card is under 200px tall (`compact`). When nothing fits it uses the most columns and the grid scrolls itself (more than 4 courts). Known limit: with a staged next round the rotation bar is taller, and the courts may scroll at 1280x720 and 1366x768. Stacked layouts keep `shrinkWrap` + `NeverScrollableScrollPhysics` inside the page `SingleChildScrollView`. Court slots are `Expanded`, so the card has no empty band below the last slot. Breakpoint from the viewport width; stacked grid caps columns with `courtGridLayout(maxColumnCount:)` (2 tablet, 1 phone). Tests: `test/features/dashboard_breakpoints_test.dart`. Stacked layout: the whole page scrolls (stat strip, bars, chips, courts)
 
 #### Round rotation (RND-01…11) — time-based mode only
+
+> **Superseded (2026-10-17 design).** The criteria below record the PR 45 round model (Pre-make, Rotate now, auto-rotation at 0:00, radio panels). UAT RND-01…11 are rewritten and RND-12…22 added; Stage 8 (8.2, 8.5) builds them.
 - [x] **RND-01** — Live `mm:ss` countdown, progress bar fill = remaining/D as percentage, updates at least once per second. Only the bar rebuilds on a tick: `_buildRoundRotationBar` watches `TimerData` through a `Consumer`, the page never does (R45-03, `test/features/dashboard_timer_rebuild_test.dart`)
 - [x] **RND-02** — Urgency styling when ≤60s: countdown text + progress bar switch to amber (#ffb38a)
 - [x] **RND-03** — Auto-rotation at 0:00: recomputes level-balanced court assignment from all checked-in players, increments round number, restarts countdown at full duration — no organizer action required
@@ -629,6 +634,8 @@ re-roll when the game finishes → Save again.
 - [x] **GB-07** — Re-roll ends the game: the court gets a new `Game` (so the playing flag clears by construction), drawn only from players not on any other court
 
 #### Courts (COURT-01…13)
+
+> **Partly superseded (2026-10-17 design).** COURT-11…13 are removed in UAT; COURT-01, COURT-02, COURT-04…10 change and COURT-14…16 are new (Stage 8.5.4).
 - [x] **COURT-01** — Each court shows: number, level-gap badge (0="Same level", N>0="N level gap"; value is `Game.tierGap()`, the 4-tier gap, display only), up to 4 player rows (name + tier), "Open slot" italic for empty positions
 - [x] **COURT-02** — Re-roll: evaluates multiple random 4-player combos from court occupants + full checked-in waitlist pool, selects lowest level gap, returns others to waitlist, increments re-roll count (the stat strip counts only re-rolls on the current round, not on the pre-made next round). `GameData.rerollSampleCount` (100) weighted-random draws; gap = SkillTier spread, Elo spread breaks ties. `GameData(random:)` is injectable for tests. Tests: `test/game_data_reroll_test.dart`
 - [x] **COURT-03** — Re-roll no-op when a full court's occupants + waitlist = 4 (or any court when < 4); a court with an open slot still fills from exactly 4: nothing changes, no re-roll count increment. `GameData.canRerollCourt(i)`; the dashboard stays silent (no dialog, no SnackBar)
@@ -644,6 +651,8 @@ re-roll when the game finishes → Save again.
 - [x] **COURT-13** — Regenerate warning while the time-based clock runs (`dashboard_discard_round_*`), restored from main
 
 #### Waitlist (WL-01…02)
+
+> **Superseded (2026-10-17 design).** WL-01…03 now use the fill rule and the new panel; WL-04 is new (Stage 8.4, 8.5.5).
 - [x] **WL-01** — Waitlist shows position number + name + level tier per entry; "No one waiting" when empty
 - [x] **WL-03** — Promotion refills only the court that lost the player (`_removeAndRefillCourt` → `_autoPromoteFromWaitlist(court)`); a PLAYING court is never refilled. Tests: `test/game_data_waitlist_promotion_test.dart`
 - [x] **WL-02** — Auto-promotion on check-out: when a court slot opens (player checks out or set Disabled), highest-level waitlisted player(s) fill open slot(s), highest tier first — no organizer action required *(triggered by Stage 5 Check-in; logic lives in GameData)*
@@ -678,7 +687,7 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 
 ### Detailed Tasks
 
-#### 4.1 — `LevelAdjuster`
+#### 4.1 — `LevelAdjuster` — **Superseded (2026-10-17 design, Stage 8)**
 ```dart
 // Row: [−] button + level text (13px, 800, accent, 82px wide) + [+] button.
 // Buttons: 20–22px square, bg=pillBg, text=textPrimary, radius=6px.
@@ -687,7 +696,7 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 // Props: currentLevel(String), canDecrease, canIncrease, onDecrease, onIncrease
 ```
 
-#### 4.2 — `PlayerRow`
+#### 4.2 — `PlayerRow` — **Superseded (2026-10-17 design, Stage 8)**
 ```dart
 // A single row in the players table.
 // Columns: Name (14px, 600, underlined, tappable) | ID (12px, subtle) | Level (LevelAdjuster) | Membership (pill, cycles Member → Casual → Disabled) | Checked In (toggle)
@@ -744,7 +753,7 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 - [x] **PLY-05** — Level ±1 of the 8 `Elo` levels per click, clamped [C2…S1]; "−" disabled (visually dimmed) at C2, "+" disabled at S1
 - [x] **PLY-06** — Membership cycles Member → Casual → Disabled → Member. Casual → Disabled while checked in requires confirmation (auto-checked-out, removed from court/waitlist, triggers WL-02 auto-promotion); not checked in needs no confirmation. Disabled → Member: no auto-check-in. Disabled players stay in the list with check-in disabled
 - [x] **PLY-07** — Delete player (profile card): confirmation dialog, then removal from the roster (record anonymised, ADR-0001); triggers checkout and WL-02 auto-promotion (`removePlayer` calls `_autoPromoteFromWaitlist`) if currently checked in
-- [x] **PLY-08** — The row tap is the check-in toggle (tap = in / out) and performs CHK-02/03/05 directly (no separate Check-in tab). Design in `lib/features/players/player_row.dart`: no In/Out pill and no "Checked in" column; a Disabled row tap is refused with the disabled message (CHK-06, R45-38); `GameData.checkInPlayer` returns a `CheckInResult` that names the reason; at capacity the tap is refused with the capacity message (CHK-03). The header has Name/ID, Level, Membership and a blank More column (`PlayerRow.moreColumnWidth` = 100)
+- [x] **PLY-08** — *(row layout superseded by Stage 8.7.3)* The row tap is the check-in toggle (tap = in / out) and performs CHK-02/03/05 directly (no separate Check-in tab). Design in `lib/features/players/player_row.dart`: no In/Out pill and no "Checked in" column; a Disabled row tap is refused with the disabled message (CHK-06, R45-38); `GameData.checkInPlayer` returns a `CheckInResult` that names the reason; at capacity the tap is refused with the capacity message (CHK-03). The header has Name/ID, Level, Membership and a blank More column (`PlayerRow.moreColumnWidth` = 100)
 - [x] **PLY-13** — Add player: `AddPlayerDialog` closes itself and returns the player through `showDialog<Player>`; the caller only reads the result and awaits the repository write. Callers must never pop it — `showDialog` uses the root navigator while a page's context resolves to its `StatefulShellRoute` branch navigator, so popping from the caller unmounts the tab and blanks the screen. Covered by `integration_test/players_add_player_test.dart`
 
 #### Expandable profile (PLY-09…12)
@@ -754,7 +763,7 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 - [x] **PLY-12** — Profile stats computed from logged session history — unaffected by re-rolls or check-ins in the current live session until session is logged. `computePlayerProfileStats` (`lib/features/players/player_profile_stats.dart`) reads `GameRepository` + `SessionLogRepository` caches; `PlayersPage` listens to both. Not `GameData.history`
 
 #### Scanner and sign-in ID (PLY-14, PLY-15)
-- [x] **PLY-14** — Barcode scan check-in: the search field is focused when the Players tab opens (and gives up focus when the tab is hidden). `_onSearchSubmitted` in `players_page.dart` runs on Enter (`AppSearchInput.onSubmitted`, which also covers the keyboard done action); no debounce (two fast scans both count); Enter during an IME composition is ignored (`Focus.onKeyEvent`). `_refocusSearch` gives the field focus again after row taps (`AppSearchInput.onTapOutside` replaces the desktop unfocus), profile toggles and dialogs, unless another `EditableText` has focus; a row tap clears a stale query. Target: the one listed player whose sign-in ID equals the text (trimmed, case-insensitive), else the only player in `_listedPlayers()` (search + level chips). The target is toggled: check in (capacity and Disabled rules apply, `players_scan_checked_in`) or check out (`players_scan_checked_out`). Disabled: `players_scan_disabled`. At capacity: the capacity message. Empty list: `players_scan_no_match`. Many listed and no exact ID: nobody changes, `players_scan_many_matches`. Two exact IDs: nobody changes, `players_scan_duplicate_id`. In all cases `_selectSearchText` keeps the text, selects all of it (again after the frame) and keeps focus, so the result stays listed and the next scan replaces the text. Empty field: nothing. Test: `test/features/players_scanner_test.dart`
+- [x] **PLY-14** — *(result messages superseded by Stage 8.7.2: result box, not SnackBars)* Barcode scan check-in: the search field is focused when the Players tab opens (and gives up focus when the tab is hidden). `_onSearchSubmitted` in `players_page.dart` runs on Enter (`AppSearchInput.onSubmitted`, which also covers the keyboard done action); no debounce (two fast scans both count); Enter during an IME composition is ignored (`Focus.onKeyEvent`). `_refocusSearch` gives the field focus again after row taps (`AppSearchInput.onTapOutside` replaces the desktop unfocus), profile toggles and dialogs, unless another `EditableText` has focus; a row tap clears a stale query. Target: the one listed player whose sign-in ID equals the text (trimmed, case-insensitive), else the only player in `_listedPlayers()` (search + level chips). The target is toggled: check in (capacity and Disabled rules apply, `players_scan_checked_in`) or check out (`players_scan_checked_out`). Disabled: `players_scan_disabled`. At capacity: the capacity message. Empty list: `players_scan_no_match`. Many listed and no exact ID: nobody changes, `players_scan_many_matches`. Two exact IDs: nobody changes, `players_scan_duplicate_id`. In all cases `_selectSearchText` keeps the text, selects all of it (again after the frame) and keeps focus, so the result stays listed and the next scan replaces the text. Empty field: nothing. Test: `test/features/players_scanner_test.dart`
 - [x] **PLY-15** — Edit sign-in ID: the profile panel (`player_profile_card.dart`) has a Sign In ID field and Save; the value is trimmed, empty = no ID, an ID used by another listed player is refused with `players_sign_in_id_taken` (names that player), success shows `players_sign_in_id_saved`; no other field changes. Add player (`AddPlayerDialog`) trims name and ID, and refuses a blank name, a duplicate name and a duplicate ID. Test: `test/features/players_add_dialog_test.dart`
 
 #### Quality gates
@@ -1050,12 +1059,243 @@ Implement the self-registration page, integrate the new design system with the e
 
 #### Responsive & polish (REG-07)
 - [x] **REG-07** — Responsive: single centered column (max-width ~520px), fully usable at all widths from phone to desktop, no horizontal scrolling or overlapping controls
-- [x] Dark mode: not supported. The redesign has a light palette only, so `MyApp` uses `ThemeMode.light`. A dark system theme changed only Material defaults (white text in light text fields)
+- [x] Dark mode: not supported. *(Stage 8.1.3 removes the dark theme code too.)* The redesign has a light palette only, so `MyApp` uses `ThemeMode.light`. A dark system theme changed only Material defaults (white text in light text fields)
 - [ ] All breakpoints tested with window resize *(rendered at 390, 900 and 1400 px wide in widget tests; a live resize on Windows is still a manual check)*
 - [x] Full `flutter analyze --fatal-infos --no-pub` passes (0 issues)
 - [x] All existing tests pass (`flutter test`) — 375 passing, 0 failing
 - [ ] App launches and navigates correctly *(needs manual check — not run interactively)*
 - [x] Old inline theme code is fully removed (`lib/theme.dart` has zero references to the old `stAndrewsBlue`/`goldRush` palette; `lib/view/` retains only `component/` — the still-active dialogs and helpers, not old theme code)
+
+---
+
+## Stage 8 — 2026-10-17 design build (Courts, shell, Players, type and colour)
+
+### Goal
+Build the approved 2026-10-17 design on desktop: the new round lifecycle, the Courts tab, the
+shell with the session bar, the Players scan check-in, and the new type and colour tokens.
+
+### Rules for this stage
+- **Authority.** `audit/design-diff-2026-10-17/decisions.md` (48 rows, IDs R1-Q1 … R5-Q2)
+  overrides the design HTML and the UX review resolutions. On a new conflict, ask Nathan and
+  investigate first (R1-Q2). UAT.md is the feature source of truth.
+- **Order.** Docs first, Nathan reviews (R1-Q3). Then the design canvas is updated (R3-Q13).
+  Then code. Build on PR 45; the release waits (R1-Q1).
+- **Scope.** Desktop only (≥1080px). Phone and tablet layouts stay as they are (R2-Q23). The
+  round logic (8.2) is shared by every size, so phone and tablet show the new state names and
+  button labels in their existing layout. Time mode only (`GameMode.enabled=false`, code kept).
+  4 courts fixed (`CourtCount.editable=false`). Light theme only. The app stays offline.
+- **Data format: unchanged.** No decision needs a new field in `players.json`, `games.json`,
+  `session_logs.json` or `session_templates.json`. Undo adds one repository method
+  (`SessionLogRepository.delete`, 8.3), not a format change. ADR-0002 (round id) stays a
+  separate task.
+- **l10n.** Every new string is an ARB key in en, fr, zh and zh_HK, with ICU plurals for counts
+  ("1 round", "1 place left"). Run `flutter gen-l10n`.
+- **TDD.** Write the failing tests for each UAT ID first (repo `CLAUDE.md`). Tests never touch
+  the real data directory (PERSISTENCE.md §2.2, §6 phase 4): use a temp dir through
+  `RepositoryService.initializeForTesting`.
+- **Release flags.** No flag changes in this stage (see the flag table).
+
+### Superseded by this stage
+| Old task / criterion | Replaced by |
+|---|---|
+| Stage 0 font notes (Space Grotesk + Inter/OpenSans), 0.2 | 8.1 (Source Sans 3 only) |
+| Stage 2 2.1 `AppTabButton` pill style; 2.2 `TopNavBar` 5 tabs (desktop); NAV-01 criterion | 8.6 |
+| Stage 3 3.6 `StatStrip` on desktop; NAV-06 desktop part | 8.5.1 (removed on desktop, R3-Q4) |
+| Stage 3 3.8 `RoundRotationBar` (Pre-make, Rotate now, radio panels, depleting bar) | 8.2, 8.5.2 |
+| Stage 3 criteria RND-01…11, COURT-11…13, WL-01…03 | 8.2, 8.4, 8.5 |
+| Stage 3 3.1 `PlayerSlot` × remove, 3.4 `WaitlistSidebar` numbers and hint-only | 8.5.4, 8.5.5 |
+| Stage 4 4.1 `LevelAdjuster` and the membership pill in the row; 4.2 `PlayerRow` | 8.7.3 |
+| Stage 4 PLY-14 SnackBars for scan results | 8.7.2 |
+| Stage 7 7.4 "dark mode works" | 8.1.3 (dark theme removed) |
+
+### 8.1 — Tokens: type and colour (ARCHITECTURE.md §1)
+| Task | Files | Decision / UAT |
+|---|---|---|
+| 8.1.1 Bundle the Source Sans 3 variable font (one `wght` axis file) in `asset/font/`. Remove OpenSans and SpaceGrotesk from `pubspec.yaml` and the asset folder. Delete the unused `asset/font/NotoSans-VariableFont_wdth,wght.ttf` | `pubspec.yaml`, `asset/font/` | facts; UX-25 |
+| 8.1.2 Rewrite `AppTypography` to the 6-size scale (50, 28, 20, 16, 14, 12) and 3 weights (400, 600, 800 page titles only). Replace every literal `fontSize` and `FontWeight` in `lib/` with a token. Set `fontFamilyFallback` per locale: zh → `Microsoft YaHei`, zh_HK → `Microsoft JhengHei` | `lib/design/app_typography.dart`, `app_theme.dart`, feature widgets | R2-Q20, R3-Q6 |
+| 8.1.3 Replace `AppColors` with the ARCHITECTURE §1.1 tokens. Darken control borders to ≥3:1 (R2-Q22). Remove the dark theme: dark tokens (`app_colors.dart:78-92`), `AppTheme.dark()`, `theme.dart` `darkTheme`, `main.dart` `darkTheme:`; replace `AppColors.darkCardBorder` in `hamburger_menu.dart` | `lib/design/`, `lib/theme.dart`, `lib/main.dart`, `lib/shell/hamburger_menu.dart` | R2-Q22, UX-22 |
+| 8.1.4 Contrast test: a unit test computes the WCAG 2.x ratio of every token pair in ARCHITECTURE §1.1 and fails below 4.5:1 (text) or 3:1 (non-text) | `test/design/contrast_test.dart` | UX-22 |
+
+### 8.2 — Round state machine (`GameData`, `TimerData`)
+Add `RoundPhase { noLineup, ready, running, paused, timeUp, changeover }` and a separate
+`isEditingNext` flag. The UI reads the phase only; it never derives it from the timer.
+
+| Method | From phase | Effect | UAT |
+|---|---|---|---|
+| `generateFirstRound()` | noLineup | Matchmaker lineup → `ready`. Refuses with <4 checked in (R45-39) | RND-12 |
+| `regenerateDraft()` | ready | New lineup; clock stays stopped | RND-13 |
+| `startFirstRound()` | ready | `running`, clock from full duration; memento (8.3) | RND-13, RND-21 |
+| `makeNextRound()` / `editNextRound()` | running, paused | Lineup for n+1 → `isEditingNext` | RND-05, RND-10 |
+| `saveNextRound()` / `regenerateNext()` / `exitEditNext()` | edit mode | Save n+1 / new n+1 lineup / drop edits (× ) | RND-14, RND-07 |
+| `pause()` / `resume()` | running, changeover | `paused` keeps remaining time and the phase to return to | RND-17, RND-18 |
+| tick at 0:00 | running | Saved n+1 → `changeover` (20 s, `TimerData` second countdown); else `timeUp` | RND-03, RND-15 |
+| changeover end / `startNextNow()` | changeover | Log round n (8.2.1), n+1 → `running` | RND-06, RND-19 |
+| `saveAndStartNew()` | running, timeUp | Memento, log round n, start n+1 (saved lineup or fresh) | RND-04 |
+| `discardAndStartNew()` | running, paused, timeUp | Memento, no log, same number, start next | RND-16 |
+| `endSession()` | any with a lineup | Memento, log the started round, stop clock, check out all, `noLineup`, round 1 | RND-20 |
+| `undo()` | within 10 s / until next scan | Restore memento (8.3) | RND-21, PLY-20 |
+
+8.2.1 **Round logging at next-round start (R3-Q8).** Round n is logged only when round n+1
+starts: `saveAndStartNew`, the end of the changeover, `startNextNow`, or `endSession`. Reuse
+`_logRound` (disk first, then `history`, R45-01) and the one-at-a-time guard of `rotateNow`.
+`discardAndStartNew` logs nothing. The round number is `logged rounds this session + 1`, so a
+discard uses the number again (R2-Q5) and `endSession` resets it to 1. Keep the current rule
+for empty courts; changing it belongs to ADR-0002.
+
+8.2.2 Remove the old flow: `rotateNow` auto-rotation at 0:00 (`_onAutoRotate`), the radio
+`RoundView` panels, the time-mode global Save (`saveCurrentGame` path from the action bar),
+and "Pre-make" / "Cancel next". Keep `rotateNow`'s write guard as the core of 8.2.1.
+
+8.2.3 `TimerData`: default duration 10 min (R2-Q24, was 20). `isUrgent` is true only while
+RUNNING with ≤60 s (UX-09). Progress = elapsed ÷ duration (R4-Q7). Add the 20 s changeover
+countdown (R3-Q7) and the pause of it (R4-Q5). Wire the existing unused `pause()`.
+
+### 8.3 — Undo: memento of session state, one level (R3-Q2, R4-Q2, R2-Q10)
+- `SessionMemento` is an immutable copy of the in-memory session: live lineup, next lineup and
+  its saved flag, round number, phase, remaining time and running flag, checked-in ids,
+  re-roll count, playing game ids, selection cleared. It also records the **log receipt** of
+  the action: the game ids it wrote, the `SessionLog` id it wrote, and the `history` index.
+- `GameData` holds one slot `_undo`. Courts actions (`startFirstRound`, `saveAndStartNew`,
+  `discardAndStartNew`, `endSession`) and each state-changing scan set it. A new memento
+  replaces the old. The Courts bottom message expires the slot after 10 s; on Players the next
+  scan replaces it.
+- **Undo after a logged round deletes that log entry.** Steps, in this order:
+  1. `GameRepository.delete(id)` for each game id in the receipt.
+  2. `SessionLogRepository.delete(id)` for the receipt's log id. This is a new one-line method
+     over `JsonCollection.remove`. It is not a format change.
+  3. Remove the `history` entry at the receipt index, then restore the memento and notify.
+  Disk first, RAM last (as R45-01): if a delete fails, the error goes to the caller, the
+  session does not change, and the message reads "Something went wrong. Try again.".
+- **Why the delete is safe (PERSISTENCE.md §3.1, ADR-0001).** The delete removes whole rows by
+  their own id. It never loads, resolves or rebuilds a roster. `JsonCollection` caches the DTOs
+  as read from disk (player ids only, after the phase 1 fix), so the rewrite after `remove`
+  writes every other row unchanged. It never drops an unresolvable player id and never writes a
+  shortened roster back. The receipt holds only ids this session wrote in the last action, so
+  Undo cannot delete an older row. Golden test: `games.json` and `session_logs.json` after
+  log + Undo are byte-equal to the files before the log, including a row with an id that does
+  not resolve to a player.
+- The memento restores `history` too, so rounds played (`getCurrentPlayersHistory`) and the
+  fill rule stay correct after Undo.
+- Open points (UAT RND-21, PLY-20 TODOs): restored clock time, and whether any other change
+  in between cancels the Undo.
+
+### 8.4 — Fill rule, late check-in, check-out (R2-Q7, R2-Q8, R2-Q9, R3-Q12)
+- 8.4.1 `GameData.pickForSlot(court, candidates)`: sort the candidates by rounds played this
+  session ascending (`getCurrentPlayersHistory`; in time mode each `history` entry is one
+  Round, so the count is rounds). Tie: the candidate that gives the smallest `tierGap()` for
+  that court with the candidate in it. Replace the `elo.index` sort in
+  `_autoPromoteFromWaitlist`. Use the same order for the waitlist display (WL-01); its
+  tie-break is open (TODO in WL-01). UAT WL-01…03.
+- 8.4.2 Fix the `isCourtPlaying(stagingMatches.indexOf(court))` lookup in
+  `_autoPromoteFromWaitlist`: it reads `visibleMatches`, which can be the next round
+  (verification.json, checkin-mid-round extra 2). Test it with the next round on screen.
+- 8.4.3 `checkInPlayer`: never place on a live court. Saved next round with an open slot →
+  that slot; else the waitlist. UAT CHK-02, PLY-17.
+- 8.4.4 `checkOutPlayer`: drop the id from the checked-in set at once (count drops, R2-Q8).
+  Live court while the clock runs: leave the player in the live lineup until the round ends
+  (the log holds them), no marker. Saved next round or a stopped live court: remove and fill
+  by 8.4.1. Return a result that names who took which slot, for PLY-18. UAT CHK-05,
+  COURT-16, RND-11.
+
+### 8.5 — Courts tab (desktop)
+- 8.5.1 Page structure: round bar → next-round strip → 2×2 grid + 280 px waitlist. Remove the
+  desktop `StatStrip` and `_ActionBar` (R3-Q4, UX-10). Keep the phone/tablet layout. UAT NAV-06,
+  NAV-07.
+- 8.5.2 `RoundBar` (replaces `RoundRotationBar` on desktop): 80 px full-width band, states
+  and buttons per ARCHITECTURE §2.3, 50 px timer, chip, counts, round "⋯" menu with "End
+  session", 4 px bar filling with elapsed time. No "COURTS − 4 +" stepper (R2-Q2). UAT RND-01,
+  RND-02, RND-09, RND-12, RND-13, RND-15…19.
+- 8.5.3 `NextRoundStrip` and edit mode: strip texts, dashed NEXT cards, edit strip with
+  "Discard & regenerate", "Save round {n+1}", "×"; round bar shows Pause only (R4-Q9). UAT
+  RND-05, RND-07, RND-08, RND-10, RND-14, RND-22.
+- 8.5.4 `CourtCard` / `PlayerSlot`: "Court {k}", plain gap text, secondary Re-roll shown per
+  R3-Q10, slot tap = select for swap, hover fill and "⋯" menu ("Move to waitlist", "Check
+  out"; running live court "Check out" only), no "×" (R3-Q11). Keep "Open slot" (R2-Q19).
+  UAT COURT-01, COURT-04…10, COURT-14…16.
+- 8.5.5 `WaitlistPanel`: title + count, "SEARCH WAITLIST" field (UX-14), fill-rule order, no
+  numbers, "{tier} · {n} rounds", "Next in" tag, "No one waiting", selection hint kept. Desktop
+  only; `WaitlistChips` unchanged. UAT WL-01, WL-04, COURT-04…06.
+- 8.5.6 End session dialog and the Courts Undo bottom message (10 s, "Round {n} started.
+  Undo"). UAT RND-20, RND-21.
+
+### 8.6 — Shell (desktop)
+- 8.6.1 `TopNavBar` desktop: left text "Session · {duration} rounds" (R3-Q5); tabs "Courts",
+  "Players", "Sessions"; "⋯" menu with "Analytics", "Settings" (R2-Q13); active tab = white
+  600 + 3 px orange underline (UX-21). Routes stay the same 5 routes. Tablet unchanged
+  (open point). UAT NAV-01, NAV-09.
+- 8.6.2 `SessionBar`: 40 px, on every tab except Courts; chip always; "No round yet" before
+  the first lineup; amber time ≤60 s while RUNNING; click → Courts; no round-change message
+  (R4-Q4, R4-Q6). It watches `TimerData` through a `Consumer` so only the bar rebuilds on a
+  tick (R45-03). UAT NAV-10, NAV-11.
+
+### 8.7 — Players tab (desktop)
+- 8.7.1 Scan field ("CHECK IN" label, scan icon, "Scan card or search name", 52 px, 2 px
+  border, 20/600), the count "{in} / {capacity} in" + "{n} places left", the orange "Add
+  player" button. Keep the capacity bar, banner, pending card and level chips restyled
+  (R2-Q19). UAT PLY-14, CHK-01, CHK-04, PLY-13.
+- 8.7.2 `ScanResultBox` with the 9 states (READY, CHECKED IN, CHECKED OUT, SCANNED TWICE, NOT
+  FOUND, MANY MATCHES, SESSION FULL, DISABLED, DUPLICATE ID), `Semantics(liveRegion: true)`,
+  stays until the next scan, not changed by row taps (R3-Q3). Texts per R4-Q3. Scan results no
+  longer use SnackBars. A refused row tap keeps the small bottom message (R4-Q1). UAT PLY-14,
+  PLY-16…18, CHK-03, CHK-06.
+- 8.7.3 `PlayerRow`: 48 px, columns NAME / SIGN-IN ID / LEVEL (tier name) / TYPE / More;
+  checked-in fill, 1 px border and 6 px bar in green (UX-16). Move `LevelAdjuster` (with the Elo
+  code) and the membership control into the More panel (R2-Q17, R2-Q18). UAT PLY-05, PLY-06,
+  PLY-08, NAV-08.
+- 8.7.4 Double-scan guard: keep only the last scan check-in (id + time); a scan of the same
+  target within 10 s shows SCANNED TWICE with "Check out" (R2-Q11). UAT PLY-19.
+- 8.7.5 Undo button on CHECKED IN / CHECKED OUT through 8.3 (R2-Q10). UAT PLY-20.
+- 8.7.6 More panel: keep the content; its layout waits for the canvas (R5-Q1). UAT PLY-09.
+
+### 8.8 — l10n keys (en, fr, zh, zh_HK)
+New keys, prefix by feature. Courts: `courts_generate_round_one`, `courts_save_and_start_round`,
+`courts_discard_and_regenerate`, `courts_save_and_start_new`, `courts_discard_and_start_new`,
+`courts_pause`, `courts_resume_round`, `courts_start_round_now`, `courts_chip_ready`,
+`courts_chip_running`, `courts_chip_paused`, `courts_chip_time_up`, `courts_chip_changeover`,
+`courts_sub_not_started`, `courts_sub_paused`, `courts_sub_time_up`,
+`courts_sub_players_to_courts`, `courts_counts_in_waiting`, `courts_next_not_saved`,
+`courts_next_saved`, `courts_next_clock_stops`, `courts_next_starts_after`, `courts_make_round`,
+`courts_edit_round`, `courts_editing_round`, `courts_save_round`, `courts_tag_next`,
+`courts_slot_move_to_waitlist`, `courts_slot_check_out`, `courts_round_started_undo`,
+`courts_end_session*`, `courts_waitlist_search_label`, `courts_waitlist_search_hint`,
+`courts_waitlist_rounds_played` (plural), `courts_waitlist_next_in`. Shell: `shell_session_header`,
+`shell_tab_courts` (desktop), `shell_more_menu`, `shell_session_bar_*`, `shell_no_round_yet`,
+`shell_view_courts`. Players: `players_check_in_label`, `players_scan_placeholder`,
+`players_count_in`, `players_places_left` (plural), `players_add_player`, `players_scan_ready*`,
+`players_scan_in_joins`, `players_scan_in_waits`, `players_scan_out_takes`, `players_scan_out`,
+`players_scan_twice`, `players_scan_not_found`, `players_scan_many`, `players_scan_full`,
+`players_scan_disabled_more`, `players_scan_duplicate_id`, `common_undo`. Remove keys the
+build no longer reads (for example `dashboard_rotate_now`, `dashboard_premake_next`,
+`dashboard_next_round_ready`, `dashboard_mode_time_based`) only after a grep shows no reader.
+
+### 8.9 — Tests (write first)
+| Area | Test file (new unless noted) | UAT |
+|---|---|---|
+| Round state machine | `test/game_data_round_phase_test.dart` | RND-03…08, RND-11…20 |
+| Logging and round number | `test/game_data_round_logging_test.dart` | RND-04, RND-06, RND-16, RND-20 |
+| Undo and log deletion (temp dir, golden files) | `test/game_data_undo_test.dart` | RND-21, PLY-20 |
+| Fill rule | `test/game_data_fill_rule_test.dart` (replaces the level order in `game_data_waitlist_promotion_test.dart`) | WL-01…03, CHK-02, CHK-05, COURT-16 |
+| Round bar, strip, edit mode | `test/features/courts_round_bar_test.dart` | RND-01, RND-02, RND-09, RND-10, RND-22 |
+| Slot menu, re-roll visibility | `test/features/courts_slot_menu_test.dart` | COURT-01, COURT-10, COURT-14, COURT-15 |
+| Waitlist panel | `test/features/courts_waitlist_test.dart` | WL-01, WL-04 |
+| Shell | `test/shell/session_bar_test.dart`, `top_nav_test.dart` | NAV-01, NAV-09…11 |
+| Scan result box | `test/features/players_scanner_test.dart` (rewrite) | PLY-14, PLY-16…20 |
+| Player row | `test/features/players_row_test.dart` | PLY-05, PLY-06, PLY-08, NAV-08 |
+| Layout fit | `test/features/dashboard_four_courts_fit_test.dart` (update) | NAV-07 |
+| Contrast | `test/design/contrast_test.dart` | ARCHITECTURE §1.1 |
+
+### Acceptance Criteria
+> **UAT mapping:** NAV-01, NAV-06…11, RND-01…22, COURT-01…16, WL-01…04, CHK-01…06, PLY-05,
+> PLY-06, PLY-08, PLY-09, PLY-12…20, SESS-02.
+
+- [ ] Every UAT ID above has a test that failed first and now passes
+- [ ] All TODO(Nathan) points in UAT.md are answered and the specs updated
+- [ ] The design canvas shows every decided change (R3-Q13), and the More panel is drawn (R5-Q1)
+- [ ] `flutter analyze --fatal-infos --no-pub` passes; `flutter test` passes
+- [ ] No test writes outside a temp dir (PERSISTENCE.md §6 phase 4)
+- [ ] All new strings exist in en, fr, zh and zh_HK
+- [ ] Manual check on Windows at 1280×720: 4 courts visible in every round state; Chinese text
+      renders in YaHei (zh) and JhengHei (zh_HK)
 
 ---
 
