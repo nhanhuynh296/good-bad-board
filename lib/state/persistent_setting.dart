@@ -2,7 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum Setting { background, gameType, gameDuration, language, autoMakegame }
+/// Saved setting keys. Main's `autoMakegame` key is no longer read or
+/// written; it stays on disk, so a rollback to main keeps its value.
+enum Setting { background, gameType, gameDuration, language }
 
 enum GameType {
   timeBased,
@@ -14,15 +16,38 @@ enum GameType {
   };
 }
 
+/// Release flag for game-based mode.
+///
+/// Off in the release build: the app always runs time-based and the mode
+/// toggle is hidden. All game-based code stays. Tests that cover it set this
+/// to `true`. The saved `gameType` setting is never rewritten by this flag.
+abstract final class GameMode {
+  static bool enabled = false;
+}
+
 class PersistentSetting extends ChangeNotifier {
   PersistentSetting._init();
 
   static final PersistentSetting instance = PersistentSetting._init();
 
-  late final SharedPreferencesWithCache sharedPreference;
+  SharedPreferencesWithCache? _prefs;
+
+  /// Uses `SharedPreferencesWithCache`, the same API as the released build
+  /// on `main`. Its keys have no `flutter.` prefix. The legacy
+  /// `SharedPreferences` API prefixes every key, so it cannot read the
+  /// settings that clubs already saved.
+  SharedPreferencesWithCache get sharedPreference {
+    final prefs = _prefs;
+    if (prefs == null) {
+      throw StateError(
+        'PersistentSetting not initialized. Call initialize() first.',
+      );
+    }
+    return prefs;
+  }
 
   Future<void> initialize() async {
-    sharedPreference = await SharedPreferencesWithCache.create(
+    _prefs = await SharedPreferencesWithCache.create(
       cacheOptions: const SharedPreferencesWithCacheOptions(),
     );
   }
@@ -57,11 +82,16 @@ class PersistentSetting extends ChangeNotifier {
     );
   }
 
-  GameType getGameType() => GameType.values.firstWhere(
-    (element) =>
-        element.name == sharedPreference.getString(Setting.gameType.name),
-    orElse: () => GameType.timeBased,
-  );
+  /// The round mode. Always time-based while [GameMode.enabled] is off, even
+  /// when a game-based mode is saved.
+  GameType getGameType() {
+    if (!GameMode.enabled) return GameType.timeBased;
+    return GameType.values.firstWhere(
+      (element) =>
+          element.name == sharedPreference.getString(Setting.gameType.name),
+      orElse: () => GameType.timeBased,
+    );
+  }
 
   Future<void> setLanguage(Locale locale) async {
     await sharedPreference.setStringList(Setting.language.name, [
@@ -77,15 +107,6 @@ class PersistentSetting extends ChangeNotifier {
     final languageCode = localeString.elementAtOrNull(0) ?? 'en';
     final countryCode = localeString.elementAtOrNull(1);
     return Locale(languageCode, countryCode);
-  }
-
-  Future<void> setAutoMakeGame(bool value) async {
-    await sharedPreference.setBool(Setting.autoMakegame.name, value);
-    notifyListeners();
-  }
-
-  bool getAutoMakeGame() {
-    return sharedPreference.getBool(Setting.autoMakegame.name) ?? false;
   }
 
   Future<void> clear() async {

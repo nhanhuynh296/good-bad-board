@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:good_bad_board/core/build_context_extension.dart';
-import 'package:good_bad_board/spacing.dart';
+import 'package:good_bad_board/design/design.dart';
 
 extension ShowToast on BuildContext {
   Future<void> showSnackBar(SnackBar snackBar) async {

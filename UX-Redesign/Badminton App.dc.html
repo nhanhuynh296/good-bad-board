@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0}
+  button{font-family:inherit;border:none;cursor:pointer;font-weight:700}
+  input{font-family:inherit}
+  .scrollY{-webkit-overflow-scrolling:touch}
+  @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+
+<div ref="{{ rootRef }}" style="width:100%;height:100%;min-height:100%;display:flex;flex-direction:column;background:#fffdfa;font-family:'Inter',sans-serif;color:#221d18;position:relative;overflow:hidden">
+
+  <!-- ===== TOP NAV (tablet + desktop) ===== -->
+  <sc-if value="{{ showTopNav }}" hint-placeholder-val="{{ true }}">
+    <div style="{{ headerStyle }}">
+      <div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;letter-spacing:-0.01em;color:#fff">Riverside Badminton Club</div>
+        <div style="font-size:12px;color:#c9c2b8;margin-top:3px">{{ headerSubText }}</div>
+      </div>
+      <div style="{{ headerTabsStyle }}">
+        <button onClick="{{ setTabDashboard }}" style="{{ tabStyle_dashboard }}">Dashboard</button>
+        <button onClick="{{ setTabCheckin }}" style="{{ tabStyle_checkin }}">Check-in</button>
+        <button onClick="{{ setTabPlayers }}" style="{{ tabStyle_players }}">Players</button>
+        <button onClick="{{ setTabSessions }}" style="{{ tabStyle_sessions }}">Sessions</button>
+        <button onClick="{{ setTabSchedule }}" style="{{ tabStyle_schedule }}">Schedule</button>
+        <button onClick="{{ setTabAnalytics }}" style="{{ tabStyle_analytics }}">Analytics</button>
+        <button onClick="{{ setTabSettings }}" style="{{ tabStyle_settings }}">Settings</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== COMPACT HEADER (phone) ===== -->
+  <sc-if value="{{ showCompactHeader }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:13px 16px;background:#221d18;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:#fff;line-height:1.1">Riverside BC</div>
+        <div style="font-size:11px;color:#c9c2b8;margin-top:2px">{{ currentTabLabel }}</div>
+      </div>
+      <sc-if value="{{ isHamburger }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toggleMenu }}" style="background:rgba(255,255,255,0.1);color:#fff;border-radius:8px;width:38px;height:38px;font-size:17px;display:flex;align-items:center;justify-content:center">☰</button>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ===== STAT STRIP (desktop + tablet) ===== -->
+  <sc-if value="{{ statFull }}" hint-placeholder-val="{{ true }}">
+    <div style="{{ statStripStyle }}">
+      <div style="background:#fffdfa;padding:12px 16px"><div style="font-size:10px;color:#8a7c68;font-weight:700;letter-spacing:.05em">CHECKED IN</div><div style="font-size:19px;font-weight:800;color:#221d18;font-variant-numeric:tabular-nums">{{ stats.checkedIn }}/{{ stats.capacity }}</div></div>
+      <div style="background:#fffdfa;padding:12px 16px"><div style="font-size:10px;color:#8a7c68;font-weight:700;letter-spacing:.05em">REMAINING SLOTS</div><div style="font-size:19px;font-weight:800;color:#221d18;font-variant-numeric:tabular-nums">{{ stats.remaining }}</div></div>
+      <div style="background:#fffdfa;padding:12px 16px"><div style="font-size:10px;color:#8a7c68;font-weight:700;letter-spacing:.05em">WAITLIST</div><div style="font-size:19px;font-weight:800;color:#ff6a2b;font-variant-numeric:tabular-nums">{{ stats.waitlistCount }}</div></div>
+      <div style="background:#fffdfa;padding:12px 16px"><div style="font-size:10px;color:#8a7c68;font-weight:700;letter-spacing:.05em">AVG LEVEL</div><div style="font-size:19px;font-weight:800;color:#221d18">{{ stats.avgLevelLabel }}</div></div>
+      <div style="background:#fffdfa;padding:12px 16px"><div style="font-size:10px;color:#8a7c68;font-weight:700;letter-spacing:.05em">AVG LEVEL GAP</div><div style="font-size:19px;font-weight:800;color:#221d18;font-variant-numeric:tabular-nums">{{ stats.avgLevelGap }}</div></div>
+      <div style="background:#fffdfa;padding:12px 16px"><div style="font-size:10px;color:#8a7c68;font-weight:700;letter-spacing:.05em">RE-ROLLS</div><div style="font-size:19px;font-weight:800;color:#221d18;font-variant-numeric:tabular-nums">{{ stats.rerollCount }}</div></div>
+    </div>
+  </sc-if>
+
+  <!-- ===== STAT STRIP (phone: 4 key stats) ===== -->
+  <sc-if value="{{ statPhone }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#eee4d8;border-bottom:1px solid #eee4d8">
+      <div style="background:#fffdfa;padding:10px 14px"><div style="font-size:9.5px;color:#8a7c68;font-weight:700;letter-spacing:.05em">CHECKED IN</div><div style="font-size:18px;font-weight:800;color:#221d18;font-variant-numeric:tabular-nums">{{ stats.checkedIn }}/{{ stats.capacity }}</div></div>
+      <div style="background:#fffdfa;padding:10px 14px"><div style="font-size:9.5px;color:#8a7c68;font-weight:700;letter-spacing:.05em">WAITLIST</div><div style="font-size:18px;font-weight:800;color:#ff6a2b;font-variant-numeric:tabular-nums">{{ stats.waitlistCount }}</div></div>
+      <div style="background:#fffdfa;padding:10px 14px"><div style="font-size:9.5px;color:#8a7c68;font-weight:700;letter-spacing:.05em">AVG LEVEL</div><div style="font-size:18px;font-weight:800;color:#221d18">{{ stats.avgLevelLabel }}</div></div>
+      <div style="background:#fffdfa;padding:10px 14px"><div style="font-size:9.5px;color:#8a7c68;font-weight:700;letter-spacing:.05em">REMAINING</div><div style="font-size:18px;font-weight:800;color:#221d18;font-variant-numeric:tabular-nums">{{ stats.remaining }}</div></div>
+    </div>
+  </sc-if>
+
+  <!-- ===== SCROLLABLE CONTENT ===== -->
+  <div class="scrollY" style="flex:1;overflow-y:auto;min-height:0">
+
+    <!-- DASHBOARD -->
+    <sc-if value="{{ tabIsDashboard }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:{{ contentPad }}">
+
+        <!-- ===== ROUND ROTATION BAR ===== -->
+        <div style="background:#221d18;border-radius:14px;padding:16px 18px;margin-bottom:16px;color:#fff">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px 20px;flex-wrap:wrap">
+            <div style="display:flex;align-items:baseline;gap:12px;min-width:0">
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;line-height:1">ROUND {{ round.number }}</div>
+              <div style="font-size:12px;color:#c9c2b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ round.modeLabel }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;flex:1;justify-content:flex-end;flex-wrap:wrap">
+              <div style="display:flex;align-items:baseline;gap:7px">
+                <span style="font-variant-numeric:tabular-nums;font-size:26px;font-weight:800;line-height:1;color:{{ round.timeColor }}">{{ round.remainingLabel }}</span>
+                <span style="font-size:11px;color:#c9c2b8;font-weight:600">until rotation</span>
+              </div>
+              <div style="display:flex;gap:8px">
+                <sc-if value="{{ round.staged }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ cancelStaged }}" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.22);border-radius:8px;padding:8px 12px;font-size:12px">Cancel next</button>
+                </sc-if>
+                <sc-if value="{{ round.canStage }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ stageNext }}" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.22);border-radius:8px;padding:8px 12px;font-size:12px">Pre-make next round</button>
+                </sc-if>
+                <button onClick="{{ rotateNow }}" style="background:#ff6a2b;color:#221d18;border-radius:8px;padding:8px 14px;font-size:12px">Rotate now →</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:13px;background:rgba(255,255,255,0.14);border-radius:999px;height:10px;overflow:hidden">
+            <div style="height:100%;background:{{ round.barColor }};border-radius:999px;width:{{ round.pct }};transition:width .9s linear"></div>
+          </div>
+
+          <!-- ===== PENDING (PRE-MADE) NEXT ROUND ===== -->
+          <sc-if value="{{ round.staged }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12);animation:fadeIn .2s ease">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:9px">
+                <div style="display:flex;align-items:center;gap:9px;min-width:0">
+                  <span style="font-size:10px;font-weight:800;letter-spacing:.06em;color:#221d18;background:#ffb38a;padding:3px 8px;border-radius:999px;white-space:nowrap;flex:none">NEXT ROUND · READY</span>
+                  <span style="font-size:12px;color:#c9c2b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ round.stagedSummary }}</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-variant-numeric:tabular-nums;font-size:15px;font-weight:800;color:#ffb38a">{{ round.remainingLabel }}</span>
+                  <span style="font-size:11px;color:#8a7c68;font-weight:600">until it starts</span>
+                </div>
+              </div>
+              <div style="background:rgba(255,255,255,0.08);border:1px dashed rgba(255,179,138,0.5);border-radius:999px;height:8px;overflow:hidden">
+                <div style="height:100%;border-radius:999px;width:{{ round.stagedPct }};background:repeating-linear-gradient(45deg,rgba(255,179,138,0.55) 0 6px,rgba(255,179,138,0.2) 6px 12px)"></div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- Desktop: courts grid + waitlist sidebar -->
+        <sc-if value="{{ dashSidebar }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:20px;align-items:flex-start">
+            <div style="flex:1;{{ courtGridStyle }}">
+              <sc-for list="{{ courts }}" as="court" hint-placeholder-count="4">
+                <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18">COURT {{ court.number }}</div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="font-size:11px;font-weight:700;color:#8a7c68;background:#f0e6d6;padding:4px 8px;border-radius:999px">{{ court.spread }}</span>
+                      <button onClick="{{ court.reroll }}" style="background:#ff6a2b;color:#221d18;border-radius:8px;padding:6px 10px;font-size:11px">Re-roll ⟲</button>
+                    </div>
+                  </div>
+                  <sc-for list="{{ court.slots }}" as="slot" hint-placeholder-count="4">
+                    <div onClick="{{ slot.onSlotClick }}" style="{{ slot.rowStyle }}">
+                      <sc-if value="{{ slot.occupied }}" hint-placeholder-val="{{ true }}">
+                        <span style="font-size:14px;font-weight:600;color:#221d18;padding:6px 4px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ slot.player.name }}</span>
+                        <span style="font-size:13px;font-weight:800;color:#ff6a2b;padding:6px 4px;flex:none;white-space:nowrap">{{ slot.player.level }}</span>
+                      </sc-if>
+                      <sc-if value="{{ slot.empty }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:13px;color:#b3a891;font-style:italic;padding:6px 4px">Open slot</span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+            <div style="width:270px;flex:none;background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18">Waitlist</div>
+              <sc-for list="{{ waitlist }}" as="wp" hint-placeholder-count="2">
+                <div onClick="{{ wp.onSelect }}" style="{{ wp.rowStyle }}">
+                  <span style="font-size:13px;font-weight:600">{{ wp.pos }}. {{ wp.name }}</span>
+                  <span style="font-size:12px;font-weight:700">{{ wp.level }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ waitlistEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#b3a891;font-style:italic;padding:8px 0">No one waiting</div>
+              </sc-if>
+              <div style="font-size:11px;color:#8a7c68;margin-top:14px;line-height:1.5;font-weight:600">{{ swapHint }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- Tablet + phone: waitlist chips on top, courts stacked -->
+        <sc-if value="{{ dashStacked }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fbf6ee;border-radius:12px;padding:14px 16px;border:1px solid #eee4d8;margin-bottom:16px">
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:10px">Waitlist</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ waitlist }}" as="wp" hint-placeholder-count="2">
+                <div onClick="{{ wp.onSelect }}" style="{{ wp.chipStyle }}">{{ wp.pos }}. {{ wp.name }} · {{ wp.level }}</div>
+              </sc-for>
+              <sc-if value="{{ waitlistEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#b3a891;font-style:italic">No one waiting</div>
+              </sc-if>
+            </div>
+            <div style="font-size:11px;color:#8a7c68;margin-top:10px;line-height:1.5;font-weight:600">{{ swapHint }}</div>
+          </div>
+          <div style="{{ courtGridStyle }}">
+            <sc-for list="{{ courts }}" as="court" hint-placeholder-count="4">
+              <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18">COURT {{ court.number }}</div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:11px;font-weight:700;color:#8a7c68;background:#f0e6d6;padding:4px 8px;border-radius:999px">{{ court.spread }}</span>
+                    <button onClick="{{ court.reroll }}" style="background:#ff6a2b;color:#221d18;border-radius:8px;padding:6px 10px;font-size:11px">Re-roll ⟲</button>
+                  </div>
+                </div>
+                <sc-for list="{{ court.slots }}" as="slot" hint-placeholder-count="4">
+                  <div onClick="{{ slot.onSlotClick }}" style="{{ slot.rowStyle }}">
+                    <sc-if value="{{ slot.occupied }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-size:14px;font-weight:600;color:#221d18;padding:6px 4px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ slot.player.name }}</span>
+                      <span style="font-size:13px;font-weight:800;color:#ff6a2b;padding:6px 4px;flex:none;white-space:nowrap">{{ slot.player.level }}</span>
+                    </sc-if>
+                    <sc-if value="{{ slot.empty }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:13px;color:#b3a891;font-style:italic;padding:6px 4px">Open slot</span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-if>
+
+    <!-- CHECK-IN -->
+    <sc-if value="{{ tabIsCheckin }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:{{ contentPad }}">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+          <div style="flex:1;background:#f0e6d6;border-radius:8px;height:12px;overflow:hidden"><div style="height:100%;background:#ff6a2b;width:{{ stats.capacityPct }}"></div></div>
+          <div style="font-size:13px;font-weight:700;color:#221d18;white-space:nowrap">{{ stats.checkedIn }} / {{ stats.capacity }} · {{ stats.remaining }} left</div>
+        </div>
+        <sc-if value="{{ stats.atCapacity }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fdeee4;color:#a8481a;font-size:12px;font-weight:700;padding:8px 12px;border-radius:8px;margin-bottom:14px">Session at capacity — new check-ins will join the waitlist.</div>
+        </sc-if>
+        <sc-if value="{{ isTabletUp }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;font-size:11px;font-weight:700;color:#b3a891;text-transform:uppercase;padding:0 4px 8px">
+            <div style="flex:2">Name</div><div style="width:110px">Level</div><div style="width:100px">Status</div><div style="width:120px">Present</div>
+          </div>
+        </sc-if>
+        <sc-for list="{{ checkinPlayers }}" as="p" hint-placeholder-count="8">
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:9px 4px;border-top:1px solid #f0e6d6">
+            <div style="flex:1 1 130px;min-width:120px;font-size:14px;font-weight:600;color:#221d18">{{ p.name }}</div>
+            <div style="width:100px;font-size:13px;font-weight:800;color:#ff6a2b">{{ p.level }}</div>
+            <div style="width:80px;font-size:12px;color:#b3a891">{{ p.statusLabel }}</div>
+            <div><button onClick="{{ p.toggleCheckin }}" style="{{ p.checkinStyle }}">{{ p.checkinLabel }}</button></div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- PLAYERS -->
+    <sc-if value="{{ tabIsPlayers }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:{{ contentPad }}">
+        <sc-if value="{{ pendingCount }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8;margin-bottom:16px">
+            <div style="font-size:12px;font-weight:800;color:#221d18;margin-bottom:8px">Pending self-registrations ({{ pendingCount }})</div>
+            <sc-for list="{{ pending }}" as="pr" hint-placeholder-count="2">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:6px 0;border-top:1px solid #f0e6d6">
+                <span style="font-size:13px;color:#221d18">{{ pr.name }} <span style="color:#b3a891">· est. {{ pr.estLevel }} · {{ pr.contact }}</span></span>
+                <div style="display:flex;gap:6px">
+                  <button onClick="{{ pr.approve }}" style="background:#2ea043;color:#fff;font-size:11px;padding:6px 12px;border-radius:6px">Approve</button>
+                  <button onClick="{{ pr.reject }}" style="background:#f0e6d6;color:#8a7c68;font-size:11px;padding:6px 12px;border-radius:6px">Reject</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <input value="{{ search }}" onChange="{{ setSearch }}" placeholder="Search players…" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #e2d8c8;font-size:14px;margin-bottom:14px">
+        <sc-if value="{{ isTabletUp }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;font-size:11px;font-weight:700;color:#b3a891;text-transform:uppercase;padding:0 4px 8px">
+            <div style="flex:2">Name</div><div style="width:70px">ID</div><div style="width:120px">Level</div><div style="width:90px">Status</div><div style="width:100px">Member</div><div style="width:104px">Checked in</div>
+          </div>
+        </sc-if>
+        <sc-for list="{{ filteredPlayers }}" as="p" hint-placeholder-count="8">
+          <div style="border-top:1px solid #f0e6d6">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:10px 4px">
+              <div style="flex:1 1 140px;min-width:130px;font-size:14px;font-weight:600;color:#221d18;cursor:pointer;text-decoration:underline;text-decoration-color:#e2d8c8" onClick="{{ p.toggleProfile }}">{{ p.name }}</div>
+              <div style="width:64px;font-size:12px;color:#b3a891">{{ p.code }}</div>
+              <div style="width:120px;display:flex;align-items:center;gap:5px">
+                <button onClick="{{ p.levelDown }}" style="{{ p.levelDownStyle }}">−</button>
+                <span style="font-size:13px;font-weight:800;color:#ff6a2b;width:82px;text-align:center">{{ p.level }}</span>
+                <button onClick="{{ p.levelUp }}" style="{{ p.levelUpStyle }}">+</button>
+              </div>
+              <div style="width:84px"><button onClick="{{ p.toggleActive }}" style="{{ p.statusStyle }}">{{ p.statusLabel }}</button></div>
+              <div style="width:92px"><button onClick="{{ p.toggleMembership }}" style="{{ p.membershipStyle }}">{{ p.membershipLabel }}</button></div>
+              <div style="width:96px"><button onClick="{{ p.toggleCheckin }}" style="{{ p.checkinStyle }}">{{ p.checkinLabel }}</button></div>
+            </div>
+            <sc-if value="{{ p.expanded }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8;margin:0 4px 14px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+                  <div style="font-size:12px;color:#b3a891">{{ p.profile.membershipLabel }}</div>
+                  <button onClick="{{ p.toggleProfile }}" style="background:#f0e6d6;color:#221d18;border-radius:6px;width:26px;height:26px">✕</button>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+                  <div style="flex:1 1 90px;background:#fffdfa;border-radius:10px;padding:10px;text-align:center;border:1px solid #eee4d8"><div style="font-size:18px;font-weight:800;color:#ff6a2b">{{ p.level }}</div><div style="font-size:10px;color:#8a7c68;font-weight:700">CURRENT LEVEL</div></div>
+                  <div style="flex:1 1 90px;background:#fffdfa;border-radius:10px;padding:10px;text-align:center;border:1px solid #eee4d8"><div style="font-size:20px;font-weight:800;color:#221d18">{{ p.profile.matches }}</div><div style="font-size:10px;color:#8a7c68;font-weight:700">MATCHES</div></div>
+                  <div style="flex:1 1 90px;background:#fffdfa;border-radius:10px;padding:10px;text-align:center;border:1px solid #eee4d8"><div style="font-size:20px;font-weight:800;color:#221d18">{{ p.profile.diversity }}</div><div style="font-size:10px;color:#8a7c68;font-weight:700">DIVERSITY</div></div>
+                </div>
+                <div style="display:flex;gap:20px;flex-wrap:wrap">
+                  <div style="flex:1 1 200px">
+                    <div style="font-size:12px;font-weight:700;color:#221d18;margin-bottom:8px">Level progression</div>
+                    <svg width="100%" height="70" viewBox="0 0 260 80" preserveAspectRatio="none"><polyline points="{{ p.profile.levelPoints }}" fill="none" stroke="#ff6a2b" stroke-width="2.5"></polyline></svg>
+                  </div>
+                  <div style="flex:1 1 200px">
+                    <div style="font-size:12px;font-weight:700;color:#221d18;margin-bottom:8px">Most frequent partners</div>
+                    <sc-for list="{{ p.profile.topPartners }}" as="tp" hint-placeholder-count="3">
+                      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0"><span style="font-size:13px;color:#221d18">{{ tp.name }}</span><span style="font-size:12px;color:#8a7c68;font-weight:700">{{ tp.count }}×</span></div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="font-size:12px;font-weight:700;color:#221d18;margin:16px 0 6px">Session attendance history</div>
+                <div style="font-size:12px;color:#8a7c68;line-height:1.7">{{ p.profile.attendanceHistory }}</div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- SESSIONS -->
+    <sc-if value="{{ tabIsSessions }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:{{ contentPad }};{{ twoColStyle }}">
+        <div style="flex:1;background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:14px">Round mode (applies to all courts)</div>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button onClick="{{ setRoundGame }}" style="{{ roundStyle_game }}">Game-based</button>
+            <button onClick="{{ setRoundTime }}" style="{{ roundStyle_time }}">Time-based</button>
+          </div>
+          <div style="font-size:12px;color:#8a7c68;margin-bottom:16px;line-height:1.5">{{ settings.roundModeDesc }}</div>
+          <sc-if value="{{ settings.isTimeBased }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-bottom:16px">
+              <label style="font-size:12px;font-weight:700;color:#221d18;display:block;margin-bottom:6px">Rotation duration: {{ settings.roundDuration }} min</label>
+              <input type="range" min="10" max="45" step="5" value="{{ settings.roundDuration }}" onChange="{{ setDuration }}" style="width:100%">
+            </div>
+          </sc-if>
+          <label style="font-size:12px;font-weight:700;color:#221d18;display:block;margin-bottom:6px">Session capacity</label>
+          <input type="number" value="{{ settings.sessionCapacity }}" onChange="{{ setCapacity }}" style="width:100px;padding:8px 10px;border-radius:8px;border:1px solid #e2d8c8;font-size:13px;margin-bottom:16px">
+          <label style="font-size:12px;font-weight:700;color:#221d18;display:block;margin-bottom:6px">Number of courts</label>
+          <input type="number" value="{{ settings.courtsCount }}" onChange="{{ setCourtsCount }}" style="width:100px;padding:8px 10px;border-radius:8px;border:1px solid #e2d8c8;font-size:13px">
+        </div>
+        <div style="flex:1;background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:14px">Session templates</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input value="{{ templateName }}" onChange="{{ setTemplateName }}" placeholder="Template name…" style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid #e2d8c8;font-size:13px">
+            <button onClick="{{ saveTemplate }}" style="background:#ff6a2b;color:#221d18;border-radius:8px;padding:8px 14px;font-size:12px;white-space:nowrap">Save current</button>
+          </div>
+          <sc-for list="{{ templates }}" as="tpl" hint-placeholder-count="2">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #f0e6d6">
+              <div><div style="font-size:13px;font-weight:700;color:#221d18">{{ tpl.name }}</div><div style="font-size:11px;color:#b3a891">{{ tpl.summary }}</div></div>
+              <button onClick="{{ tpl.load }}" style="background:#f0e6d6;color:#221d18;border-radius:8px;padding:6px 12px;font-size:11px;white-space:nowrap">Load</button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- SCHEDULE -->
+    <sc-if value="{{ tabIsSchedule }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:{{ contentPad }}">
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:14px">Recurring sessions</div>
+        <sc-for list="{{ scheduleItems }}" as="sch" hint-placeholder-count="3">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8;margin-bottom:10px">
+            <div><div style="font-size:14px;font-weight:700;color:#221d18">{{ sch.day }} · {{ sch.time }}</div><div style="font-size:12px;color:#8a7c68">{{ sch.note }}</div></div>
+            <span style="font-size:11px;font-weight:700;color:#2ea043;background:#e6f4ea;padding:5px 10px;border-radius:999px">Auto check-in opens 30 min prior</span>
+          </div>
+        </sc-for>
+        <div style="font-size:12px;color:#b3a891;margin-top:8px">Public calendar view and reminder scheduling live under Settings.</div>
+      </div>
+    </sc-if>
+
+    <!-- ANALYTICS -->
+    <sc-if value="{{ tabIsAnalytics }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:{{ contentPad }}">
+        <div style="{{ analyticsGridStyle }}">
+          <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#221d18;margin-bottom:10px">Attendance trend (last 8)</div>
+            <div style="display:flex;align-items:flex-end;gap:6px;height:70px">
+              <sc-for list="{{ attendanceBars }}" as="b" hint-placeholder-count="8"><div style="flex:1;background:#ff6a2b;border-radius:3px 3px 0 0;height:{{ b.h }}"></div></sc-for>
+            </div>
+            <div style="font-size:11px;color:#8a7c68;margin-top:8px">Month-over-month growth: {{ kpis.momGrowth }}</div>
+          </div>
+          <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#221d18;margin-bottom:10px">Court utilization</div>
+            <sc-for list="{{ courtUtil }}" as="u" hint-placeholder-count="4">
+              <div style="margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#8a7c68;margin-bottom:3px"><span>Court {{ u.number }}</span><span>{{ u.pct }}</span></div>
+                <div style="background:#f0e6d6;border-radius:6px;height:8px;overflow:hidden"><div style="height:100%;background:#ff6a2b;width:{{ u.pct }}"></div></div>
+              </div>
+            </sc-for>
+            <div style="font-size:11px;color:#8a7c68;margin-top:6px">Avg duration: {{ kpis.avgDuration }} · Peak: {{ kpis.peakTime }}</div>
+          </div>
+          <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#221d18;margin-bottom:10px">Level gap over time</div>
+            <div style="display:flex;align-items:flex-end;gap:6px;height:60px">
+              <sc-for list="{{ spreadBars }}" as="b" hint-placeholder-count="8"><div style="flex:1;background:#221d18;border-radius:3px 3px 0 0;height:{{ b.h }}"></div></sc-for>
+            </div>
+            <div style="font-size:11px;color:#8a7c68;margin-top:8px">Re-roll freq: {{ kpis.rerollFreq }} · Waitlist: {{ kpis.waitlistPressure }}</div>
+          </div>
+          <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#221d18;margin-bottom:10px">Level distribution</div>
+            <div style="display:flex;align-items:flex-end;gap:5px;height:60px">
+              <sc-for list="{{ bellBars }}" as="b" hint-placeholder-count="4"><div style="flex:1;background:#ffb38a;border-radius:3px 3px 0 0;height:{{ b.h }}"></div></sc-for>
+            </div>
+            <sc-if value="{{ stagnationCount }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:11px;color:#a8481a;margin-top:8px;font-weight:700">⚠ {{ stagnationCount }} players flat 6+ sessions</div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="{{ kpiGridStyle }};margin-top:16px">
+          <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8"><div style="font-size:11px;color:#8a7c68;font-weight:700">CHURN RATE</div><div style="font-size:22px;font-weight:800;color:#221d18">{{ kpis.churnRate }}</div></div>
+          <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8"><div style="font-size:11px;color:#8a7c68;font-weight:700">RE-ACTIVATION</div><div style="font-size:22px;font-weight:800;color:#221d18">{{ kpis.reactivationRate }}</div></div>
+          <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8"><div style="font-size:11px;color:#8a7c68;font-weight:700">NEW ONBOARDING</div><div style="font-size:22px;font-weight:800;color:#221d18">{{ kpis.onboarding }}</div></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- SETTINGS -->
+    <sc-if value="{{ tabIsSettings }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:{{ contentPad }};{{ twoColStyle }}">
+        <div style="flex:1;background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:14px">Notifications</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid #f0e6d6"><span style="font-size:13px;color:#221d18">Session reminders</span><button onClick="{{ toggleReminders }}" style="{{ settings.remindersStyle }}">{{ settings.remindersLabel }}</button></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid #f0e6d6"><span style="font-size:13px;color:#221d18">Court assignment alerts</span><button onClick="{{ toggleCourtAlerts }}" style="{{ settings.courtAlertsStyle }}">{{ settings.courtAlertsLabel }}</button></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid #f0e6d6"><span style="font-size:13px;color:#221d18">General announcements</span><button onClick="{{ toggleAnnouncements }}" style="{{ settings.announcementsStyle }}">{{ settings.announcementsLabel }}</button></div>
+        </div>
+        <div style="flex:1;background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:14px">Membership &amp; self-registration</div>
+          <div style="font-size:12px;color:#8a7c68;margin-bottom:10px;line-height:1.5">Members: {{ kpis.memberCount }} · Fees outstanding: {{ kpis.feesOutstanding }}</div>
+          <div style="font-size:12px;font-weight:700;color:#221d18;margin-bottom:6px">Invite link</div>
+          <input value="{{ inviteLink }}" readonly="{{ true }}" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid #e2d8c8;font-size:12px;color:#8a7c68;margin-bottom:12px">
+          <a href="Self Registration.dc.html" target="_blank" style="display:inline-block;font-size:12px;font-weight:700;color:#ff6a2b;text-decoration:none">Preview signup page →</a>
+          <div style="font-size:12px;font-weight:700;color:#221d18;margin:14px 0 6px">Level calibration</div>
+          <div style="font-size:12px;color:#8a7c68;line-height:1.5">New players self-estimate their level on signup; organizers can override any estimate from the Players tab.</div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- ===== PHONE BOTTOM TAB BAR ===== -->
+  <sc-if value="{{ showBottomBar }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;border-top:1px solid #eee4d8;background:#fffdfa;flex:none">
+      <button onClick="{{ setTabDashboard }}" style="{{ navStyle_dashboard }}"><span style="font-size:16px;line-height:1">▦</span><span style="font-size:10px;font-weight:700">Courts</span></button>
+      <button onClick="{{ setTabCheckin }}" style="{{ navStyle_checkin }}"><span style="font-size:16px;line-height:1">✓</span><span style="font-size:10px;font-weight:700">Check-in</span></button>
+      <button onClick="{{ setTabPlayers }}" style="{{ navStyle_players }}"><span style="font-size:16px;line-height:1">☰</span><span style="font-size:10px;font-weight:700">Players</span></button>
+      <button onClick="{{ openMore }}" style="{{ navStyle_more }}"><span style="font-size:16px;line-height:1">•••</span><span style="font-size:10px;font-weight:700">More</span></button>
+    </div>
+  </sc-if>
+
+  <!-- ===== PHONE "MORE" SHEET ===== -->
+  <sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeMore }}" style="position:absolute;inset:0;background:rgba(20,16,12,.45);z-index:50;display:flex;flex-direction:column;justify-content:flex-end;animation:fadeIn .15s ease">
+      <div style="background:#fffdfa;border-radius:18px 18px 0 0;padding:8px 0 16px;animation:sheetUp .22s cubic-bezier(.2,.8,.2,1)">
+        <div style="width:38px;height:4px;border-radius:2px;background:#e2d8c8;margin:8px auto 12px"></div>
+        <sc-for list="{{ moreTabs }}" as="mt" hint-placeholder-count="4">
+          <div onClick="{{ mt.onClick }}" style="{{ mt.rowStyle }}"><span>{{ mt.label }}</span><span style="color:#b3a891">›</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== PHONE HAMBURGER MENU ===== -->
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ toggleMenu }}" style="position:absolute;inset:0;background:rgba(20,16,12,.5);z-index:50;animation:fadeIn .15s ease">
+      <div style="background:#221d18;padding:16px 12px 22px;animation:sheetUp .22s cubic-bezier(.2,.8,.2,1)">
+        <div style="font-size:11px;font-weight:700;color:#8a7c68;letter-spacing:.06em;text-transform:uppercase;padding:6px 14px 10px">Navigate</div>
+        <sc-for list="{{ menuTabs }}" as="mt" hint-placeholder-count="7">
+          <div onClick="{{ mt.onClick }}" style="{{ mt.menuStyle }}">{{ mt.label }}</div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: &quot;100%&quot;, &quot;height&quot;: &quot;100%&quot; },
+  &quot;phoneNav&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;tabbar&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;tabbar&quot;, &quot;hamburger&quot;], &quot;section&quot;: &quot;Responsive&quot; },
+  &quot;density&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;comfortable&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;comfortable&quot;, &quot;compact&quot;], &quot;section&quot;: &quot;Responsive&quot; }
+}">
+const NAMES = ["Ava Chen","Liam Ortiz","Maya Singh","Noah Kim","Zoe Alvarez","Ethan Brooks","Priya Nair","Jack Sullivan","Ruby Tanaka","Leo Fischer","Mia Delgado","Owen Walsh","Chloe Bennett","Sam Okafor","Grace Lindqvist","Theo Nakamura","Ivy Marsh","Finn O'Brien","Nina Petrova","Cole Whitfield"];
+const ELOS = [2100,2050,1980,1920,1870,1830,1790,1740,1690,1650,1600,1560,1510,1470,1420,1380,1330,1280,1150,980];
+const TIER_NAMES = ['Amateur', 'Intermediate', 'Advanced', 'Professional'];
+const TIER_MID = [900, 1500, 1850, 2150];
+
+function tierIndexForElo(elo){ if (elo < 1300) return 0; if (elo < 1700) return 1; if (elo < 2000) return 2; return 3; }
+function levelGap(o){ if (o.length < 2) return 0; const t = o.map(p => p.tier); return Math.max(...t) - Math.min(...t); }
+function levelGapLabel(g){ return g <= 0 ? 'Same level' : g + ' level gap'; }
+function shuffle(arr){ const a = arr.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function makePlayers(){
+  return NAMES.map((name, i) => ({ id: i, code: 'BC-' + String(101 + i), name, elo: ELOS[i], status: i === 19 ? 'inactive' : 'active', checkedIn: i < 18, courtId: null, waitlisted: false }));
+}
+function makeFullPlayers(){
+  return makePlayers().map((p, i) => {
+    const membership = i % 4 === 0 ? 'Casual' : 'Member';
+    const feePaid = membership === 'Member' ? (i % 7 !== 0) : true;
+    const tier = tierIndexForElo(p.elo);
+    const trend = (i % 3) - 1;
+    const hist = []; let t = Math.max(0, Math.min(3, tier - trend));
+    for (let k = 0; k < 7; k++){ if (trend !== 0 && (i + k) % 3 === 0) t = Math.max(0, Math.min(3, t + trend)); hist.push(t); }
+    hist.push(tier);
+    return Object.assign({}, p, { elo: TIER_MID[tier], tier, membership, feePaid, levelHistory: hist });
+  });
+}
+function assignInitialN(players, cc){
+  const cap = cc * 4;
+  const checked = players.filter(p => p.checkedIn).sort((a,b) => b.tier - a.tier);
+  checked.slice(0, cap).forEach((p, i) => { p.courtId = Math.floor(i / 4); p.waitlisted = false; });
+  checked.slice(cap).forEach(p => { p.waitlisted = true; p.courtId = null; });
+}
+function rotateAssign(players, cc){
+  const cap = cc * 4;
+  const checked = shuffle(players.filter(p => p.checkedIn)).sort((a,b) => b.tier - a.tier);
+  checked.slice(0, cap).forEach((p, i) => { p.courtId = Math.floor(i / 4); p.waitlisted = false; });
+  checked.slice(cap).forEach(p => { p.waitlisted = true; p.courtId = null; });
+}
+function generateSessionLogs(players, cc){
+  const active = players.filter(p => p.status === 'active');
+  const dates = ['May 6','May 13','May 20','May 27','Jun 3','Jun 10','Jun 17','Jun 24'];
+  const logs = [];
+  for (let s = 0; s < 8; s++){
+    const attendCount = Math.min(active.length, 12 + ((s * 5) % 8));
+    const attendees = active.slice().sort((a,b) => ((a.id + s*3) % players.length) - ((b.id + s*3) % players.length)).slice(0, attendCount);
+    const sorted = attendees.slice().sort((a,b) => b.tier - a.tier);
+    const courts = [];
+    for (let c = 0; c*4 < sorted.length && courts.length < cc; c++){ const g = sorted.slice(c*4, c*4+4); if (g.length < 2) break; courts.push({ court: c+1, playerIds: g.map(p => p.id) }); }
+    const spreads = courts.map(c => { const t = c.playerIds.map(id => players.find(p => p.id === id).tier); return Math.max(...t) - Math.min(...t); });
+    const avgSpread = spreads.length ? Math.round((spreads.reduce((a,b)=>a+b,0)/spreads.length)*10)/10 : 0;
+    const seated = courts.reduce((sum, c) => sum + c.playerIds.length, 0);
+    logs.push({ date: dates[s], checkedIn: attendees.length, courts, avgSpread, waitlistCount: Math.max(0, attendees.length - seated), courtsCount: cc });
+  }
+  return logs;
+}
+function computePartnerStats(playerId, logs){
+  const counts = {}; let matches = 0; const dates = [];
+  logs.forEach(log => {
+    const court = log.courts.find(c => c.playerIds.includes(playerId));
+    if (court){ matches++; dates.push(log.date); court.playerIds.forEach(id => { if (id !== playerId) counts[id] = (counts[id]||0)+1; }); }
+  });
+  const entries = Object.entries(counts).map(([id, count]) => ({ id: Number(id), count })).sort((a,b) => b.count - a.count);
+  const diversity = matches > 0 ? Math.round(Math.min(1, entries.length / Math.max(1, matches * 2.5)) * 100) : 0;
+  return { matches, dates, entries, diversity };
+}
+
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.rootRef = React.createRef();
+    const players = makeFullPlayers();
+    const settings = { roundMode: 'game', roundDuration: 20, sessionCapacity: 20, courtsCount: 4, notifyReminders: true, notifyCourtAlerts: true, notifyAnnouncements: false };
+    assignInitialN(players, settings.courtsCount);
+    this.state = {
+      w: 1200, tab: 'dashboard', menuOpen: false, moreOpen: false,
+      roundNumber: 3, roundStartTs: Date.now() - 8 * 60 * 1000, now: Date.now(), nextRoundStaged: false, stagedAssignment: null,
+      search: '', players, rerollCount: 0, selectedWaitlistId: null, profileOpenId: null,
+      settings, sessionLogs: generateSessionLogs(players, settings.courtsCount),
+      templateName: '',
+      templates: [{ id: 1, name: 'Standard Tuesday', courtsCount: 4, roundMode: 'game', roundDuration: 20, sessionCapacity: 20 }],
+      pending: [
+        { id: 901, name: 'Harper Lin', contact: 'harper.lin@email.com', estTier: 1 },
+        { id: 902, name: 'Diego Ramos', contact: 'diego.r@email.com', estTier: 0 }
+      ]
+    };
+  }
+
+  componentDidMount(){
+    const el = this.rootRef && this.rootRef.current;
+    if (el && typeof ResizeObserver !== 'undefined'){
+      this._ro = new ResizeObserver(entries => {
+        const width = entries[0].contentRect.width;
+        if (Math.abs(width - this.state.w) > 1) this.setState({ w: width });
+      });
+      this._ro.observe(el);
+      const w0 = el.getBoundingClientRect().width;
+      if (w0 && Math.abs(w0 - this.state.w) > 1) this.setState({ w: w0 });
+    }
+    this._timer = setInterval(() => this.tick(), 1000);
+  }
+  componentWillUnmount(){ if (this._ro) this._ro.disconnect(); if (this._timer) clearInterval(this._timer); }
+
+  roundDurationSec(s){ return Math.max(30, (s.settings.roundDuration || 20) * 60); }
+  rotateState(s){
+    const players = s.players.map(p => ({ ...p }));
+    if (s.stagedAssignment){
+      const m = {}; s.stagedAssignment.forEach(a => { m[a.id] = a; });
+      players.forEach(p => { const a = m[p.id]; if (a){ p.courtId = a.courtId; p.waitlisted = a.waitlisted; } });
+    } else {
+      rotateAssign(players, s.settings.courtsCount);
+    }
+    return { players, roundNumber: s.roundNumber + 1, roundStartTs: Date.now(), nextRoundStaged: false, stagedAssignment: null, now: Date.now() };
+  }
+  tick(){
+    this.setState(s => {
+      const elapsed = (Date.now() - s.roundStartTs) / 1000;
+      if (elapsed >= this.roundDurationSec(s)) return this.rotateState(s);
+      return { now: Date.now() };
+    });
+  }
+  rotateNow(){ this.setState(s => this.rotateState(s)); }
+  stageNext(){
+    this.setState(s => {
+      const players = s.players.map(p => ({ ...p }));
+      rotateAssign(players, s.settings.courtsCount);
+      const stagedAssignment = players.map(p => ({ id: p.id, courtId: p.courtId, waitlisted: p.waitlisted }));
+      return { nextRoundStaged: true, stagedAssignment };
+    });
+  }
+  cancelStaged(){ this.setState({ nextRoundStaged: false, stagedAssignment: null }); }
+
+  setTab(tab){ this.setState({ tab, menuOpen: false, moreOpen: false }); }
+  toggleMenu(){ this.setState(s => ({ menuOpen: !s.menuOpen })); }
+  openMore(){ this.setState({ moreOpen: true }); }
+  closeMore(){ this.setState({ moreOpen: false }); }
+  setSearch(ev){ const v = ev && ev.target ? ev.target.value : ''; this.setState({ search: v }); }
+  toggleProfile(id){ this.setState(s => ({ profileOpenId: s.profileOpenId === id ? null : id })); }
+
+  autoPromote(players, cc){
+    const waiting = players.filter(p => p.checkedIn && p.waitlisted).sort((a,b) => b.tier - a.tier);
+    for (let courtId = 0; courtId < cc; courtId++){
+      let occ = players.filter(p => p.checkedIn && p.courtId === courtId).length;
+      while (occ < 4 && waiting.length){ const p = waiting.shift(); p.waitlisted = false; p.courtId = courtId; occ++; }
+    }
+  }
+  toggleCheckin(id){
+    this.setState(s => {
+      const cc = s.settings.courtsCount;
+      const players = s.players.map(p => ({ ...p }));
+      const p = players.find(pl => pl.id === id); if (!p) return null;
+      if (p.checkedIn){ p.checkedIn = false; p.courtId = null; p.waitlisted = false; this.autoPromote(players, cc); }
+      else {
+        if (players.filter(pl => pl.checkedIn).length >= s.settings.sessionCapacity) return null;
+        p.checkedIn = true;
+        const open = Array.from({length: cc}, (_, i) => i).find(cid => players.filter(pl => pl.checkedIn && pl.courtId === cid).length < 4);
+        if (open !== undefined){ p.courtId = open; p.waitlisted = false; } else { p.waitlisted = true; p.courtId = null; }
+      }
+      return { players };
+    });
+  }
+  toggleActive(id){
+    this.setState(s => {
+      const players = s.players.map(p => ({ ...p }));
+      const p = players.find(pl => pl.id === id); if (!p) return null;
+      if (p.status === 'active'){ p.status = 'inactive'; p.checkedIn = false; p.courtId = null; p.waitlisted = false; this.autoPromote(players, s.settings.courtsCount); }
+      else p.status = 'active';
+      return { players };
+    });
+  }
+  toggleMembership(id){ this.setState(s => ({ players: s.players.map(p => p.id === id ? { ...p, membership: p.membership === 'Member' ? 'Casual' : 'Member' } : p) })); }
+  adjustLevel(id, delta){
+    this.setState(s => ({ players: s.players.map(p => { if (p.id !== id) return p; const tier = Math.max(0, Math.min(3, p.tier + delta)); return { ...p, tier, elo: TIER_MID[tier] }; }) }));
+  }
+  selectWaitlist(id){ this.setState(s => ({ selectedWaitlistId: s.selectedWaitlistId === id ? null : id })); }
+  placeOrSwap(courtId, slotOccupantId){
+    this.setState(s => {
+      const selId = s.selectedWaitlistId; if (selId == null) return null;
+      const players = s.players.map(p => ({ ...p }));
+      const sel = players.find(p => p.id === selId); if (!sel) return null;
+      if (slotOccupantId != null){ const occ = players.find(p => p.id === slotOccupantId); if (occ){ occ.waitlisted = true; occ.courtId = null; } }
+      sel.waitlisted = false; sel.courtId = courtId;
+      return { players, selectedWaitlistId: null };
+    });
+  }
+  reroll(courtId){
+    this.setState(s => {
+      const players = s.players.map(p => ({ ...p }));
+      const pool = players.filter(p => p.checkedIn && p.courtId === courtId).concat(players.filter(p => p.checkedIn && p.waitlisted));
+      if (pool.length <= 4) return null;
+      let best = null, bestSpread = Infinity;
+      for (let t = 0; t < 24; t++){ const cand = shuffle(pool).slice(0, 4); const sp = levelGap(cand); if (sp < bestSpread){ bestSpread = sp; best = cand; } }
+      const ids = new Set(best.map(p => p.id));
+      pool.forEach(p => { if (ids.has(p.id)){ p.courtId = courtId; p.waitlisted = false; } else { p.courtId = null; p.waitlisted = true; } });
+      return { players, rerollCount: s.rerollCount + 1 };
+    });
+  }
+  setRoundMode(mode){ this.setState(s => ({ settings: { ...s.settings, roundMode: mode } })); }
+  setDuration(ev){ const v = Number(ev.target.value); this.setState(s => ({ settings: { ...s.settings, roundDuration: v } })); }
+  setCapacity(ev){ const v = Math.max(4, Number(ev.target.value) || 0); this.setState(s => ({ settings: { ...s.settings, sessionCapacity: v } })); }
+  setCourtsCount(ev){
+    const v = Math.max(1, Math.min(8, Number(ev.target.value) || 1));
+    this.setState(s => { const players = s.players.map(p => ({ ...p })); players.forEach(p => { if (p.checkedIn){ p.courtId = null; p.waitlisted = true; } }); assignInitialN(players, v); return { players, settings: { ...s.settings, courtsCount: v } }; });
+  }
+  setTemplateName(ev){ const v = ev.target.value; this.setState({ templateName: v }); }
+  saveTemplate(){
+    this.setState(s => { if (!s.templateName.trim()) return null; const t = { id: Date.now(), name: s.templateName.trim(), courtsCount: s.settings.courtsCount, roundMode: s.settings.roundMode, roundDuration: s.settings.roundDuration, sessionCapacity: s.settings.sessionCapacity }; return { templates: s.templates.concat([t]), templateName: '' }; });
+  }
+  loadTemplate(id){
+    this.setState(s => { const t = s.templates.find(x => x.id === id); if (!t) return null; const players = s.players.map(p => ({ ...p })); players.forEach(p => { if (p.checkedIn){ p.courtId = null; p.waitlisted = true; } }); assignInitialN(players, t.courtsCount); return { players, settings: { ...s.settings, courtsCount: t.courtsCount, roundMode: t.roundMode, roundDuration: t.roundDuration, sessionCapacity: t.sessionCapacity } }; });
+  }
+  approvePending(id){
+    this.setState(s => { const pend = s.pending.find(p => p.id === id); if (!pend) return null; const tier = pend.estTier; const np = { id: Date.now(), code: 'BC-' + (200 + s.players.length), name: pend.name, elo: TIER_MID[tier], tier, status: 'active', checkedIn: false, courtId: null, waitlisted: false, membership: 'Casual', feePaid: true, levelHistory: [tier] }; return { players: s.players.concat([np]), pending: s.pending.filter(p => p.id !== id) }; });
+  }
+  rejectPending(id){ this.setState(s => ({ pending: s.pending.filter(p => p.id !== id) })); }
+  toggleSetting(key){ this.setState(s => ({ settings: { ...s.settings, [key]: !s.settings[key] } })); }
+
+  buildViewModel(){
+    const s = this.state;
+    const players = s.players;
+    const cc = s.settings.courtsCount;
+    const checkedIn = players.filter(p => p.checkedIn);
+    const selectedPlayer = s.selectedWaitlistId != null ? players.find(p => p.id === s.selectedWaitlistId) : null;
+
+    const courts = Array.from({length: cc}, (_, courtId) => {
+      const occupants = players.filter(p => p.checkedIn && p.courtId === courtId);
+      const slots = [0,1,2,3].map(i => {
+        const p = occupants[i]; const occId = p ? p.id : null;
+        const invite = selectedPlayer != null;
+        const rowStyle = 'display:flex;align-items:center;justify-content:space-between;' + (invite ? 'cursor:pointer;background:rgba(255,106,43,0.08);border-radius:6px' : '');
+        return p ? { occupied: true, empty: false, player: { name: p.name, level: TIER_NAMES[p.tier] }, rowStyle, onSlotClick: () => this.placeOrSwap(courtId, occId) }
+                 : { occupied: false, empty: true, player: null, rowStyle: rowStyle + ';min-height:29px', onSlotClick: () => this.placeOrSwap(courtId, null) };
+      });
+      return { number: courtId + 1, slots, spread: levelGapLabel(levelGap(occupants)), reroll: () => this.reroll(courtId) };
+    });
+
+    const waitlist = players.filter(p => p.checkedIn && p.waitlisted).map((p, i) => ({
+      id: p.id, name: p.name, level: TIER_NAMES[p.tier], pos: i + 1,
+      rowStyle: p.id === s.selectedWaitlistId ? 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;background:#ff6a2b;color:#fff;cursor:pointer' : 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer',
+      chipStyle: p.id === s.selectedWaitlistId ? 'padding:7px 11px;border-radius:999px;background:#ff6a2b;color:#fff;cursor:pointer;font-size:12px;font-weight:600' : 'padding:7px 11px;border-radius:999px;background:#f0e6d6;color:#221d18;cursor:pointer;font-size:12px;font-weight:600',
+      onSelect: () => this.selectWaitlist(p.id)
+    }));
+    const swapHint = selectedPlayer != null ? ('Placing ' + selectedPlayer.name + ' — tap a court slot') : 'Tap a waitlisted player, then a court slot to place or swap them in.';
+
+    const byId = {}; players.forEach(pl => byId[pl.id] = pl);
+    const buildProfile = (p) => {
+      const stats = computePartnerStats(p.id, s.sessionLogs);
+      const topPartners = stats.entries.slice(0, 3).map(e => ({ name: byId[e.id] ? byId[e.id].name : '—', count: e.count }));
+      const hist = p.levelHistory.length > 1 ? p.levelHistory : [p.levelHistory[0], p.levelHistory[0]];
+      const pts = hist.map((v, i) => { const x = Math.round(i / (hist.length - 1) * 260); const y = Math.round(70 - (v / 3) * 60) + 5; return x + ',' + y; }).join(' ');
+      return { matches: stats.matches, diversity: stats.diversity + '%', membershipLabel: p.membership + (p.membership === 'Member' && !p.feePaid ? ' · fee due' : ''), levelPoints: pts, topPartners, attendanceHistory: stats.dates.length ? stats.dates.join(', ') : 'No sessions logged yet' };
+    };
+
+    const search = (s.search || '').toLowerCase();
+    const btnSm = 'font-size:11px;padding:5px 9px;border-radius:6px';
+    const lvlBtn = 'width:22px;height:22px;border-radius:6px;background:#f0e6d6;color:#221d18;font-weight:800;line-height:1';
+    const filteredPlayers = players.filter(p => p.name.toLowerCase().includes(search)).map(p => ({
+      id: p.id, name: p.name, code: p.code, level: TIER_NAMES[p.tier],
+      levelUp: () => this.adjustLevel(p.id, 1), levelDown: () => this.adjustLevel(p.id, -1),
+      levelUpStyle: lvlBtn + (p.tier >= 3 ? ';opacity:.35' : ''), levelDownStyle: lvlBtn + (p.tier <= 0 ? ';opacity:.35' : ''),
+      statusLabel: p.status === 'active' ? 'Active' : 'Inactive',
+      statusStyle: p.status === 'active' ? 'background:transparent;color:#3a9a5c;' + btnSm + ';border:1px solid #3a9a5c33' : 'background:transparent;color:#a3a3a3;' + btnSm + ';border:1px solid #a3a3a333',
+      toggleActive: () => this.toggleActive(p.id),
+      membershipLabel: p.membership,
+      membershipStyle: p.membership === 'Member' ? 'background:#f0e6d6;color:#8a5a2a;' + btnSm : 'background:transparent;color:#a3a3a3;' + btnSm + ';border:1px solid #e2d8c8',
+      toggleMembership: () => this.toggleMembership(p.id),
+      checkinLabel: p.checkedIn ? 'In' : 'Check in',
+      checkinStyle: p.checkedIn ? 'background:#2ea043;color:#fff;' + btnSm : 'background:#e5e5e5;color:#555;' + btnSm,
+      toggleCheckin: () => this.toggleCheckin(p.id),
+      toggleProfile: () => this.toggleProfile(p.id),
+      expanded: p.id === s.profileOpenId,
+      profile: p.id === s.profileOpenId ? buildProfile(p) : null
+    }));
+
+    const checkinPlayers = players.filter(p => p.status === 'active').map(p => ({
+      name: p.name, level: TIER_NAMES[p.tier], statusLabel: 'Active',
+      checkinLabel: p.checkedIn ? 'Present' : 'Mark present',
+      checkinStyle: p.checkedIn ? 'background:#2ea043;color:#fff;font-size:11px;padding:7px 12px;border-radius:6px' : 'background:#f0e6d6;color:#221d18;font-size:11px;padding:7px 12px;border-radius:6px',
+      toggleCheckin: () => this.toggleCheckin(p.id)
+    }));
+
+    const avgTier = checkedIn.length ? checkedIn.reduce((a,p) => a + p.tier, 0) / checkedIn.length : 0;
+    const courtGaps = courts.map(c => levelGap(players.filter(p => p.checkedIn && p.courtId === c.number - 1)));
+    const capacity = s.settings.sessionCapacity;
+    const pending = s.pending.map(pr => ({ ...pr, estLevel: TIER_NAMES[pr.estTier], approve: () => this.approvePending(pr.id), reject: () => this.rejectPending(pr.id) }));
+
+    const onS = 'background:#2ea043;color:#fff;font-size:11px;padding:5px 12px;border-radius:6px';
+    const offS = 'background:#e5e5e5;color:#555;font-size:11px;padding:5px 12px;border-radius:6px';
+    const settingsVM = {
+      roundModeLabel: s.settings.roundMode === 'game' ? 'Game-based rounds' : 'Time-based rounds',
+      isTimeBased: s.settings.roundMode === 'time', roundDuration: s.settings.roundDuration, sessionCapacity: s.settings.sessionCapacity, courtsCount: s.settings.courtsCount,
+      roundModeDesc: s.settings.roundMode === 'game' ? 'Players leave after one set; new players rotate in from the waitlist.' : 'Players rotate to a new court every ' + s.settings.roundDuration + ' minutes.',
+      remindersLabel: s.settings.notifyReminders ? 'On' : 'Off', remindersStyle: s.settings.notifyReminders ? onS : offS,
+      courtAlertsLabel: s.settings.notifyCourtAlerts ? 'On' : 'Off', courtAlertsStyle: s.settings.notifyCourtAlerts ? onS : offS,
+      announcementsLabel: s.settings.notifyAnnouncements ? 'On' : 'Off', announcementsStyle: s.settings.notifyAnnouncements ? onS : offS
+    };
+    const templates = s.templates.map(t => ({ id: t.id, name: t.name, summary: t.courtsCount + ' courts · ' + (t.roundMode === 'game' ? 'game-based' : t.roundDuration + 'min rotations') + ' · cap ' + t.sessionCapacity, load: () => this.loadTemplate(t.id) }));
+    const scheduleItems = [
+      { day: 'Tuesday', time: '7:00–9:00 PM', note: 'Standard club night · 4 courts · game-based' },
+      { day: 'Thursday', time: '6:30–8:30 PM', note: 'Intermediate/advanced focus · 3 courts · time-based (20min)' },
+      { day: 'Saturday', time: '9:00–11:00 AM', note: 'Open play, all levels · 4 courts · game-based' }
+    ];
+
+    const logs = s.sessionLogs;
+    const maxAttend = Math.max(...logs.map(l => l.checkedIn), 1);
+    const attendanceBars = logs.map(l => ({ h: Math.round(l.checkedIn / maxAttend * 60) + 'px' }));
+    const maxSpread = Math.max(...logs.map(l => l.avgSpread), 1);
+    const spreadBars = logs.map(l => ({ h: Math.max(4, Math.round(l.avgSpread / maxSpread * 50)) + 'px' }));
+    const utilBy = {}; logs.forEach(l => l.courts.forEach(c => { utilBy[c.court] = (utilBy[c.court] || 0) + c.playerIds.length; }));
+    const courtUtil = Array.from({length: cc}, (_, i) => { const num = i + 1; const filled = utilBy[num] || 0; return { number: num, pct: Math.min(100, Math.round(filled / (logs.length * 4) * 100)) + '%' }; });
+    const levelCounts = TIER_NAMES.map((n, idx) => players.filter(p => p.tier === idx).length);
+    const maxLC = Math.max(...levelCounts, 1);
+    const bellBars = levelCounts.map(c => ({ h: Math.max(4, Math.round(c / maxLC * 50)) + 'px' }));
+    const avgWaitlist = Math.round(logs.reduce((sum, l) => sum + l.waitlistCount, 0) / logs.length);
+    const stagnation = players.filter(p => { const h = p.levelHistory; if (h.length < 6) return false; const r = h.slice(-6); return Math.max(...r) - Math.min(...r) === 0; }).length;
+    const inactive = players.filter(p => p.status === 'inactive').length;
+    const kpis = {
+      momGrowth: '+' + Math.max(1, Math.round((logs[7].checkedIn - logs[0].checkedIn) / Math.max(1, logs[0].checkedIn) * 100)) + '%',
+      avgDuration: '112 min', peakTime: 'Tue 7–8 PM',
+      rerollFreq: (s.rerollCount / Math.max(1, logs.length)).toFixed(1) + '/session', waitlistPressure: avgWaitlist + ' avg',
+      churnRate: Math.round(inactive / players.length * 100) + '%', reactivationRate: '9%', onboarding: '+' + (2 + (players.length % 3)) + ' this month',
+      memberCount: players.filter(p => p.membership === 'Member').length, feesOutstanding: players.filter(p => p.membership === 'Member' && !p.feePaid).length
+    };
+
+    const durationSec = Math.max(30, (s.settings.roundDuration || 20) * 60);
+    const elapsedSec = Math.min(durationSec, Math.max(0, (s.now - s.roundStartTs) / 1000));
+    const remainingSec = Math.max(0, Math.round(durationSec - elapsedSec));
+    const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+    const stagedCount = s.stagedAssignment ? s.stagedAssignment.filter(a => a.courtId != null).length : 0;
+    const round = {
+      number: s.roundNumber,
+      modeLabel: s.settings.roundMode === 'game' ? 'Game-based · auto-rotates when the set clock ends' : 'Time-based · ' + s.settings.roundDuration + ' min rounds',
+      remainingLabel: fmt(remainingSec),
+      elapsedLabel: fmt(elapsedSec),
+      pct: (durationSec > 0 ? (remainingSec / durationSec * 100) : 0).toFixed(2) + '%',
+      stagedPct: (durationSec > 0 ? (elapsedSec / durationSec * 100) : 0).toFixed(2) + '%',
+      urgent: remainingSec <= 60,
+      timeColor: remainingSec <= 60 ? '#ffb38a' : '#ffffff',
+      barColor: remainingSec <= 60 ? '#ffb38a' : '#ff6a2b',
+      canStage: !s.nextRoundStaged,
+      staged: s.nextRoundStaged,
+      stagedSummary: stagedCount + ' players placed across ' + Math.ceil(stagedCount / 4) + ' court' + (Math.ceil(stagedCount / 4) === 1 ? '' : 's')
+    };
+
+    return {
+      round,
+      courts, waitlist, waitlistEmpty: waitlist.length === 0, swapHint, search, filteredPlayers, checkinPlayers,
+      stats: { checkedIn: checkedIn.length, capacity, remaining: Math.max(0, capacity - checkedIn.length), capacityPct: Math.min(100, Math.round(checkedIn.length / capacity * 100)) + '%', atCapacity: checkedIn.length >= capacity, waitlistCount: waitlist.length, avgLevelLabel: checkedIn.length ? TIER_NAMES[Math.round(avgTier)] : '—', avgLevelGap: courtGaps.length ? Math.round(courtGaps.reduce((a,b) => a+b, 0) / courtGaps.length) : 0, rerollCount: s.rerollCount },
+      pending, pendingCount: pending.length, settingsVM, templateName: s.templateName, templates, scheduleItems,
+      attendanceBars, spreadBars, courtUtil, bellBars, stagnation, kpis
+    };
+  }
+
+  renderVals(){
+    const vm = this.buildViewModel();
+    const s = this.state;
+    const w = s.w;
+    const isPhone = w < 720, isTablet = w >= 720 && w < 1080, isDesktop = w >= 1080;
+    const isTabletUp = !isPhone;
+    const nav = this.props.phoneNav || 'tabbar';
+    const dense = (this.props.density || 'comfortable') === 'compact';
+
+    let contentPad;
+    if (isPhone) contentPad = nav === 'tabbar' ? '14px 12px 20px' : '14px 12px 24px';
+    else if (isTablet) contentPad = dense ? '14px 18px 20px' : '20px 24px 28px';
+    else contentPad = dense ? '16px 22px 24px' : '24px 32px 32px';
+
+    const tabActive = 'background:#ff6a2b;color:#221d18;border-radius:8px;padding:8px 12px;font-size:12px;white-space:nowrap;flex:none';
+    const tabInactive = 'background:transparent;color:#c9c2b8;border-radius:8px;padding:8px 12px;font-size:12px;white-space:nowrap;flex:none';
+    const roundActive = 'background:#ff6a2b;color:#221d18;border-radius:8px;padding:8px 14px;font-size:12px';
+    const roundInactive = 'background:#f0e6d6;color:#221d18;border-radius:8px;padding:8px 14px;font-size:12px';
+
+    const navBtn = 'flex:1;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;color:#8a7c68';
+    const navBtnActive = 'flex:1;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;color:#ff6a2b';
+    const secondary = ['sessions','schedule','analytics','settings'];
+    const moreActive = secondary.includes(s.tab);
+
+    const tabDefs = [['dashboard','Dashboard'],['checkin','Check-in'],['players','Players'],['sessions','Sessions'],['schedule','Schedule'],['analytics','Analytics'],['settings','Settings']];
+    const menuTabs = tabDefs.map(([k, label]) => ({ label, onClick: () => this.setTab(k), menuStyle: (s.tab === k ? 'background:#ff6a2b;color:#221d18;' : 'background:transparent;color:#fff;') + 'padding:13px 14px;border-radius:10px;font-size:15px;font-weight:600' }));
+    const moreTabs = tabDefs.slice(3).map(([k, label]) => ({ label, onClick: () => this.setTab(k), rowStyle: 'display:flex;align-items:center;justify-content:space-between;' + (s.tab === k ? 'color:#ff6a2b;' : 'color:#221d18;') + 'padding:15px 22px;font-size:15px;font-weight:600' }));
+    const curLabel = (tabDefs.find(([k]) => k === s.tab) || ['', 'Riverside'])[1];
+
+    const out = {
+      rootRef: this.rootRef,
+      showTopNav: !isPhone, showCompactHeader: isPhone, isHamburger: isPhone && nav === 'hamburger', showBottomBar: isPhone && nav === 'tabbar',
+      headerStyle: isDesktop
+        ? 'padding:20px 28px;border-bottom:1px solid #eee4d8;display:flex;justify-content:space-between;align-items:center;background:#221d18;gap:16px'
+        : 'padding:15px 22px;border-bottom:1px solid #eee4d8;display:flex;flex-direction:column;align-items:stretch;background:#221d18;gap:12px',
+      headerTabsStyle: isDesktop
+        ? 'display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end'
+        : 'display:flex;gap:6px;overflow-x:auto;padding-bottom:2px',
+      isTabletUp, statFull: !isPhone, statPhone: isPhone,
+      dashSidebar: isDesktop, dashStacked: !isDesktop,
+      statStripStyle: 'display:grid;grid-template-columns:repeat(' + (isTablet ? 3 : 6) + ',1fr);gap:1px;background:#eee4d8;border-bottom:1px solid #eee4d8',
+      courtGridStyle: 'display:grid;grid-template-columns:' + (isPhone ? '1fr' : '1fr 1fr') + ';gap:' + (isPhone ? '12px' : '16px'),
+      twoColStyle: 'display:flex;gap:' + (isPhone ? '16px' : '20px') + (isPhone ? ';flex-direction:column' : ''),
+      analyticsGridStyle: 'display:grid;grid-template-columns:' + (isPhone ? '1fr' : '1fr 1fr') + ';gap:16px',
+      kpiGridStyle: 'display:grid;grid-template-columns:' + (isPhone ? '1fr' : 'repeat(3,1fr)') + ';gap:16px',
+      contentPad,
+      headerSubText: 'Tuesday Evening Session · 7:00–9:00 PM · ' + vm.settingsVM.roundModeLabel,
+      currentTabLabel: curLabel,
+      menuOpen: s.menuOpen, moreOpen: s.moreOpen, moreActive, menuTabs, moreTabs,
+      toggleMenu: () => this.toggleMenu(), openMore: () => this.openMore(), closeMore: () => this.closeMore(),
+      navStyle_dashboard: s.tab === 'dashboard' ? navBtnActive : navBtn,
+      navStyle_checkin: s.tab === 'checkin' ? navBtnActive : navBtn,
+      navStyle_players: s.tab === 'players' ? navBtnActive : navBtn,
+      navStyle_more: moreActive ? navBtnActive : navBtn,
+
+      tabIsDashboard: s.tab === 'dashboard', tabIsCheckin: s.tab === 'checkin', tabIsPlayers: s.tab === 'players',
+      tabIsSessions: s.tab === 'sessions', tabIsSchedule: s.tab === 'schedule', tabIsAnalytics: s.tab === 'analytics', tabIsSettings: s.tab === 'settings',
+      setTabDashboard: () => this.setTab('dashboard'), setTabCheckin: () => this.setTab('checkin'), setTabPlayers: () => this.setTab('players'),
+      setTabSessions: () => this.setTab('sessions'), setTabSchedule: () => this.setTab('schedule'), setTabAnalytics: () => this.setTab('analytics'), setTabSettings: () => this.setTab('settings'),
+
+      round: vm.round, rotateNow: () => this.rotateNow(), stageNext: () => this.stageNext(), cancelStaged: () => this.cancelStaged(),
+      stats: vm.stats, courts: vm.courts, waitlist: vm.waitlist, waitlistEmpty: vm.waitlistEmpty, swapHint: vm.swapHint,
+      search: vm.search, setSearch: (ev) => this.setSearch(ev), filteredPlayers: vm.filteredPlayers, checkinPlayers: vm.checkinPlayers,
+      pending: vm.pending, pendingCount: vm.pendingCount, settings: vm.settingsVM,
+      setRoundGame: () => this.setRoundMode('game'), setRoundTime: () => this.setRoundMode('time'), setDuration: (ev) => this.setDuration(ev),
+      setCapacity: (ev) => this.setCapacity(ev), setCourtsCount: (ev) => this.setCourtsCount(ev),
+      templateName: vm.templateName, setTemplateName: (ev) => this.setTemplateName(ev), saveTemplate: () => this.saveTemplate(), templates: vm.templates,
+      scheduleItems: vm.scheduleItems,
+      attendanceBars: vm.attendanceBars, spreadBars: vm.spreadBars, courtUtil: vm.courtUtil, bellBars: vm.bellBars, stagnationCount: vm.stagnation, kpis: vm.kpis,
+      toggleReminders: () => this.toggleSetting('notifyReminders'), toggleCourtAlerts: () => this.toggleSetting('notifyCourtAlerts'), toggleAnnouncements: () => this.toggleSetting('notifyAnnouncements'),
+      inviteLink: 'https://riversidebc.club/join/ab13x9',
+      roundStyle_game: s.settings.roundMode === 'game' ? roundActive : roundInactive,
+      roundStyle_time: s.settings.roundMode === 'time' ? roundActive : roundInactive
+    };
+    tabDefs.forEach(([k]) => { out['tabStyle_' + k] = s.tab === k ? tabActive : tabInactive; });
+    return out;
+  }
+}
+</script>
+</body>
+</html>

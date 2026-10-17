@@ -1,27 +1,373 @@
 {
   "about": "About",
-  "active_player": "Active Player",
   "add": "Add",
   "add_player": "Add Player",
+  "analytics_at_risk_players": "At-risk players ({count})",
+  "@analytics_at_risk_players": {
+    "description": "Card title with the number of lapsed regular players",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_attendance_change": "{change}% month over month",
+  "@analytics_attendance_change": {
+    "description": "Attendance chart note; change is a signed whole number (e.g. +12)",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_attendance_trend": "Attendance trend",
+  "@analytics_attendance_trend": {
+    "description": "Chart title"
+  },
+  "analytics_court_util_summary": "Full-4 fill rate: {fillPct}% · avg {idle} idle courts/session",
+  "@analytics_court_util_summary": {
+    "description": "Court utilization summary; fillPct and idle are pre-formatted numbers",
+    "placeholders": {
+      "fillPct": {
+        "type": "String"
+      },
+      "idle": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_court_utilization": "Court utilization",
+  "@analytics_court_utilization": {
+    "description": "KPI tile label and chart title: share of court slots filled"
+  },
+  "analytics_courts_absorb_overflow": "{count, plural, =1{Court {courts} regularly absorbs overflow with wider gaps.} other{Courts {courts} regularly absorb overflow with wider gaps.}}",
+  "@analytics_courts_absorb_overflow": {
+    "description": "Per-court fairness note; courts is a comma-separated list of court numbers, count is how many",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "courts": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_delta_vs_prior": "{delta} vs prior period",
+  "@analytics_delta_vs_prior": {
+    "description": "KPI context line comparing to the previous period; delta is pre-formatted with sign and unit (e.g. +4.2%)",
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_joined_sessions": "{count, plural, =1{Joined {date} · 1 session} other{Joined {date} · {count} sessions}}",
+  "@analytics_joined_sessions": {
+    "description": "New player's join date (pre-formatted) and sessions attended",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_kpi_active_players": "Active players",
+  "@analytics_kpi_active_players": {
+    "description": "KPI tile label: players who played at least one game in the selected range"
+  },
+  "analytics_kpi_avg_attendance": "Avg attendance",
+  "@analytics_kpi_avg_attendance": {
+    "description": "KPI tile label: average attendance rate"
+  },
+  "analytics_kpi_avg_waitlist": "Avg waitlist",
+  "@analytics_kpi_avg_waitlist": {
+    "description": "KPI tile label: average number of players on the waitlist"
+  },
+  "analytics_kpi_rerolls_per_session": "Re-rolls / session",
+  "@analytics_kpi_rerolls_per_session": {
+    "description": "KPI tile label: average number of re-rolls per session"
+  },
+  "analytics_kpi_retention": "Retention ({weeks}wk)",
+  "@analytics_kpi_retention": {
+    "description": "KPI tile label: player retention over the selected number of weeks",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_level_distribution": "Level distribution",
+  "@analytics_level_distribution": {
+    "description": "Chart title"
+  },
+  "analytics_level_gap_down": "Level gap is trending down — matchmaking is improving.",
+  "@analytics_level_gap_down": {
+    "description": "Level-gap chart note when the gap is shrinking"
+  },
+  "analytics_level_gap_trend": "Level-gap trend",
+  "@analytics_level_gap_trend": {
+    "description": "Chart title"
+  },
+  "analytics_level_gap_up": "Level gap is not shrinking — matchmaking fairness is not improving.",
+  "@analytics_level_gap_up": {
+    "description": "Level-gap chart note when the gap is widening"
+  },
+  "analytics_level_trend_up": "Active players skew higher in tier than in the prior period.",
+  "@analytics_level_trend_up": {
+    "description": "Level distribution note: the active players are in higher tiers than in the prior period"
+  },
+  "analytics_level_trend_down": "Active players skew lower in tier than in the prior period.",
+  "@analytics_level_trend_down": {
+    "description": "Level distribution note: the active players are in lower tiers than in the prior period"
+  },
+  "analytics_level_trend_flat": "Active players' tier mix is steady vs the prior period.",
+  "@analytics_level_trend_flat": {
+    "description": "Level distribution note: the tier mix of the active players did not change"
+  },
+  "analytics_median_tier": "Median tier: {tier}",
+  "@analytics_median_tier": {
+    "description": "Level distribution note naming the median skill tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_mixing_connectors": "{count, plural, =1{1 connector bridging the club} other{{count} connectors bridging the club}}",
+  "@analytics_mixing_connectors": {
+    "description": "First half of the player mixing summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_mixing_cliques": "{count, plural, =1{1 player in a clique} other{{count} players in cliques}}",
+  "@analytics_mixing_cliques": {
+    "description": "Middle part of the player mixing summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_mixing_isolated": "{count, plural, =1{1 isolated player rarely mixing.} other{{count} isolated players rarely mixing.}}",
+  "@analytics_mixing_isolated": {
+    "description": "Second half of the player mixing summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_mixing_summary": "{connectors}, {cliques}, {isolated}",
+  "@analytics_mixing_summary": {
+    "description": "Joins the three parts of the player mixing summary",
+    "placeholders": {
+      "connectors": {
+        "type": "String"
+      },
+      "cliques": {
+        "type": "String"
+      },
+      "isolated": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_mixing_tag_connector": "connector",
+  "@analytics_mixing_tag_connector": {
+    "description": "Tag shown under a player with a high mixing score"
+  },
+  "analytics_mixing_tag_clique": "clique",
+  "@analytics_mixing_tag_clique": {
+    "description": "Tag shown under a player with a low mixing score"
+  },
+  "analytics_mixing_tag_isolated": "isolated",
+  "@analytics_mixing_tag_isolated": {
+    "description": "Tag shown under a player with a very low mixing score"
+  },
+  "analytics_new_player_integration": "New player integration",
+  "@analytics_new_player_integration": {
+    "description": "Card title"
+  },
+  "analytics_new_players_attention": "{count, plural, =1{1 new player mostly plays away from regulars — pair them up.} other{{count} new players mostly play away from regulars — pair them up.}}",
+  "@analytics_new_players_attention": {
+    "description": "New player integration note when some new players play with regulars in under half of their games",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_new_players_ok": "New players are playing alongside regulars.",
+  "@analytics_new_players_ok": {
+    "description": "New player integration note when every new player plays with regulars in at least half of their games"
+  },
+  "analytics_no_court_wider_gap": "No court consistently runs a wider gap than the rest.",
+  "@analytics_no_court_wider_gap": {
+    "description": "Per-court fairness note when no court is flagged"
+  },
+  "analytics_no_data": "No data yet",
+  "@analytics_no_data": {
+    "description": "Empty state of a horizontal bar list"
+  },
+  "analytics_no_lapsed": "No regular attendees have lapsed",
+  "@analytics_no_lapsed": {
+    "description": "Empty state of the at-risk players card"
+  },
+  "analytics_no_new_players": "No new players in this window",
+  "@analytics_no_new_players": {
+    "description": "Empty state of the new player integration card"
+  },
+  "analytics_no_session_data": "No session data yet",
+  "@analytics_no_session_data": {
+    "description": "Empty state of a bar chart"
+  },
+  "analytics_no_sessions_logged": "No sessions logged yet",
+  "@analytics_no_sessions_logged": {
+    "description": "Empty state of the session history card"
+  },
+  "analytics_not_enough_sessions": "Not enough sessions logged yet.",
+  "@analytics_not_enough_sessions": {
+    "description": "Chart note shown when fewer than two sessions are logged"
+  },
+  "analytics_pct_with_regulars": "{pct}% with regulars",
+  "@analytics_pct_with_regulars": {
+    "description": "Share of a new player's games played with regulars; pct is a whole number",
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_per_court_fairness": "Per-court fairness",
+  "@analytics_per_court_fairness": {
+    "description": "Chart title: average level gap per court"
+  },
+  "analytics_player_mixing": "Player mixing",
+  "@analytics_player_mixing": {
+    "description": "Chart title: how widely each player mixes with partners"
+  },
+  "analytics_reroll_spikes": "Re-roll spikes tend to line up with high level-spread nights.",
+  "@analytics_reroll_spikes": {
+    "description": "Re-roll chart note when spikes match high level-spread sessions"
+  },
+  "analytics_reroll_spikes_attendance": "Re-roll spikes tend to line up with high-attendance nights.",
+  "@analytics_reroll_spikes_attendance": {
+    "description": "Re-roll chart note when spikes match high-attendance nights only"
+  },
+  "analytics_reroll_spikes_both": "Re-roll spikes tend to line up with high-attendance, high level-spread nights.",
+  "@analytics_reroll_spikes_both": {
+    "description": "Re-roll chart note when spikes match nights with both high attendance and high level spread"
+  },
+  "analytics_reroll_steady": "Re-roll counts stay steady regardless of level spread.",
+  "@analytics_reroll_steady": {
+    "description": "Re-roll chart note when counts are steady"
+  },
+  "analytics_rerolls_per_session": "Re-rolls per session",
+  "@analytics_rerolls_per_session": {
+    "description": "Chart title"
+  },
+  "analytics_short_date": "{month}/{day}",
+  "@analytics_short_date": {
+    "description": "Compact day-and-month chart axis label (e.g. 8/14)",
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_session_history": "Session history",
+  "@analytics_session_history": {
+    "description": "Card title: list of logged games"
+  },
+  "analytics_stagnation": "{count, plural, =1{1 player flat 6+ sessions} other{{count} players flat 6+ sessions}}",
+  "@analytics_stagnation": {
+    "description": "Level distribution warning: number of players whose tier has not changed in their last 6 sessions",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_title": "Analytics",
+  "@analytics_title": {
+    "description": "Title of the Analytics tab"
+  },
+  "analytics_usually_per_month": "usually {freq}x/mo",
+  "@analytics_usually_per_month": {
+    "description": "How often an at-risk player usually attends; freq is a pre-formatted number",
+    "placeholders": {
+      "freq": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_waitlist_high": "Average waitlist is high ({avg}/session) — consider adding capacity or another court.",
+  "@analytics_waitlist_high": {
+    "description": "Waitlist chart note when pressure is high; avg is a pre-formatted number",
+    "placeholders": {
+      "avg": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_waitlist_low": "Waitlist pressure is low ({avg}/session).",
+  "@analytics_waitlist_low": {
+    "description": "Waitlist chart note when pressure is low; avg is a pre-formatted number",
+    "placeholders": {
+      "avg": {
+        "type": "String"
+      }
+    }
+  },
+  "analytics_waitlist_pressure": "Waitlist pressure",
+  "@analytics_waitlist_pressure": {
+    "description": "Chart title"
+  },
+  "analytics_weeks_short": "{weeks} wks",
+  "@analytics_weeks_short": {
+    "description": "Short time-range chip label, a number of weeks (e.g. 4 wks)",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "analytics_weeks_since_seen": "{weeks}w since last seen",
+  "@analytics_weeks_since_seen": {
+    "description": "Weeks since an at-risk player last attended",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "anonymised_player": "Deleted player",
+  "@anonymised_player": {
+    "description": "Placeholder shown in place of the name of a Player who has been anonymised (deleted)"
+  },
+  "app_load_error": "Cannot load the data files. The app did not change anything. Check the data folder: {path}",
+  "@app_load_error": {
+    "description": "Start-up error screen; path is the data folder",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "app_name": "Badminton Game Generator",
   "are_you_sure_you_want_to_delete_this_player": "Are you sure you want to delete this player?",
   "@are_you_sure_you_want_to_delete_this_player": {
     "description": "Confirmation message when deleting a player"
   },
   "are_you_sure_you_want_to_exit": "Are you sure you want to exit?",
-  "auto_game": "Auto Game",
-  "@auto_game": {
-    "description": "Automatically generate games after a session ends"
-  },
-  "auto_game_status": "Auto game generation is {status}",
-  "@auto_game_status": {
-    "description": "Status of the auto game feature (On/Off)",
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "break_": "Break",
   "@break_": {
     "description": "Temporarily exclude a player from gameplay"
@@ -74,7 +420,6 @@
   "@id": {
     "description": "Unique player identifier"
   },
-  "inactive_player": "Inactive Player",
   "language": "Language",
   "language_name": "English",
   "@language_name": {
@@ -119,14 +464,544 @@
   "@player_statistic": {
     "description": "View player statistics"
   },
+  "players_already_exists": "A player named \"{name}\" already exists",
+  "@players_already_exists": {
+    "description": "Toast when approving a registration whose name matches an existing player",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_approve": "Approve",
+  "@players_approve": {
+    "description": "Button to approve a pending self-registration"
+  },
+  "players_approve_failed": "Failed to approve {name}",
+  "@players_approve_failed": {
+    "description": "Toast when approving a registration fails",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_approved_toast": "{name} has been approved",
+  "@players_approved_toast": {
+    "description": "Toast after a registration is approved",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_at_capacity_banner": "Session at capacity — new check-ins are blocked.",
+  "@players_at_capacity_banner": {
+    "description": "Banner shown when the session has reached its player capacity"
+  },
+  "players_attendance": "Attendance",
+  "@players_attendance": {
+    "description": "Section label in the player profile card"
+  },
+  "players_attended_sessions": "{total, plural, =1{Attended {attended} of 1 session} other{Attended {attended} of {total} sessions}}",
+  "@players_attended_sessions": {
+    "description": "Attendance summary in the player profile card",
+    "placeholders": {
+      "attended": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "players_bulk_edit": "Bulk Edit",
+  "@players_bulk_edit": {
+    "description": "Title of the dialog for editing imported players in bulk"
+  },
+  "players_capacity_left": "{checkedIn} / {capacity} · {left} left",
+  "@players_capacity_left": {
+    "description": "Session capacity summary: checked-in players, capacity and remaining places",
+    "placeholders": {
+      "checkedIn": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      },
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "players_checked_in": "Checked in",
+  "@players_checked_in": {
+    "description": "Players table column header for the check-in toggle"
+  },
+  "players_checkin_in": "In",
+  "@players_checkin_in": {
+    "description": "Check-in toggle label when the player is checked in"
+  },
+  "players_checkin_out": "Out",
+  "@players_checkin_out": {
+    "description": "Check-in toggle label when the player is not checked in"
+  },
+  "players_conflict_existing_names": "Conflict name with existing player: {names}",
+  "@players_conflict_existing_names": {
+    "description": "Error when imported names clash with existing players",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "players_current_level": "Current Level",
+  "@players_current_level": {
+    "description": "Stat label in the player profile card"
+  },
+  "players_delete_player_body": "Remove {name} from the club roster? This can't be undone.",
+  "@players_delete_player_body": {
+    "description": "Confirmation message when deleting a player from the roster",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_delete_player_title": "Delete player?",
+  "@players_delete_player_title": {
+    "description": "Title of the delete-player confirmation dialog"
+  },
+  "players_deleted_toast": "{name} deleted",
+  "@players_deleted_toast": {
+    "description": "Toast after a player is deleted",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_disable": "Disable",
+  "@players_disable": {
+    "description": "Button confirming that a player will be disabled"
+  },
+  "players_disable_player_body": "They'll be checked out and removed from their court or the waitlist immediately.",
+  "@players_disable_player_body": {
+    "description": "Explanation in the disable-player confirmation dialog"
+  },
+  "players_disable_player_title": "Disable player?",
+  "@players_disable_player_title": {
+    "description": "Title of the disable-player confirmation dialog"
+  },
+  "players_diversity": "Diversity",
+  "@players_diversity": {
+    "description": "Stat label: percent of possible partners played with (distinct partners over possible partners)"
+  },
+  "players_duplicate_name_in_file": "Duplicate name found in file",
+  "@players_duplicate_name_in_file": {
+    "description": "Error when an imported file contains the same name twice"
+  },
+  "players_enter_first_name": "Please enter first name",
+  "@players_enter_first_name": {
+    "description": "Validation error for an empty first name"
+  },
+  "players_enter_last_name": "Please enter last name",
+  "@players_enter_last_name": {
+    "description": "Validation error for an empty last name"
+  },
+  "players_fill_all_fields": "Please fill out all fields correctly.",
+  "@players_fill_all_fields": {
+    "description": "Error toast when the add-player form is invalid"
+  },
+  "players_header_name_id": "Name / ID",
+  "@players_header_name_id": {
+    "description": "Players table column header for name and sign-in ID"
+  },
+  "players_import": "Import",
+  "@players_import": {
+    "description": "Button to import players from a CSV file"
+  },
+  "players_import_failed": "Failed to import players — try again",
+  "@players_import_failed": {
+    "description": "Error toast when saving imported players fails"
+  },
+  "players_level": "Level",
+  "@players_level": {
+    "description": "Players table column header for the skill level"
+  },
+  "players_level_progression": "Level Progression",
+  "@players_level_progression": {
+    "description": "Section label for the level sparkline in the player profile card"
+  },
+  "players_matches": "Matches",
+  "@players_matches": {
+    "description": "Stat label: number of games played"
+  },
+  "players_membership": "Membership",
+  "@players_membership": {
+    "description": "Players table column header for membership status"
+  },
+  "players_membership_casual": "Casual",
+  "@players_membership_casual": {
+    "description": "Membership status: casual (non-member) player"
+  },
+  "players_membership_disabled": "Disabled",
+  "@players_membership_disabled": {
+    "description": "Membership status: disabled player, cannot check in"
+  },
+  "players_membership_member": "Member",
+  "@players_membership_member": {
+    "description": "Membership status: club member"
+  },
+  "players_most_frequent_partners": "Most Frequent Partners",
+  "@players_most_frequent_partners": {
+    "description": "Section label in the player profile card"
+  },
+  "players_name": "Name",
+  "@players_name": {
+    "description": "Column header for the player name"
+  },
+  "players_no_players_matching": "No players matching \"{query}\"",
+  "@players_no_players_matching": {
+    "description": "Empty state when the player search has no results",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "players_no_players_yet": "No players added yet",
+  "@players_no_players_yet": {
+    "description": "Empty state when no players exist"
+  },
+  "players_no_session_data": "No sessions logged yet",
+  "@players_no_session_data": {
+    "description": "Attendance summary when there is no session history"
+  },
+  "players_pending_registrations_title": "Pending self-registrations ({count})",
+  "@players_pending_registrations_title": {
+    "description": "Title of the pending self-registrations card with the number pending",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "players_reject": "Reject",
+  "@players_reject": {
+    "description": "Button to reject a pending self-registration"
+  },
+  "players_rejected_toast": "{name} has been rejected",
+  "@players_rejected_toast": {
+    "description": "Toast after a registration is rejected",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_more": "More",
+  "@players_more": {
+    "description": "Button on a player row that opens or closes the profile"
+  },
+  "players_scan_checked_in": "{name} checked in",
+  "@players_scan_checked_in": {
+    "description": "Toast after a scanned sign-in ID checks a player in",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_checked_out": "{name} checked out",
+  "@players_scan_checked_out": {
+    "description": "Toast when Enter in the Players search checks out the one listed player",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_many_matches": "{count, plural, =1{1 player matches — nothing changed} other{{count} players match — nothing changed}}",
+  "@players_scan_many_matches": {
+    "description": "Toast when Enter in the Players search lists more than one player, so nobody is checked in or out",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "players_scan_no_match": "No player with ID {id}",
+  "@players_scan_no_match": {
+    "description": "Toast when no player has the entered sign-in ID",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_duplicate_id": "{count, plural, =1{ID {id} is used by 1 player} other{ID {id} is used by {count} players}}",
+  "@players_scan_duplicate_id": {
+    "description": "Toast when more than one player has the scanned sign-in ID",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "players_scan_disabled": "{name} is disabled — cannot check in",
+  "@players_scan_disabled": {
+    "description": "Toast when a scanned sign-in ID belongs to a Disabled player",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_search_placeholder": "Search players…",
+  "@players_search_placeholder": {
+    "description": "Placeholder for the player search field"
+  },
+  "players_select_elo": "Please select elo",
+  "@players_select_elo": {
+    "description": "Validation error when no Elo level is selected"
+  },
+  "players_select_import_file": "Select import data file",
+  "@players_select_import_file": {
+    "description": "File picker title for importing players from CSV"
+  },
+  "players_select_output_file": "Please select an output file:",
+  "@players_select_output_file": {
+    "description": "File picker title for saving game data"
+  },
+  "players_select_saved_data_file": "Select saved data file",
+  "@players_select_saved_data_file": {
+    "description": "File picker title for loading saved game data"
+  },
+  "players_session_full_cannot_check_in": "Session at capacity — cannot check in",
+  "@players_session_full_cannot_check_in": {
+    "description": "Snackbar when a check-in is refused because the session is full"
+  },
   "regenerate": "Regenerate",
   "@regenerate": {
     "description": "Recreate a game with new parameters"
   },
   "regenerate_game": "Regenerate Game",
+  "registration_contact": "Email or phone",
+  "@registration_contact": {
+    "description": "Label for the contact field on the signup form"
+  },
+  "registration_contact_hint": "How we can reach you",
+  "@registration_contact_hint": {
+    "description": "Placeholder for the contact field"
+  },
+  "registration_intro": "Join the club — takes about a minute",
+  "@registration_intro": {
+    "description": "Subtitle at the top of the public signup form"
+  },
+  "registration_level_question": "Which best describes your level?",
+  "@registration_level_question": {
+    "description": "Prompt above the skill tier choices"
+  },
+  "registration_name": "Name",
+  "@registration_name": {
+    "description": "Label for the name field on the signup form"
+  },
+  "registration_name_hint": "Your full name",
+  "@registration_name_hint": {
+    "description": "Placeholder for the name field"
+  },
+  "registration_review_note": "An organizer reviews every new sign-up before you're added to the roster.",
+  "@registration_review_note": {
+    "description": "Note under the signup form"
+  },
+  "registration_signed_up_as": "You're signed up as {tier}. An organizer reviews every new sign-up and may adjust your starting level after your first few sessions.",
+  "@registration_signed_up_as": {
+    "description": "Confirmation text; tier is the localized skill tier name",
+    "placeholders": {
+      "tier": {
+        "type": "String",
+        "example": "Intermediate"
+      }
+    }
+  },
+  "registration_submit": "Submit for approval",
+  "@registration_submit": {
+    "description": "Button that submits the signup form"
+  },
+  "registration_thanks": "Thanks, {name}!",
+  "@registration_thanks": {
+    "description": "Heading on the signup confirmation; name is the player's first name",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Jane"
+      }
+    }
+  },
+  "registration_tier_advanced": "Advanced",
+  "@registration_tier_advanced": {
+    "description": "Skill tier name"
+  },
+  "registration_tier_advanced_description": "Plays regularly with strong technique and strategy",
+  "@registration_tier_advanced_description": {
+    "description": "Description of the Advanced skill tier"
+  },
+  "registration_tier_amateur": "Amateur",
+  "@registration_tier_amateur": {
+    "description": "Skill tier name"
+  },
+  "registration_tier_amateur_description": "New to badminton, or playing just for fun",
+  "@registration_tier_amateur_description": {
+    "description": "Description of the Amateur skill tier"
+  },
+  "registration_tier_intermediate": "Intermediate",
+  "@registration_tier_intermediate": {
+    "description": "Skill tier name"
+  },
+  "registration_tier_intermediate_description": "Comfortable rallying and knows the rules well",
+  "@registration_tier_intermediate_description": {
+    "description": "Description of the Intermediate skill tier"
+  },
+  "registration_tier_professional": "Professional",
+  "@registration_tier_professional": {
+    "description": "Skill tier name"
+  },
+  "registration_tier_professional_description": "Competitive or tournament-level player",
+  "@registration_tier_professional_description": {
+    "description": "Description of the Professional skill tier"
+  },
   "reset": "Reset",
   "save": "Save",
+  "sessions_capacity": "Session capacity",
+  "@sessions_capacity": {
+    "description": "Label for the maximum number of players in a session"
+  },
+  "sessions_game_based": "Game-based",
+  "@sessions_game_based": {
+    "description": "Round mode where the organizer advances each court by hand"
+  },
+  "sessions_game_based_description": "Game-based · save and re-roll each court by hand",
+  "@sessions_game_based_description": {
+    "description": "Summary of game-based mode"
+  },
+  "sessions_load": "Load",
+  "@sessions_load": {
+    "description": "Button that applies a saved template"
+  },
+  "sessions_minutes_short": "min",
+  "@sessions_minutes_short": {
+    "description": "Short unit label under the minutes field"
+  },
+  "sessions_number_of_courts": "Number of courts",
+  "@sessions_number_of_courts": {
+    "description": "Label for the number of courts in use"
+  },
+  "sessions_reshuffle_confirm": "Reshuffle",
+  "@sessions_reshuffle_confirm": {
+    "description": "Confirm button of the warning before a new court count or a loaded template reshuffles a running round"
+  },
+  "sessions_rotation_duration": "Rotation duration",
+  "@sessions_rotation_duration": {
+    "description": "Label for the length of a timed rotation"
+  },
+  "sessions_round_mode": "Round mode",
+  "@sessions_round_mode": {
+    "description": "Title of the card configuring how rounds advance"
+  },
+  "sessions_save_current": "Save current",
+  "@sessions_save_current": {
+    "description": "Button that saves the current settings as a template"
+  },
+  "sessions_seconds_short": "sec",
+  "@sessions_seconds_short": {
+    "description": "Short unit label under the seconds field"
+  },
+  "sessions_template_summary": "{courts, plural, =1{1 court} other{{courts} courts}} · {mode, select, timed{time-based} other{game-based}} · cap {capacity}",
+  "@sessions_template_summary": {
+    "description": "One-line summary of a saved session template, e.g. '4 courts · game-based · cap 20'. mode is 'timed' or 'game'.",
+    "placeholders": {
+      "courts": {
+        "type": "int"
+      },
+      "mode": {
+        "type": "String"
+      },
+      "capacity": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_template_summary_no_mode": "{courts, plural, =1{1 court} other{{courts} courts}} · cap {capacity}",
+  "@sessions_template_summary_no_mode": {
+    "description": "One-line summary of a saved session template without the round mode, e.g. '4 courts · cap 20'.",
+    "placeholders": {
+      "courts": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_template_name": "Template name",
+  "@sessions_template_name": {
+    "description": "Hint text for the new template name field"
+  },
+  "sessions_templates": "Session templates",
+  "@sessions_templates": {
+    "description": "Title of the card listing saved session templates"
+  },
+  "sessions_time_based": "Time-based",
+  "@sessions_time_based": {
+    "description": "Round mode where rounds advance on a timer"
+  },
+  "sessions_time_based_description": "Time-based · {duration} rounds",
+  "@sessions_time_based_description": {
+    "description": "Summary of time-based mode; duration is mm:ss",
+    "placeholders": {
+      "duration": {
+        "type": "String",
+        "example": "12:00"
+      }
+    }
+  },
   "settings": "Settings",
+  "settings_level_calibration_note": "New players self-estimate their level at signup, and organizers may override any estimate from the Players tab.",
+  "@settings_level_calibration_note": {
+    "description": "Explains how new players' levels are set"
+  },
+  "settings_membership_title": "Membership & self-registration",
+  "@settings_membership_title": {
+    "description": "Title of the membership card in Settings"
+  },
+  "settings_preview_signup": "Preview signup page →",
+  "@settings_preview_signup": {
+    "description": "Link that opens the public signup page"
+  },
+  "settings_total_members": "Total members",
+  "@settings_total_members": {
+    "description": "Label above the total member count"
+  },
+  "players_sign_in_id_taken": "Sign In ID \"{id}\" is already used by {name}",
+  "@players_sign_in_id_taken": {
+    "description": "Error when a sign-in ID is already used by another player",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_sign_in_id_saved": "Sign In ID saved",
+  "@players_sign_in_id_saved": {
+    "description": "Toast after the sign-in ID of a player is saved"
+  },
   "sign_in_id": "Sign In ID",
   "skill_gap_n": "Skill Gap: {gap}",
   "@skill_gap_n": {
@@ -151,5 +1026,263 @@
   },
   "to_current_session": "To current session",
   "today": "Today",
-  "update": "Update"
+  "update": "Update",
+  "dashboard_generate_hint": "Generate a game to get started",
+  "@dashboard_generate_hint": {
+    "description": "Empty-state hint on the dashboard when there are no courts"
+  },
+  "dashboard_courts_label": "Courts",
+  "@dashboard_courts_label": {
+    "description": "Label beside the court count adjuster in the dashboard action bar"
+  },
+  "dashboard_mode_time_based": "Time-based · {duration} rounds",
+  "@dashboard_mode_time_based": {
+    "description": "Mode label in the round rotation bar; duration is mm:ss",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboard_staged_summary": "{players} placed across {courts}",
+  "@dashboard_staged_summary": {
+    "description": "Summary of the pre-made next round, e.g. '16 players placed across 4 courts'. players is dashboard_player_count, courts is dashboard_court_count",
+    "placeholders": {
+      "players": {
+        "type": "String"
+      },
+      "courts": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboard_player_count": "{count, plural, =1{1 player} other{{count} players}}",
+  "@dashboard_player_count": {
+    "description": "Number of players, used inside dashboard_staged_summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_court_count": "{count, plural, =1{1 court} other{{count} courts}}",
+  "@dashboard_court_count": {
+    "description": "Number of courts, used inside dashboard_staged_summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_court_title": "COURT {number}",
+  "@dashboard_court_title": {
+    "description": "Uppercase title of a court card",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_reroll": "Re-roll",
+  "@dashboard_reroll": {
+    "description": "Button that re-rolls (re-generates) one court's lineup"
+  },
+  "dashboard_badge_next": "NEXT",
+  "@dashboard_badge_next": {
+    "description": "Badge on a court card showing the pre-made next round"
+  },
+  "dashboard_badge_playing": "PLAYING",
+  "@dashboard_badge_playing": {
+    "description": "Badge on a court card whose saved game is under way"
+  },
+  "dashboard_current_round": "Current round",
+  "@dashboard_current_round": {
+    "description": "Label of the live-round panel in the round rotation bar"
+  },
+  "dashboard_next_round": "Next round",
+  "@dashboard_next_round": {
+    "description": "Label of the pre-made-round panel in the round rotation bar"
+  },
+  "dashboard_round_label": "ROUND {number}",
+  "@dashboard_round_label": {
+    "description": "Uppercase round number in the round rotation bar",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_until_rotation": "until rotation",
+  "@dashboard_until_rotation": {
+    "description": "Caption under the countdown timer"
+  },
+  "dashboard_premake_next": "Pre-make next round",
+  "@dashboard_premake_next": {
+    "description": "Button that stages the next round in advance"
+  },
+  "dashboard_rotate_now": "Rotate now",
+  "@dashboard_rotate_now": {
+    "description": "Button that ends the current round and starts the next"
+  },
+  "dashboard_next_round_ready": "NEXT ROUND · READY",
+  "@dashboard_next_round_ready": {
+    "description": "Badge on the staged next-round panel"
+  },
+  "dashboard_cancel_next": "Cancel next",
+  "@dashboard_cancel_next": {
+    "description": "Button that discards the pre-made next round"
+  },
+  "dashboard_open_slot": "Open slot",
+  "@dashboard_open_slot": {
+    "description": "Placeholder for an empty player slot on a court"
+  },
+  "dashboard_spread": "{gap, plural, =0{Same level} =1{1 level gap} other{{gap} level gap}}",
+  "@dashboard_spread": {
+    "description": "Pill showing the level gap between the strongest and weakest player on a court",
+    "placeholders": {
+      "gap": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_stat_checked_in": "Checked In",
+  "@dashboard_stat_checked_in": {
+    "description": "Stat strip: number of checked-in players"
+  },
+  "dashboard_stat_remaining_slots": "Remaining Slots",
+  "@dashboard_stat_remaining_slots": {
+    "description": "Stat strip: empty court slots"
+  },
+  "dashboard_stat_remaining": "Remaining",
+  "@dashboard_stat_remaining": {
+    "description": "Stat strip, phone layout: short label for empty court slots"
+  },
+  "dashboard_waitlist": "Waitlist",
+  "@dashboard_waitlist": {
+    "description": "Waitlist title and stat strip label"
+  },
+  "dashboard_stat_avg_level": "Avg Level",
+  "@dashboard_stat_avg_level": {
+    "description": "Stat strip: average player level on courts"
+  },
+  "dashboard_stat_avg_level_gap": "Avg Level Gap",
+  "@dashboard_stat_avg_level_gap": {
+    "description": "Stat strip: average level gap across courts"
+  },
+  "dashboard_stat_rerolls": "Re-rolls",
+  "@dashboard_stat_rerolls": {
+    "description": "Stat strip: number of re-rolls this session"
+  },
+  "dashboard_waitlist_empty": "No one waiting",
+  "@dashboard_waitlist_empty": {
+    "description": "Shown when the waitlist is empty"
+  },
+  "dashboard_waitlist_hint_place": "Placing {name} — tap a court slot",
+  "@dashboard_waitlist_hint_place": {
+    "description": "Hint when a waitlisted player is selected; name is the selected player",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboard_waitlist_hint_select": "Tap a waitlisted player, then a court slot to place or swap them in.",
+  "@dashboard_waitlist_hint_select": {
+    "description": "Hint explaining how to place a waitlisted player"
+  },
+  "shell_tab_dashboard": "Dashboard",
+  "@shell_tab_dashboard": {
+    "description": "Navigation tab: dashboard"
+  },
+  "shell_tab_players": "Players",
+  "@shell_tab_players": {
+    "description": "Navigation tab: players"
+  },
+  "shell_tab_sessions": "Sessions",
+  "@shell_tab_sessions": {
+    "description": "Navigation tab: sessions"
+  },
+  "shell_tab_analytics": "Analytics",
+  "@shell_tab_analytics": {
+    "description": "Navigation tab: analytics"
+  },
+  "shell_tab_courts": "Courts",
+  "@shell_tab_courts": {
+    "description": "Short bottom-bar label for the dashboard tab on phones"
+  },
+  "shell_more": "More",
+  "@shell_more": {
+    "description": "Bottom-bar tab that opens the secondary tabs sheet"
+  },
+  "shell_navigate": "NAVIGATE",
+  "@shell_navigate": {
+    "description": "Heading of the hamburger navigation menu"
+  },
+  "common_search_players": "Search players…",
+  "@common_search_players": {
+    "description": "Default placeholder of the search input"
+  },
+  "common_toggle": "Toggle",
+  "@common_toggle": {
+    "description": "Default accessibility label of a toggle button"
+  },
+  "dashboard_discard_round_title": "Discard the current round?",
+  "@dashboard_discard_round_title": {
+    "description": "Title of the warning before Regenerate discards a running round"
+  },
+  "dashboard_discard_round_body": "The current round is not saved to history. Some players then get more court time than others.",
+  "@dashboard_discard_round_body": {
+    "description": "Body of the warning before Regenerate discards a running round"
+  },
+  "dashboard_discard_court_title": "Discard this court's game?",
+  "@dashboard_discard_court_title": {
+    "description": "Title of the warning before Re-roll discards a running court game"
+  },
+  "dashboard_discard_court_body": "This court's current game is not saved to history. Some players then get more court time than others.",
+  "@dashboard_discard_court_body": {
+    "description": "Body of the warning before Re-roll discards a running court game"
+  },
+  "dashboard_remove_from_court": "Remove from court",
+  "@dashboard_remove_from_court": {
+    "description": "Tooltip of the button that moves a player from an incomplete court to the waitlist"
+  },
+  "dashboard_error_no_courts": "Add a court first.",
+  "@dashboard_error_no_courts": {
+    "description": "Toast when Generate is pressed with no courts"
+  },
+  "dashboard_error_not_enough_players": "Check in at least {needed} players. {count} checked in.",
+  "@dashboard_error_not_enough_players": {
+    "description": "Toast when Generate is pressed with fewer checked-in players than one court needs",
+    "placeholders": {
+      "needed": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_error_unbalanced_courts": "{count, plural, =1{Court {courts} needs {needed} players.} other{Courts {courts} need {needed} players.}}",
+  "@dashboard_error_unbalanced_courts": {
+    "description": "Toast when Save is pressed and one or more courts do not have a full lineup. courts is a comma-separated list of court numbers",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "courts": {
+        "type": "String"
+      },
+      "needed": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_error_nothing_to_save": "No game to save.",
+  "@dashboard_error_nothing_to_save": {
+    "description": "Toast when Save is pressed and no court has players"
+  },
+  "dashboard_error_generic": "Something went wrong. Try again.",
+  "@dashboard_error_generic": {
+    "description": "Toast when a Dashboard action fails for an unexpected reason"
+  }
 }

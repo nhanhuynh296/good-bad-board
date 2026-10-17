@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#e6e2db;font-family:'Inter',system-ui,sans-serif}
+  .lbl{display:flex;align-items:baseline;gap:9px;margin:0 0 12px}
+  .badge{font:600 11px ui-monospace,Menlo,monospace;padding:3px 8px;background:#221d18;color:#fff;border-radius:5px;text-decoration:none}
+  .lname{font:600 13px/1.3 system-ui,sans-serif;color:#221d18}
+  .lsub{font:400 12px/1.3 system-ui,sans-serif;color:#7c756b}
+</style>
+</helmet>
+
+<div style="padding:44px 48px 80px">
+  <div style="max-width:900px;margin-bottom:8px">
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#221d18;letter-spacing:-0.01em">Responsive layouts — Riverside Badminton</div>
+    <div style="font-size:13.5px;color:#5f584f;line-height:1.6;margin-top:8px">One component, three breakpoints. Each frame runs a live, independent instance that measures its own width and reflows — full functionality on desktop &amp; tablet, a stripped-down floor view on phone. Tap tabs, check players in, re-roll courts, drag the waitlist onto a court slot.</div>
+  </div>
+
+  <!-- Row 1: desktop + iPad landscape (both full command layout) -->
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;margin-top:36px">
+
+    <div id="4a">
+      <div class="lbl"><a class="badge" href="#4a">4a</a><span class="lname">Desktop</span><span class="lsub">≥1080px · full 7-tab command layout</span></div>
+      <div style="width:1280px;height:812px;background:#c9c4bb;border-radius:12px;padding:12px 12px 0;box-shadow:0 20px 50px rgba(0,0,0,.18)">
+        <div style="display:flex;align-items:center;gap:6px;padding:0 4px 10px">
+          <div style="width:11px;height:11px;border-radius:50%;background:#f0625b"></div>
+          <div style="width:11px;height:11px;border-radius:50%;background:#f6be4f"></div>
+          <div style="width:11px;height:11px;border-radius:50%;background:#4fc466"></div>
+          <div style="flex:1;margin-left:10px;height:24px;background:#efece7;border-radius:6px;display:flex;align-items:center;padding:0 12px;font-size:11px;color:#9a9389">riversidebc.club/organizer</div>
+        </div>
+        <div style="width:100%;height:766px;background:#fffdfa;border-radius:6px 6px 0 0;overflow:hidden">
+          <dc-import name="Badminton App" phone-nav="tabbar" style="width:100%;height:100%" hint-size="1256px,766px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <div id="4b">
+      <div class="lbl"><a class="badge" href="#4b">4b</a><span class="lname">iPad — landscape</span><span class="lsub">1194×834 · full layout, touch-first</span></div>
+      <div style="width:1258px;height:898px;background:#15130f;border-radius:38px;padding:32px;box-shadow:0 20px 50px rgba(0,0,0,.22);position:relative">
+        <div style="position:absolute;top:15px;left:50%;transform:translateX(-50%);width:7px;height:7px;border-radius:50%;background:#3a352d"></div>
+        <div style="width:1194px;height:834px;background:#fffdfa;border-radius:10px;overflow:hidden">
+          <dc-import name="Badminton App" phone-nav="tabbar" style="width:100%;height:100%" hint-size="1194px,834px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Row 2: iPad portrait (tablet reflow) + phones -->
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;margin-top:64px">
+
+    <div id="4c">
+      <div class="lbl"><a class="badge" href="#4c">4c</a><span class="lname">iPad — portrait</span><span class="lsub">834×1112 · reflows to 3-up stats + stacked courts</span></div>
+      <div style="width:898px;height:1176px;background:#15130f;border-radius:38px;padding:32px;box-shadow:0 20px 50px rgba(0,0,0,.22);position:relative">
+        <div style="position:absolute;top:50%;left:15px;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:#3a352d"></div>
+        <div style="width:834px;height:1112px;background:#fffdfa;border-radius:10px;overflow:hidden">
+          <dc-import name="Badminton App" phone-nav="tabbar" style="width:100%;height:100%" hint-size="834px,1112px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <div id="4d">
+      <div class="lbl"><a class="badge" href="#4d">4d</a><span class="lname">Phone — bottom tab bar</span><span class="lsub">390×844 · Courts / Check-in / Players + More</span></div>
+      <div style="width:414px;height:868px;background:#15130f;border-radius:52px;padding:12px;box-shadow:0 20px 50px rgba(0,0,0,.22);position:relative">
+        <div style="position:absolute;top:24px;left:50%;transform:translateX(-50%);width:118px;height:30px;border-radius:16px;background:#15130f;z-index:5"></div>
+        <div style="width:390px;height:844px;background:#fffdfa;border-radius:42px;overflow:hidden">
+          <dc-import name="Badminton App" phone-nav="tabbar" style="width:100%;height:100%" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <div id="4e">
+      <div class="lbl"><a class="badge" href="#4e">4e</a><span class="lname">Phone — hamburger menu</span><span class="lsub">390×844 · full-menu nav, tap ☰</span></div>
+      <div style="width:414px;height:868px;background:#15130f;border-radius:52px;padding:12px;box-shadow:0 20px 50px rgba(0,0,0,.22);position:relative">
+        <div style="position:absolute;top:24px;left:50%;transform:translateX(-50%);width:118px;height:30px;border-radius:16px;background:#15130f;z-index:5"></div>
+        <div style="width:390px;height:844px;background:#fffdfa;border-radius:42px;overflow:hidden">
+          <dc-import name="Badminton App" phone-nav="hamburger" style="width:100%;height:100%" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

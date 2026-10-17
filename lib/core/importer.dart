@@ -20,9 +20,12 @@ class NameRecord {
   NameRecord({required this.firstName, required this.lastName, this.elo});
 }
 
-Future<Iterable<NameRecord>> importFromCsv() async {
+/// [dialogTitle] is the (localised) title for the file picker.
+Future<Iterable<NameRecord>> importFromCsv({
+  required String dialogTitle,
+}) async {
   final pickerResult = await FilePicker.platform.pickFiles(
-    dialogTitle: 'Select import data file',
+    dialogTitle: dialogTitle,
     type: FileType.custom,
     allowedExtensions: ['csv'],
   );

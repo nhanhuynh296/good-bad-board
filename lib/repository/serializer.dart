@@ -8,10 +8,11 @@ class Serializer {
 
   static final Serializer instance = Serializer._();
 
-  Future<File?> pickJsonFile() async {
+  /// [dialogTitle] is the (localised) title for the file picker.
+  Future<File?> pickJsonFile({required String dialogTitle}) async {
     final downloadDir = await getDownloadsDirectory();
     final pickerResult = await FilePicker.platform.pickFiles(
-      dialogTitle: 'Select saved data file',
+      dialogTitle: dialogTitle,
       initialDirectory: downloadDir?.path,
       type: FileType.custom,
       allowedExtensions: ['json'],

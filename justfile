@@ -12,3 +12,6 @@ lint:
 
 test:
     flutter test
+
+run-macos:
+    flutter run -d macos
