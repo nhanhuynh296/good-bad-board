@@ -1075,19 +1075,29 @@ Build the approved 2026-10-17 design on desktop: the new round lifecycle, the Co
 shell with the session bar, the Players scan check-in, and the new type and colour tokens.
 
 ### Rules for this stage
-- **Authority.** `audit/design-diff-2026-10-17/decisions.md` (48 rows, IDs R1-Q1 … R5-Q2)
-  overrides the design HTML and the UX review resolutions. On a new conflict, ask Nathan and
+- **Authority.** `audit/design-diff-2026-10-17/decisions.md` (70 rows, IDs R1-Q1 … R7-Q7; a
+  later row overrides an earlier one) overrides the design HTML and the UX review resolutions.
+  R6-Q12…18 accept the recommendations in `review-round6.md`. On a new conflict, ask Nathan and
   investigate first (R1-Q2). UAT.md is the feature source of truth.
 - **Order.** Docs first, Nathan reviews (R1-Q3). Then the design canvas is updated (R3-Q13).
   Then code. Build on PR 45; the release waits (R1-Q1).
-- **Scope.** Desktop only (≥1080px). Phone and tablet layouts stay as they are (R2-Q23). The
+- **Scope.** Desktop only (≥1080px). Phone and tablet layouts stay as they are now (R2-Q23,
+  R6-Q7): 5 tabs, the level stepper and membership pill in the row, the capacity bar. The
   round logic (8.2) is shared by every size, so phone and tablet show the new state names and
   button labels in their existing layout. Time mode only (`GameMode.enabled=false`, code kept).
-  4 courts fixed (`CourtCount.editable=false`). Light theme only. The app stays offline.
+  4 courts fixed on the Courts tab (`CourtCount.editable=false`). Light theme only. The app
+  stays offline.
+- **On hold (R6-Q6).** Courts Undo for "Start round {n+1}", "Discard round {n} and start round
+  {n+1}" and "End session" (R4-Q2, UAT RND-21) is not in this build. The swap Undo (UAT
+  COURT-17) and the Players scan Undo (UAT PLY-20) are in this build.
+- **Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3). A sub-agent draws the
+  Sessions tab (settings, time mode, duration, capacity, courts); Nathan fixes it later in a
+  separate task. Its court count control is shown only when `CourtCount.editable` is on. Stage 8
+  does not build it.
 - **Data format: unchanged.** No decision needs a new field in `players.json`, `games.json`,
-  `session_logs.json` or `session_templates.json`. Undo adds one repository method
-  (`SessionLogRepository.delete`, 8.3), not a format change. ADR-0002 (round id) stays a
-  separate task.
+  `session_logs.json` or `session_templates.json`. The Courts Undo log delete
+  (`SessionLogRepository.delete`, 8.3) is on hold with RND-21, so this build adds no repository
+  method. ADR-0002 (round id) stays a separate task.
 - **l10n.** Every new string is an ARB key in en, fr, zh and zh_HK, with ICU plurals for counts
   ("1 round", "1 place left"). Run `flutter gen-l10n`.
 - **TDD.** Write the failing tests for each UAT ID first (repo `CLAUDE.md`). Tests never touch
@@ -1118,68 +1128,71 @@ shell with the session bar, the Players scan check-in, and the new type and colo
 
 ### 8.2 — Round state machine (`GameData`, `TimerData`)
 Add `RoundPhase { noLineup, ready, running, paused, timeUp, changeover }` and a separate
-`isEditingNext` flag. The UI reads the phase only; it never derives it from the timer.
+`isEditingNext` flag. The UI reads the phase only; it never derives it from the timer. The
+changeover also keeps a `discarded` flag for the round it follows (R2-Q5).
 
 | Method | From phase | Effect | UAT |
 |---|---|---|---|
 | `generateFirstRound()` | noLineup | Matchmaker lineup → `ready`. Refuses with <4 checked in (R45-39) | RND-12 |
 | `regenerateDraft()` | ready | New lineup; clock stays stopped | RND-13 |
-| `startFirstRound()` | ready | `running`, clock from full duration; memento (8.3) | RND-13, RND-21 |
+| `startFirstRound()` | ready | Save round 1 → `running`, clock from full duration. No changeover (open point, UAT RND-13 TODO). No Undo | RND-13 |
 | `makeNextRound()` / `editNextRound()` | running, paused | Lineup for n+1 → `isEditingNext` | RND-05, RND-10 |
-| `saveNextRound()` / `regenerateNext()` / `exitEditNext()` | edit mode | Save n+1 / new n+1 lineup / drop edits (× ) | RND-14, RND-07 |
-| `pause()` / `resume()` | running, changeover | `paused` keeps remaining time and the phase to return to | RND-17, RND-18 |
-| tick at 0:00 | running | Saved n+1 → `changeover` (20 s, `TimerData` second countdown); else `timeUp` | RND-03, RND-15 |
-| changeover end / `startNextNow()` | changeover | Log round n (8.2.1), n+1 → `running` | RND-06, RND-19 |
-| `saveAndStartNew()` | running, timeUp | Memento, log round n, start n+1 (saved lineup or fresh) | RND-04 |
-| `discardAndStartNew()` | running, paused, timeUp | Memento, no log, same number, start next | RND-16 |
-| `endSession()` | any with a lineup | Memento, log the started round, stop clock, check out all, `noLineup`, round 1 | RND-20 |
-| `undo()` | within 10 s / until next scan | Restore memento (8.3) | RND-21, PLY-20 |
+| `saveNextRound()` / `regenerateNext()` / `exitEditNext()` | edit mode | Save n+1 / new n+1 lineup / drop edits (× ). In `timeUp`, `saveNextRound()` also starts the changeover (R6-Q3) | RND-14, RND-07 |
+| `pause()` / `resume()` | running, changeover | `paused` keeps remaining time and the phase to return to ("Resume round n" / "Resume changeover") | RND-17, RND-18 |
+| tick at 0:00 | running | Saved n+1 → `changeover` (20 s, `TimerData` second countdown). Else `timeUp`, and the matchmaker makes the planned n+1 lineup that the courts show (R6-Q4). `isEditingNext` stays as it is in both cases (R6-Q3, R7-Q4) | RND-03, RND-14, RND-15 |
+| changeover end / `startNextNow()` | changeover | Log round n (8.2.1) unless `discarded`, n+1 → `running` | RND-06, RND-19 |
+| `startNextRound()` (was `saveAndStartNew`) | running, paused, timeUp; not edit mode | Save n+1 (saved, planned, or fresh lineup) → `changeover` (R6-Q1, R6-Q14, R7-Q1). Logs nothing at the click | RND-04 |
+| `discardAndStartNext()` (was `discardAndStartNew`) | running, paused, timeUp; not edit mode | → `changeover` with `discarded = true`; never logs round n; number n again (R2-Q5, open point) | RND-16 |
+| `endSession()` | any with a lineup | Log the round that started last once (also the round that ended in `timeUp` / before `changeover`; never a discarded or not-started round, R6-Q5), stop clock, check out all, `noLineup`, round 1 | RND-20 |
+| `swapPlayers()` / `undoSwap()` | any state that allows a swap | Swap two players; keep one swap memento for 10 s; any other change clears it (R6-Q6, R7-Q2) | COURT-08, COURT-10, COURT-17 |
+| `undoScan()` | until the next scan | Restore the scan memento (8.3) | PLY-20 |
 
-8.2.1 **Round logging at next-round start (R3-Q8).** Round n is logged only when round n+1
-starts: `saveAndStartNew`, the end of the changeover, `startNextNow`, or `endSession`. Reuse
-`_logRound` (disk first, then `history`, R45-01) and the one-at-a-time guard of `rotateNow`.
-`discardAndStartNew` logs nothing. The round number is `logged rounds this session + 1`, so a
-discard uses the number again (R2-Q5) and `endSession` resets it to 1. Keep the current rule
-for empty courts; changing it belongs to ADR-0002.
+8.2.1 **Round logging at next-round start (R3-Q8, R6-Q2).** Round n is logged only when round
+n+1 starts: the end of the changeover or `startNextNow`, or by `endSession`. The start buttons
+log nothing at the click; they go through the changeover (R6-Q1). Reuse `_logRound` (disk
+first, then `history`, R45-01) and the one-at-a-time guard of `rotateNow`. A discarded round
+logs nothing. The round number is `logged rounds this session + 1`, so a discard uses the
+number again (R2-Q5; open point on the R7-Q1 label, UAT RND-16) and `endSession` resets it to
+1. Keep the current rule for empty courts; changing it belongs to ADR-0002.
 
 8.2.2 Remove the old flow: `rotateNow` auto-rotation at 0:00 (`_onAutoRotate`), the radio
 `RoundView` panels, the time-mode global Save (`saveCurrentGame` path from the action bar),
 and "Pre-make" / "Cancel next". Keep `rotateNow`'s write guard as the core of 8.2.1.
 
 8.2.3 `TimerData`: default duration 10 min (R2-Q24, was 20). `isUrgent` is true only while
-RUNNING with ≤60 s (UX-09). Progress = elapsed ÷ duration (R4-Q7). Add the 20 s changeover
-countdown (R3-Q7) and the pause of it (R4-Q5). Wire the existing unused `pause()`.
+RUNNING with ≤60 s, never while PAUSED (UX-09, R6-Q8); the round bar and the session bar both
+read it. Progress = elapsed ÷ duration (R4-Q7). Add the 20 s changeover countdown (R3-Q7) and
+the pause of it (R4-Q5). Wire the existing unused `pause()`.
 
-### 8.3 — Undo: memento of session state, one level (R3-Q2, R4-Q2, R2-Q10)
+8.2.4 **Double-click guard (R6-Q18).** Two fast clicks on "Start round {n+1}", "Discard round
+{n} and start round {n+1}", "Save round {n+1}" or "Start round {n+1} now" start one changeover
+and log round n once. The guard is a phase check plus the one-at-a-time flag of 8.2.1, so the
+second call is a no-op. Test: `test/game_data_round_logging_test.dart`
+`should_log_round_once_when_start_clicked_twice` (and one per button).
+
+### 8.3 — Undo: memento of session state, one level (R3-Q2, R2-Q10, R6-Q6, R7-Q2)
 - `SessionMemento` is an immutable copy of the in-memory session: live lineup, next lineup and
   its saved flag, round number, phase, remaining time and running flag, checked-in ids,
-  re-roll count, playing game ids, selection cleared. It also records the **log receipt** of
-  the action: the game ids it wrote, the `SessionLog` id it wrote, and the `history` index.
-- `GameData` holds one slot `_undo`. Courts actions (`startFirstRound`, `saveAndStartNew`,
-  `discardAndStartNew`, `endSession`) and each state-changing scan set it. A new memento
-  replaces the old. The Courts bottom message expires the slot after 10 s; on Players the next
-  scan replaces it.
-- **Undo after a logged round deletes that log entry.** Steps, in this order:
-  1. `GameRepository.delete(id)` for each game id in the receipt.
-  2. `SessionLogRepository.delete(id)` for the receipt's log id. This is a new one-line method
-     over `JsonCollection.remove`. It is not a format change.
-  3. Remove the `history` entry at the receipt index, then restore the memento and notify.
-  Disk first, RAM last (as R45-01): if a delete fails, the error goes to the caller, the
-  session does not change, and the message reads "Something went wrong. Try again.".
-- **Why the delete is safe (PERSISTENCE.md §3.1, ADR-0001).** The delete removes whole rows by
-  their own id. It never loads, resolves or rebuilds a roster. `JsonCollection` caches the DTOs
-  as read from disk (player ids only, after the phase 1 fix), so the rewrite after `remove`
-  writes every other row unchanged. It never drops an unresolvable player id and never writes a
-  shortened roster back. The receipt holds only ids this session wrote in the last action, so
-  Undo cannot delete an older row. Golden test: `games.json` and `session_logs.json` after
-  log + Undo are byte-equal to the files before the log, including a row with an id that does
-  not resolve to a player.
+  re-roll count, playing game ids, selection cleared.
+- `GameData` holds one slot `_undo`. Each state-changing scan sets it (Players, until the next
+  scan, PLY-20). A swap on Courts sets it too (COURT-17): the bottom message "Swapped {A} and
+  {B}. Undo" expires the slot after 10 s, and any other change clears it (R6-Q6). No Ctrl/Cmd+Z
+  (R7-Q2). A new memento replaces the old. Neither action logs a round, so this Undo never
+  deletes a log entry.
 - The memento restores `history` too, so rounds played (`getCurrentPlayersHistory`) and the
   fill rule stay correct after Undo.
-- Open points (UAT RND-21, PLY-20 TODOs): restored clock time, and whether any other change
-  in between cancels the Undo.
+- **On hold (R6-Q6, R4-Q2 paused): Courts round Undo.** Not in this build. Note for later: the
+  memento would be set by `startFirstRound`, `startNextRound`, `discardAndStartNext` and
+  `endSession`, and would carry a **log receipt** (the game ids, the `SessionLog` id, the
+  `history` index). Undo after a logged round would delete that log entry, disk first:
+  `GameRepository.delete(id)` per game id, then a new `SessionLogRepository.delete(id)` over
+  `JsonCollection.remove`, then the `history` entry, then restore. The delete removes whole rows
+  by their own id and never loads, resolves or rewrites a roster, so it cannot lose history
+  (PERSISTENCE.md §3.1, ADR-0001). Golden test then: `games.json` and `session_logs.json` after
+  log + Undo are byte-equal to the files before the log. R6 answers: restore the clock time at
+  the click; any other change cancels the Undo; round 1 included.
 
-### 8.4 — Fill rule, late check-in, check-out (R2-Q7, R2-Q8, R2-Q9, R3-Q12)
+### 8.4 — Fill rule, late check-in, check-out (R2-Q8, R2-Q9, R3-Q12, R7-Q4…Q7)
 - 8.4.1 `GameData.pickForSlot(court, candidates)`: sort the candidates by rounds played this
   session ascending (`getCurrentPlayersHistory`; in time mode each `history` entry is one
   Round, so the count is rounds). Tie: the candidate that gives the smallest `tierGap()` for
@@ -1189,13 +1202,19 @@ countdown (R3-Q7) and the pause of it (R4-Q5). Wire the existing unused `pause()
 - 8.4.2 Fix the `isCourtPlaying(stagingMatches.indexOf(court))` lookup in
   `_autoPromoteFromWaitlist`: it reads `visibleMatches`, which can be the next round
   (verification.json, checkin-mid-round extra 2). Test it with the next round on screen.
-- 8.4.3 `checkInPlayer`: never place on a live court. Saved next round with an open slot →
-  that slot; else the waitlist. UAT CHK-02, PLY-17.
+- 8.4.3 `checkInPlayer`: never place on a live court, and never add to a saved next round, also
+  when it has an open slot (R7-Q7, overrides R2-Q7). The player goes to the waitlist. UAT
+  CHK-02, PLY-17.
 - 8.4.4 `checkOutPlayer`: drop the id from the checked-in set at once (count drops, R2-Q8).
-  Live court while the clock runs: leave the player in the live lineup until the round ends
-  (the log holds them), no marker. Saved next round or a stopped live court: remove and fill
-  by 8.4.1. Return a result that names who took which slot, for PLY-18. UAT CHK-05,
-  COURT-16, RND-11.
+  Live court while the clock runs (RUNNING): leave the player in the live lineup until the round
+  ends (the log holds them), no marker. Saved next round (also in CHANGEOVER), planned round in
+  TIME UP, or a stopped live court: remove and fill by 8.4.1. No bottom message on Courts
+  (R7-Q5). Return a result that names who took which slot, for PLY-18. UAT CHK-05, COURT-16,
+  RND-11.
+- 8.4.5 `moveToWaitlist`: the player goes to the waitlist, stays checked in, and the place is
+  filled by 8.4.1 from the other players who sit out that round (R7-Q6). UAT COURT-15, WL-02.
+- 8.4.6 CHANGEOVER counts as "the clock runs" for Re-roll and the slot menu (R7-Q4), except in
+  edit mode for the new round. UAT COURT-10, COURT-14.
 
 ### 8.5 — Courts tab (desktop)
 - 8.5.1 Page structure: round bar → next-round strip → 2×2 grid + 280 px waitlist. Remove the
@@ -1203,94 +1222,117 @@ countdown (R3-Q7) and the pause of it (R4-Q5). Wire the existing unused `pause()
   NAV-07.
 - 8.5.2 `RoundBar` (replaces `RoundRotationBar` on desktop): 80 px full-width band, states
   and buttons per ARCHITECTURE §2.3, 50 px timer, chip, counts, round "⋯" menu with "End
-  session", 4 px bar filling with elapsed time. No "COURTS − 4 +" stepper (R2-Q2). UAT RND-01,
-  RND-02, RND-09, RND-12, RND-13, RND-15…19.
+  session", 4 px bar filling with elapsed time. Time and progress fill amber at ≤60 s while
+  RUNNING, not PAUSED (R6-Q8). Labels "Start round {n}" and "Discard round {n} and start round
+  {n+1}" (R7-Q1); PAUSED also has "Start round {n+1}" (R6-Q14); paused changeover "Resume
+  changeover" (R6-Q12). No "COURTS − 4 +" stepper (R2-Q2). UAT RND-01, RND-02, RND-04, RND-09,
+  RND-12, RND-13, RND-15…19.
 - 8.5.3 `NextRoundStrip` and edit mode: strip texts, dashed NEXT cards, edit strip with
-  "Discard & regenerate", "Save round {n+1}", "×"; round bar shows Pause only (R4-Q9). UAT
-  RND-05, RND-07, RND-08, RND-10, RND-14, RND-22.
+  "Discard & regenerate", "Save round {n+1}", "×"; round bar shows Pause only (R4-Q9). CHANGEOVER
+  strip reads "Round {n} ended" (R6-Q2). No strip in TIME UP; the courts show the planned round
+  (R6-Q4). UAT RND-05, RND-07, RND-08, RND-10, RND-14, RND-15, RND-22.
 - 8.5.4 `CourtCard` / `PlayerSlot`: "Court {k}", plain gap text, secondary Re-roll shown per
-  R3-Q10, slot tap = select for swap, hover fill and "⋯" menu ("Move to waitlist", "Check
-  out"; running live court "Check out" only), no "×" (R3-Q11). Keep "Open slot" (R2-Q19).
-  UAT COURT-01, COURT-04…10, COURT-14…16.
+  R3-Q10 and R7-Q4, slot tap = select for swap, hover fill and "⋯" menu ("Move to waitlist",
+  "Check out"; live court while the clock runs, CHANGEOVER included: "Check out" only), no "×"
+  (R3-Q11). Keep "Open slot" (R2-Q19). UAT COURT-01, COURT-04…10, COURT-14…16.
 - 8.5.5 `WaitlistPanel`: title + count, "SEARCH WAITLIST" field (UX-14), fill-rule order, no
-  numbers, "{tier} · {n} rounds", "Next in" tag, "No one waiting", selection hint kept. Desktop
-  only; `WaitlistChips` unchanged. UAT WL-01, WL-04, COURT-04…06.
-- 8.5.6 End session dialog and the Courts Undo bottom message (10 s, "Round {n} started.
-  Undo"). UAT RND-20, RND-21.
+  numbers, "{tier} · {n} rounds", "Next in" tag, "No one waiting", "No one matches “{text}”"
+  (R6-Q12), selection hint kept. Desktop only; `WaitlistChips` unchanged. UAT WL-01, WL-04,
+  COURT-04…06.
+- 8.5.6 End session dialog (no Undo message; RND-21 on hold). The swap Undo bottom message
+  (10 s, "Swapped {A} and {B}. Undo", no keyboard shortcut, R7-Q2). UAT RND-20, COURT-17.
 
 ### 8.6 — Shell (desktop)
 - 8.6.1 `TopNavBar` desktop: left text "Session · {duration} rounds" (R3-Q5); tabs "Courts",
   "Players", "Sessions"; "⋯" menu with "Analytics", "Settings" (R2-Q13); active tab = white
-  600 + 3 px orange underline (UX-21). Routes stay the same 5 routes. Tablet unchanged
-  (open point). UAT NAV-01, NAV-09.
+  600 + 3 px orange underline (UX-21). Routes stay the same 5 routes. Tablet keeps 5 tabs and
+  "Dashboard" (R6-Q7). UAT NAV-01, NAV-09.
 - 8.6.2 `SessionBar`: 40 px, on every tab except Courts; chip always; "No round yet" before
-  the first lineup; amber time ≤60 s while RUNNING; click → Courts; no round-change message
-  (R4-Q4, R4-Q6). It watches `TimerData` through a `Consumer` so only the bar rebuilds on a
-  tick (R45-03). UAT NAV-10, NAV-11.
+  the first lineup; "· round {n+1} saved" or "· round {n+1} not saved" (R6-Q12); amber time
+  ≤60 s while RUNNING, not PAUSED (R6-Q8); click → Courts; no round-change message (R4-Q4,
+  R4-Q6). It watches `TimerData` through a `Consumer` so only the bar rebuilds on a tick
+  (R45-03). UAT NAV-10, NAV-11.
 
 ### 8.7 — Players tab (desktop)
 - 8.7.1 Scan field ("CHECK IN" label, scan icon, "Scan card or search name", 52 px, 2 px
   border, 20/600), the count "{in} / {capacity} in" + "{n} places left", the orange "Add
-  player" button. Keep the capacity bar, banner, pending card and level chips restyled
-  (R2-Q19). UAT PLY-14, CHK-01, CHK-04, PLY-13.
+  player" button. No capacity progress bar on desktop (R6-Q11). Keep the banner and pending card
+  restyled (R2-Q19). Level chips: 4 tier chips replace the 8 Elo-code chips (R6-Q13). Control
+  borders per ARCHITECTURE §1.1 (`#6f6352` inputs and outline buttons, `#8f826e` secondary,
+  R6-Q16). UAT PLY-14, CHK-01, CHK-04, PLY-13.
 - 8.7.2 `ScanResultBox` with the 9 states (READY, CHECKED IN, CHECKED OUT, SCANNED TWICE, NOT
   FOUND, MANY MATCHES, SESSION FULL, DISABLED, DUPLICATE ID), `Semantics(liveRegion: true)`,
-  stays until the next scan, not changed by row taps (R3-Q3). Texts per R4-Q3. Scan results no
-  longer use SnackBars. A refused row tap keeps the small bottom message (R4-Q1). UAT PLY-14,
-  PLY-16…18, CHK-03, CHK-06.
+  stays until the next scan, not changed by row taps (R3-Q3). Texts per R4-Q3 and R6-Q12:
+  DUPLICATE ID "ID {id} is used by {count} players · nothing changed. Fix the ID in More.";
+  CHECKED IN "waits for round {n}" only (the "joins round {n} on Court {k}" text is not used,
+  R7-Q7); READY after Undo. Scan results no longer use SnackBars. A refused row tap keeps the
+  small bottom message (R4-Q1). UAT PLY-14, PLY-16…18, CHK-03, CHK-06.
 - 8.7.3 `PlayerRow`: 48 px, columns NAME / SIGN-IN ID / LEVEL (tier name) / TYPE / More;
   checked-in fill, 1 px border and 6 px bar in green (UX-16). Move `LevelAdjuster` (with the Elo
-  code) and the membership control into the More panel (R2-Q17, R2-Q18). UAT PLY-05, PLY-06,
-  PLY-08, NAV-08.
-- 8.7.4 Double-scan guard: keep only the last scan check-in (id + time); a scan of the same
-  target within 10 s shows SCANNED TWICE with "Check out" (R2-Q11). UAT PLY-19.
+  code) and the membership control into the More panel (R2-Q17, R2-Q18); phone/tablet rows keep
+  them (R6-Q7). UAT PLY-05, PLY-06, PLY-08, NAV-08.
+- 8.7.4 Double-scan guard: keep only the last scan check-in (id); a scan of the same target, with
+  no time limit, shows SCANNED TWICE "(same card as the last scan)" with "Check out" (R2-Q11,
+  R6-Q15). UAT PLY-19.
 - 8.7.5 Undo button on CHECKED IN / CHECKED OUT through 8.3 (R2-Q10). UAT PLY-20.
-- 8.7.6 More panel: keep the content; its layout waits for the canvas (R5-Q1). UAT PLY-09.
+- 8.7.6 More panel as drawn on the canvas board "Players · More panel" (R6-Q17): accordion under
+  the row; sign-in ID + Save; level "− Intermediate (B1) +"; "Member / Casual / Disabled";
+  delete; close; stats, partners, attendance. Disabled asks for confirmation, then checks the
+  player out. UAT PLY-05, PLY-06, PLY-09.
 
 ### 8.8 — l10n keys (en, fr, zh, zh_HK)
-New keys, prefix by feature. Courts: `courts_generate_round_one`, `courts_save_and_start_round`,
-`courts_discard_and_regenerate`, `courts_save_and_start_new`, `courts_discard_and_start_new`,
-`courts_pause`, `courts_resume_round`, `courts_start_round_now`, `courts_chip_ready`,
+New keys, prefix by feature. Courts: `courts_generate_round_one`, `courts_start_round` ("Start
+round {n}", also round 1; replaces `courts_save_and_start_round` and `courts_save_and_start_new`),
+`courts_discard_and_regenerate`, `courts_discard_and_start_round` ("Discard round {n} and start
+round {m}"; replaces `courts_discard_and_start_new`), `courts_pause`, `courts_resume_round`,
+`courts_resume_changeover`, `courts_start_round_now`, `courts_chip_ready`,
 `courts_chip_running`, `courts_chip_paused`, `courts_chip_time_up`, `courts_chip_changeover`,
 `courts_sub_not_started`, `courts_sub_paused`, `courts_sub_time_up`,
 `courts_sub_players_to_courts`, `courts_counts_in_waiting`, `courts_next_not_saved`,
-`courts_next_saved`, `courts_next_clock_stops`, `courts_next_starts_after`, `courts_make_round`,
-`courts_edit_round`, `courts_editing_round`, `courts_save_round`, `courts_tag_next`,
-`courts_slot_move_to_waitlist`, `courts_slot_check_out`, `courts_round_started_undo`,
+`courts_next_saved`, `courts_next_clock_stops`, `courts_next_starts_after`,
+`courts_round_ended`, `courts_make_round`, `courts_edit_round`, `courts_editing_round`,
+`courts_save_round`, `courts_tag_next`, `courts_slot_move_to_waitlist`,
+`courts_slot_check_out`, `courts_swapped_undo` ("Swapped {a} and {b}. Undo"),
 `courts_end_session*`, `courts_waitlist_search_label`, `courts_waitlist_search_hint`,
-`courts_waitlist_rounds_played` (plural), `courts_waitlist_next_in`. Shell: `shell_session_header`,
-`shell_tab_courts` (desktop), `shell_more_menu`, `shell_session_bar_*`, `shell_no_round_yet`,
-`shell_view_courts`. Players: `players_check_in_label`, `players_scan_placeholder`,
-`players_count_in`, `players_places_left` (plural), `players_add_player`, `players_scan_ready*`,
-`players_scan_in_joins`, `players_scan_in_waits`, `players_scan_out_takes`, `players_scan_out`,
-`players_scan_twice`, `players_scan_not_found`, `players_scan_many`, `players_scan_full`,
-`players_scan_disabled_more`, `players_scan_duplicate_id`, `common_undo`. Remove keys the
-build no longer reads (for example `dashboard_rotate_now`, `dashboard_premake_next`,
-`dashboard_next_round_ready`, `dashboard_mode_time_based`) only after a grep shows no reader.
+`courts_waitlist_no_match`, `courts_waitlist_rounds_played` (plural), `courts_waitlist_next_in`.
+Not in this build (on hold): `courts_round_started_undo`. Shell: `shell_session_header`,
+`shell_tab_courts` (desktop), `shell_more_menu`, `shell_session_bar_*` (saved and not saved),
+`shell_no_round_yet`, `shell_view_courts`. Players: `players_check_in_label`,
+`players_scan_placeholder`, `players_count_in`, `players_places_left` (plural),
+`players_add_player`, `players_scan_ready*`, `players_scan_in_waits`, `players_scan_out_takes`,
+`players_scan_out`, `players_scan_twice`, `players_scan_not_found`, `players_scan_many`,
+`players_scan_full`, `players_scan_disabled_more`, `players_scan_duplicate_id`, `common_undo`.
+Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads (for example
+`dashboard_rotate_now`, `dashboard_premake_next`, `dashboard_next_round_ready`,
+`dashboard_mode_time_based`) only after a grep shows no reader.
 
 ### 8.9 — Tests (write first)
 | Area | Test file (new unless noted) | UAT |
 |---|---|---|
-| Round state machine | `test/game_data_round_phase_test.dart` | RND-03…08, RND-11…20 |
-| Logging and round number | `test/game_data_round_logging_test.dart` | RND-04, RND-06, RND-16, RND-20 |
-| Undo and log deletion (temp dir, golden files) | `test/game_data_undo_test.dart` | RND-21, PLY-20 |
-| Fill rule | `test/game_data_fill_rule_test.dart` (replaces the level order in `game_data_waitlist_promotion_test.dart`) | WL-01…03, CHK-02, CHK-05, COURT-16 |
-| Round bar, strip, edit mode | `test/features/courts_round_bar_test.dart` | RND-01, RND-02, RND-09, RND-10, RND-22 |
+| Round state machine | `test/game_data_round_phase_test.dart` | RND-03…08, RND-11…20, RND-22 |
+| Logging, round number, double-click guard (8.2.4) | `test/game_data_round_logging_test.dart` | RND-04, RND-06, RND-16, RND-19, RND-20 |
+| Swap Undo and scan Undo (memento) | `test/game_data_undo_test.dart` | COURT-17, PLY-20 |
+| Fill rule | `test/game_data_fill_rule_test.dart` (replaces the level order in `game_data_waitlist_promotion_test.dart`) | WL-01…03, CHK-02, CHK-05, COURT-15, COURT-16 |
+| Round bar, strip, edit mode | `test/features/courts_round_bar_test.dart` | RND-01, RND-02, RND-09, RND-10, RND-15, RND-22 |
 | Slot menu, re-roll visibility | `test/features/courts_slot_menu_test.dart` | COURT-01, COURT-10, COURT-14, COURT-15 |
+| Swap Undo message | `test/features/courts_swap_undo_test.dart` | COURT-17 |
 | Waitlist panel | `test/features/courts_waitlist_test.dart` | WL-01, WL-04 |
 | Shell | `test/shell/session_bar_test.dart`, `top_nav_test.dart` | NAV-01, NAV-09…11 |
 | Scan result box | `test/features/players_scanner_test.dart` (rewrite) | PLY-14, PLY-16…20 |
-| Player row | `test/features/players_row_test.dart` | PLY-05, PLY-06, PLY-08, NAV-08 |
+| Player row, level chips | `test/features/players_row_test.dart` | PLY-05, PLY-06, PLY-08, NAV-08 |
+| More panel | `test/features/players_more_panel_test.dart` | PLY-05, PLY-06, PLY-09 |
 | Layout fit | `test/features/dashboard_four_courts_fit_test.dart` (update) | NAV-07 |
 | Contrast | `test/design/contrast_test.dart` | ARCHITECTURE §1.1 |
 
 ### Acceptance Criteria
-> **UAT mapping:** NAV-01, NAV-06…11, RND-01…22, COURT-01…16, WL-01…04, CHK-01…06, PLY-05,
-> PLY-06, PLY-08, PLY-09, PLY-12…20, SESS-02.
+> **UAT mapping:** NAV-01, NAV-06…11, RND-01…20, RND-22 (RND-21 on hold), COURT-01…17,
+> WL-01…04, CHK-01…06, PLY-05, PLY-06, PLY-08, PLY-09, PLY-12…20, SESS-02.
 
 - [ ] Every UAT ID above has a test that failed first and now passes
 - [ ] All TODO(Nathan) points in UAT.md are answered and the specs updated
 - [ ] The design canvas shows every decided change (R3-Q13), and the More panel is drawn (R5-Q1)
+- [ ] Two fast clicks on any start or save button log round n once (R6-Q18, 8.2.4)
+- [ ] No Courts round Undo ships (R6-Q6); the swap Undo has no keyboard shortcut (R7-Q2)
 - [ ] `flutter analyze --fatal-infos --no-pub` passes; `flutter test` passes
 - [ ] No test writes outside a temp dir (PERSISTENCE.md §6 phase 4)
 - [ ] All new strings exist in en, fr, zh and zh_HK
