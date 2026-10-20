@@ -3,7 +3,7 @@
 > Extracted from the UX-Redesign HTML handoff (`Badminton App.dc.html`, `Analytics Dashboard.dc.html`, `Dashboard Options.dc.html`, `Responsive Layouts.dc.html`, `Self Registration.dc.html`).
 > This document defines a **reusable design system** to guide the Flutter implementation.
 >
-> **2026-10-17 design build.** The approved design (`Main`, `Players`, `ScanStates`, `TypeColour` `.dc.html`, artifact `9JBfi4Rk8igxQMVDexk6So`) and `audit/design-diff-2026-10-17/decisions.md` (R1-Q1 … R10-Q3; a later row overrides an earlier one) replace §1.1, §1.2 and the desktop components of the Courts tab, the shell and the Players tab. Phone and tablet keep the PR 45 components as they are now (R2-Q23, R6-Q7). UAT.md is the feature source of truth; "TODO" marks points Nathan has not decided. Courts round Undo is on hold (R6-Q6, UAT RND-21). The Players scan Undo is removed (R9-Q8): the only Undo is the Courts swap. **Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3).
+> **2026-10-17 design build.** The approved design (`Main`, `Players`, `ScanStates`, `TypeColour` `.dc.html`, artifact `9JBfi4Rk8igxQMVDexk6So`) and `audit/design-diff-2026-10-17/decisions.md` (R1-Q1 … R11-Q6; a later row overrides an earlier one) and the 2026-10-20 design review (`audit/design-review-2026-10-20/resolution.md`, F01 … F30; F05 and F28 wait for Nathan) replace §1.1, §1.2 and the desktop components of the Courts tab, the shell and the Players tab. Phone and tablet keep the PR 45 components as they are now (R2-Q23, R6-Q7). UAT.md is the feature source of truth; "TODO" marks points Nathan has not decided. Courts round Undo is on hold (R6-Q6, UAT RND-21). The Players scan Undo is removed (R9-Q8): the only Undo is the Courts swap. **Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3).
 
 ---
 
@@ -37,7 +37,7 @@ separators may stay light (R2-Q22).
 |-------|-------|-------|----------|
 | `color.text.primary` | `#221d18` | All body text, names | 16.45:1 page, 15.53:1 card, 12.14:1 checked-in row |
 | `color.text.muted` | `#6f6352` | Labels, levels, helper text, caps labels (was `#8a7c68`, 4.01:1) | 5.77:1 page, 5.45:1 card, 4.72:1 on `#ece6dc`. **Fails on the checked-in row (4.26:1): use `color.text.primary`, or `#5f5446` (5.37:1) for the TYPE label, there** |
-| `color.text.disabled` | `#b3a891` | Disabled row text only (exempt from contrast) | 2.32:1 page — never for content |
+| (Disabled row text) | `#6f6352` | A Disabled player's name, ID and level use `color.text.muted`; there is no paler disabled token and no contrast exemption (F13) | 5.45:1 card |
 | `color.header.text` | `#ffffff` | Text on the top nav and bars | 16.71:1 / 15.29:1 |
 | `color.header.sub` | `#c9c2b8` | Inactive tabs, round label, counts, paused timer on the bars | 9.46:1 nav, 8.66:1 bar, 5.71:1 on track |
 
@@ -47,8 +47,8 @@ separators may stay light (R2-Q22).
 |-------|-------|-------|----------|
 | `color.accent.primary` | `#ff6a2b` | Fill of the **one** primary button per view; active-tab underline; CHANGEOVER chip and timer | ink on it 5.85:1; on bar 5.35:1; vs nav 5.85:1. **Never text on a light surface (2.81:1)** |
 | `color.accent.onPrimary` | `#221d18` | Text on orange | 5.85:1 |
-| `color.accent.strong` | `#c2410c` | Focus ring on light surfaces (3 px, 2 px offset), selection outline, dashed edit-mode border, amber-state border | 5.10:1 page, 4.81:1 card, 4.98:1 next fill, 4.30:1 on amber |
-| `color.focus.onDark` | `#ff6a2b` | Focus ring on the top nav and bars (new; `#c2410c` is only 2.95:1 on `#2b241e`) | 5.35:1 bar, 5.85:1 nav |
+| `color.accent.strong` | `#c2410c` | Focus ring on light surfaces only (3 px, 2 px offset; F07), selection outline, dashed edit-mode border, amber-state border | 5.10:1 page, 4.81:1 card, 4.98:1 next fill, 4.30:1 on amber |
+| `color.focus.onDark` | `#ff6a2b` | Focus ring on `#221d18` and `#2b241e`: the tabs, the nav "⋯", the round bar buttons and "⋯", the session bar link (F07; `#c2410c` is only 2.95:1 on `#2b241e`, 3.23:1 on `#221d18`) | 5.35:1 bar, 5.85:1 nav |
 | `color.control.border` | `#6f6352` | Inputs (scan field 2 px, waitlist search 1 px), "More", "Edit round" and other outline buttons | 5.77:1 page, 5.45:1 card, 5.86:1 white |
 | `color.control.borderSoft` | `#8f826e` | Secondary outline button, e.g. "Re-roll" (replaces design `#d6c9b4`, 1.61:1) — R2-Q22; accepted with `#6f6352` for inputs and outline buttons (R6-Q16) | 3.70:1 page, 3.49:1 card, 3.62:1 next fill, 3.15:1 hover |
 | `color.checkedIn.bg` | `#bfe5c8` | Checked-in row fill, CHECKED IN result box | ink 12.14:1; fill vs page 1.36:1, so the edge carries the state |
@@ -59,7 +59,7 @@ separators may stay light (R2-Q22).
 | `color.error` | `#b91c1c` | NOT FOUND / DISABLED border and icon, error text on page (was `#f44336`, 3.63:1) | 6.37:1 page; white on it 6.47:1; 5.28:1 on error bg |
 | `color.error.bg` / `color.error.text` | `#fde2e2` / `#991b1b` | NOT FOUND, DISABLED result box | 6.79:1 |
 | `color.neutral.bg` | `#ece6dc` | CHECKED OUT result box (border `#6f6352`, icon `#6f6352` with white 5.86:1) | ink 13.46:1 |
-| `color.urgent.onDark` | `#ffb38a` | Time on the session bar and the Courts round bar, and the round bar progress fill, at ≤60 s while RUNNING; not when PAUSED (R4-Q6, R6-Q8) | 8.78:1 on bar |
+| `color.urgent.onDark` | `#ffb38a` | Time on the session bar and the Courts round bar, and the round bar progress fill, at ≤60 s while RUNNING; not when PAUSED (R4-Q6, R6-Q8). The only ≤60 s amber on every board and bar; the Sessions board `#fde7c8` is wrong (F26) | 8.78:1 on bar |
 
 **Round state chips** (12 px, weight 600, caps, radius 4)
 
@@ -68,15 +68,19 @@ separators may stay light (R2-Q22).
 | READY | `#4a4038` | `#ffffff` | 10.09:1 |
 | RUNNING | `#1f7a3d` | `#ffffff` | 5.37:1 |
 | PAUSED | `#fde7c8` | `#9a3412` | 6.07:1 |
-| TIME UP | `#b91c1c` | `#ffffff` | 6.47:1 — proposal, not in the design (TODO Nathan) |
+| TIME UP | `#b91c1c` | `#ffffff` | 6.47:1 — decided (R11-Q5, F04): on the round bar, the session bar and every board. The TIME UP time is `#ff6a2b` |
 | CHANGEOVER | `#ff6a2b` | `#221d18` | 5.85:1 |
+
+The state chip is a polite live region on both bars (`Semantics(liveRegion: true)` on the chip
+only); the time is not a live region (F24).
 
 **Charts.** The Analytics chart colours (`#e8dcc8`, `#d9c7a8`, `#f0e6d6`, `#ffb38a`) stay until
 Analytics is drawn (R2-Q19).
 
 **Removed tokens:** `#8a7c68` (→ `#6f6352`), `#2ea043` and `#e6f4ea` (→ `#1f7a3d`, `#bfe5c8`),
 `#f44336` (→ `#b91c1c`), `#a8481a` / `#fdeee4` (→ `#9a3412` / `#fde7c8`), `#eee4d8` (→
-`#e4d8c4`), `#e2d8c8` input border (→ `#6f6352`), `#d6c9b4` (→ `#8f826e`).
+`#e4d8c4`), `#e2d8c8` input border (→ `#6f6352`), `#d6c9b4` (→ `#8f826e`), `#b3a891`
+`color.text.disabled` (→ `#6f6352`, F13).
 
 #### Alternative Themes — Removed (2026-10-17)
 
@@ -168,14 +172,14 @@ PR 45 sizes until they are redesigned (R2-Q23). The sizes in the older component
 #### TopNavBar (desktop ≥1080px, 2026-10-17)
 ```
 56px bar, bg #221d18, padding 0 24px
-├── Left: "Session · {duration} rounds" (14/600 white; R3-Q5 — no club or template name);
-│   {duration} = "10 min" for whole minutes, else m:ss ("Session · 10:30 rounds")
+├── Left, two lines (F29): "Session" over "{duration} rounds" (14/600 white; R3-Q5 — no club or
+│   template name); {duration} = "10 min" for whole minutes, else m:ss ("10:30 rounds")
 └── Right (margin-left auto): tabs "Courts", "Players", "Sessions" + "⋯" (44×44)
     ├── Tab: full bar height, padding 0 16px, 14px
     ├── Active: white, weight 600, 3px #ff6a2b bottom border, no fill (UX-21)
     ├── Inactive: #c9c2b8, weight 400
     └── "⋯" opens a menu: "Analytics", "Settings"; active style when one of them is open
-Focus on the bar: 3px #ff6a2b ring (`color.focus.onDark`)
+Focus on the bar: 3px #ff6a2b ring (`color.focus.onDark`) on the tabs and "⋯" (F07)
 ```
 Tablet (720–1079px) keeps the PR 45 bar (5 tabs with "Dashboard", pill style) (R6-Q7, UAT NAV-01).
 
@@ -183,12 +187,14 @@ Tablet (720–1079px) keeps the PR 45 bar (5 tabs with "Dashboard", pill style) 
 ```
 40px link band under the top nav, bg #2b241e, padding 0 24px, gap 16
 ├── "ROUND N" (12/600 caps, #c9c2b8)
-├── State chip (READY / RUNNING / PAUSED / TIME UP / CHANGEOVER, §1.1)
-├── Time (20/600 tabular, white; #ffb38a at ≤60 s while RUNNING, not PAUSED, R6-Q8)
+├── Time (20/600 tabular, white; #ffb38a at ≤60 s while RUNNING, not PAUSED, R6-Q8;
+│   #ff6a2b in TIME UP, R11-Q5)
+├── State chip (READY / RUNNING / PAUSED / TIME UP / CHANGEOVER, §1.1); polite live region (F24)
 ├── "{in}/{capacity} in · {waiting} waiting · round N+1 saved" or "· round N+1 not saved" (14/400, #c9c2b8, R6-Q12)
 └── Right: "View courts →" (14/600 white). The whole bar opens Courts.
 Before the first lineup: "No round yet" in place of round, chip and time.
-No toast on a round change (R4-Q4).
+No toast on a round change (R4-Q4). Order ROUND · time · chip, as on the round bar (F29).
+Focus: 3px #ff6a2b ring on the link (F07).
 ```
 
 #### CompactHeader (Phone)
@@ -276,7 +282,7 @@ tablet keep their PR 45 widgets (R2-Q23) with the new state names and labels.
 ```
 Full-width band under the top nav: 80px, bg #2b241e, no radius, padding 0 24px
 ├── Left: "ROUND N" (12/600 caps, 0.08em, #c9c2b8) over the sub-label (14/400, #c9c2b8)
-├── Time "mm:ss" (50/600, tabular) in the state colour + state chip
+├── Time "mm:ss" (50/600, tabular) in the state colour + state chip (polite live region, F24)
 ├── Counts "{in}/{capacity} in · {waiting} waiting" (14/400, #c9c2b8)
 ├── Right: the state buttons (44px tall), then "⋯" round menu (44×44) → "End session"
 └── Progress bar: 4px at the bottom edge, track #4a4038, fill = state colour,
@@ -291,14 +297,17 @@ Full-width band under the top nav: 80px, bg #2b241e, no radius, padding 0 24px
 | RUNNING + edit mode | RUNNING | none | as RUNNING | "Pause" only (R4-Q9) |
 | PAUSED | PAUSED | "Clock paused" | `#c9c2b8` (never amber, R6-Q8) | "Discard round N and start again" (outline), "Start round N+1" (outline, R6-Q14), "Resume round N" |
 | PAUSED + edit mode | PAUSED | "Clock paused" | `#c9c2b8` | "Start round N+1" (outline), "Resume round N" (R9-Q5, as the board "Courts · Paused") |
-| TIME UP | TIME UP | "Clock stopped at 0:00" | `#ffffff` (TODO) | "Discard round N and start again" (outline), "Start round N+1" (R6-Q4, R7-Q1). Courts show the planned round N+1; no strip |
-| TIME UP + edit mode | TIME UP | "Clock stopped at 0:00" | `#ffffff` (TODO) | no start buttons (edit mode, R4-Q9); the edit strip "Save round N+1" starts the changeover (R6-Q3) |
+| TIME UP | TIME UP | "Clock stopped at 0:00" | `#ff6a2b` (R11-Q5) | "Discard round N and start again" (outline), "Start round N+1" (R6-Q4, R7-Q1). Courts show the planned round N+1, each card tagged "ROUND N+1" (F08); no strip |
+| TIME UP + edit mode | TIME UP | "Clock stopped at 0:00" | `#ff6a2b` (R11-Q5) | no start buttons (edit mode, R4-Q9); the edit strip "Save round N+1" starts the changeover (R6-Q3) |
 | CHANGEOVER | CHANGEOVER | "Players to courts" | `#ff6a2b` | "Pause" (text), "Start round N+1 now" (after a discard the new round keeps number N: "ROUND N", "Start round N now", R9-Q1) |
 | CHANGEOVER + edit mode | CHANGEOVER | "Players to courts" | `#ff6a2b` | "Pause" only (R4-Q9). At 0:00 with unsaved edits the time stops at 00:00 and the bar shows no buttons; the edit strip "Save round N+1" starts the round (R9-Q4) |
-| CHANGEOVER paused | PAUSED | (TODO) | `#c9c2b8` | "Resume changeover" (R6-Q12) |
+| CHANGEOVER paused | PAUSED | (TODO) | `#c9c2b8` | "Resume changeover" (R6-Q12). Courts follow the PAUSED rules for round N+1: Re-roll, swap, full slot "⋯" menu (F17) |
 
 No "COURTS − 4 +" stepper (R2-Q2). No "Ends 19:42" (R4-Q8). Bar buttons: outline = 1px
 `#c9c2b8` border, white text; text = no border; primary = `#ff6a2b` fill, `#221d18` text.
+Focus ring on the bar: `#ff6a2b` (F07). Edit mode is a flag beside the phase, never a phase:
+"Pause" keeps edit mode (F02). PAUSED label width: if fr / zh / zh_HK labels do not fit at
+1280 px, PAUSED uses "Discard round N" (IMPLEMENTATION 8.8, F16).
 
 **Actions** (see §4.7 for the state machine)
 
@@ -307,12 +316,18 @@ No "COURTS − 4 +" stepper (R2-Q2). No "Ends 19:42" (R4-Q8). Bar buttons: outli
 | `generateFirstRound` | Fills the courts for round 1; clock stays stopped |
 | `startFirstRound` | "Start round 1": starts the round 1 clock at once, no changeover (R9-Q2) |
 | `startNextRound` | "Start round N+1": saves round N+1 (saved, planned or fresh lineup; in paused edit mode the edit lineup, R9-Q5) → 20 s changeover; round N is logged when N+1 starts (R6-Q1, R6-Q2) |
-| `discardAndStartNext` | "Discard round N and start again": confirm dialog first ("Discard round N?", "Discard round" / "Cancel", R9-Q3) → 20 s changeover; round N is never logged; the new round keeps number N (R2-Q5, R9-Q1) |
+| `discardAndStartNext` | "Discard round N and start again": confirm dialog first ("Discard round N?", "Discard round" / "Cancel", R9-Q3; the UAT RND-16 text, F14) → 20 s changeover; round N is never logged; the new round keeps number N (R2-Q5, R9-Q1) |
 | `pause` / `resume` | Freezes / continues the round or the changeover |
 | `startNextNow` | Ends the changeover at once; logs round N (unless discarded) |
-| `endSession` | Confirm dialog ("End session?", "Round N goes into the history. Everyone is checked out."); logs the round that started last once (also in TIME UP / CHANGEOVER, R6-Q5), stops the clock, checks out all, round 1, empty courts. No Undo (on hold, R6-Q6) |
+| `endSession` | Confirm dialog ("End session?"; text by state, F09: "Round N goes into the history." in RUNNING / PAUSED / TIME UP, "Round N−1 goes into the history." in CHANGEOVER, "Nothing is logged." in READY, no lineup, or a changeover after a discard; then "Everyone is checked out."); logs the round that started last once (also in TIME UP / CHANGEOVER, R6-Q5), stops the clock, checks out all, round 1, empty courts. No Undo (on hold, R6-Q6) |
 
 Every start button has a double-click guard: two fast clicks start one changeover and log once (R6-Q18).
+
+**Confirm dialogs (F14, F18).** "Close without saving?" ("Close" / "Keep editing", R11-Q2,
+only when the edit has changes, F03), "Discard round N?" and "End session?" use one pattern:
+alert dialog semantics with title and description, initial focus on the cancel button, Esc =
+cancel, the dialog pops itself (§4.6). A phase change while the Discard or End session dialog
+is open closes it with no action.
 
 #### NextRoundStrip (desktop)
 ```
@@ -324,7 +339,8 @@ Edit mode: bg #fde7c8, bottom 1px #c2410c, title "Editing round N+1" (#9a3412)
 └── Right: "Discard & regenerate" (outline #9a3412), "Save round N+1" (primary), "×" (far right)
 ```
 Shown in RUNNING and PAUSED (and edit mode). CHANGEOVER: title "Round N ended", no button
-(R6-Q2). Not shown in TIME UP (the courts show the planned next round, R6-Q4), READY or with
+(R6-Q2); after a discard: "Round N discarded · new lineup for round N" (F10). "×" asks
+"Close without saving?" first when the edit has changes (R11-Q2, F03). Not shown in TIME UP (the courts show the planned next round, R6-Q4), READY or with
 no lineup.
 
 #### CourtCard
@@ -351,11 +367,14 @@ The SpreadPill is not used on desktop (plain text instead). Tablet/phone keep it
 ```
 Button row, 40px, radius 6, padding 0 8, no border:
 ├── Occupied: name (14/600, ellipsis) + tier name (14/400, #6f6352, 96px, right) + "⋯" (16px)
-│   ├── Hover: bg #f3eadb, "⋯" shows; focus: 3px #c2410c ring, 2px offset
+│   ├── Hover: bg #f3eadb, "⋯" shows; it also shows when the slot or the "⋯" has keyboard
+│   │   focus (F06); "⋯" hit area 40×40 (F27); focus: 3px #c2410c ring, 2px offset
+│   ├── Checked-out player on a live court while the clock runs: no "⋯" (R11-Q4)
 │   └── Semantics label: "{name}, {tier}. Open actions"
 └── Empty: "Open slot" (14/400 italic, #6f6352)
 ```
-No "×" remove button (R3-Q11). Tap = select for a swap (not on a running live court).
+No "×" remove button (R3-Q11). Tap = select for a swap. On a live court while the clock runs
+(not edit mode) the slot is not a tap button and a tap does nothing (F11).
 
 #### SlotActionMenu ("⋯" on a slot)
 | Court | Items |
@@ -365,6 +384,8 @@ No "×" remove button (R3-Q11). Tap = select for a swap (not on a running live c
 
 Menu: card bg, 1px `#6f6352` border, radius 8, items 40px, 14/400. "Move to waitlist" refills
 the place by the fill rule (§4.3, R7-Q6). A Courts check-out shows no message (R7-Q5).
+Keyboard (F06): arrow keys move between items, Enter selects, Esc closes; on close, focus goes
+back to the slot "⋯".
 
 A swap of two players shows the bottom message "Swapped {A} and {B}. Undo" for 10 s (§2.8,
 R6-Q6, R7-Q2). No Ctrl/Cmd+Z.
@@ -390,7 +411,7 @@ Row states:
 |---|---|---|---|---|
 | Checked in | `#bfe5c8` | 1px `#1f7a3d` | 6px `#1f7a3d` (inset) | 3% darker |
 | Not checked in | `#fbf6ee` | 1px `#e4d8c4` (separator) | none | 3% darker |
-| Disabled | `#fbf6ee` | 1px `#e4d8c4` | none | none; forbidden cursor; text `#b3a891`; tap shows the bottom message |
+| Disabled | `#fbf6ee` | 1px `#e4d8c4` | none | none; forbidden cursor; text `#6f6352` (F13); tap shows the bottom message |
 
 The table header reads NAME · SIGN-IN ID · LEVEL · TYPE · (blank), 12/600 caps, 0.08em,
 `#6f6352`. Tablet/phone rows keep the PR 45 layout, with the stepper and pill (R6-Q7, UAT NAV-08).
@@ -399,12 +420,15 @@ The table header reads NAME · SIGN-IN ID · LEVEL · TYPE · (blank), 12/600 ca
 **As drawn on the canvas board "Players · More panel" (R5-Q1, accepted R6-Q17).** An accordion
 under the row (row and panel in one rounded panel):
 ```
-├── Top row: Sign In ID field + "Save" (PLY-15); delete (btn.danger-outline) and close at the right
+├── Top row: Sign In ID field (selects all on focus, F30) + "Save" (PLY-15; a duplicate ID gives
+│   "ID {id} is used by {name}.", F23); delete (btn.danger-outline, F23) and close at the right
 ├── Level: "−" "Intermediate (B1)" "+" (tier name with the Elo code, PLY-05)
 ├── Membership: "Member / Casual / Disabled" (PLY-06). Disabled asks for confirmation,
 │   then checks the player out
 └── 3 stat tiles, partners, attendance (PLY-09)
 ```
+The row's "More" is a button with `aria-expanded` / `aria-controls` on the board and
+`Semantics(expanded:)` in Flutter (F23). The Disabled confirm is drawn on the board (F23).
 Desktop only; tablet/phone keep the PR 45 profile with the new tokens (R6-Q7).
 
 #### WaitlistPanel (desktop, 2026-10-17)
@@ -413,15 +437,19 @@ Desktop only; tablet/phone keep the PR 45 profile with the new tokens (R6-Q7).
 ├── Header: "Waitlist" (16/600) + count (14/600)
 ├── Search: caps label "SEARCH WAITLIST" + field (40px, 1px #6f6352, radius 8,
 │   placeholder "Name or sign-in ID") — same matching as Players search, no chips (UX-14)
-├── List (fill-rule order, no numbers, R3-Q12), each item a 48px button, radius 6:
+├── List (fill-rule order, no numbers, R3-Q12): flex 1, min-height 0, scrolls (Flutter
+│   `Expanded(child: ListView)`); header, search and hint stay fixed (F12). Each item a 48px
+│   button, radius 6; not pressable while the live clock runs and not in edit mode (F11):
 │   ├── Name (14/600) over "{tier} · {n} rounds" (12/400, #6f6352)
 │   ├── "Next in" tag (12/600, #1f7a3d) when the player is in the saved next round
 │   ├── Hover #f3eadb; selected: 2px #c2410c outline (UX-21: outline, not fill)
 │   └── Semantics label: "{name}, {n} rounds. Select to place"
 ├── Empty: "No one waiting" (14/400 italic, #6f6352); no search match: "No one matches “{text}”" (R6-Q12)
-└── Selection hint (kept, R2-Q19): "Placing {name} — tap a court slot" (12/400, #6f6352)
+└── Selection hint (kept, R2-Q19): "Placing {name} — tap a court slot" (12/400, #6f6352); while
+    the live clock runs (not edit mode): "Courts change at the next round" (F11)
 ```
-In edit mode the panel lists the players who sit out the next round.
+In edit mode the panel lists the players who sit out the next round. With no lineup it lists
+the checked-in players in check-in order, no "Next in" (F22).
 
 #### WaitlistItem — Superseded on desktop by WaitlistPanel (2026-10-17). Tablet/phone unchanged.
 ```
@@ -447,7 +475,11 @@ Row: [field (flex)] [count] [Add player]
 ├── Caps label "CHECK IN" (12/600, 0.08em, #6f6352)
 ├── Field: 52px, 2px #6f6352, radius 10, bg #ffffff, scan icon (22px, #6f6352) at left 14,
 │   text 20/600, placeholder "Scan card or search name"; focus: 3px #c2410c ring, 2px offset
-├── onSubmitted (Enter) runs the scan (PLY-14); the text stays selected after each scan
+├── onSubmitted (Enter) runs the scan (PLY-14): the exact sign-in ID match runs over all listed
+│   players before the chips and the query, and does not clear the chips (F01); the text stays
+│   selected after each scan, except MANY MATCHES: caret at the end, no selection (F19)
+├── Focus returns to the field after pointer actions (scanner rule); Esc on the tab returns
+│   focus to it (F21)
 ├── Count: "{in}" (28/600) + " / {capacity} in" (16/400, #6f6352), under it
 │   "{n} places left" (12/400, #6f6352, plural)
 └── "Add player": 52px, #ff6a2b fill, #221d18 text 14/600, radius 10 (the primary of the view)
@@ -543,7 +575,10 @@ Players row).
 | `btn.inState` | transparent | current text colour | 1px current colour | 36 | Result box "Check out" (SCANNED TWICE). No "Undo" (R9-Q8) |
 | `btn.danger-outline` | transparent | `#b91c1c` | 1px `#b91c1c` | 36 | Delete (profile) |
 
-Focus: 3px ring, 2px offset — `#c2410c` on light, `#ff6a2b` on dark surfaces.
+Focus: 3px ring, 2px offset — `#c2410c` on light, `#ff6a2b` on dark surfaces (`#221d18`,
+`#2b241e`; F07).
+Hit areas (F27): the slot "⋯" (32×32 drawn) and every 32 px button (for example Approve /
+Reject) keep their look but get a 40×40 / 40 px tall hit area.
 
 ### 2.7 Charts & Data Viz
 
@@ -585,7 +620,7 @@ SVG polyline for trend data
 | **Empty State** | `font-style=italic, color=#6f6352, 14px` |
 | **Selection Hint** | `font=12px, color=#6f6352, margin-top=12px` |
 | **Scan result** | ScanResultBox (§2.5), not a SnackBar |
-| **Bottom message** (SnackBar) | Only for: a refused row tap on Players (R4-Q1, R45-38), the swap Undo message "Swapped {A} and {B}. Undo" (10 s, R6-Q6, R7-Q2; no keyboard shortcut), and errors. The Courts round Undo message is on hold (R6-Q6). bg `#221d18`, text white 14/400, action `#ff6a2b` 14/600 (5.85:1) |
+| **Bottom message** (SnackBar) | Only for: a refused row tap on Players (R4-Q1, R45-38), the swap Undo message "Swapped {A} and {B}. Undo" (10 s, R6-Q6, R7-Q2; no keyboard shortcut), and errors. The Courts round Undo message is on hold (R6-Q6). bg `#221d18`, text white 14/400, action `#ff6a2b` 14/600 (5.85:1). Bottom-centre, as now; the message blocks pointer input only inside its own box (360 × 48 px), never outside it (F15) |
 
 ### 2.9 Overlays & Sheets
 
@@ -617,7 +652,7 @@ Fullscreen dark overlay
 ```
 Desktop (≥1080px), 2026-10-17:
 ┌────────────────────────────────────────────────────────────┐
-│ TopNavBar 56px: Session · 10 min rounds   Courts Players Sessions ⋯ │
+│ TopNavBar 56px: Session / 10 min rounds   Courts Players Sessions ⋯ │
 ├────────────────────────────────────────────────────────────┤
 │ RoundBar 80px: ROUND 3 · 04:12 [RUNNING] · 18/20 in · 2 waiting · buttons · ⋯ │
 ├────────────────────────────────────────────────────────────┤
@@ -769,9 +804,11 @@ CHANGEOVER, R7-Q4) offers only "Check out" (R3-Q10, R3-Q11). End session in TIME
 CHANGEOVER logs the round that ended, once (R6-Q5). Round 1 starts at once (R9-Q2). Discard
 asks first and keeps the number (R9-Q1, R9-Q3). Paused in edit mode: "Start round n+1" and
 "Resume round n" (R9-Q5). A changeover that ends with unsaved edits waits at 00:00 for the save
-(R9-Q4). Open points (UAT TODOs): "×" while the changeover waits (RND-06), whether "Start round
-n+1" in paused edit mode keeps the unsaved edits (RND-14), the strip text in the changeover
-after a discard (RND-16).
+(R9-Q4). "×" asks "Close without saving?" first; while the changeover waits, "Close" starts the
+saved round n+1 unchanged (R11-Q2). "Start round n+1" in paused edit mode saves the edits,
+then the changeover starts (R11-Q3). The changeover strip after a discard reads "Round n
+discarded · new lineup for round n" (F10). A paused changeover follows the PAUSED rules for
+round n+1 (F17). Edit mode is a flag, kept through Pause (F02).
 
 ### 4.8 Undo (memento, one level, swap only)
 ```

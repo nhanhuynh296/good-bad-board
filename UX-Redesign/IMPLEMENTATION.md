@@ -763,7 +763,7 @@ Implement the Players tab: searchable player list, expandable profile cards, lev
 - [x] **PLY-12** — Profile stats computed from logged session history — unaffected by re-rolls or check-ins in the current live session until session is logged. `computePlayerProfileStats` (`lib/features/players/player_profile_stats.dart`) reads `GameRepository` + `SessionLogRepository` caches; `PlayersPage` listens to both. Not `GameData.history`
 
 #### Scanner and sign-in ID (PLY-14, PLY-15)
-- [x] **PLY-14** — *(result messages superseded by Stage 8.7.2: result box, not SnackBars)* Barcode scan check-in: the search field is focused when the Players tab opens (and gives up focus when the tab is hidden). `_onSearchSubmitted` in `players_page.dart` runs on Enter (`AppSearchInput.onSubmitted`, which also covers the keyboard done action); no debounce (two fast scans both count); Enter during an IME composition is ignored (`Focus.onKeyEvent`). `_refocusSearch` gives the field focus again after row taps (`AppSearchInput.onTapOutside` replaces the desktop unfocus), profile toggles and dialogs, unless another `EditableText` has focus; a row tap clears a stale query. Target: the one listed player whose sign-in ID equals the text (trimmed, case-insensitive), else the only player in `_listedPlayers()` (search + level chips). The target is toggled: check in (capacity and Disabled rules apply, `players_scan_checked_in`) or check out (`players_scan_checked_out`). Disabled: `players_scan_disabled`. At capacity: the capacity message. Empty list: `players_scan_no_match`. Many listed and no exact ID: nobody changes, `players_scan_many_matches`. Two exact IDs: nobody changes, `players_scan_duplicate_id`. In all cases `_selectSearchText` keeps the text, selects all of it (again after the frame) and keeps focus, so the result stays listed and the next scan replaces the text. Empty field: nothing. Test: `test/features/players_scanner_test.dart`
+- [x] **PLY-14** — *(result messages superseded by Stage 8.7.2: result box, not SnackBars; target rule superseded by 8.7.7: the exact ID match ignores the level chips, F01)* Barcode scan check-in: the search field is focused when the Players tab opens (and gives up focus when the tab is hidden). `_onSearchSubmitted` in `players_page.dart` runs on Enter (`AppSearchInput.onSubmitted`, which also covers the keyboard done action); no debounce (two fast scans both count); Enter during an IME composition is ignored (`Focus.onKeyEvent`). `_refocusSearch` gives the field focus again after row taps (`AppSearchInput.onTapOutside` replaces the desktop unfocus), profile toggles and dialogs, unless another `EditableText` has focus; a row tap clears a stale query. Target: the one listed player whose sign-in ID equals the text (trimmed, case-insensitive), else the only player in `_listedPlayers()` (search + level chips). The target is toggled: check in (capacity and Disabled rules apply, `players_scan_checked_in`) or check out (`players_scan_checked_out`). Disabled: `players_scan_disabled`. At capacity: the capacity message. Empty list: `players_scan_no_match`. Many listed and no exact ID: nobody changes, `players_scan_many_matches`. Two exact IDs: nobody changes, `players_scan_duplicate_id`. In all cases `_selectSearchText` keeps the text, selects all of it (again after the frame) and keeps focus, so the result stays listed and the next scan replaces the text. Empty field: nothing. Test: `test/features/players_scanner_test.dart`
 - [x] **PLY-15** — Edit sign-in ID: the profile panel (`player_profile_card.dart`) has a Sign In ID field and Save; the value is trimmed, empty = no ID, an ID used by another listed player is refused with `players_sign_in_id_taken` (names that player), success shows `players_sign_in_id_saved`; no other field changes. Add player (`AddPlayerDialog`) trims name and ID, and refuses a blank name, a duplicate name and a duplicate ID. Test: `test/features/players_add_dialog_test.dart`
 
 #### Quality gates
@@ -1075,8 +1075,14 @@ Build the approved 2026-10-17 design on desktop: the new round lifecycle, the Co
 shell with the session bar, the Players scan check-in, and the new type and colour tokens.
 
 ### Rules for this stage
-- **Authority.** `audit/design-diff-2026-10-17/decisions.md` (81 rows, IDs R1-Q1 … R10-Q3; a
+- **Authority.** `audit/design-diff-2026-10-17/decisions.md` (87 rows, IDs R1-Q1 … R11-Q6; a
   later row overrides an earlier one) overrides the design HTML and the UX review resolutions.
+  R11-Q2 … Q5 are in force: "×" in edit mode asks "Close without saving?" first, also while the
+  changeover waits; "Start round {n+1}" in paused edit mode saves the edits, then the changeover
+  starts; a checked-out player on a running live court has no slot "⋯"; the TIME UP chip is red
+  `#b91c1c` with white text, time `#ff6a2b`. The design review
+  `audit/design-review-2026-10-20/resolution.md` (F01 … F30) is written into UAT.md and this
+  stage; F05 and F28 wait for Nathan and are not built.
   R6-Q12…18 accept the recommendations in `review-round6.md`. On a new conflict, ask Nathan and
   investigate first (R1-Q2). UAT.md is the feature source of truth.
 - **Order.** Docs first, Nathan reviews (R1-Q3). Then the design canvas is updated (R3-Q13).
@@ -1099,7 +1105,9 @@ shell with the session bar, the Players scan check-in, and the new type and colo
 - **Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3). A sub-agent draws the
   Sessions tab (settings, time mode, duration, capacity, courts); Nathan fixes it later in a
   separate task. Its court count control is shown only when `CourtCount.editable` is on. Stage 8
-  does not build it.
+  does not build it. The design review rule F25 (template Load applies duration and capacity at
+  once and asks only when the court count changes; new dialog text; template delete asks first)
+  is written into UAT SESS-04 and SESS-06 for that task.
 - **Data format: unchanged.** No decision needs a new field in `players.json`, `games.json`,
   `session_logs.json` or `session_templates.json`. The Courts Undo log delete
   (`SessionLogRepository.delete`, 8.3) is on hold with RND-21, so this build adds no repository
@@ -1124,12 +1132,36 @@ shell with the session bar, the Players scan check-in, and the new type and colo
 | Stage 4 PLY-14 SnackBars for scan results | 8.7.2 |
 | Stage 7 7.4 "dark mode works" | 8.1.3 (dark theme removed) |
 
+### 8.0 — Canvas pass from the design review (2026-10-20, before code)
+The acceptance criterion "The design canvas shows every decided change (R3-Q13)" needs these
+board changes (`audit/design-review-2026-10-20/resolution.md`). The spec texts are in UAT.md.
+- **Main (F02).** Add an `editing` flag next to `mode`; "Pause" keeps edit mode. Draw the
+  states PAUSED + edit ("Start round {n+1}", "Resume round {n}"), TIME UP + edit (no bar
+  buttons; "Save round {n+1}" in the strip), CHANGEOVER + edit, and the changeover waiting at
+  00:00 (no bar buttons).
+- **Main.** "×" confirm "Close without saving?" (F03, R11-Q2); TIME UP chip `#b91c1c` /
+  `#ffffff` (F04, R11-Q5); slot "⋯" on focus-within and menu keys (F06); focus ring `#ff6a2b`
+  on dark surfaces (F07); TIME UP card tag "ROUND {n+1}" (F08); End session text by state
+  (F09); discard strip text (F10); no slot tap and no pressable waitlist on a live court while
+  the clock runs, hint "Courts change at the next round", one checked-out slot with no "⋯"
+  (F11, R11-Q4); scrolling waitlist with 8 waiting (F12); one alert-dialog pattern and the
+  RND-16 text (F14); paused changeover = PAUSED rules (F17); no-lineup waitlist (F22); "Running
+  · 00:45" in `#ffb38a` (F26).
+- **Players / More panel.** Disabled row text `#6f6352` (F13); exact-ID match before chips
+  (F01); MANY MATCHES caret at end and the PLY-14 text (F19); CHECKED OUT after "Check out" in
+  SCANNED TWICE (F20); "More" as a button with `aria-expanded` / `aria-controls`, Delete as
+  `btn.danger-outline`, the duplicate-ID text with the name, the Disabled confirm (F23).
+- **Sessions.** Amber `#ffb38a` (F26), TIME UP chip (F04); the F25 Load and delete rules
+  follow in Nathan's Sessions pass (R7-Q3).
+- **All boards.** Focus rule for tabs and the session bar link (F07); the state chip is a
+  polite live region (F24); session bar order ROUND · time · chip (F29).
+
 ### 8.1 — Tokens: type and colour (ARCHITECTURE.md §1)
 | Task | Files | Decision / UAT |
 |---|---|---|
 | 8.1.1 Bundle the Source Sans 3 variable font (one `wght` axis file) in `asset/font/`. Remove OpenSans and SpaceGrotesk from `pubspec.yaml` and the asset folder. Delete the unused `asset/font/NotoSans-VariableFont_wdth,wght.ttf` | `pubspec.yaml`, `asset/font/` | facts; UX-25 |
 | 8.1.2 Rewrite `AppTypography` to the 6-size scale (50, 28, 20, 16, 14, 12) and 3 weights (400, 600, 800 page titles only). Replace every literal `fontSize` and `FontWeight` in `lib/` with a token. Set `fontFamilyFallback` per locale: zh → `Microsoft YaHei`, zh_HK → `Microsoft JhengHei` | `lib/design/app_typography.dart`, `app_theme.dart`, feature widgets | R2-Q20, R3-Q6 |
-| 8.1.3 Replace `AppColors` with the ARCHITECTURE §1.1 tokens. Darken control borders to ≥3:1 (R2-Q22). Remove the dark theme: dark tokens (`app_colors.dart:78-92`), `AppTheme.dark()`, `theme.dart` `darkTheme`, `main.dart` `darkTheme:`; replace `AppColors.darkCardBorder` in `hamburger_menu.dart` | `lib/design/`, `lib/theme.dart`, `lib/main.dart`, `lib/shell/hamburger_menu.dart` | R2-Q22, UX-22 |
+| 8.1.3 Replace `AppColors` with the ARCHITECTURE §1.1 tokens. Darken control borders to ≥3:1 (R2-Q22). Design review: focus ring `#ff6a2b` on `#221d18` / `#2b241e` (tabs, bar buttons, "⋯", session bar link) and `#c2410c` on light surfaces (F07); Disabled row text `#6f6352`, no `color.text.disabled` (F13); TIME UP chip `#b91c1c` / `#ffffff`, TIME UP time `#ff6a2b` (R11-Q5, F04); one ≤60 s amber `#ffb38a` (F26). Remove the dark theme: dark tokens (`app_colors.dart:78-92`), `AppTheme.dark()`, `theme.dart` `darkTheme`, `main.dart` `darkTheme:`; replace `AppColors.darkCardBorder` in `hamburger_menu.dart` | `lib/design/`, `lib/theme.dart`, `lib/main.dart`, `lib/shell/hamburger_menu.dart` | R2-Q22, UX-22, R11-Q5, F04, F07, F13, F26 |
 | 8.1.4 Contrast test: a unit test computes the WCAG 2.x ratio of every token pair in ARCHITECTURE §1.1 and fails below 4.5:1 (text) or 3:1 (non-text) | `test/design/contrast_test.dart` | UX-22 |
 
 ### 8.2 — Round state machine (`GameData`, `TimerData`)
@@ -1144,13 +1176,13 @@ changeover also keeps a `discarded` flag for the round it follows (R2-Q5, R9-Q1)
 | `regenerateDraft()` | ready | New lineup; clock stays stopped | RND-13 |
 | `startFirstRound()` | ready | Save round 1 → `running` at once, clock from full duration. No changeover (R9-Q2). No Undo | RND-13 |
 | `makeNextRound()` / `editNextRound()` | running, paused | Lineup for n+1 → `isEditingNext` | RND-05, RND-10 |
-| `saveNextRound()` / `regenerateNext()` / `exitEditNext()` | edit mode | Save n+1 / new n+1 lineup / drop edits (× ). In `timeUp`, `saveNextRound()` also starts the changeover (R6-Q3). In `changeover` with `waitingForEdit`, `saveNextRound()` and `exitEditNext()` start round n+1 (log round n, → `running`); `regenerateNext()` keeps waiting (R9-Q4; × open point, UAT RND-06 TODO) | RND-14, RND-07, RND-06 |
-| `pause()` / `resume()` | running, changeover | `paused` keeps remaining time and the phase to return to ("Resume round n" / "Resume changeover"). Paused in edit mode: the round bar shows "Start round {n+1}" and "Resume round {n}" (R9-Q5) | RND-17, RND-18, RND-14 |
+| `saveNextRound()` / `regenerateNext()` / `exitEditNext()` | edit mode | Save n+1 / new n+1 lineup / drop edits (× ). `exitEditNext()` is called only after the "Close without saving?" dialog ("Close" / "Keep editing"), or with no dialog when nothing changed since edit mode opened; add `hasUnsavedEdits` (R11-Q2, F03). In `timeUp`, `saveNextRound()` also starts the changeover (R6-Q3). In `changeover` with `waitingForEdit`, `saveNextRound()` and `exitEditNext()` start round n+1 (log round n, → `running`; × starts the saved round unchanged, R11-Q2); `regenerateNext()` keeps waiting (R9-Q4) | RND-14, RND-07, RND-06 |
+| `pause()` / `resume()` | running, changeover | `paused` keeps remaining time and the phase to return to ("Resume round n" / "Resume changeover"). `pause()` never changes `isEditingNext` (F02). Paused in edit mode: the round bar shows "Start round {n+1}" and "Resume round {n}" (R9-Q5). A paused changeover follows the PAUSED rules for round n+1: Re-roll, swap and the full slot menu (F17) | RND-17, RND-18, RND-14, COURT-14 |
 | tick at 0:00 | running | Saved n+1 → `changeover` (20 s, `TimerData` second countdown). Else `timeUp`, and the matchmaker makes the planned n+1 lineup that the courts show (R6-Q4). `isEditingNext` stays as it is in both cases (R6-Q3, R7-Q4) | RND-03, RND-14, RND-15 |
 | changeover end / `startNextNow()` | changeover | Log round n (8.2.1) unless `discarded`, n+1 → `running`, leave edit mode. If edit mode has unsaved changes at the end, the countdown stops at 0:00 and sets `waitingForEdit`; nothing is logged until `saveNextRound()` (R9-Q4) | RND-06, RND-19 |
-| `startNextRound()` (was `saveAndStartNew`) | running, paused, timeUp, not edit mode; or paused in edit mode (R9-Q5) | Save n+1 (saved, planned, or fresh lineup; in paused edit mode the edit lineup with its changes, open point UAT RND-14 TODO) → `changeover` (R6-Q1, R6-Q14, R7-Q1). Logs nothing at the click | RND-04, RND-14 |
+| `startNextRound()` (was `saveAndStartNew`) | running, paused, timeUp, not edit mode; or paused in edit mode (R9-Q5) | Save n+1 (saved, planned, or fresh lineup; in paused edit mode the edit lineup with its changes, saved, R11-Q3) → `changeover` (R6-Q1, R6-Q14, R7-Q1). Logs nothing at the click | RND-04, RND-14 |
 | `discardAndStartNext()` (was `discardAndStartNew`) | running, paused, timeUp; not edit mode | Called only after the confirm dialog (R9-Q3). → `changeover` with `discarded = true`; never logs round n; number n again, label "Discard round {n} and start again" (R2-Q5, R9-Q1) | RND-16 |
-| `endSession()` | any with a lineup | Log the round that started last once (also the round that ended in `timeUp` / before `changeover`; never a discarded or not-started round, R6-Q5), stop clock, check out all, `noLineup`, round 1 | RND-20 |
+| `endSession()` | any with a lineup | Log the round that started last once (also the round that ended in `timeUp` / before `changeover`; never a discarded or not-started round, R6-Q5), stop clock, check out all, `noLineup`, round 1. Add `roundToLog` (n, n−1 in `changeover`, or none) for the dialog text (F09) | RND-20 |
 | `swapPlayers()` / `undoSwap()` | any state that allows a swap | Swap two players; keep one swap memento for 10 s; any other change clears it (R6-Q6, R7-Q2) | COURT-08, COURT-10, COURT-17 |
 | ~~`undoScan()`~~ | — | Removed: no Undo after a scan (R9-Q8; UAT PLY-20 removed) | — |
 
@@ -1251,36 +1283,60 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   start again" (R9-Q1), which opens a confirm dialog first (R9-Q3); PAUSED also has "Start
   round {n+1}" (R6-Q14); PAUSED in edit mode shows "Start round {n+1}" and "Resume round {n}"
   only (R9-Q5); paused changeover "Resume changeover" (R6-Q12); a changeover waiting at 0:00
-  for an edit shows no buttons (R9-Q4). No "COURTS − 4 +" stepper (R2-Q2). UAT RND-01, RND-02, RND-04, RND-09,
+  for an edit shows no buttons (R9-Q4). No "COURTS − 4 +" stepper (R2-Q2). TIME UP chip `#b91c1c`
+  / `#ffffff`, time `#ff6a2b`, sub-label "Clock stopped at 0:00" (R11-Q5, F04). The state chip is
+  `Semantics(liveRegion: true)`; the time is not (F24). Focus ring `#ff6a2b` on the bar (F07).
+  Each 32 px button gets a 40 px hit area (F27). UAT RND-01, RND-02, RND-04, RND-09,
   RND-12, RND-13, RND-15…19, RND-06.
 - 8.5.3 `NextRoundStrip` and edit mode: strip texts, dashed NEXT cards, edit strip with
   "Discard & regenerate", "Save round {n+1}", "×"; round bar shows Pause only while RUNNING
   (R4-Q9), and "Start round {n+1}" + "Resume round {n}" while PAUSED (R9-Q5). Court tag
   "{count} players" (for example "3 players", ICU plural) on a court one player short (UX-04). CHANGEOVER
-  strip reads "Round {n} ended" (R6-Q2). No strip in TIME UP; the courts show the planned round
-  (R6-Q4). UAT RND-05, RND-07, RND-08, RND-10, RND-14, RND-15, RND-22.
+  strip reads "Round {n} ended" (R6-Q2); after a discard it reads "Round {n} discarded · new lineup
+  for round {n}" (`discarded` flag, F10). No strip in TIME UP; the courts show the planned round
+  (R6-Q4), and every card shows the tag "ROUND {n+1}" (F08). "×" opens "Close without saving?"
+  ("Close" / "Keep editing") when the edit has changes, and closes at once when it has none
+  (R11-Q2, F03). UAT RND-05, RND-07, RND-08, RND-10, RND-14, RND-15, RND-22.
 - 8.5.4 `CourtCard` / `PlayerSlot`: "Court {k}", plain gap text, secondary Re-roll shown per
   R3-Q10 and R7-Q4, slot tap = select for swap, hover fill and "⋯" menu ("Move to waitlist",
   "Check out"; live court while the clock runs, CHANGEOVER included: "Check out" only), no "×"
-  (R3-Q11). Keep "Open slot" (R2-Q19). UAT COURT-01, COURT-04…10, COURT-14…16.
+  (R3-Q11). Keep "Open slot" (R2-Q19). On a live court while the clock runs (not edit mode) the
+  slot tap is a no-op and the slot is not a tap button (F11); a checked-out player there has no
+  "⋯" (R11-Q4). The "⋯" shows on hover and on keyboard focus of the slot or the button, with a
+  40×40 hit area; the menu takes arrow keys, Enter and Esc, and focus goes back to the "⋯" when
+  it closes (F06, F27). Paused changeover: PAUSED rules (F17). UAT COURT-01, COURT-04…10,
+  COURT-14…16.
 - 8.5.5 `WaitlistPanel`: title + count, "SEARCH WAITLIST" field (UX-14), fill-rule order, no
   numbers, "{tier} · {n} rounds", "Next in" tag, "No one waiting", "No one matches “{text}”"
-  (R6-Q12), selection hint kept. Desktop only; `WaitlistChips` unchanged. UAT WL-01, WL-04,
-  COURT-04…06.
-- 8.5.6 End session dialog: "End session?", "Round {n} goes into the history. Everyone is
-  checked out." (READY: "Everyone is checked out." only), "End session" / "Cancel" (no Undo
-  message; RND-21 on hold). Discard confirm dialog: "Discard round {n}?", "Round {n} is not
-  logged. The next lineup goes on the courts and round {n} starts again.", "Discard round" /
-  "Cancel" (R9-Q3). The swap Undo bottom message (10 s, "Swapped {A} and {B}. Undo", no
-  keyboard shortcut, R7-Q2). UAT RND-16, RND-20, COURT-17.
+  (R6-Q12), selection hint kept. The list is `Expanded(child: ListView)` under a fixed header,
+  search and hint, so it scrolls (F12). While the live clock runs (not edit mode) the items are
+  not pressable and the hint reads "Courts change at the next round" (F11). With no lineup the
+  panel lists the checked-in players in check-in order, no "Next in" (F22). Desktop only;
+  `WaitlistChips` unchanged. UAT WL-01, WL-04, NAV-07, RND-12, COURT-04…06, COURT-10.
+- 8.5.6 End session dialog: "End session?", "End session" / "Cancel" (no Undo message; RND-21
+  on hold). Text from `roundToLog` (F09): RUNNING, PAUSED, TIME UP "Round {n} goes into the
+  history. Everyone is checked out."; CHANGEOVER (not discarded) "Round {n−1} goes into the
+  history. Everyone is checked out."; READY, no lineup, or a changeover after a discard
+  "Nothing is logged. Everyone is checked out." Discard confirm dialog: "Discard round {n}?",
+  "Round {n} is not logged. The next lineup goes on the courts and round {n} starts again.",
+  "Discard round" / "Cancel" (R9-Q3; this text wins over the board, F14). "Close without
+  saving?" dialog: "Close" / "Keep editing" (R11-Q2, F03). One confirm widget for all three
+  (F14): alert dialog semantics with title and description, initial focus on the cancel
+  button, Esc = cancel; it pops itself (ARCHITECTURE §4.6). A phase change while the Discard or
+  End session dialog is open closes it with no action (F18). The swap Undo bottom message (10 s,
+  "Swapped {A} and {B}. Undo", no keyboard shortcut, R7-Q2) stays bottom-centre and blocks
+  pointer input only inside its own 360 × 48 px box (F15). UAT RND-07, RND-16, RND-20,
+  COURT-17.
 
 ### 8.6 — Shell (desktop)
-- 8.6.1 `TopNavBar` desktop: left text "Session · {duration} rounds" (R3-Q5); whole minutes
-  as "10 min", else `m:ss`, for example "Session · 10:30 rounds"; tabs "Courts",
+- 8.6.1 `TopNavBar` desktop: left text "Session" over "{duration} rounds" (R3-Q5, F29); whole
+  minutes as "10 min", else `m:ss`, for example "10:30 rounds"; tabs "Courts",
   "Players", "Sessions"; "⋯" menu with "Analytics", "Settings" (R2-Q13); active tab = white
-  600 + 3 px orange underline (UX-21). Routes stay the same 5 routes. Tablet keeps 5 tabs and
+  600 + 3 px orange underline (UX-21). Tabs and "⋯" have a `#ff6a2b` focus ring (F07). Routes stay the same 5 routes. Tablet keeps 5 tabs and
   "Dashboard" (R6-Q7). UAT NAV-01, NAV-09.
-- 8.6.2 `SessionBar`: 40 px, on every tab except Courts; chip always; "No round yet" before
+- 8.6.2 `SessionBar`: 40 px, on every tab except Courts; order ROUND · time · chip, as on the
+  round bar (F29); the chip is `Semantics(liveRegion: true)`, the time is not (F24); the bar link
+  has a `#ff6a2b` focus ring (F07); TIME UP chip `#b91c1c` / `#ffffff` (R11-Q5); chip always; "No round yet" before
   the first lineup; "· round {n+1} saved" or "· round {n+1} not saved" (R6-Q12); amber time
   ≤60 s while RUNNING, not PAUSED (R6-Q8); click → Courts; no round-change message (R4-Q4,
   R4-Q6). It watches `TimerData` through a `Consumer` so only the bar rebuilds on a tick
@@ -1292,7 +1348,10 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   player" button. No capacity progress bar on desktop (R6-Q11). Keep the banner and pending card
   restyled (R2-Q19). Level chips: 4 tier chips replace the 8 Elo-code chips (R6-Q13). Control
   borders per ARCHITECTURE §1.1 (`#6f6352` inputs and outline buttons, `#8f826e` secondary,
-  R6-Q16). UAT PLY-14, CHK-01, CHK-04, PLY-13.
+  R6-Q16). Focus: the scan field gets focus back after pointer actions (scanner rule, kept,
+  F21), and Esc anywhere on the tab returns focus to it (F21). After a scan the text is
+  selected, except in MANY MATCHES: caret at the end, no selection (F19). UAT PLY-14, CHK-01,
+  CHK-04, PLY-13.
 - 8.7.2 `ScanResultBox` with the 9 states (READY, CHECKED IN, CHECKED OUT, SCANNED TWICE, NOT
   FOUND, MANY MATCHES, SESSION FULL, DISABLED, DUPLICATE ID), `Semantics(liveRegion: true)`,
   stays until the next scan, not changed by row taps (R3-Q3). Texts per R4-Q3 and R6-Q12:
@@ -1303,15 +1362,32 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
 - 8.7.3 `PlayerRow`: 48 px, columns NAME / SIGN-IN ID / LEVEL (tier name) / TYPE / More;
   checked-in fill, 1 px border and 6 px bar in green (UX-16). Move `LevelAdjuster` (with the Elo
   code) and the membership control into the More panel (R2-Q17, R2-Q18); phone/tablet rows keep
-  them (R6-Q7). UAT PLY-05, PLY-06, PLY-08, NAV-08.
+  them (R6-Q7). Disabled row: name, ID and level in `#6f6352`, not a paler colour (F13). "More"
+  is a button with `Semantics(expanded:)` for its panel (F23). UAT PLY-05, PLY-06, PLY-08,
+  NAV-08.
 - 8.7.4 Double-scan guard: keep only the last scan check-in (id); a scan of the same target, with
   no time limit, shows SCANNED TWICE "(same card as the last scan)" with "Check out" (R2-Q11,
-  R6-Q15). UAT PLY-19.
+  R6-Q15). Its "Check out" shows the CHECKED OUT result for that player, not READY (F20).
+  UAT PLY-19.
 - 8.7.5 Removed (R9-Q8): no Undo button on CHECKED IN / CHECKED OUT (UAT PLY-20 removed).
 - 8.7.6 More panel as drawn on the canvas board "Players · More panel" (R6-Q17): accordion under
   the row; sign-in ID + Save; level "− Intermediate (B1) +"; "Member / Casual / Disabled";
-  delete; close; stats, partners, attendance. Disabled asks for confirmation, then checks the
-  player out. UAT PLY-05, PLY-06, PLY-09.
+  delete (`btn.danger-outline`, F23); close; stats, partners, attendance. Disabled asks for
+  confirmation, then checks the player out. The Sign-in ID field selects all its text on focus
+  (F30). A duplicate ID on Save is refused with "ID {id} is used by {name}." (F23). UAT PLY-05,
+  PLY-06, PLY-09, PLY-15.
+- 8.7.7 **Bug: exact sign-in-ID match must ignore the level chips (F01, P1).** Today
+  `_onSearchSubmitted` (`lib/features/players/players_page.dart:258`) looks for the exact ID in
+  `_listedPlayers()` (`players_page.dart:339-347`), which applies the level chips and the search
+  text. So a card of a level that no chip selects gives NOT FOUND, and the operator may add a
+  duplicate player. Fix: match the exact sign-in ID first over
+  `PlayerRepository.instance.listedPlayers()` (all listed players, no chips, no query); only
+  when no ID equals the text, use `_listedPlayers()` for the "only player in the list" fallback.
+  Do not clear the chips. Write the failing test first in
+  `test/features/players_scanner_test.dart`:
+  `should_check_in_by_exact_sign_in_id_when_level_chip_hides_player` (Arrange: one chip on, the
+  scanned player's tier not selected; Act: type the ID, Enter; Assert: the player is checked
+  in). UAT PLY-14.
 
 ### 8.8 — l10n keys (en, fr, zh, zh_HK)
 New keys, prefix by feature. Courts: `courts_generate_round_one`, `courts_start_round` ("Start
@@ -1338,6 +1414,19 @@ Not in this build (on hold): `courts_round_started_undo`. Shell: `shell_session_
 `players_scan_out`, `players_scan_twice`, `players_scan_not_found`, `players_scan_many`,
 `players_scan_full`, `players_scan_disabled_more`, `players_scan_duplicate_id`. No Undo key
 on Players (R9-Q8).
+Design review keys (2026-10-20): `courts_close_unsaved_title` ("Close without saving?"),
+`courts_close_unsaved_close` ("Close"), `courts_keep_editing` ("Keep editing") (R11-Q2, F03);
+`courts_round_discarded` ("Round {n} discarded · new lineup for round {n}", F10);
+`courts_tag_round` ("ROUND {n}", TIME UP card tag, F08); `courts_waitlist_hint_live` ("Courts
+change at the next round", F11); `courts_end_session_body_round` ("Round {n} goes into the
+history.") and `courts_end_session_nothing_logged` ("Nothing is logged."), each followed by
+"Everyone is checked out." (F09); `players_id_used_by` ("ID {id} is used by {name}.", F23);
+`players_disable_confirm_*` (F23); `sessions_reshuffle_confirm_*` and
+`sessions_delete_template_confirm_*` (F25, for the Sessions task).
+**Label width (F16).** In the build, check the PAUSED round bar at 1280 px in fr, zh and zh_HK
+("Discard round {n} and start again", "Start round {n+1}", "Resume round {n}", "⋯"). If the
+labels do not fit, PAUSED uses the short label `courts_discard_round_short` ("Discard round
+{n}"); the dialog keeps the full text.
 Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads (for example
 `dashboard_rotate_now`, `dashboard_premake_next`, `dashboard_next_round_ready`,
 `dashboard_mode_time_based`) only after a grep shows no reader.
@@ -1352,10 +1441,11 @@ Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads
 | Round bar, strip, edit mode | `test/features/courts_round_bar_test.dart` | RND-01, RND-02, RND-09, RND-10, RND-15, RND-22 |
 | Slot menu, re-roll visibility | `test/features/courts_slot_menu_test.dart` | COURT-01, COURT-10, COURT-14, COURT-15 |
 | Swap Undo message | `test/features/courts_swap_undo_test.dart` | COURT-17 |
-| Waitlist panel | `test/features/courts_waitlist_test.dart` | WL-01, WL-04 |
+| Confirm dialogs: "×" asks first, End session text by state, focus and Esc, a phase change closes the dialog (R11-Q2, F03, F09, F14, F18) | `test/features/courts_confirm_dialog_test.dart` | RND-06, RND-07, RND-16, RND-20 |
+| Waitlist panel (scrolls, not pressable while the clock runs, no-lineup list) | `test/features/courts_waitlist_test.dart` | WL-01, WL-04, RND-12 |
 | Shell | `test/shell/session_bar_test.dart`, `top_nav_test.dart` | NAV-01, NAV-09…11 |
 | Duration change while paused | `test/timer_data_test.dart` (update) | SESS-02 |
-| Scan result box | `test/features/players_scanner_test.dart` (rewrite) | PLY-14, PLY-16…19 |
+| Scan result box; exact-ID match ignores the level chips (8.7.7, F01) | `test/features/players_scanner_test.dart` (rewrite) | PLY-14, PLY-16…19 |
 | Player row, level chips | `test/features/players_row_test.dart` | PLY-05, PLY-06, PLY-08, NAV-08 |
 | More panel | `test/features/players_more_panel_test.dart` | PLY-05, PLY-06, PLY-09 |
 | Layout fit | `test/features/dashboard_four_courts_fit_test.dart` (update) | NAV-07 |
@@ -1367,7 +1457,9 @@ Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads
 
 - [ ] Every UAT ID above has a test that failed first and now passes
 - [ ] All TODO(Nathan) points in UAT.md are answered and the specs updated
-- [ ] The design canvas shows every decided change (R3-Q13), and the More panel is drawn (R5-Q1)
+- [ ] The design canvas shows every decided change (R3-Q13), and the More panel is drawn (R5-Q1);
+      the design-review canvas pass (8.0) is done
+- [ ] F05 and F28 (design review) are not built until Nathan answers them
 - [ ] Two fast clicks on any start or save button log round n once (R6-Q18, 8.2.4)
 - [ ] No Courts round Undo ships (R6-Q6); no scan Undo ships (R9-Q8); the swap Undo has no
       keyboard shortcut (R7-Q2)
