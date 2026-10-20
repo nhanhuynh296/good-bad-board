@@ -8,7 +8,7 @@ are superseded explorations — excluded (see "Excluded from scope").
 
 **2026-10-17 design build.** The approved design (artifact `9JBfi4Rk8igxQMVDexk6So`: Main,
 Players, ScanStates, TypeColour) and the decisions in
-`audit/design-diff-2026-10-17/decisions.md` (IDs R1-Q1 … R7-Q7; a later row overrides an
+`audit/design-diff-2026-10-17/decisions.md` (IDs R1-Q1 … R10-Q3; a later row overrides an
 earlier one) replace the old prototype for
 the Courts tab, the shell and the Players tab. A decision overrides the design HTML. A case
 changed by this build names its decision IDs in brackets, for example (R2-Q4). A removed case
@@ -40,10 +40,12 @@ prototype's logic and should be treated as acceptance values, not approximations
 | Round modes in the release build | Time-based only. Game-based mode is hidden behind `GameMode.enabled` (`false` in release). `getGameType()` then returns time-based. A stored game-based setting, or the mode in a template, is ignored. The stored `gameType` preference is never rewritten. |
 | Other release flags (code kept, hidden in UI) | `PlayersPage.showImportButton=false` (CSV Import button), `SettingsPage.showSignupPreview=false` (signup preview link), `AnalyticsPage.showHiddenCards=false` (per-court gap and player mixing cards) |
 | Default round duration | **10 min** (R2-Q24). The organizer sets it as `mm:ss` on the Sessions tab (SESS-02) |
-| Changeover | **20 s**, fixed (R3-Q7). It runs before every new round after round 1: at 0:00 when the next round is saved (RND-03), and after "Start round {n+1}", "Discard round {n} and start round {n+1}" and "Save round {n+1}" in TIME UP (R6-Q1, R6-Q3, R7-Q1). The changeover counts as "the clock runs" (R7-Q4) |
+| Changeover | **20 s**, fixed (R3-Q7). It runs before every new round after round 1: at 0:00 when the next round is saved (RND-03), and after "Start round {n+1}", "Discard round {n} and start again" and "Save round {n+1}" in TIME UP (R6-Q1, R6-Q3, R7-Q1, R9-Q1). "Start round 1" has no changeover: round 1 starts at once (R9-Q2). The changeover counts as "the clock runs" (R7-Q4). If edit mode has changes that are not saved when the changeover reaches 0:00, the changeover stops at 0:00 and waits for "Save round {n+1}" (R9-Q4, RND-06) |
 | Round states | READY · RUNNING · PAUSED · TIME UP · CHANGEOVER. The round bar and the session bar show the state as a chip (R4-Q6) |
-| Rounds played | The number of logged Rounds of this Session that hold the Player (`GameData.getCurrentPlayersHistory`). A Round is logged when the next Round starts (R3-Q8) |
-| Fill rule | The app fills an open slot with the waiting Player who has played the fewest Rounds this Session. On a tie, it takes the Player who gives the smallest court level gap. The same rule applies everywhere the app picks a waiting Player (R2-Q9, UX-01) |
+| Rounds played | The number of logged Rounds of this Session that hold the Player (`GameData.getCurrentPlayersHistory`). A Round is logged when the next Round starts (R3-Q8). A Player who checks in late starts at 0 Rounds: the app gives no credit for the Rounds played before the check-in, such as the Session average (R10-Q3) |
+| Matchmaker (a full round) | To make a full lineup ("Generate round 1", "Discard & regenerate", "Make round {n+1}", the planned round at TIME UP, a fresh lineup at a start button), the app keeps the current algorithm: a weighted random pick of the Players (`GameData._choosePlayer`, weight `1 / exp(2 × (rounds played − Session average))`, so a Player with fewer Rounds is more likely to play), then the court swap optimiser (`GameData._improveEloSpread`, cost `0.1 × average court level gap + largest court level gap`). The fill rule does not make full rounds (R10-Q1) |
+| Fill rule (one open place) | Used only when the app fills **one** open place: a check-out, a delete or a set to Disabled (WL-02), and "Move to waitlist" (COURT-15). The app takes the waiting Player who has played the fewest Rounds this Session. On a tie, it takes the Player who gives the smallest level gap on that court (R2-Q9, UX-01, R10-Q1, R10-Q2) |
+| Waitlist order | The waitlist panel lists the Players in the order the fill rule would use for the next open place: fewest Rounds first; on a tie, the smallest level gap on the first court (Court 1 first) that has an open place; with no open place to compare, check-in order, earliest first (R10-Q2, WL-01) |
 | Level text | Tier name (for example "Intermediate") in every user-facing place. The Elo code (for example "B1") shows only in the Players More panel (R2-Q18). The Players level chips are the 4 tiers, not the 8 Elo codes (R6-Q13) |
 | Typeface | Source Sans 3 only. Chinese text uses the Windows system fonts (Microsoft YaHei for zh, Microsoft JhengHei for zh_HK) (R3-Q6). All UI text comes from ARB keys in en, fr, zh, zh_HK |
 | Theme | Light only. The dark theme is removed |
@@ -82,18 +84,19 @@ the raw-ELO numbers shown in the standalone `Analytics Dashboard.dc.html` protot
 
 ## 2. Cross-cutting: Navigation & Responsive Layout
 
-**NAV-01** — Desktop top nav (changed 2026-10-17: R2-Q13, R3-Q5)
+**NAV-01** — Desktop top nav (changed 2026-10-17: R2-Q13, R3-Q5; 2026-10-20: duration text)
 Given viewport width ≥ 1080px
 When the app loads
 Then a 56 px dark top nav shows, at the left, the text "Session · {duration} rounds" (for
 example "Session · 10 min rounds"). It shows no club name and no template name.
+And a duration that is not whole minutes shows as `m:ss`, for example "Session · 10:30
+rounds". A duration in whole minutes shows as "{m} min", for example "10 min".
 And at the right it shows 3 tabs, "Courts", "Players", "Sessions", and a "⋯" button (NAV-09).
 And the active tab has white text at weight 600 and a 3 px orange underline. It has no fill.
 And the compact phone header and the bottom bar or hamburger are not shown.
 Given viewport width 720–1079px (tablet)
 Then the top nav stays as before this build: 5 tabs (Dashboard, Players, Sessions, Analytics,
 Settings), with the label "Dashboard" (R2-Q23, R6-Q7).
-TODO(Nathan): the text for a duration that is not whole minutes (for example 10:30).
 
 **NAV-02** — Phone compact header
 Given viewport width < 720px
@@ -212,13 +215,13 @@ nothing to disk (see PERSISTENCE.md §3.1).
 >
 > **2026-10-17 round model.** A Round has these states: no lineup → READY (draft, clock
 > stopped) → RUNNING ⇄ PAUSED → (0:00) TIME UP or CHANGEOVER → next Round RUNNING. A Round
-> must be saved before its clock starts (R2-Q4). Every new Round after round 1 starts through
-> the 20 s CHANGEOVER: at 0:00 with a saved next Round, and after "Start round {n+1}" or
-> "Discard round {n} and start round {n+1}" (R6-Q1, R7-Q1). The app logs Round n (history,
-> `games.json`, one `SessionLog`) when Round n+1 starts: at the end of the changeover, or with
-> "Start round {n+1} now" (R3-Q8, R6-Q2). A discarded Round is never logged, and the next
-> Round uses the same number again (R2-Q5, see the TODO in RND-16). So the round number is
-> always the number of logged Rounds this Session + 1. The state names on the chips are READY,
+> must be saved before its clock starts (R2-Q4). Round 1 starts at once, with no changeover
+> (R9-Q2). Every new Round after round 1 starts through the 20 s CHANGEOVER: at 0:00 with a
+> saved next Round, and after "Start round {n+1}" or "Discard round {n} and start again"
+> (R6-Q1, R7-Q1, R9-Q1). The app logs Round n (history, `games.json`, one `SessionLog`) when
+> Round n+1 starts: at the end of the changeover, or with "Start round {n+1} now" (R3-Q8,
+> R6-Q2). A discarded Round is never logged, and the next Round uses the same number again
+> (R2-Q5, R9-Q1). So the round number is always the number of logged Rounds this Session + 1. The state names on the chips are READY,
 > RUNNING, PAUSED, TIME UP and CHANGEOVER (R6-Q12).
 
 **RND-01** — Round bar display (changed 2026-10-17: R2-Q20, R4-Q7, R4-Q8)
@@ -254,9 +257,10 @@ And the courts count as "the clock runs": no "Re-roll", and the slot "⋯" shows
 only, except while the organizer edits round n+1 in edit mode (R7-Q4, COURT-14).
 And if edit mode for round n+1 is open, it stays open (RND-14).
 
-**RND-04** — "Start round {n+1}" (changed 2026-10-17: UX-07, R3-Q8, R6-Q1, R6-Q14, R6-Q18, R7-Q1)
+**RND-04** — "Start round {n+1}" (changed 2026-10-17: UX-07, R3-Q8, R6-Q1, R6-Q14, R6-Q18, R7-Q1; 2026-10-20: R9-Q5)
 Was "Save and start new round".
-Given round n is RUNNING, PAUSED or TIME UP and the page is not in edit mode
+Given round n is RUNNING, PAUSED or TIME UP and the page is not in edit mode, or round n is
+PAUSED and edit mode is open (RND-14, R9-Q5)
 When the organizer clicks "Start round {n+1}"
 Then round n+1 is saved with its lineup: the saved round n+1, or in TIME UP the planned round
 on the courts (RND-15), or else a new matchmaker lineup. The click saves it (R2-Q4).
@@ -276,7 +280,7 @@ Given round n+1 is saved
 When the organizer clicks "Edit round {n+1}"
 Then the page enters edit mode with the saved lineup.
 
-**RND-06** — The changeover ends and round n+1 starts (changed 2026-10-17: R3-Q7, R3-Q8, R6-Q2)
+**RND-06** — The changeover ends and round n+1 starts (changed 2026-10-17: R3-Q7, R3-Q8, R6-Q2; 2026-10-20: R9-Q4)
 Given the state is CHANGEOVER for round n+1
 When the changeover time reaches 00:00
 Then the app logs round n: one history entry, one row per court in `games.json`, one
@@ -286,9 +290,26 @@ And the saved lineup, with every edit the organizer made, is the live lineup.
 And no round n+2 exists yet. The strip reads "Round {n+2} not saved".
 And if the write fails, round n+1 does not start, nothing is logged, and the message reads
 "Something went wrong. Try again." (R45-01).
-TODO(Nathan): the changeover ends while edit mode is open with changes that are not saved
-(R7-Q4 allows edits in CHANGEOVER). Proposal: the saved lineup starts, and edit mode stays open
-for the live round? Or the edit is dropped?
+Given the state is CHANGEOVER for round n+1 and edit mode for round n+1 is open with no changes
+that are not saved
+When the changeover time reaches 00:00
+Then round n+1 starts as above, and the page leaves edit mode.
+Given the state is CHANGEOVER for round n+1 and edit mode for round n+1 has changes that are not
+saved (R7-Q4 allows edits in CHANGEOVER)
+When the changeover time reaches 00:00
+Then the changeover time stops at 00:00 and waits (R9-Q4). The chip stays "CHANGEOVER", edit
+mode stays open with its changes, and round n is not logged yet.
+And the round bar shows no buttons, only the round "⋯" menu (R4-Q9: no start button in edit
+mode; "Pause" has no time to freeze).
+When the organizer clicks "Save round {n+1}"
+Then round n+1 is saved with the edits, the page leaves edit mode, and round n+1 starts as
+above (round n logged, round n+1 RUNNING with the full duration).
+When the organizer clicks "Discard & regenerate"
+Then the app replaces the round n+1 lineup with a new matchmaker lineup, edit mode stays open,
+and the changeover still waits. The next "Save round {n+1}" starts round n+1 (R9-Q4).
+When the organizer clicks "×"
+Then the edits are lost (RND-07), and the saved round n+1 starts as above.
+TODO(Nathan): confirm "×" while the changeover waits: this spec starts the saved round n+1.
 
 **RND-07** — "×" leaves edit mode without saving (changed 2026-10-17: R2-Q6)
 Given the page is in edit mode for round n+1
@@ -327,13 +348,13 @@ And the round bar shows the round n clock and "Pause" only (R4-Q9).
 And the waitlist lists the players who sit out round n+1, so no player is on two courts.
 And place, swap, re-roll and the slot "⋯" menu change round n+1, never the live courts.
 
-**RND-11** — The next round does not go stale (changed 2026-10-17: R2-Q9, UX-04, R7-Q7)
+**RND-11** — The next round does not go stale (changed 2026-10-17: R2-Q9, UX-04, R7-Q7; 2026-10-20: tag text)
 Given round n+1 is saved
 When a player in round n+1 is checked out, deleted, or set to Disabled
 Then the app removes the player from round n+1 and fills the slot by the fill rule (§1) from
 the players who sit out round n+1.
 And if nobody can fill it, the court stays one player short and shows the tag "{count}
-players". TODO(Nathan): confirm the tag (UX-04 agreed by default; not drawn).
+players" with the number of players on the court, for example "3 players" (UX-04; ICU plural).
 When a player is checked in late
 Then the player is not added to round n+1 and waits on the waitlist (CHK-02, R7-Q7).
 When a player's details are edited
@@ -350,7 +371,7 @@ When fewer than 4 players are checked in
 Then nothing changes and a message reads "Check in at least 4 players. {count} checked in."
 (R45-39). The button stays enabled.
 
-**RND-13** — Draft round 1: "Start round 1" (added 2026-10-17: R2-Q1, R2-Q2, R7-Q1)
+**RND-13** — Draft round 1: "Start round 1" (added 2026-10-17: R2-Q1, R2-Q2, R7-Q1; 2026-10-20: R9-Q2)
 Was "Save and start round 1".
 Given a round 1 lineup exists and its clock has not started (READY, sub-label "Not started")
 Then the round bar shows "Discard & regenerate" and the primary "Start round 1".
@@ -359,20 +380,19 @@ And the organizer can place, swap, re-roll and use the slot "⋯" menu on every 
 When the organizer clicks "Discard & regenerate"
 Then the app replaces the draft with a new matchmaker lineup. The clock stays stopped.
 When the organizer clicks "Start round 1"
-Then round 1 is saved, the state becomes RUNNING and the clock starts from the full duration.
+Then round 1 is saved, the state becomes RUNNING at once and the clock starts from the full
+duration. Round 1 has no changeover (R9-Q2).
 Nothing is logged. No Undo message shows (RND-21 is on hold).
-TODO(Nathan): does "Start round 1" also go through the 20 s changeover (R6-Q1 names the
-buttons after a round)? This spec: no, round 1 starts at once, as before.
 
-**RND-14** — Save or regenerate the next round in edit mode (added 2026-10-17: R2-Q6, R4-Q9, R6-Q3)
+**RND-14** — Save or regenerate the next round in edit mode (added 2026-10-17: R2-Q6, R4-Q9, R6-Q3; 2026-10-20: R9-Q4, R9-Q5)
 Given the page is in edit mode for round n+1
 When the organizer clicks "Save round {n+1}"
 Then round n+1 is saved, the page leaves edit mode, and the strip reads "Round {n+1} saved".
 When the organizer clicks "Discard & regenerate"
 Then the app replaces the round n+1 lineup with a new matchmaker lineup, and the page stays in
 edit mode.
-And while edit mode is open, the round bar shows no "Start round {n+1}" and no "Discard round
-{n} and start round {n+1}" (R4-Q9).
+And while edit mode is open and round n is RUNNING, the round bar shows "Pause" only: no "Start
+round {n+1}" and no "Discard round {n} and start again" (R4-Q9).
 Given edit mode is open and round n+1 is not saved
 When round n reaches 00:00
 Then the state becomes TIME UP and edit mode stays open with its changes (R6-Q3).
@@ -380,8 +400,21 @@ When the organizer then clicks "Save round {n+1}"
 Then round n+1 is saved and the changeover starts (RND-03, R6-Q3).
 Given edit mode is open and round n+1 is saved
 When round n reaches 00:00
-Then the changeover starts (RND-03) and edit mode stays open (R7-Q4).
-TODO(Nathan): which round bar buttons show when the organizer pauses during edit mode?
+Then the changeover starts (RND-03) and edit mode stays open (R7-Q4). If the edits are not
+saved when the changeover reaches 00:00, the changeover waits for "Save round {n+1}" (RND-06,
+R9-Q4).
+Given edit mode is open and round n is RUNNING
+When the organizer clicks "Pause"
+Then the chip reads "PAUSED", edit mode stays open, and the round bar shows "Start round {n+1}"
+and the primary "Resume round {n}", as on the canvas board "Courts · Paused" (R9-Q5). It shows no
+"Discard round {n} and start again".
+When the organizer clicks "Resume round {n}"
+Then the clock continues from the paused time (RND-17), and edit mode stays open.
+When the organizer clicks "Start round {n+1}"
+Then round n+1 is saved with the lineup in edit mode, its edits included, the page leaves edit
+mode, and RND-04 applies (changeover for round n+1).
+TODO(Nathan): confirm "Start round {n+1}" in paused edit mode keeps the edits that are not saved
+(this spec), and does not drop them.
 
 **RND-15** — 0:00 with no saved next round: TIME UP (added 2026-10-17: R2-Q4, R3-Q9, R6-Q4)
 Given round n is RUNNING and round n+1 is not saved
@@ -392,32 +425,39 @@ And the court grid and the waitlist show the planned round n+1: the matchmaker m
 0:00. Round n keeps its lineup for the log.
 And the organizer can change the planned round (place, swap, re-roll, slot "⋯", COURT-14).
 These changes, and a check-out, change the planned round only, never the round n lineup.
-And the round bar shows "Discard round {n} and start round {n+1}" and the primary "Start round
+And the round bar shows "Discard round {n} and start again" and the primary "Start round
 {n+1}" (RND-16, RND-04). Both go through the changeover.
 Given edit mode was open at 00:00
 Then RND-14 applies: edit mode stays open and "Save round {n+1}" starts the changeover.
 
-**RND-16** — "Discard round {n} and start round {n+1}" (added 2026-10-17: R2-Q5, R3-Q8, R6-Q1, R7-Q1)
-Was "Discard and start new round".
+**RND-16** — "Discard round {n} and start again" (added 2026-10-17: R2-Q5, R3-Q8, R6-Q1, R7-Q1; 2026-10-20: R9-Q1, R9-Q3)
+Was "Discard and start new round", then "Discard round {n} and start round {n+1}" (R7-Q1,
+replaced by R9-Q1).
 Given round n is RUNNING, PAUSED or TIME UP and the page is not in edit mode
-When the organizer clicks "Discard round {n} and start round {n+1}"
+When the organizer clicks "Discard round {n} and start again"
+Then a dialog asks "Discard round {n}?" and says "Round {n} is not logged. The next lineup goes
+on the courts and round {n} starts again." The buttons are "Discard round" and "Cancel" (R9-Q3).
+The clock does not stop while the dialog shows.
+When the organizer clicks "Cancel"
+Then nothing changes.
+When the organizer clicks "Discard round"
 Then the app does not log round n, now or later.
 And the new round uses the saved next-round lineup, or in TIME UP the planned round, or else a
 new matchmaker lineup. The state becomes CHANGEOVER, as in RND-04 (R6-Q1).
-And the new round uses the number n again: the round label reads "ROUND {n}" (R2-Q5).
+And the new round uses the number n again (R2-Q5, R9-Q1): in the changeover the round label
+reads "ROUND {n}" and the button reads "Start round {n} now" (RND-19).
 And no Undo message shows (RND-21 is on hold).
-TODO(Nathan): the R7-Q1 label says "start round {n+1}", but R2-Q5 uses the number n again, so
-the bar then reads "ROUND {n}". Which one is correct?
-TODO(Nathan): Courts Undo is on hold (R6-Q6), and the old reason for no confirmation dialog was
-Undo. Add a confirmation dialog for this button? This spec: no dialog.
+TODO(Nathan): the strip text in the changeover after a discard. This spec keeps "Round {n}
+ended" (RND-22), although the new round has the same number.
 
 **RND-17** — "Pause" and "Resume round {n}" (added 2026-10-17: R3-Q1, R6-Q14)
 Given round n is RUNNING
 When the organizer clicks "Pause"
 Then the time stops, the chip reads "PAUSED", and the time shows in grey (not amber, RND-02).
-And the round bar shows "Discard round {n} and start round {n+1}", "Start round {n+1}"
+And the round bar shows "Discard round {n} and start again", "Start round {n+1}"
 (R6-Q14, so the committee can end a round early with the clock paused) and the primary "Resume
-round {n}".
+round {n}". In edit mode it shows only "Start round {n+1}" and "Resume round {n}" (RND-14,
+R9-Q5).
 And the next-round strip stays (RND-22).
 When the organizer clicks "Resume round {n}"
 Then the clock continues from the paused time, and the chip reads "RUNNING".
@@ -437,11 +477,12 @@ Given the state is CHANGEOVER for round n+1
 When the organizer clicks "Start round {n+1} now"
 Then the changeover ends at once and RND-06 applies (round n logged, round n+1 RUNNING).
 
-**RND-20** — End session (added 2026-10-17: R2-Q16, UX-06, R6-Q5)
+**RND-20** — End session (added 2026-10-17: R2-Q16, UX-06, R6-Q5; 2026-10-20: dialog text)
 Given the Courts tab is active
 When the organizer clicks the round menu "⋯" and then "End session"
-Then a dialog asks "End session?" and says "Round {n} will be logged. The clock stops and all
-players are checked out." The buttons are "End session" and "Cancel". TODO(Nathan): wording.
+Then a dialog asks "End session?" and says "Round {n} goes into the history. Everyone is
+checked out." The buttons are "End session" and "Cancel". In READY (nothing to log) it says
+only "Everyone is checked out."
 When the organizer clicks "Cancel"
 Then nothing changes.
 When the organizer clicks "End session"
@@ -455,11 +496,11 @@ Given the state is READY (round 1 not started)
 Then End session logs nothing.
 
 **RND-21** — On hold (R6-Q6): Undo on the Courts tab for "Start round {n+1}", "Discard round
-{n} and start round {n+1}" and "End session" is not in this build (R4-Q2 is paused). Note for
+{n} and start again" and "End session" is not in this build (R4-Q2 is paused). Note for
 later: R4-Q2 and the R6 answers asked for a 10 s bottom message "Round {n} started. Undo" that
 restores the session and the clock time at the click, deletes the log entry the action wrote,
-and closes when any other change happens. The swap Undo (COURT-17) and the Players Undo
-(PLY-20) are in this build.
+and closes when any other change happens. The only Undo in this build is the swap Undo
+(COURT-17). The Players scan Undo is removed (R9-Q8, PLY-20).
 
 **RND-22** — Next-round strip (added 2026-10-17: R2-Q4, R3-Q7, R6-Q2, R6-Q4)
 Given round n is RUNNING or PAUSED and the page is not in edit mode
@@ -620,7 +661,7 @@ clock runs (R3-Q10, COURT-14), so the warning dialog has no trigger.
 
 **COURT-13** — Removed (2026-10-17 design): the action bar "Regenerate" is removed in time
 mode. "Discard & regenerate" shows only in READY and edit mode, where no round runs
-(RND-13, RND-14). "Discard round {n} and start round {n+1}" goes through the changeover
+(RND-13, RND-14). "Discard round {n} and start again" goes through the changeover
 (RND-16).
 
 **COURT-14** — Where Re-roll and editing show (added 2026-10-17: R3-Q10, R7-Q4)
@@ -638,7 +679,7 @@ Then a menu shows "Move to waitlist" and "Check out".
 When the organizer selects "Move to waitlist"
 Then the player goes to the waitlist and stays checked in.
 And the app fills the place by the fill rule (§1) from the other players who sit out that
-round (R7-Q6). If nobody can fill it, the slot shows "Open slot".
+round (R7-Q6): fewest rounds; on a tie, the smallest level gap on that court (R10-Q2). If nobody can fill it, the slot shows "Open slot".
 When the organizer selects "Check out"
 Then CHK-05 applies.
 Given a filled slot on a live court while the clock runs
@@ -661,7 +702,7 @@ Then RND-11 applies: round n+1 is the saved next round, so the app removes the p
 fills the slot by the fill rule. The round n log still holds the player.
 TODO(Nathan): the slot "⋯" of a player already checked out: show "Check out" again, or nothing?
 
-**COURT-17** — Undo a swap on the Courts tab (added 2026-10-17: R6-Q6, R7-Q2)
+**COURT-17** — Undo a swap on the Courts tab (added 2026-10-17: R6-Q6, R7-Q2; 2026-10-20: R9-Q8)
 Given the organizer swapped two players A and B on the Courts tab (COURT-08, COURT-10)
 Then a bottom message shows "Swapped {A} and {B}. Undo" for 10 s.
 When the organizer clicks "Undo" in the message
@@ -671,29 +712,33 @@ Then the message closes and Undo is no longer possible (R6-Q6: any other change 
 Undo). A new swap shows its own message. Only one level of Undo exists.
 And no key (Ctrl+Z or Cmd+Z) runs this Undo (R7-Q2).
 And a move of one player into an open slot is not a swap and shows no message.
+And this is the only Undo in this build: a scan on the Players tab has no Undo (R9-Q8).
 
-**WL-01** — Waitlist ordering & display (changed 2026-10-17: R3-Q12, UX-14)
+**WL-01** — Waitlist ordering & display (changed 2026-10-17: R3-Q12, UX-14; 2026-10-20: R10-Q2)
 Given one or more checked-in players are waitlisted
 Then the 280 px waitlist panel shows the title "Waitlist" and the count.
-And it lists the players in fill-rule order (§1): fewest rounds played first. It shows no
-position numbers (R3-Q12).
+And it lists the players in the waitlist order (§1): fewest rounds played first. On a tie, the
+player who gives the smallest level gap on the first court that has an open place; when no court
+has an open place, check-in order, earliest first (R10-Q2). It shows no position numbers
+(R3-Q12).
 And each entry shows the name, and under it "{tier} · {n} rounds" (for example "Intermediate
 · 1 round"; singular for 1).
 And an entry shows the green tag "Next in" when the player is in the saved next round (R3-Q12).
 Given no one is waitlisted
 Then "No one waiting" shows in place of the list (R2-Q19).
-TODO(Nathan): the tie-break for the list order. The fill rule tie-break (court level gap)
-needs one court. Proposal: then by name.
 
-**WL-02** — Fill rule on check-out (changed 2026-10-17: R2-Q9, UX-01, UX-11)
+**WL-02** — Fill rule on check-out (changed 2026-10-17: R2-Q9, UX-01, UX-11; 2026-10-20: R10-Q1, R10-Q2)
 Given a slot opens because a player is checked out, deleted or set Disabled
 Then the app fills it from the players who sit out that round, by the fill rule (§1): fewest
-rounds played this session; on a tie, the player who gives the smallest court level gap.
+rounds played this session; on a tie, the player who gives the smallest level gap on that court
+(R10-Q2).
 And the app fills the slot in the round that can change: the saved next round (also in
 CHANGEOVER), the planned next round in TIME UP (RND-15), or the live round when its clock does
 not run (READY, PAUSED). It never changes a live court while the clock runs (COURT-16).
 And "Move to waitlist" (COURT-15) opens a slot too, and the same rule fills it (R7-Q6).
 And it fills only the freed slot (WL-03). No organizer action is needed.
+And the fill rule fills one place only. A full lineup comes from the matchmaker (§1), never
+from the fill rule (R10-Q1).
 
 **WL-03** — Promotion fills only the freed court
 Given a court player leaves (check-out, delete or set Disabled) and players are waitlisted
@@ -793,7 +838,7 @@ at 28 px) and under it "{remaining} places left" ("1 place left" for 1).
 And no capacity progress bar shows (R6-Q11, as the design draws). Desktop only; phone and
 tablet stay as now (R6-Q7).
 
-**CHK-02** — Late check-in waits on the waitlist (changed 2026-10-17: R7-Q7, overrides R2-Q7)
+**CHK-02** — Late check-in waits on the waitlist (changed 2026-10-17: R7-Q7, overrides R2-Q7; 2026-10-20: R10-Q3)
 Given a player is not checked in and the session is below capacity
 When the organizer checks the player in (row tap or scan)
 Then the player becomes checked in and is never put on a live court.
@@ -801,6 +846,8 @@ And the player goes to the waitlist (the pool). The app does not add the player 
 round, also when it has an open slot (R7-Q7). The next lineup the app makes can use the player.
 And in READY (draft round 1, not saved) and in TIME UP (planned round) the player goes to the
 waitlist too.
+And the player starts at 0 rounds played. The app gives no credit for the rounds before the
+check-in (R10-Q3), so the fill rule and the matchmaker's weighted pick favour the player.
 
 **CHK-03** — At-capacity block
 Given checked-in count already equals session capacity
@@ -903,7 +950,7 @@ Then the save is refused with a message that names that player.
 When a player is added (PLY-13)
 Then the name and the ID are trimmed. A blank name, a duplicate name, or a duplicate ID is refused.
 
-**PLY-16** — Scan result box (added 2026-10-17: UX-02, R3-Q3)
+**PLY-16** — Scan result box (added 2026-10-17: UX-02, R3-Q3; 2026-10-20: R9-Q8)
 Given the Players tab is active
 Then a result box (at least 52 px tall, full width) shows directly under the scan field. It has a
 round icon, a name in 20 px weight 600, and text in 16 px weight 400. Screen readers read it as a
@@ -914,24 +961,29 @@ When a scan (Enter in the scan field) gives a result
 Then the box shows that result (PLY-14, PLY-17 … PLY-19) and keeps it until the next scan.
 When the organizer taps a row
 Then the box does not change (R3-Q3).
+And the box has no "Undo" button in any state (R9-Q8). The only action button is "Check out" in
+SCANNED TWICE (PLY-19).
 And each state has its own colour and icon: IN green ✓, OUT grey ←, SCANNED TWICE amber !, NOT
 FOUND red ×, MANY MATCHES amber ?, SESSION FULL amber !, DISABLED red ×, DUPLICATE ID amber !,
 READY neutral ›.
 
-**PLY-17** — CHECKED IN result text (added 2026-10-17: R4-Q3, R7-Q7)
+**PLY-17** — CHECKED IN result text (added 2026-10-17: R4-Q3, R7-Q7; 2026-10-20: R9-Q8)
 Given a scan checks a player in
 Then the player goes to the waitlist (CHK-02), and the box reads "{name} is in · waits for
-round {n}", with an "Undo" button. Here {n} is the first round that has no saved lineup: the
-next round to start, or the round after a saved next round (1 before the first round starts).
+round {n}". It has no "Undo" button (R9-Q8). Here {n} is the first round that has no saved
+lineup: the next round to start, or the round after a saved next round (1 before the first
+round starts).
 And the R4-Q3 text "{name} is in · joins round {n} on Court {k}" is no longer used: a late
 check-in never joins a saved round (R7-Q7).
 
-**PLY-18** — CHECKED OUT result text (added 2026-10-17: R2-Q8, R4-Q3)
+**PLY-18** — CHECKED OUT result text (added 2026-10-17: R2-Q8, R4-Q3; 2026-10-20: R9-Q8)
 Given a scan checks a player out
 When the fill rule puts player X into the freed slot of round {n} (WL-02)
-Then the box reads "{name} is out · {X} takes Court {k} in round {n}", with an "Undo" button.
+Then the box reads "{name} is out · {X} takes Court {k} in round {n}".
 When nobody takes a slot (the player was on the waitlist, or nobody can fill it)
-Then the box reads "{name} is out", with an "Undo" button.
+Then the box reads "{name} is out".
+And neither text has an "Undo" button (R9-Q8). To reverse a scan, the organizer scans or taps
+the player again.
 
 **PLY-19** — Scanned twice guard (added 2026-10-17: UX-01, R2-Q11, R6-Q15)
 Given player A is the last player checked in by a scan (no time limit, R6-Q15)
@@ -945,17 +997,9 @@ When A is scanned again
 Then the guard does not apply (it holds only the last card, R2-Q11), and A is checked out.
 And a row tap is never guarded.
 
-**PLY-20** — Undo on the Players tab (added 2026-10-17: R2-Q10, R3-Q2)
-Given the result box shows CHECKED IN or CHECKED OUT with "Undo"
-When the organizer clicks "Undo"
-Then the session returns exactly to its state before that scan: check-in, court slot, slot in
-the saved next round, the player who took a freed slot, and the waitlist.
-And "Undo" stays available until the next scan. After the next scan it is gone.
-And only one level of Undo exists (R3-Q2).
-And after Undo the box goes back to READY: "Ready to scan" (R6-Q12).
-TODO(Nathan): does a row tap or a Courts action after the scan cancel the Undo, so a later
-Undo cannot also revert that change? (R6-Q6 says "any other change cancels the Undo" for the
-Courts Undo, which is now on hold.)
+**PLY-20** — Removed (2026-10-20, R9-Q8): there is no Undo after a scan on the Players tab
+(overrides R2-Q10 and the scan part of R3-Q2). The result box has no "Undo" button (PLY-16 …
+PLY-18). The only Undo in this build is the swap Undo on the Courts tab (COURT-17).
 
 **PLY-09** — Expand player profile (changed 2026-10-17: R2-Q17, R5-Q1, R6-Q17)
 Given a player row is shown
@@ -1012,7 +1056,7 @@ and the duration field is always shown.
 Note: game-based selection (buttons, description, duration hidden per RND-09) exists in code behind
 `GameMode.enabled=false`. It is covered by tests with the flag on.
 
-**SESS-02** — Round duration (`mm:ss`) (changed 2026-10-17: R2-Q24, R2-Q4)
+**SESS-02** — Round duration (`mm:ss`) (changed 2026-10-17: R2-Q24, R2-Q4; 2026-10-20: R9-Q6)
 Given round mode is Time-based
 Then the default duration is 10:00 (R2-Q24).
 When the organizer edits the minute or second field of the `mm:ss` duration control
@@ -1021,11 +1065,12 @@ Then: (a) clicking either field selects that whole segment so the next keystroke
 (c) a total of 0:00 is rejected and the previous duration is restored; (d) the Courts round
 countdown recalculates against the new duration at once. If the new duration is now less than
 the time already elapsed in a RUNNING round, the round reaches 0:00 at once, and RND-03 or
-RND-15 applies (no automatic rotation). When the clock is not running (READY, PAUSED, TIME UP), the
+RND-15 applies (no automatic rotation). In PAUSED the new duration applies at once, by the same
+rule as RUNNING (R9-Q6): the time shows the new duration minus the time already elapsed, and
+"Resume round {n}" continues from there. If the new duration is now less than the elapsed time,
+the round reaches 0:00 at once, and RND-03 or RND-15 applies. In READY and TIME UP the
 remaining time becomes the new duration at once. The top nav text follows the new duration
 (NAV-01). Loading a template (SESS-06) applies the same rule. The changeover stays 20 s (R3-Q7).
-TODO(Nathan): in PAUSED, should a new duration reset the remaining time, or keep the elapsed
-time?
 
 **SESS-03** — Session capacity change
 Given the organizer changes the "Session capacity" number field (minimum enforced value: 4)
@@ -1262,15 +1307,16 @@ scrolling or overlapping controls at any width.
 | Courts: round lifecycle (time-based) | RND-01…22 (RND-21 on hold) |
 | Courts: game-based mode | GB-01…07 (hidden in release) |
 | Courts: courts & waitlist | COURT-01…17 (COURT-11…13 removed), WL-01…04 |
-| Players (with integrated check-in) | PLY-01…20, CHK-01…06 |
+| Players (with integrated check-in) | PLY-01…20 (PLY-20 removed), CHK-01…06 |
 | Sessions | SESS-01…06 |
 | ~~Schedule~~ (removed) | ~~SCHED-01~~ |
 | Analytics | ANA-01…14 |
 | Settings | SET-01…05 |
 | Self-Registration | REG-01…07 |
 
-Total: **121** case IDs. **6** are removed (SCHED-01, SET-01, ANA-10, COURT-11, COURT-12,
-COURT-13) and **1** is on hold (RND-21, R6-Q6), so **114** acceptance cases are active in this
-build; 7 of them (GB-01…07) are hidden in the release build. The 2026-10-17 design build added
-24 IDs (NAV-09…11, RND-12…22, COURT-14…17, WL-04, PLY-16…20), removed 3 and put 1 on hold.
+Total: **121** case IDs. **7** are removed (SCHED-01, SET-01, ANA-10, COURT-11, COURT-12,
+COURT-13, PLY-20) and **1** is on hold (RND-21, R6-Q6), so **113** acceptance cases are active
+in this build; 7 of them (GB-01…07) are hidden in the release build. The 2026-10-17 design build
+added 24 IDs (NAV-09…11, RND-12…22, COURT-14…17, WL-04, PLY-16…20), removed 3 and put 1 on hold.
+The 2026-10-20 decisions (R9-Q1 … R10-Q3) removed PLY-20 (R9-Q8) and added no ID.
 Before it: 97 IDs, 94 active (the old line said 77; that count was out of date).
