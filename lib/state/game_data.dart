@@ -33,18 +33,6 @@ typedef GameContainer = List<Game>;
 
 const int maxIteration = 1000;
 
-/// Which round the court grid shows.
-///
-/// The organizer switches between the round being played and the pre-made
-/// next round, and edits whichever one is on screen.
-enum RoundView {
-  /// The round currently being played.
-  current,
-
-  /// The pre-made lineup that starts at the next rotation.
-  next,
-}
-
 /// The outcome of [GameData.checkInPlayer] (R45-38).
 enum CheckInResult {
   checkedIn,
@@ -184,8 +172,6 @@ class GameData extends ChangeNotifier {
   void _applyCourtCount() {
     if (wouldReshuffleLineup) {
       _generateLineup();
-      // A pre-made round was built for the old count — plan it again.
-      if (_stagedLineup != null) _stagedLineup = _computeFreshLineup();
       return;
     }
     // Nothing to redistribute. A court beyond the new count leaves the grid,
@@ -197,21 +183,13 @@ class GameData extends ChangeNotifier {
       stagingMatches = [...stagingMatches];
       _padToCourtCount(stagingMatches);
     }
-    // Keep the pre-made round in step with the grid, so every court the
-    // organizer can see is one they can drop a player onto.
-    final staged = _stagedLineup;
-    if (staged != null) _padToCourtCount(staged);
   }
 
-  /// Removes the courts beyond [numberOfCourt] from both rounds.
+  /// Removes the courts beyond [numberOfCourt] from the live round.
   void _dropCourtsBeyondCount() {
     if (stagingMatches.length > numberOfCourt) {
       stagingMatches = stagingMatches.take(numberOfCourt).toList();
       _prunePlayingGameIds();
-    }
-    final staged = _stagedLineup;
-    if (staged != null && staged.length > numberOfCourt) {
-      _stagedLineup = staged.take(numberOfCourt).toList();
     }
   }
 
@@ -230,8 +208,8 @@ class GameData extends ChangeNotifier {
 
   /// Whether the court at [courtIndex] holds a saved game that is in play.
   ///
-  /// Keyed on the lineup on screen: a staged court has a brand-new [Game] id,
-  /// so a pre-made round never reports a court as playing.
+  /// Keyed on the lineup on screen: a court of round n+1 has a brand-new
+  /// [Game] id, so round n+1 never reports a court as playing.
   bool isCourtPlaying(int courtIndex) =>
       courtIndex >= 0 &&
       courtIndex < visibleMatches.length &&
@@ -272,56 +250,13 @@ class GameData extends ChangeNotifier {
   /// The current round number.
   int get roundNumber => _roundNumber;
 
-  /// Pre-computed lineup for the next round, or `null` if nothing is staged.
-  GameContainer? _stagedLineup;
-
-  /// The currently staged lineup, if any.
-  GameContainer? get stagedLineup => _stagedLineup;
-
-  /// Whether a round is currently staged.
-  bool get isStaged => _stagedLineup != null;
-
-  /// Human-readable summary of the staged round (e.g.,
-  /// "16 players placed across 4 courts").
-  String get stagedSummary {
-    final staged = _stagedLineup;
-    if (staged == null) return '';
-    final playerCount = staged.fold<int>(
-      0,
-      (sum, g) => sum + g.playerIds.length,
-    );
-    final courtCount = staged.where((g) => g.playerIds.isNotEmpty).length;
-    return '$playerCount players placed across $courtCount courts';
-  }
-
-  /// Which round the court grid is showing.
-  RoundView _roundView = RoundView.current;
-
-  /// The round the court grid is showing — the live round, or the pre-made
-  /// next round.
-  RoundView get roundView => _roundView;
-
-  /// Selects the round the court grid shows.
-  ///
-  /// Selecting [RoundView.next] with nothing staged is a no-op: there is no
-  /// next round to show.
-  void setRoundView(RoundView view) {
-    if (view == RoundView.next && _stagedLineup == null) return;
-    if (view == _roundView) return;
-    _roundView = view;
-    notifyListeners();
-  }
-
-  /// The lineup the court grid renders — the staged round when the next view
-  /// is selected, otherwise the live round.
+  /// The lineup the court grid renders: in edit mode the edit lineup; in
+  /// TIME UP the planned round and in the changeover the saved round
+  /// (RND-03, RND-15); else the live round.
   ///
   /// All court edits ([placePlayerInSlot], [makeSingleCourt],
   /// [removePlayerFromCourt]) apply to this container, so the organizer edits
   /// exactly what is on screen.
-  ///
-  /// The round state machine (8.2) comes first: edit mode shows the edit
-  /// lineup; TIME UP shows the planned round and the changeover the saved
-  /// round (RND-03, RND-15).
   GameContainer get visibleMatches {
     final edit = _editLineup;
     if (edit != null) return edit;
@@ -329,9 +264,7 @@ class GameData extends ChangeNotifier {
     if (next != null && (_phase == RoundPhase.timeUp || _inChangeover)) {
       return next;
     }
-    return _roundView == RoundView.next && _stagedLineup != null
-        ? _stagedLineup!
-        : stagingMatches;
+    return stagingMatches;
   }
 
   /// Runs [action] with [target] installed as the live lineup, then restores
@@ -339,7 +272,7 @@ class GameData extends ChangeNotifier {
   ///
   /// Lineup-scoped helpers ([_choosePlayer], [gameContainingPlayer],
   /// [placePlayerInSlot], ...) all read [stagingMatches]. This lets them work
-  /// against the staged round without duplicating them.
+  /// against round n+1 without duplicating them.
   T _onLineup<T>(GameContainer target, T Function() action) {
     if (identical(target, stagingMatches)) return action();
     final saved = stagingMatches;
@@ -361,7 +294,7 @@ class GameData extends ChangeNotifier {
   GameContainer _computeFreshLineup() {
     if (_checkedInPlayers.isEmpty || numberOfCourt <= 0) return [];
 
-    // RND-05: staging must not change the live courts, so the draw runs
+    // RND-05: round n+1 must not change the live courts, so the draw runs
     // against an empty lineup rather than the live one.
     return _onLineup(<Game>[], () {
       final candidatePlayers = _choosePlayer().toList(growable: true);
@@ -382,68 +315,6 @@ class GameData extends ChangeNotifier {
     }
   }
 
-  /// Pre-computes a fresh level-balanced lineup for the next round
-  /// without changing the live court assignments, and shows it on the courts.
-  ///
-  /// Only one round can be staged at a time — if a round is already
-  /// staged this is a no-op.
-  void stageNextRound() {
-    if (_stagedLineup != null) return; // RND-08
-    final lineup = _computeFreshLineup();
-    // Nothing to plan (no players, no courts) — leave the bar as it was.
-    if (lineup.isEmpty) return;
-    _stagedLineup = lineup;
-    // Pressing the button means "show me the plan".
-    _roundView = RoundView.next;
-    notifyListeners();
-  }
-
-  /// Cancels the currently staged round.
-  ///
-  /// This clears the staged lineup without affecting the live courts
-  /// or the current round number, and returns the grid to the live round.
-  void cancelStagedRound() {
-    _stagedLineup = null;
-    _roundView = RoundView.current;
-    notifyListeners();
-  }
-
-  /// Ends the current round and starts the next one immediately.
-  ///
-  /// The finished round is logged to the history and the session log — a
-  /// rotation is how a time-based round ends, so nothing is lost. If a staged
-  /// round exists it is adopted as edited; otherwise a fresh level-balanced
-  /// court assignment is computed. The round number is always incremented and
-  /// the grid returns to the live round.
-  ///
-  /// Runs one at a time (R45-01): a call made while a rotation is in flight
-  /// does nothing and returns `false`. If the write fails, the error goes to
-  /// the caller and the session is unchanged, so a retry logs the round once.
-  Future<bool> rotateNow() async {
-    if (_isRotating) return false;
-    _isRotating = true;
-    try {
-      await _logLiveRound();
-    } finally {
-      _isRotating = false;
-    }
-
-    if (_stagedLineup != null) {
-      // Adopt the staged lineup (RND-06)
-      stagingMatches = _stagedLineup!;
-      _stagedLineup = null;
-    } else {
-      // Compute a fresh assignment (RND-03)
-      stagingMatches = _computeFreshLineup();
-    }
-
-    _roundView = RoundView.current;
-    _roundNumber++;
-    _prunePlayingGameIds();
-    notifyListeners();
-    return true;
-  }
-
   /// The one-at-a-time flag of every path that logs a round (R45-01,
   /// 8.2.1, 8.2.4).
   bool _isRotating = false;
@@ -452,8 +323,7 @@ class GameData extends ChangeNotifier {
   ///
   /// Every court that holds players is logged as played, including an
   /// incomplete one — the clock running out must never be blocked by a
-  /// half-filled court. (Saving by hand still validates; see
-  /// [saveCurrentGame].) Empty courts are left out: that rule stays until
+  /// half-filled court. Empty courts are left out: that rule stays until
   /// ADR-0002 adds the round id.
   Future<void> _logLiveRound() async {
     final finished = stagingMatches
@@ -463,10 +333,6 @@ class GameData extends ChangeNotifier {
   }
 
   // ── Round state machine (IMPLEMENTATION 8.2) ─────────────────
-  //
-  // TODO(8.2.2): the PR 45 flow (rotateNow, RoundView, stageNextRound,
-  // cancelStagedRound, the time-mode saveCurrentGame path) stays until the
-  // 8.5 round bar replaces the dashboard controls that call it.
 
   RoundPhase _phase = RoundPhase.noLineup;
 
@@ -806,8 +672,6 @@ class GameData extends ChangeNotifier {
     _discarded = false;
     _waitingForEdit = false;
     _roundLogError = null;
-    _stagedLineup = null;
-    _roundView = RoundView.current;
     _playingGameIds.clear();
     _sessionRerollCount = 0;
     _roundNumber = 1;
@@ -1109,7 +973,7 @@ class GameData extends ChangeNotifier {
   ///
   /// Applies to whichever round is on screen — see [visibleMatches].
   void makeSingleCourt(int courtIndex) {
-    // Only a re-roll on the live round counts (F6); the pre-made next round
+    // Only a re-roll on the live round counts (F6); round n+1
     // is a plan, not a played round.
     final onLiveRound = identical(visibleMatches, stagingMatches);
     _onLineup(
@@ -1186,32 +1050,11 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> saveCurrentGame() async {
-    if (!hasAnyCourtLineup) throw const NothingToSave();
-    final unbalanced = [
-      for (final (index, match) in stagingMatches.indexed)
-        if (match.playerIds.isNotEmpty && !match.isPlayable()) index + 1,
-    ];
-    if (unbalanced.isNotEmpty) {
-      throw UnbalancedCourts(courtNumbers: unbalanced);
-    }
-    await _logRound(stagingMatches);
-
-    // Every court stays on the grid, empty, so a slot tap after Save finds a
-    // court. The pre-made round was built for the saved lineup: drop it.
-    stagingMatches = [];
-    _padToCourtCount(stagingMatches);
-    _stagedLineup = null;
-    _roundView = RoundView.current;
-    _prunePlayingGameIds();
-    notifyListeners();
-  }
-
   /// Records [courts] as a played round: history, game repository, and a
   /// [SessionLog] snapshot.
   ///
-  /// Shared by [saveCurrentGame] (which validates first) and [rotateNow]
-  /// (which does not — a rotation must never be blocked).
+  /// Shared by every path that ends a time-based round; it does not
+  /// validate, because the end of a round must never be blocked.
   ///
   /// Writes to disk first and adds to [history] last, so a failed write
   /// leaves [history] unchanged (R45-01). A retry writes the same game ids
@@ -1473,8 +1316,8 @@ class GameData extends ChangeNotifier {
   /// Players off-court in the round on screen — what the waitlist sidebar
   /// shows.
   ///
-  /// This has to follow [visibleMatches]: while the organizer edits the
-  /// pre-made next round, a sidebar built from the live round would let the
+  /// This has to follow [visibleMatches]: while the organizer edits
+  /// round n+1, a sidebar built from the live round would let the
   /// same player be placed twice, or leave a player off the plan entirely.
   Iterable<Player> get visibleWaitlistedPlayers {
     final onCourt = getPlayerFromGames(visibleMatches).toSet();
@@ -1666,10 +1509,6 @@ class GameData extends ChangeNotifier {
     final edit = _editLineup;
     if (edit != null && !identical(edit, next)) {
       _vacate(edit, player, round: _nextRoundNumber, base: _editBase);
-    }
-    // TODO(8.2.2): the PR 45 pre-made round only drops the player.
-    for (final game in _stagedLineup ?? const <Game>[]) {
-      game.playerIds.remove(player.id);
     }
     return fills;
   }

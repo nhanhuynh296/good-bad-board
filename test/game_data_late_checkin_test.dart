@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 import 'support/prefs_sandbox.dart';
 import 'support/repository_sandbox.dart';
 
-/// After Save the courts are empty. A court added then, and a late check-in,
+/// With every court empty. A court added then, and a late check-in,
 /// must both behave (SESS-04, CHK-02).
 void main() {
   late RepositorySandbox sandbox;
@@ -32,7 +32,10 @@ void main() {
       gameData.checkInPlayer(player);
     }
     await gameData.makeGame();
-    await gameData.saveCurrentGame();
+    // Every court empty, as after the old time-mode Save (removed in 8.2.2).
+    for (final player in [...gameData.checkedInPlayers.values]) {
+      gameData.removePlayerFromCourt(player);
+    }
     return gameData;
   }
 
@@ -46,7 +49,7 @@ void main() {
     return player;
   }
 
-  group('court count grows after Save', () {
+  group('court count grows with every court empty', () {
     test('should_pad_the_courts_when_the_count_grows', () async {
       final gameData = await savedSession(8, courts: 2);
 
@@ -92,7 +95,7 @@ void main() {
     );
   });
 
-  group('late check-in after Save (time mode)', () {
+  group('late check-in with every court empty (time mode)', () {
     test('should_waitlist_the_player_when_every_court_is_empty', () async {
       final gameData = await savedSession(8, courts: 2);
       final late = await lateComer();

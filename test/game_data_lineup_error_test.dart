@@ -59,25 +59,6 @@ void main() {
     },
   );
 
-  test('should_refuse_save_with_a_three_player_court_as_unbalanced', () async {
-    final gameData = await session(8);
-    await gameData.makeGame();
-    final court2 = gameData.stagingMatches[1].players;
-    gameData.removePlayerFromCourt(court2.first);
-
-    final error = await errorOf(gameData.saveCurrentGame);
-
-    expect(error, const UnbalancedCourts(courtNumbers: [2]));
-  });
-
-  test('should_refuse_save_with_empty_courts_as_nothing_to_save', () async {
-    final gameData = await session(8);
-
-    final error = await errorOf(gameData.saveCurrentGame);
-
-    expect(error, const NothingToSave());
-  });
-
   test('should_refuse_saving_an_empty_court_as_nothing_to_save', () async {
     final gameData = await session(8);
 

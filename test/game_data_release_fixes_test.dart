@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 import 'support/prefs_sandbox.dart';
 import 'support/repository_sandbox.dart';
 
-/// Release fixes F1 (Save), F3 (court count), F4 (tier gap), F6 (re-rolls).
+/// Release fixes F3 (court count), F4 (tier gap), F6 (re-rolls).
 void main() {
   late RepositorySandbox sandbox;
 
@@ -34,51 +34,6 @@ void main() {
     await PlayerRepository.instance.add(player);
     return player;
   }
-
-  group('F1 Save', () {
-    test('should_keep_one_empty_court_per_court_after_save', () async {
-      final gameData = await session(8, courts: 2);
-
-      await gameData.saveCurrentGame();
-
-      expect(gameData.stagingMatches, hasLength(2));
-    });
-
-    test('should_accept_a_slot_tap_after_save', () async {
-      final gameData = await session(8, courts: 2);
-      final player = gameData.checkedInPlayers.values.first;
-      await gameData.saveCurrentGame();
-
-      gameData.placePlayerInSlot(player, 0, 0);
-
-      expect(gameData.stagingMatches[0].playerIds, [player.id]);
-    });
-
-    test('should_refuse_a_second_save_when_all_courts_are_empty', () async {
-      final gameData = await session(8, courts: 2);
-      await gameData.saveCurrentGame();
-
-      expect(gameData.saveCurrentGame(), throwsException);
-    });
-
-    test('should_clear_the_staged_round_after_save', () async {
-      final gameData = await session(12, courts: 2);
-      gameData.stageNextRound();
-
-      await gameData.saveCurrentGame();
-
-      expect(gameData.isStaged, isFalse);
-    });
-
-    test('should_show_the_current_round_after_save', () async {
-      final gameData = await session(12, courts: 2);
-      gameData.stageNextRound();
-
-      await gameData.saveCurrentGame();
-
-      expect(gameData.roundView, RoundView.current);
-    });
-  });
 
   group('F3 court count', () {
     /// Four players on court 1, then one leaves and the other three are
@@ -111,16 +66,6 @@ void main() {
       gameData.setNumberOfCourt(1);
 
       expect(gameData.stagingMatches, hasLength(1));
-    });
-
-    test('should_drop_staged_court_beyond_new_count', () async {
-      final gameData = await threePlayersOnCourtTwo();
-      gameData.setNumberOfCourt(2);
-      gameData.stageNextRound();
-
-      gameData.setNumberOfCourt(1);
-
-      expect(gameData.stagedLineup, hasLength(1));
     });
   });
 
@@ -178,8 +123,15 @@ void main() {
     });
 
     test('should_not_count_a_re_roll_on_the_next_round', () async {
-      final gameData = await session(12, courts: 2);
-      gameData.stageNextRound();
+      final gameData = GameData()..setNumberOfCourt(2);
+      for (final player in await createTestPlayers(12)) {
+        gameData.checkInPlayer(player);
+      }
+      gameData
+        ..generateFirstRound()
+        ..startFirstRound()
+        ..makeNextRound();
+      addTearDown(() => gameData.endSession());
 
       gameData.makeSingleCourt(0);
 

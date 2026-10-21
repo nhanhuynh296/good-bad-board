@@ -80,41 +80,7 @@ class TimerData extends ChangeNotifier {
     return '$mins:$secs';
   }
 
-  /// Remaining time as a percentage (0.0 – 100.0).
-  ///
-  /// Read by the PR 45 `RoundRotationBar`. The new round bar reads
-  /// [progress].
-  double get pct {
-    if (duration == Duration.zero) return 0.0;
-    return (_remaining.inMilliseconds / duration.inMilliseconds * 100.0).clamp(
-      0.0,
-      100.0,
-    );
-  }
-
   // ── Lifecycle ──────────────────────────────────────────────────
-
-  /// Starts (or resumes) the countdown from the configured [duration].
-  /// If the timer is already running this is a no-op.
-  ///
-  /// Kept for the PR 45 dashboard flow. The round state machine uses
-  /// [startRound], [startChangeover] and [resume].
-  void start({VoidCallback? onExpired}) {
-    if (isRunning) return;
-    _onExpired = onExpired;
-
-    // If we're resuming from a paused state, keep the remaining time.
-    // Otherwise, start fresh from the full duration.
-    if (_remaining == Duration.zero) {
-      _remaining = duration;
-      _isChangeover = false;
-    }
-
-    _isPaused = false;
-    isRunning = true;
-    _startTicking();
-    notifyListeners();
-  }
 
   /// Starts a round clock from the full [duration].
   ///

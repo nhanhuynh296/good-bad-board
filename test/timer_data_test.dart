@@ -29,7 +29,7 @@ void main() {
 
   testWidgets('should_keep_elapsed_time_when_timer_is_running', (tester) async {
     final timer = TimerData()..duration = const Duration(minutes: 10);
-    timer.start();
+    timer.startRound();
     await tester.pump(const Duration(minutes: 1));
 
     timer.updateDuration(const Duration(minutes: 5));
@@ -42,7 +42,7 @@ void main() {
     final timer = TimerData()..reset();
     timer.updateDuration(const Duration(minutes: 5));
 
-    timer.start();
+    timer.startRound();
 
     expect(timer.remaining, const Duration(minutes: 5));
     timer.dispose();

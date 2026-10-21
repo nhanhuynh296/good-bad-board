@@ -51,28 +51,6 @@ Finder _buttonOf(String text) =>
 
 void main() {
   group('Dashboard', () {
-    testWidgets('should_put_the_countdown_at_the_right_edge_of_the_bar', (
-      tester,
-    ) async {
-      _desktop(tester);
-      await tester.pumpWidget(
-        _wrap(
-          const RoundRotationBar(
-            roundNumber: 1,
-            modeLabel: 'Time-based · 10:00 rounds',
-            remainingLabel: '10:00',
-            pct: 100,
-            isUrgent: false,
-            isStaged: false,
-          ),
-        ),
-      );
-
-      final bar = tester.getRect(find.byType(RoundRotationBar));
-      final countdown = tester.getRect(find.text('10:00').first);
-      expect(bar.right - countdown.right, lessThan(24));
-    });
-
     testWidgets('should_put_the_reroll_button_at_the_right_edge_of_a_court', (
       tester,
     ) async {

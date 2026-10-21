@@ -76,13 +76,13 @@ void main() {
   // ---------------------------------------------------------------------
 
   test(
-    'saveCurrentGame persists a SessionLog snapshot matching live state',
+    'endSession persists a SessionLog snapshot matching live state',
     () async {
       final gameData = GameData()..setNumberOfCourt(1);
       final players = await fourPlayers();
       players.forEach(gameData.addFullPricedPlayer);
       players.forEach(gameData.checkInPlayer);
-      await gameData.makeGame();
+      gameData.generateFirstRound();
 
       // One extra checked-in, waitlisted player.
       final waitlisted = Player.create(
@@ -95,8 +95,9 @@ void main() {
 
       gameData.makeSingleCourt(0);
       expect(gameData.sessionRerollCount, 1);
+      gameData.startFirstRound();
 
-      await gameData.saveCurrentGame();
+      await gameData.endSession();
 
       final logs = SessionLogRepository.instance.getAll();
       expect(logs, hasLength(1));

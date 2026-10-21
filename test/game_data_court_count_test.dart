@@ -109,21 +109,6 @@ void main() {
     },
   );
 
-  test('should_replan_the_staged_round_when_courts_change', () async {
-    // Arrange
-    final gameData = await session(12, courts: 2);
-    gameData.stageNextRound();
-
-    // Act
-    gameData.setNumberOfCourt(3);
-
-    // Assert — all 12 players are on the new plan, over 3 courts.
-    expect(
-      gameData.stagedLineup!.expand((g) => g.playerIds).toSet(),
-      hasLength(12),
-    );
-  });
-
   test('should_reshuffle_pool_when_template_is_loaded', () async {
     // Arrange
     final gameData = await session(12, courts: 2);

@@ -356,22 +356,6 @@ void main() {
 
       expect(gameData.hasUnsavedEdits, isFalse);
     });
-
-    test('should_not_refill_playing_court_when_next_round_on_screen', () async {
-      // 8.4.2: the PLAYING check read the round on screen.
-      await PersistentSetting.instance.setGameType(GameType.gameBased);
-      final gameData = GameData(timer: timer, random: Random(2))
-        ..setNumberOfCourt(3);
-      (await createTestPlayers(14)).forEach(gameData.checkInPlayer);
-      await gameData.makeGame();
-      await gameData.saveSingleGame(gameData.stagingMatches[0]);
-      gameData.stageNextRound();
-      final leaving = byId(gameData.stagingMatches[0].playerIds[0]);
-
-      gameData.checkOutPlayer(leaving);
-
-      expect(gameData.stagingMatches[0].playerIds, hasLength(3));
-    });
   });
 
   group('late check-in waits (8.4.3, CHK-02)', () {
