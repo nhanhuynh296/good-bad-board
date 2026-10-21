@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:good_bad_board/features/players/players.dart';
 import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/pending_registration.dart';
 import 'package:good_bad_board/model/player.dart';
