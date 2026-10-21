@@ -441,6 +441,7 @@ class _DesktopRoundBar extends StatelessWidget {
         Expanded(
           child: Text(
             view.counts,
+            key: const Key('round-bar-counts'),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTypography.body.copyWith(color: AppColors.headerSub),
@@ -462,9 +463,12 @@ class _DesktopRoundBar extends StatelessWidget {
   /// buttons too, so the same check runs in every state with "Discard".
   bool _needsShortDiscard(BuildContext context, double width) {
     final scale = MediaQuery.textScalerOf(context);
+    // Merged with the ambient style, so a Chinese glyph is measured in the
+    // locale's fallback font (YaHei, JhengHei) that paints it.
+    final ambient = DefaultTextStyle.of(context).style;
     double measure(String text, TextStyle style) {
       final painter = TextPainter(
-        text: TextSpan(text: text, style: style),
+        text: TextSpan(text: text, style: ambient.merge(style)),
         textDirection: Directionality.of(context),
         textScaler: scale,
         maxLines: 1,
@@ -489,8 +493,9 @@ class _DesktopRoundBar extends StatelessWidget {
     );
     final time = measure('00:00', AppTypography.timer);
     final chip = measure(view.chip, AppTypography.statLabel) + 16;
-    // The counts may shrink, but keep room for a few words of them.
-    const counts = 120.0;
+    // The counts show in full, so the short label is used before they are
+    // cut (F16: fr "{in}/{capacity} présents · {n} en attente" in PAUSED).
+    final counts = measure(view.counts, AppTypography.body);
     needed += label + _gap + time + _buttonGap + chip + _gap + counts;
     return needed > width;
   }

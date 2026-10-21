@@ -67,9 +67,12 @@ class CourtsHarness {
     }
   }
 
+  /// [theme] is the app theme for the locale (F16 width tests pass
+  /// `AppTheme.light(locale:)` for its Chinese font fallback).
   Future<void> pump({
     Size size = const Size(1280, 720),
     Locale locale = const Locale('en'),
+    ThemeData? theme,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -86,6 +89,7 @@ class CourtsHarness {
             ),
           ],
           child: MaterialApp(
+            theme: theme,
             locale: locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
