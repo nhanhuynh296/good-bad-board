@@ -3,7 +3,7 @@
 > Extracted from the UX-Redesign HTML handoff (`Badminton App.dc.html`, `Analytics Dashboard.dc.html`, `Dashboard Options.dc.html`, `Responsive Layouts.dc.html`, `Self Registration.dc.html`).
 > This document defines a **reusable design system** to guide the Flutter implementation.
 >
-> **2026-10-17 design build.** The approved design (`Main`, `Players`, `ScanStates`, `TypeColour` `.dc.html`, artifact `9JBfi4Rk8igxQMVDexk6So`) and `audit/design-diff-2026-10-17/decisions.md` (R1-Q1 … R12-Q2; a later row overrides an earlier one) and the 2026-10-20 design review (`audit/design-review-2026-10-20/resolution.md`, F01 … F30; F05 and F28 decided by R12-Q1 and R12-Q2) replace §1.1, §1.2 and the desktop components of the Courts tab, the shell and the Players tab. Phone and tablet keep the PR 45 components as they are now (R2-Q23, R6-Q7). UAT.md is the feature source of truth; "TODO" marks points Nathan has not decided. Courts round Undo is on hold (R6-Q6, UAT RND-21). The Players scan Undo is removed (R9-Q8): the only Undo is the Courts swap. **Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3).
+> **2026-10-17 design build.** The approved design (`Main`, `Players`, `ScanStates`, `TypeColour` `.dc.html`, artifact `9JBfi4Rk8igxQMVDexk6So`) and `audit/design-diff-2026-10-17/decisions.md` (R1-Q1 … R12-Q2; a later row overrides an earlier one) and the 2026-10-20 design review (`audit/design-review-2026-10-20/resolution.md`, F01 … F30; F05 and F28 decided by R12-Q1 and R12-Q2) replace §1.1, §1.2 and the desktop components of the Courts tab, the shell and the Players tab. Phone and tablet keep the PR 45 components as they are now (R2-Q23, R6-Q7). UAT.md is the feature source of truth; "TODO" marks points Nathan has not decided. Courts round Undo is on hold (R6-Q6, UAT RND-21). The Players scan Undo is removed (R9-Q8): the only Undo is the Courts swap. **Sessions tab redesign: built on desktop** from the canvas board "Sessions" (R7-Q3, IMPLEMENTATION 8.10, §2.5 SessionsBoard); Nathan reviews it in a separate task.
 
 ---
 
@@ -577,6 +577,27 @@ Full-width text field
 └── placeholder: per use ("Search players…", "Name or sign-in ID")
 ```
 
+#### SessionsBoard (Sessions, desktop ≥1080px, 2026-10-21)
+```
+Two equal cards, 24px apart, no page scroll (the template list scrolls in its card)
+├── Card: bg #fbf6ee, 1px #e4d8c4, radius 12; title 20/600, padding 16 20 12
+├── "Round settings" rows, top separator #e4d8c4, padding 12 20:
+│   ├── setting row (min 92px): label 16/600 + note 14/400 #6f6352 | "−" value "+" (gap 16)
+│   ├── stepper: 52×52, bg #fffdfa, 1px #8f826e (3.70:1), radius 10, 28/600; 45% when off
+│   ├── value box: 128×52, bg #ffffff, 1px #6f6352, radius 10, 28/600 tabular;
+│   │   focus = 3px #c2410c border; mm:ss = two 44px fields (Tab moves min → sec)
+│   ├── rows: Round duration (±1 min), Session capacity (±1, 4…200),
+│   │   Number of courts (±1, 1…8, read-only live region; only with CourtCount.editable)
+│   └── Changeover (min 64px): "20 s · fixed", 16/400 #6f6352 (R3-Q7)
+├── "Session templates":
+│   ├── caps label 12/600 0.08em #6f6352; name field 44px, white, 1px #6f6352, radius 8;
+│   │   "Save current" btn.primary 44px (off at a blank name); "Saves {summary}" 14/400
+│   └── row (min 64px, bottom separator): name 16/600 ellipsis + summary 14/400 #6f6352,
+│       "Load" 40px (1px #8f826e), delete 40×40 (1px #8f826e, bin #b91c1c)
+└── Confirms: the Courts alert dialog (showCourtsConfirm, F14): "Discard round {n}?" /
+    "Reshuffle" and "Delete template “{name}”?" / "Delete"; red action, focus on Cancel
+```
+
 #### NumberInput
 ```
 Constrained number field
@@ -919,7 +940,7 @@ the dialog closes.
 | **Courts** | Round bar, next-round strip, 2×2 court grid, waitlist panel (desktop); stat strip and chips on tablet/phone | Generate / start / discard and start rounds, pause, edit the next round, place/swap, undo a swap, re-roll, slot ⋯ menu, end session |
 | ~~**Check-in**~~ | Merged into Players | — |
 | **Players** | Scan field + result box, count, player table, More panel, pending approvals, 4 tier chips | Scan check-in/out, add player, adjust level and membership (More panel), view stats |
-| **Sessions** | Round mode toggle, capacity/courts inputs, template list. Sessions tab redesign: canvas board "Sessions", pending (R7-Q3); its court count control shows only with `CourtCount.editable` | Configure session, save/load templates |
+| **Sessions** | Desktop: SessionsBoard (§2.5) — "Round settings" card (duration, capacity, courts only with `CourtCount.editable`, fixed changeover) and "Session templates" card (R7-Q3, 8.10). Tablet/phone: round mode toggle (hidden in release), capacity/courts inputs, template list | Configure session, save/load/delete templates |
 | ~~**Schedule**~~ | Removed 2026-10-10 | — |
 | **Analytics** (via ⋯) | Attendance trend, court utilization, level gap, level distribution, KPI row | Filter time range (4/12/26 wks) |
 | **Settings** (via ⋯) | Language, membership summary, level note | Change language |

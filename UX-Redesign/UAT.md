@@ -16,8 +16,10 @@ keeps its ID and reads "Removed (2026-10-17 design): reason". A case on hold kee
 reads "On hold": it is not in this build. `TODO(Nathan)` marks wording or
 behaviour that no decision fixes yet. This release changes the desktop layout only (R2-Q23,
 R6-Q7): phone and tablet layouts stay as they are now. The round logic is shared by all sizes.
-**Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3). Until Nathan reviews it,
-§5 stays as written, except the template Load and delete rules of the design review below.
+**Sessions tab redesign: built on desktop** from the canvas board "Sessions" (R7-Q3,
+IMPLEMENTATION 8.10, 2026-10-21). Nathan reviews and fixes it later in a separate task. Phone
+and tablet keep the §5 layout. The template Load and delete rules of the design review below
+(F25) are built.
 
 **2026-10-20 decisions and design review.** Decisions R11-Q1 … R11-Q6 are in force: "×" in
 edit mode asks "Close without saving?" first, also while the changeover waits (R11-Q2, RND-06,
@@ -1219,9 +1221,12 @@ logged. (An Undo that deletes a log entry is on hold, RND-21.)
 
 ## 5. Sessions tab
 
-> **Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3). A new design for this tab
-> (settings, time mode, duration, capacity, courts) is drawn separately; Nathan reviews it in a
-> separate task. Until then the cases below stay as written.
+> **Sessions tab redesign: built on desktop** (R7-Q3, IMPLEMENTATION 8.10, 2026-10-21). At
+> 1080 px and more the tab shows two cards with no page scroll: "Round settings" (round
+> duration, session capacity, number of courts when `CourtCount.editable` is on, the fixed
+> changeover "20 s · fixed") with "−" / "+" steppers, and "Session templates" (save, list with
+> "Load" and delete). Nathan reviews it in a separate task. Phone and tablet keep the PR 45
+> layout; the rules below apply to every size unless a case names desktop.
 
 **SESS-01** — Round mode selection
 Given the Sessions tab is active
@@ -1245,6 +1250,11 @@ rule as RUNNING (R9-Q6): the time shows the new duration minus the time already 
 the round reaches 0:00 at once, and RND-03 or RND-15 applies. In READY and TIME UP the
 remaining time becomes the new duration at once. The top nav text follows the new duration
 (NAV-01). Loading a template (SESS-06) applies the same rule. The changeover stays 20 s (R3-Q7).
+Desktop (8.10): "−" and "+" change the duration by one minute and apply at once by the same
+rule; "−" is off at 1:00 or less, "+" at 99:59. The note under "Round duration" says when the
+length applies: "Applies now · round {n} has {mm:ss} left" in RUNNING and PAUSED, "Applies from
+round {n+1}" in TIME UP, "Applies from round {n}" in CHANGEOVER (the round that starts next),
+and "Applies now to every round" before round 1.
 
 **SESS-03** — Session capacity change
 Given the organizer changes the "Session capacity" number field (minimum enforced value: 4)
@@ -1258,6 +1268,9 @@ Then the value is **clamped up to 4** — never raised back to the default of 20
 shows the clamped number, so it never displays a value the session did not accept.
 The same applies to a session template that carries a capacity below 4 (SESS-06): loading it
 yields 4. An empty or non-numeric "Number of courts" entry clamps to 1 in the same way.
+Desktop (8.10): "−" and "+" change the capacity by one (4…200; "−" is off at 4). The note says
+"{in} checked in · min 4", or "{in} checked in · no one is checked out" when the capacity is
+below the checked-in count.
 
 **SESS-04** — Courts count change (changed 2026-10-20: F25, dialog text)
 Release note (R45-36, 2026-10-14): hidden in the release build (`CourtCount.editable=false`). The
@@ -1265,14 +1278,16 @@ Dashboard stepper and the Sessions "Number of courts" field are not shown, and t
 uses 4 courts. The rules below apply when the flag is on. The 2026-10-17 design also removes
 the "COURTS − 4 +" stepper from the draft round bar (R2-Q2), so with the flag on only the
 Sessions field changes the count. The Courts tab always has 4 fixed courts. The Sessions tab
-redesign adds a court count control, shown only when `CourtCount.editable` is on (R7-Q3; canvas
-board "Sessions", pending).
+redesign adds a court count control, shown only when `CourtCount.editable` is on (R7-Q3; built,
+IMPLEMENTATION 8.10): a read-only number with "−" and "+" (1…8), and the note "Changing it
+reshuffles all courts".
 Given the organizer changes "Number of courts" (range 1–8; the default is 4, `GameData.defaultCourtCount`, and it is not persisted; the Dashboard stepper is clamped to 1–8 too)
 Then every currently checked-in player is unassigned and the whole checked-in pool is
 re-distributed across the new number of courts using the same level-sorted, courts-of-4 assignment
 logic as an initial session start — this is a full reshuffle, not an incremental add/remove of one
 court.
-When a time-based round is running and a court holds players, a confirmation shows first. It
+When round {n} of a time-based session has started (RUNNING, PAUSED, TIME UP or CHANGEOVER,
+changed 2026-10-21, 8.10) and a court holds players, a confirmation shows first, on every size. It
 uses the 2026-10-17 round model (F25): the title is "Discard round {n}?", the text is "Round {n}
 is discarded and not logged. Everyone is placed again on {count} courts.", and the buttons are
 "Reshuffle" and "Cancel". Cancel keeps everything, including the court count. When no court holds players, or fewer than 4 players are checked in, nothing is generated
@@ -1283,6 +1298,11 @@ Given the organizer enters a non-blank template name and taps "Save current"
 Then a new template is added to the list capturing the current duration, session
 capacity, and courts count, summarized as e.g. "4 courts · cap 20" (no mode); the name field
 clears. Saving with a blank/whitespace-only name is a no-op.
+Desktop (8.10): "Save current" is off while the name is blank, and Enter in the name field
+saves. The summary also names the duration, "10 min · 4 courts · cap 20" (whole minutes as
+"{m} min", else `m:ss`); with `CourtCount.editable` off it leaves out the courts, "10 min ·
+cap 20", because a Load keeps 4 courts. The line under the field, "Saves {summary}", shows what
+"Save current" keeps.
 
 **SESS-06** — Load a template (changed 2026-10-20: F25)
 Given at least one saved template exists
@@ -1293,8 +1313,10 @@ recalculates), the capacity by the SESS-03 rule (F25). The template round mode i
 And only when the template's courts count differs from the current count (possible only with
 `CourtCount.editable` on; in the release build the courts count is ignored and stays 4,
 R45-36), the SESS-04 full reshuffle applies, with the same confirmation.
-When the organizer deletes a template
-Then a dialog asks "Delete template “{name}”?" with the buttons "Delete" and "Cancel" (F25).
+When the organizer deletes a template (desktop: the bin button of the row, 8.10; tablet and
+phone have no delete button)
+Then a dialog asks "Delete template “{name}”?" with the text "The template is deleted. The
+current settings do not change." and the buttons "Delete" and "Cancel" (F25).
 "Delete" removes the template; "Cancel" keeps it.
 Loading a game-based template stops the countdown (GB-01; hidden in the release build, `GameMode.enabled=false`).
 

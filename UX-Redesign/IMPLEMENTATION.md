@@ -845,9 +845,9 @@ Implement the remaining tabs (Sessions, Settings). The Schedule tab was removed 
 - [x] **SESS-01** — Round mode toggle: Game-based / Time-based buttons with highlight; description updates; duration control visible only for Time-based (RND-09). **Hidden in release build (`GameMode.enabled=false`):** the toggle and description are not shown, the duration field is always shown, and tests cover the toggle with the flag on
 - [x] **SESS-02** — `mm:ss` duration control: two digit fields in one box, clicking either selects the whole segment, `Tab` moves minutes → seconds; minutes clamped 0–99, seconds 0–59; a total of 0:00 restores the previous value; Dashboard countdown recalculates at once via `TimerData.updateDuration`, triggering immediate rotation if the new duration < time already elapsed; a stopped timer takes the new duration as its remaining time (`_remaining = newDuration`); template Load applies the same rule (`test/timer_data_test.dart`)
 - [x] **SESS-03** — Session capacity change: stat strip / Check-in bar reflect immediately; a value below the minimum is **clamped up to 4** (`GameData.minSessionCapacity`), never raised back to the default of 20, and the number field writes the clamped value back so it cannot display a rejected number; no currently checked-in player bumped even if new capacity < current count — limit applies to future check-ins only. Empty/non-numeric courts entry clamps to 1
-- [x] **SESS-04** — **Hidden in release (`CourtCount.editable=false` in `game_data.dart`, R45-36): no Dashboard stepper, no Sessions courts field, template Load keeps 4 courts. Test: `test/features/release_court_count_test.dart`.** Courts count change (1–8; default `GameData.defaultCourtCount` = 4, not persisted; Dashboard stepper clamped 1..8): full reshuffle — every checked-in player unassigned and redistributed across new court count using level-sorted courts-of-4 logic. Shared `confirmDiscard` (`lib/features/dashboard/discard_confirmation.dart`) asks first when a time-based round is running and `GameData.wouldReshuffleLineup`; Cancel keeps the count. No lineup is generated when no court holds players or <4 are checked in (reducing the count then returns players on removed courts to the waitlist, `_dropCourtsBeyondCount`; raising it pads `stagingMatches` with empty courts, also after Save and on template load). A re-roll or a court-count change clears the selected player
-- [x] **SESS-05** — Save template: captures duration (minutes **and** seconds), capacity, courts; blank/whitespace-only name is no-op; name field clears only when `saveTemplate` returns `true`; summary shown as "N courts · cap C" with no mode (`sessions_template_summary_no_mode`)
-- [x] **SESS-06** — Load template: overwrites duration, capacity and courts (courts only when `CourtCount.editable`); the template mode is ignored in release; triggers full reshuffle (same as SESS-04); same confirmation
+- [x] **SESS-04** — **Hidden in release (`CourtCount.editable=false` in `game_data.dart`, R45-36): no Dashboard stepper, no Sessions courts field, template Load keeps 4 courts. Test: `test/features/release_court_count_test.dart`.** Courts count change (1–8; default `GameData.defaultCourtCount` = 4, not persisted; Dashboard stepper clamped 1..8): full reshuffle — every checked-in player unassigned and redistributed across new court count using level-sorted courts-of-4 logic. Asks first when round n has started (RUNNING, PAUSED, TIME UP or CHANGEOVER, time-based) and `GameData.wouldReshuffleLineup`, with the F25 text "Discard round {n}?" (changed 2026-10-21, 8.10; tablet: `confirmDiscard`, desktop: `showCourtsConfirm`); Cancel keeps the count. No lineup is generated when no court holds players or <4 are checked in (reducing the count then returns players on removed courts to the waitlist, `_dropCourtsBeyondCount`; raising it pads `stagingMatches` with empty courts, also after Save and on template load). A re-roll or a court-count change clears the selected player
+- [x] **SESS-05** — Save template: captures duration (minutes **and** seconds), capacity, courts; blank/whitespace-only name is no-op; name field clears only when `saveTemplate` returns `true`; summary shown as "N courts · cap C" with no mode (`sessions_template_summary_no_mode`) on tablet and phone; desktop shows "10 min · cap 20" (8.10)
+- [x] **SESS-06** — Load template: overwrites duration, capacity and courts (courts only when `CourtCount.editable`); the template mode is ignored in release. Changed 2026-10-21 (F25, 8.10): duration and capacity apply at once with no dialog; only a new court count reshuffles (same as SESS-04) and asks first; the same count keeps the lineup
 
 #### Schedule (SCHED-01)
 - [x] ~~**SCHED-01**~~ **REMOVED 2026-10-10** — Schedule tab removed; session templates replace it. Was: read-only recurring session list: day, time window, descriptive note, "Auto check-in opens 30 min prior" badge per entry; no create/edit/delete controls in this build
@@ -1105,12 +1105,11 @@ shell with the session bar, the Players scan check-in, and the new type and colo
   `game_data.dart:688-702`) and the court swap optimiser `GameData._improveEloSpread` (cost
   `0.1 × average gap + max gap`, `game_data.dart:751-754`). The strict fill rule (8.4.1) fills
   one empty place only. Do not replace round generation with it.
-- **Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3). A sub-agent draws the
-  Sessions tab (settings, time mode, duration, capacity, courts); Nathan fixes it later in a
-  separate task. Its court count control is shown only when `CourtCount.editable` is on. Stage 8
-  does not build it. The design review rule F25 (template Load applies duration and capacity at
-  once and asks only when the court count changes; new dialog text; template delete asks first)
-  is written into UAT SESS-04 and SESS-06 for that task.
+- **Sessions tab redesign: built on desktop (8.10, 2026-10-21)** from the canvas board
+  "Sessions" (R7-Q3). No approval was needed; Nathan fixes it later in a separate task. Its court
+  count row shows only when `CourtCount.editable` is on. The design review rule F25 (template
+  Load applies duration and capacity at once and asks only when the court count changes; new
+  dialog text; template delete asks first) is built (UAT SESS-04, SESS-06).
 - **Data format: unchanged.** No decision needs a new field in `players.json`, `games.json`,
   `session_logs.json` or `session_templates.json`. The Courts Undo log delete
   (`SessionLogRepository.delete`, 8.3) is on hold with RND-21, so this build adds no repository
@@ -1158,8 +1157,8 @@ board changes (`audit/design-review-2026-10-20/resolution.md`). The spec texts a
   (F01); MANY MATCHES caret at end and the PLY-14 text (F19); CHECKED OUT after "Check out" in
   SCANNED TWICE (F20); "More" as a button with `aria-expanded` / `aria-controls`, Delete as
   `btn.danger-outline`, the duplicate-ID text with the name, the Disabled confirm (F23).
-- **Sessions.** Amber `#ffb38a` (F26), TIME UP chip (F04); the F25 Load and delete rules
-  follow in Nathan's Sessions pass (R7-Q3).
+- **Sessions.** Amber `#ffb38a` (F26), TIME UP chip (F04). The F25 Load and delete rules are
+  built in 8.10 (R7-Q3).
 - **All boards.** Focus rule for tabs and the session bar link (F07); the state chip is a
   polite live region (F24); session bar order ROUND · time · chip (F29).
 
@@ -1691,6 +1690,15 @@ message); `players_scan_check_out`, `players_count_in`, `players_header_name`,
 `players_id_saved`, `players_disable_confirm_title`, `players_disable_confirm_body`. The
 Disabled confirm reuses `players_disable` and `cancel`. `players_sign_in_id_taken` stays for
 the Add-player dialog.
+As built for Sessions (8.10): `sessions_round_settings`, `sessions_round_duration`,
+`sessions_duration_note_left` / `_next` / `_ready`, `sessions_duration_less` / `_more`,
+`sessions_minutes`, `sessions_seconds`, `sessions_capacity_note` / `_over`,
+`sessions_capacity_less` / `_more`, `sessions_courts_note`, `sessions_courts_less` / `_more`,
+`sessions_changeover`, `sessions_changeover_value`, `sessions_save_settings_label`,
+`sessions_saves_summary`, `sessions_template_summary_duration` (plural) /
+`_duration_no_courts`, `sessions_load_named`, `sessions_delete_named`, `sessions_no_templates`,
+`sessions_reshuffle_confirm_title` / `_body` (plural), `sessions_delete_template_confirm_title`
+/ `_body`. The actions reuse `sessions_reshuffle_confirm`, `delete` and `cancel`.
 Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads (for example
 `dashboard_rotate_now`, `dashboard_premake_next`, `dashboard_next_round_ready`,
 `dashboard_mode_time_based`) only after a grep shows no reader.
@@ -1714,10 +1722,67 @@ Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads
 | More panel | `test/features/players_more_panel_test.dart` | PLY-05, PLY-06, PLY-09 |
 | Layout fit | `test/features/dashboard_four_courts_fit_test.dart` (update) | NAV-07 |
 | Contrast | `test/design/contrast_test.dart` | ARCHITECTURE §1.1 |
+| Sessions tab (desktop, 8.10) | `test/features/sessions_desktop_test.dart`, `test/game_data_court_count_test.dart` (update), `integration_test/sessions_test.dart` | SESS-01…06 |
+
+### 8.10 — Sessions tab (desktop, R7-Q3)
+Built 2026-10-21 from the canvas board "Sessions" (R7-Q3: no approval needed; Nathan fixes it
+later in a separate task), with the decisions R9-Q6 (a duration change while paused applies at
+once), `GameMode.enabled=false` (no round mode toggle), `CourtCount.editable=false` (no court
+row) and F25. Tablet and phone keep the PR 45 layout (R6-Q7).
+- **As built.**
+  - Files: `lib/features/sessions/sessions_page.dart` (actions, tablet/phone layout, the shared
+    `_DurationField` and `_NumberField` with a `desktop` look) and `desktop_sessions.dart`
+    (`part`): `_DesktopSettingsCard`, `_DesktopTemplatesCard`, `SessionsStepButton`,
+    `SessionsSaveButton`, `templateSummary`. The page picks the board at ≥1080 px
+    (`isDesktop`).
+  - Layout: two equal cards (`#fbf6ee`, 1 px `#e4d8c4`, radius 12, 20/600 title), 24 px apart,
+    filling the page inside the shell padding. No page scroll at 1280×720; only the template
+    list scrolls inside its card.
+  - "Round settings": rows of 92 px (label 16/600, note 14/400 `#6f6352`; "−" value "+").
+    Steppers 52×52, 1 px `#8f826e`, radius 10, 28/600, `#c2410c` focus ring, 45 % when off.
+    Value boxes 128×52, white, 1 px `#6f6352` (3 px `#c2410c` with focus), 28/600 tabular.
+    Round duration: the `mm:ss` fields (SESS-02 rules) and ±1 minute ("−" off at ≤1:00, "+" off
+    at 99:59). Session capacity: the field (clamped 4…200) and ±1. Number of courts (only with
+    `CourtCount.editable`): read-only value, ±1 within 1…8, a live region. Changeover: "20 s ·
+    fixed" (R3-Q7).
+  - Duration note: "Applies now · round {n} has {mm:ss} left" while round n has its clock
+    (RUNNING, PAUSED; it ticks); "Applies from round {n+1}" in TIME UP (and RUNNING at 0:00);
+    "Applies from round {n}" in CHANGEOVER (the round that starts next); "Applies now to every
+    round" before round 1. Capacity note: "{in} checked in · min 4", or "{in} checked in · no one
+    is checked out" when the capacity is below the count (SESS-03).
+  - "Session templates": caps label "SAVE CURRENT SETTINGS", name field 44 px, orange "Save
+    current" 44 px (off with a blank name; Enter saves), the line "Saves {summary}". Rows of 64 px:
+    name 16/600 (ellipsis), summary, "Load" (40 px, 1 px `#8f826e`, label "Load {name}") and a
+    40×40 delete button (red bin, label "Delete {name}"). Empty list: "No templates yet".
+  - Summary: "{duration} · {n} courts · cap {c}", duration as in the top nav ("10 min", else
+    `m:ss`). With `CourtCount.editable` off the courts are left out ("10 min · cap 20"), because a
+    Load keeps 4 courts.
+  - F25 Load: duration (by `TimerData.updateDuration`, SESS-02) and capacity apply at once. Only
+    a different court count (flag on) asks first. Fix in `GameData.loadTemplate`: the same court
+    count no longer reshuffles the courts (before, every Load made a new lineup).
+  - Reshuffle confirm: asks when round n has started (RUNNING, PAUSED, TIME UP, CHANGEOVER) and
+    the lineup holds players. Title "Discard round {n}?", text "Round {n} is discarded and not
+    logged. Everyone is placed again on {count} courts.", buttons "Reshuffle" / "Cancel"
+    (`showCourtsConfirm`, F14; phase change closes it, F18). Tablet uses the same rule and text
+    in `confirmDiscard`.
+  - Delete confirm (desktop): "Delete template “{name}”?", "The template is deleted. The current
+    settings do not change.", "Delete" / "Cancel". Tablet and phone have no delete button.
+  - Data format unchanged: `session_templates.json` is read and written as before.
+  - Tests: `test/features/sessions_desktop_test.dart` (65, harness
+    `test/support/sessions_harness.dart`), two F25 cases in `test/game_data_court_count_test.dart`,
+    `integration_test/sessions_test.dart` (4). `sessions_test.dart` (tablet) now drives real round
+    phases and expects the F25 title; `layout_feedback_test.dart` measures the desktop buttons.
+  - Not as the canvas: no bottom messages ("Loaded …", "Deleted …", "Courts reshuffled …"),
+    because bottom messages are for errors and the listed cases only (ARCHITECTURE §2.8); no
+    design note; the shell padding (32 px top and bottom, canvas 24); the "Reshuffle" button is
+    red, as every Courts confirm (canvas orange); the bin is the Material `delete_outline` glyph;
+    a focused value box draws a 3 px border, not an outline 2 px outside; the duration notes in
+    READY and TIME UP and the reshuffle text follow UAT, not the canvas ("round 3 is past this
+    length", "round 3 starts again"); the summary leaves out the courts when the flag is off.
 
 ### Acceptance Criteria
 > **UAT mapping:** NAV-01, NAV-06…11, RND-01…20, RND-22 (RND-21 on hold), COURT-01…17,
-> WL-01…04, CHK-01…06, PLY-05, PLY-06, PLY-08, PLY-09, PLY-12…19 (PLY-20 removed), SESS-02.
+> WL-01…04, CHK-01…06, PLY-05, PLY-06, PLY-08, PLY-09, PLY-12…19 (PLY-20 removed), SESS-01…06 (8.10).
 
 - [ ] Every UAT ID above has a test that failed first and now passes
 - [ ] All TODO(Nathan) points in UAT.md are answered and the specs updated
