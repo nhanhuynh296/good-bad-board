@@ -1284,5 +1284,430 @@
   "dashboard_error_generic": "Something went wrong. Try again.",
   "@dashboard_error_generic": {
     "description": "Toast when a Dashboard action fails for an unexpected reason"
+  },
+  "courts_generate_round_one": "Generate round 1",
+  "@courts_generate_round_one": {
+    "description": "Round bar button with no lineup (RND-12)"
+  },
+  "courts_start_round": "Start round {n}",
+  "@courts_start_round": {
+    "description": "Round bar button that starts round n (RND-04, RND-13; also the early start dialog button)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_start_round_now": "Start round {n} now",
+  "@courts_start_round_now": {
+    "description": "Round bar button in the changeover (RND-19)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_discard_and_regenerate": "Discard & regenerate",
+  "@courts_discard_and_regenerate": {
+    "description": "Button: a new matchmaker lineup (RND-13, RND-14)"
+  },
+  "courts_discard_and_start_round": "Discard round {n} and start again",
+  "@courts_discard_and_start_round": {
+    "description": "Round bar button (RND-16, R9-Q1)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_discard_round_short": "Discard round {n}",
+  "@courts_discard_round_short": {
+    "description": "Short PAUSED label when the full label does not fit (F16)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_discard_confirm_title": "Discard round {n}?",
+  "@courts_discard_confirm_title": {
+    "description": "Discard dialog title (RND-16)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_discard_confirm_body": "Round {n} is not logged. The next lineup goes on the courts and round {n} starts again.",
+  "@courts_discard_confirm_body": {
+    "description": "Discard dialog text (RND-16)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_discard_confirm_action": "Discard round",
+  "@courts_discard_confirm_action": {
+    "description": "Discard dialog button (RND-16)"
+  },
+  "courts_pause": "Pause",
+  "@courts_pause": {
+    "description": "Round bar button (RND-17)"
+  },
+  "courts_resume_round": "Resume round {n}",
+  "@courts_resume_round": {
+    "description": "Round bar button (RND-17)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_resume_changeover": "Resume changeover",
+  "@courts_resume_changeover": {
+    "description": "Round bar button in a paused changeover (RND-18)"
+  },
+  "courts_end_round_confirm_title": "End round {n} now?",
+  "@courts_end_round_confirm_title": {
+    "description": "Early start dialog title (RND-04, R12-Q1)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_end_round_confirm_body": "{time} left.",
+  "@courts_end_round_confirm_body": {
+    "description": "Early start dialog text; time is mm:ss (RND-04)",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "courts_chip_ready": "READY",
+  "@courts_chip_ready": {
+    "description": "Round state chip"
+  },
+  "courts_chip_running": "RUNNING",
+  "@courts_chip_running": {
+    "description": "Round state chip"
+  },
+  "courts_chip_paused": "PAUSED",
+  "@courts_chip_paused": {
+    "description": "Round state chip"
+  },
+  "courts_chip_time_up": "TIME UP",
+  "@courts_chip_time_up": {
+    "description": "Round state chip"
+  },
+  "courts_chip_changeover": "CHANGEOVER",
+  "@courts_chip_changeover": {
+    "description": "Round state chip"
+  },
+  "courts_sub_not_started": "Not started",
+  "@courts_sub_not_started": {
+    "description": "Round bar sub-label in READY (RND-09)"
+  },
+  "courts_sub_paused": "Clock paused",
+  "@courts_sub_paused": {
+    "description": "Round bar sub-label in PAUSED (RND-09)"
+  },
+  "courts_sub_time_up": "Clock stopped at 0:00",
+  "@courts_sub_time_up": {
+    "description": "Round bar sub-label in TIME UP (RND-09)"
+  },
+  "courts_sub_players_to_courts": "Players to courts",
+  "@courts_sub_players_to_courts": {
+    "description": "Round bar sub-label in CHANGEOVER (RND-09)"
+  },
+  "courts_counts_in_waiting": "{checkedIn}/{capacity} in · {waiting} waiting",
+  "@courts_counts_in_waiting": {
+    "description": "Round bar counts (RND-01)",
+    "placeholders": {
+      "checkedIn": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      },
+      "waiting": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_next_not_saved": "Round {n} not saved",
+  "@courts_next_not_saved": {
+    "description": "Next-round strip title (RND-22)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_next_saved": "Round {n} saved",
+  "@courts_next_saved": {
+    "description": "Next-round strip title (RND-22)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_next_clock_stops": "Clock stops at 0:00 if not saved.",
+  "@courts_next_clock_stops": {
+    "description": "Next-round strip text, not saved (RND-22)"
+  },
+  "courts_next_starts_after": "Starts 20 s after round {n} ends.",
+  "@courts_next_starts_after": {
+    "description": "Next-round strip text, saved (RND-22)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_round_ended": "Round {n} ended",
+  "@courts_round_ended": {
+    "description": "Changeover strip title (RND-22, R6-Q2)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_round_discarded": "Round {n} discarded · new lineup for round {n}",
+  "@courts_round_discarded": {
+    "description": "Changeover strip title after a discard (F10)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_make_round": "Make round {n}",
+  "@courts_make_round": {
+    "description": "Strip button: opens edit mode with a new lineup (RND-05)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_edit_round": "Edit round {n}",
+  "@courts_edit_round": {
+    "description": "Strip button: opens edit mode with the saved lineup (RND-05)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_editing_round": "Editing round {n}",
+  "@courts_editing_round": {
+    "description": "Edit strip title (RND-10)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_save_round": "Save round {n}",
+  "@courts_save_round": {
+    "description": "Strip button: saves round n (RND-05, RND-14)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_close_edit": "Close without saving",
+  "@courts_close_edit": {
+    "description": "Label of the edit strip × button (RND-07)"
+  },
+  "courts_close_unsaved_title": "Close without saving?",
+  "@courts_close_unsaved_title": {
+    "description": "Close dialog title (RND-07, F03)"
+  },
+  "courts_close_unsaved_body": "Your changes to round {n} are lost.",
+  "@courts_close_unsaved_body": {
+    "description": "Close dialog text (RND-07)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_close_unsaved_close": "Close",
+  "@courts_close_unsaved_close": {
+    "description": "Close dialog button (RND-07)"
+  },
+  "courts_keep_editing": "Keep editing",
+  "@courts_keep_editing": {
+    "description": "Close dialog cancel button (RND-07)"
+  },
+  "courts_court_title": "Court {k}",
+  "@courts_court_title": {
+    "description": "Court card title on desktop (COURT-01)",
+    "placeholders": {
+      "k": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_tag_next": "NEXT",
+  "@courts_tag_next": {
+    "description": "Court card tag in edit mode (RND-10)"
+  },
+  "courts_tag_round": "ROUND {n}",
+  "@courts_tag_round": {
+    "description": "Court card tag in TIME UP (F08)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_tag_players": "{count, plural, =1{1 player} other{{count} players}}",
+  "@courts_tag_players": {
+    "description": "Court card tag on a court that is short (UX-04)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_reroll_court": "Re-roll Court {k}",
+  "@courts_reroll_court": {
+    "description": "Label of the Re-roll button of one court",
+    "placeholders": {
+      "k": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_slot_select": "{name}, {tier}. Select to swap",
+  "@courts_slot_select": {
+    "description": "Label of a court slot that can be tapped (COURT-10)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "courts_slot_open_actions": "{name}, {tier}. Open actions",
+  "@courts_slot_open_actions": {
+    "description": "Label of the slot ⋯ button (COURT-15)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "courts_slot_move_to_waitlist": "Move to waitlist",
+  "@courts_slot_move_to_waitlist": {
+    "description": "Slot menu item (COURT-15)"
+  },
+  "courts_slot_check_out": "Check out",
+  "@courts_slot_check_out": {
+    "description": "Slot menu item (COURT-15)"
+  },
+  "courts_swapped_undo": "Swapped {a} and {b}.",
+  "@courts_swapped_undo": {
+    "description": "Bottom message after a swap (COURT-17); the Undo button follows",
+    "placeholders": {
+      "a": {
+        "type": "String"
+      },
+      "b": {
+        "type": "String"
+      }
+    }
+  },
+  "common_undo": "Undo",
+  "@common_undo": {
+    "description": "Undo button of the swap message (COURT-17)"
+  },
+  "courts_round_menu": "Round menu",
+  "@courts_round_menu": {
+    "description": "Label of the round ⋯ menu (RND-20)"
+  },
+  "courts_end_session": "End session",
+  "@courts_end_session": {
+    "description": "Round menu item and End session dialog button (RND-20)"
+  },
+  "courts_end_session_title": "End session?",
+  "@courts_end_session_title": {
+    "description": "End session dialog title (RND-20)"
+  },
+  "courts_end_session_body_round": "Round {n} goes into the history.",
+  "@courts_end_session_body_round": {
+    "description": "End session dialog text: the round that is logged (F09)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_end_session_nothing_logged": "Nothing is logged.",
+  "@courts_end_session_nothing_logged": {
+    "description": "End session dialog text: nothing is logged (F09)"
+  },
+  "courts_end_session_checked_out": "Everyone is checked out.",
+  "@courts_end_session_checked_out": {
+    "description": "End session dialog text, after the log sentence (F09)"
+  },
+  "courts_waitlist_search_label": "SEARCH WAITLIST",
+  "@courts_waitlist_search_label": {
+    "description": "Caps label of the waitlist search field (WL-04)"
+  },
+  "courts_waitlist_search_hint": "Name or sign-in ID",
+  "@courts_waitlist_search_hint": {
+    "description": "Placeholder of the waitlist search field (WL-04)"
+  },
+  "courts_waitlist_no_match": "No one matches “{text}”",
+  "@courts_waitlist_no_match": {
+    "description": "Waitlist text when the search matches nobody (WL-04)",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "courts_waitlist_rounds_played": "{count, plural, =1{1 round} other{{count} rounds}}",
+  "@courts_waitlist_rounds_played": {
+    "description": "Rounds played this session, on a waitlist entry (WL-01)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "courts_waitlist_next_in": "Next in",
+  "@courts_waitlist_next_in": {
+    "description": "Tag on a waitlist entry in the saved next round (WL-01)"
+  },
+  "courts_waitlist_hint_live": "Courts change at the next round",
+  "@courts_waitlist_hint_live": {
+    "description": "Waitlist hint while the live clock runs (F11)"
+  },
+  "courts_waitlist_item": "{name}, {rounds}. Select to place",
+  "@courts_waitlist_item": {
+    "description": "Label of a waitlist entry (WL-01)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "rounds": {
+        "type": "String"
+      }
+    }
   }
 }
