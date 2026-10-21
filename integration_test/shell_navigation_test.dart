@@ -15,57 +15,59 @@ Color? bottomBarLabelColor(WidgetTester tester, String label) {
   return tester.widget<Text>(text).style?.color;
 }
 
-/// Every text shown in the top nav bar, in order.
-List<String> topNavLabels(WidgetTester tester) => tester
-    .widgetList<Text>(
-      find.descendant(of: find.byType(TopNavBar), matching: find.byType(Text)),
-    )
-    .map((t) => t.data!)
-    .toList();
+/// Every text shown in the top nav bar of [type], in order.
+List<String> topNavLabels(WidgetTester tester, [Type type = TopNavBar]) =>
+    tester
+        .widgetList<Text>(
+          find.descendant(of: find.byType(type), matching: find.byType(Text)),
+        )
+        .map((t) => t.data!)
+        .toList();
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  // ── NAV-01: Desktop/tablet top header bar ──────────────────
+  // ── NAV-01: Desktop and tablet top nav ─────────────────────
 
-  group('NAV-01 — Desktop/tablet top nav visible', () {
-    testWidgets('desktop shows TopNavBar with all 5 tabs', (tester) async {
+  group('NAV-01 — Desktop and tablet top nav', () {
+    testWidgets('desktop shows the session header and 3 tabs', (tester) async {
       setDesktopSize(tester);
       await pumpApp(tester);
 
-      // All 5 tab labels are rendered (Check-in is integrated into Players).
-      const tabs = [
-        'Dashboard',
+      // "Session" over "{duration} rounds", then Courts, Players, Sessions;
+      // Analytics and Settings sit in the "⋯" menu (8.6.1, NAV-09).
+      expect(topNavLabels(tester, DesktopTopNavBar), [
+        'Session',
+        '10 min rounds',
+        'Courts',
         'Players',
         'Sessions',
-        'Analytics',
-        'Settings',
-      ];
-      for (final label in tabs) {
-        expect(
-          find.descendant(
-            of: find.byType(TopNavBar),
-            matching: find.text(label),
-          ),
-          findsOneWidget,
-        );
-      }
-
-      // Phone-only widgets should NOT be present.
-      expect(find.byIcon(Icons.menu), findsNothing);
-
-      // Exactly the 5 tab labels sit in the top bar: no club name.
-      expect(topNavLabels(tester), [
-        'Dashboard',
-        'Players',
-        'Sessions',
-        'Analytics',
-        'Settings',
       ]);
+      expect(find.byType(TopNavBar), findsNothing);
 
       // Phone chrome is absent.
       expect(find.byType(CompactHeader), findsNothing);
       expect(find.byType(BottomTabBar), findsNothing);
+    });
+
+    testWidgets('desktop "⋯" menu opens Analytics, then the session bar '
+        'returns to Courts', (tester) async {
+      setDesktopSize(tester);
+      await pumpApp(tester);
+
+      await tester.tap(find.byKey(const Key('top-nav-more')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Analytics'));
+      await tester.pumpAndSettle();
+
+      // NAV-10: the session bar shows on every tab except Courts.
+      expect(find.byType(SessionBar), findsOneWidget);
+      expect(find.text('No round yet'), findsOneWidget);
+
+      await tester.tap(find.text('View courts →'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SessionBar), findsNothing);
     });
 
     testWidgets('tablet shows TopNavBar with all 5 tabs', (tester) async {

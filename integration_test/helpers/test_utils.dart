@@ -10,7 +10,7 @@ import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/repository/pending_registration_repository.dart';
 import 'package:good_bad_board/repository/session_log_repository.dart';
 import 'package:good_bad_board/repository/session_template_repository.dart';
-import 'package:good_bad_board/shell/responsive_shell.dart';
+import 'package:good_bad_board/shell/shell.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:provider/provider.dart';
@@ -145,14 +145,30 @@ String _bottomBarLabel(String fullLabel) {
 /// Navigate to the tab at [index] in the [ResponsiveShell].
 ///
 /// Handles all three breakpoints automatically:
-/// - Desktop / tablet: taps the tab in [TopNavBar].
+/// - Desktop: taps "Courts", "Players" or "Sessions" in [DesktopTopNavBar],
+///   or opens "⋯" and taps "Analytics" or "Settings" (IMPLEMENTATION 8.6).
+/// - Tablet: taps the tab in [TopNavBar].
 /// - Phone: taps the primary tab in [BottomTabBar] or opens "More"
 ///   and taps the secondary tab there.
 Future<void> navigateToTab(WidgetTester tester, int index) async {
   final width = getCurrentWidth(tester);
   final tabLabel = ResponsiveShell.tabs[index].label;
 
-  if (isDesktop(width) || isTablet(width)) {
+  if (isDesktop(width)) {
+    if (index >= 3) {
+      await tester.tap(find.byKey(const Key('top-nav-more')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(tabLabel).last);
+    } else {
+      final label = index == dashboardTabIndex ? 'Courts' : tabLabel;
+      await tester.tap(
+        find.descendant(
+          of: find.byType(DesktopTopNavBar),
+          matching: find.text(label),
+        ),
+      );
+    }
+  } else if (isTablet(width)) {
     // TopNavBar — tap the tab pill.
     await tester.tap(find.text(tabLabel).last);
   } else {
