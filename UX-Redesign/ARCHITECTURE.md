@@ -278,7 +278,10 @@ Container with:
 ### 2.3 Court & Game
 
 Desktop components below follow the 2026-10-17 design (`Main.dc.html`) and decisions. Phone and
-tablet keep their PR 45 widgets (R2-Q23) with the new state names and labels.
+tablet keep their PR 45 widgets (R2-Q23) with the new state names and labels, except the round
+bar: `RoundBar(compact: true)` (the same states and buttons, wrapped in a rounded `#2b241e`
+card) and `NextRoundStrip(compact: true)` replace `RoundRotationBar`, which 8.2.2 removed (as
+built 2026-10-21). Files: `lib/features/dashboard/courts/`.
 
 #### RoundBar (desktop; replaces RoundRotationBar)
 ```
@@ -303,13 +306,16 @@ Full-width band under the top nav: 80px, bg #2b241e, no radius, padding 0 24px
 | TIME UP + edit mode | TIME UP | "Clock stopped at 0:00" | `#ff6a2b` (R11-Q5) | no start buttons (edit mode, R4-Q9); the edit strip "Save round N+1" starts the changeover (R6-Q3) |
 | CHANGEOVER | CHANGEOVER | "Players to courts" | `#ff6a2b` | "Pause" (text), "Start round N+1 now" (after a discard the new round keeps number N: "ROUND N", "Start round N now", R9-Q1) |
 | CHANGEOVER + edit mode | CHANGEOVER | "Players to courts" | `#ff6a2b` | "Pause" only (R4-Q9). At 0:00 with unsaved edits the time stops at 00:00 and the bar shows no buttons; the edit strip "Save round N+1" starts the round (R9-Q4) |
-| CHANGEOVER paused | PAUSED | (TODO) | `#c9c2b8` | "Resume changeover" (R6-Q12). Courts follow the PAUSED rules for round N+1: Re-roll, swap, full slot "⋯" menu (F17) |
+| CHANGEOVER paused | PAUSED | "Players to courts" (as built; no decision gives it) | `#c9c2b8` | "Resume changeover" (R6-Q12). Courts follow the PAUSED rules for round N+1: Re-roll, swap, full slot "⋯" menu (F17) |
 
 No "COURTS − 4 +" stepper (R2-Q2). No "Ends 19:42" (R4-Q8). Bar buttons: outline = 1px
 `#c9c2b8` border, white text; text = no border; primary = `#ff6a2b` fill, `#221d18` text.
 Focus ring on the bar: `#ff6a2b` (F07). Edit mode is a flag beside the phase, never a phase:
-"Pause" keeps edit mode (F02). PAUSED label width: if fr / zh / zh_HK labels do not fit at
-1280 px, PAUSED uses "Discard round N" (IMPLEMENTATION 8.8, F16).
+"Pause" keeps edit mode (F02). Label width: when "Discard round N and start again" does not fit
+in the bar, the button reads "Discard round N" (IMPLEMENTATION 8.8, F16). As built (8.5.7) the
+bar measures the labels with `TextPainter` and applies this in every state with the button,
+not only PAUSED. The progress fill uses the time colour of the state. Dialog action buttons
+are `#b91c1c` fill, white text; the cancel button is outline.
 
 **Actions** (see §4.7 for the state machine)
 
@@ -361,6 +367,10 @@ Edit mode: bg #fffaf2, 2px dashed #c2410c, "NEXT" tag
 │       hidden on a live court while the clock runs (R3-Q10)
 └── 4× PlayerSlot rows, spread over the card height
 ```
+As built (8.5.7, `DesktopCourtCard`): the tags keep the case of the ARB text ("NEXT",
+"Round N+1", "3 players"), not caps; slot rows are min(40px, height ÷ 4). The desktop grid
+minimum court height is 216px.
+
 The SpreadPill is not used on desktop (plain text instead). Tablet/phone keep it:
 
 #### SpreadPill (tablet/phone only)
@@ -456,6 +466,8 @@ Desktop only; tablet/phone keep the PR 45 profile with the new tokens (R6-Q7).
 ```
 In edit mode the panel lists the players who sit out the next round. With no lineup it lists
 the checked-in players in check-in order, no "Next in" (F22).
+As built (8.5.7): the hint sits between the search field and the list, as on the canvas, and
+there is no hint with no lineup. The title shortens with an ellipsis when it does not fit.
 
 #### WaitlistItem — Superseded on desktop by WaitlistPanel (2026-10-17). Tablet/phone unchanged.
 ```

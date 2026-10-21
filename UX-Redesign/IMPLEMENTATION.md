@@ -1221,7 +1221,7 @@ and log round n once. Two fast clicks on the strip "Save round {n+1}" (R12-Q2) s
 second call is a no-op. Test: `test/game_data_round_logging_test.dart`
 `should_log_round_once_when_start_clicked_twice` (and one per button).
 
-8.2.5 **As built (2026-10-21).** State layer only; the 8.5 widgets do not call it yet.
+8.2.5 **As built (2026-10-21).** State layer. The 8.5 widgets call it (see 8.5.7).
 - `RoundPhase` is in `lib/state/round_phase.dart` (exported by `game_data.dart`). `GameData`
   takes `timer:`; `main.dart` gives it the provided `TimerData`, with the duration from the
   settings. Without `timer:` it owns its own clock.
@@ -1234,7 +1234,8 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   TIME UP and the changeover.
 - Every method returns `false` (or a `Future` of `false`) when the phase does not allow it.
   That is the 8.2.4 guard. `saveNextRound`, `exitEditNext`, `startNextNow` and `endSession`
-  return a `Future`, because they can log a round. They share `rotateNow`'s `_isRotating` flag.
+  return a `Future`, because they can log a round. They share the `_isRotating` flag (the
+  write guard that `rotateNow` had; it stays after 8.2.2).
 - `startNextNow()` does nothing while edit mode has unsaved changes (the bar shows "Pause" only,
   R4-Q9). `quickSaveNextRound()` works in RUNNING only, as the table says.
 - Write failure at the end of the changeover (RND-06, R45-01): the phase stays CHANGEOVER at
@@ -1245,13 +1246,21 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   the clock during the write and resumes it if the write fails.
 - A check-out removes the player from the round n+1 lineups (saved, planned, edit). The fill
   of that place and the swap Undo came later: see 8.3.1 and 8.4.7.
-- **8.2.2 is not done yet.** `rotateNow`, `RoundView`, `stageNextRound`, `cancelStagedRound` and
-  the time-mode `saveCurrentGame` path stay, because the PR 45 dashboard still calls them
-  (`TODO(8.2.2)` in `game_data.dart`). Remove them with the 8.5 round bar.
+- **8.2.2 done (2026-10-21, with 8.5).** Removed: `rotateNow`, `RoundView`, `roundView`,
+  `setRoundView`, `stageNextRound`, `cancelStagedRound`, `stagedLineup`, `isStaged`,
+  `stagedSummary`, `saveCurrentGame` (game-based mode uses `saveSingleGame` only),
+  `RoundRotationBar`, `TimerData.pct` and `TimerData.start`, the `TODO(8.2.2)` markers, and
+  14 ARB keys with no reader (`regenerate`, `dashboard_rotate_now`, `dashboard_premake_next`,
+  `dashboard_cancel_next`, `dashboard_current_round`, `dashboard_next_round`,
+  `dashboard_next_round_ready`, `dashboard_until_rotation`, `dashboard_staged_summary`,
+  `dashboard_player_count`, `dashboard_court_count`, `dashboard_mode_time_based`,
+  `dashboard_discard_court_title`, `dashboard_discard_court_body`). The write guard
+  (`_isRotating`, disk first, then `history`) stays. `makeGame` stays for game-based mode; it
+  does not change the round phase.
 - `TimerData`: `startRound`, `startChangeover`, `pause`, `resume`, `isPaused`, `isChangeover`,
   `elapsed`, `progress` (elapsed ÷ length), `changeoverLength` = 20 s, default 10 min. The clock
-  now calls `onExpired` on the tick that reaches 0:00 (PR 45 waited one more tick). `pct` stays
-  for the PR 45 bar. `elapse()` is for tests only.
+  now calls `onExpired` on the tick that reaches 0:00 (PR 45 waited one more tick). `elapse()`
+  is for tests only.
 - Tests: `test/game_data_round_phase_test.dart`, `test/game_data_round_logging_test.dart`,
   `test/timer_data_test.dart` (updated).
 
@@ -1280,7 +1289,7 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   log + Undo are byte-equal to the files before the log. R6 answers: restore the clock time at
   the click; any other change cancels the Undo; round 1 included.
 
-8.3.1 **As built (2026-10-21).** State layer only; the 8.5 message does not call it yet.
+8.3.1 **As built (2026-10-21).** State layer. The 8.5 swap message calls it (see 8.5.7).
 - `GameData.swapPlayers(a, b)` swaps in the round on screen (`visibleMatches`): two court
   players trade slots (COURT-10), or a waitlisted player takes the slot of a court player, who
   goes to the waitlist (COURT-08). It returns `false` when `canEditCourts` is false (8.4.6), when
@@ -1334,7 +1343,7 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   filled by 8.4.1 from the other players who sit out that round (R7-Q6). UAT COURT-15, WL-02.
 - 8.4.6 CHANGEOVER counts as "the clock runs" for Re-roll and the slot menu (R7-Q4), except in
   edit mode for the new round. UAT COURT-10, COURT-14.
-- 8.4.7 **As built (2026-10-21).** State layer only; the 8.5 widgets do not call it yet.
+- 8.4.7 **As built (2026-10-21).** State layer. The 8.5 widgets call it (see 8.5.7).
   - `pickForSlot(court, candidates)` sorts by rounds played, then the level gap of the court
     with the candidate in it, then check-in order. The level gap is the tier gap (`tierGap()`),
     then the Elo gap inside one tier (the re-roll's `_levelGap`); no doc gives the second key.
@@ -1431,6 +1440,56 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   "Swapped {A} and {B}. Undo", no keyboard shortcut, R7-Q2) stays bottom-centre and blocks
   pointer input only inside its own 360 × 48 px box (F15). UAT RND-07, RND-16, RND-20,
   COURT-17.
+- 8.5.7 **As built (2026-10-21).**
+  - Files: `lib/features/dashboard/courts/` (`round_bar.dart`, `next_round_strip.dart`,
+    `desktop_court_card.dart`, `waitlist_panel.dart`, `courts_confirm_dialog.dart`,
+    `courts_menu.dart`, `courts_button.dart`), wired in `dashboard_page.dart`. The shell gives
+    the desktop Courts tab no padding, so the round bar is full width under the nav.
+  - Desktop, time mode: `RoundBar` → `NextRoundStrip` (edit mode, RUNNING, PAUSED,
+    CHANGEOVER only) → grid (`courtGridLayout`, minimum court height 216 px; it scrolls only
+    when that does not fit) + 280 px `WaitlistPanel`. 4 courts fit at 1280 × 720 in every
+    phase and in en, fr, zh, zh_HK.
+  - Phone and tablet, time mode: `StatStrip`, `RoundBar(compact: true)` (a wrapped card),
+    `NextRoundStrip(compact: true)`, `WaitlistChips` (in `waitlistOrder`), and the old
+    `CourtCard` grid. The compact round bar replaces `RoundRotationBar` there too, because
+    8.2.2 removed it (drift from 8.5.2, which says desktop only).
+  - Game-based mode keeps the PR 45 page: `StatStrip`, Generate Game, the court stepper (only
+    with `CourtCount.editable`), `CourtCard` with per-court Save. On desktop it has its own
+    24 px padding.
+  - "Discard round {n} and start again" becomes "Discard round {n}" in any state where the full
+    label does not fit (F16, measured with `TextPainter`).
+  - "End session" with no lineup: `endSession()` refuses `noLineup`, so the UI checks out every
+    player itself after the dialog ("Nothing is logged. Everyone is checked out.").
+  - "Close without saving?" body: "Your changes to round {n} are lost." (new key,
+    `courts_close_unsaved_body`).
+  - The confirm dialog listens to `GameData` and closes on a phase change (F18) for the early
+    start, Discard and End session dialogs. "Close without saving?" does not.
+  - Slot menu: no player → no "⋯"; courts can change → "Move to waitlist" + "Check out"; live
+    court while the clock runs → "Check out" only, and no "⋯" for a player checked out there
+    (`isCheckedOutOnLiveCourt`).
+  - A selection clears when the phase, edit mode or the lineup on screen changes.
+  - A failed round log (`roundLogError`) shows "Something went wrong. Try again." once.
+  - Tests: `test/features/courts_round_bar_test.dart` (41),
+    `courts_confirm_dialog_test.dart` (24), `courts_slot_menu_test.dart` (24),
+    `courts_swap_undo_test.dart` (10), `courts_waitlist_test.dart` (15),
+    `dashboard_four_courts_fit_test.dart` (rewritten, 39). Harness:
+    `test/support/courts_harness.dart` (loads Source Sans 3, so text has its real width).
+  - Old tests changed for 8.2.2 and 8.5: removed `dashboard_round_rotation_test.dart`,
+    `dashboard_next_round_test.dart`, `game_data_round_rotation_test.dart`,
+    `game_data_round_view_test.dart`, `game_data_rotation_guard_test.dart` (the guard and
+    failed-write cases are in `game_data_round_logging_test.dart`); removed the Save, staged
+    round and rotate cases in `game_data_release_fixes_test.dart`,
+    `game_data_lineup_error_test.dart`, `game_data_court_count_test.dart`,
+    `game_data_fill_rule_test.dart`, `dashboard_release_fixes_test.dart` (F1),
+    `dashboard_court_edit_test.dart` (old warnings), `dashboard_game_based_test.dart` (global
+    Save), `layout_feedback_test.dart` (rotation bar); updated
+    `dashboard_breakpoints_test.dart`, `dashboard_scroll_test.dart`,
+    `dashboard_timer_rebuild_test.dart`, `dashboard_lineup_error_test.dart`,
+    `release_court_count_test.dart` (no stepper even with the flag on, R2-Q2),
+    `game_data_late_checkin_test.dart`, `game_data_session_log_test.dart`, `timer_data_test.dart`.
+  - Not as the canvas: the edit strip has no helper text; the early start dialog body is only
+    "{mm:ss} left."; with no lineup the sub-label reads "Not started"; the card tags are not
+    upper-case; dialog action buttons are red.
 
 ### 8.6 — Shell (desktop)
 - 8.6.1 `TopNavBar` desktop: left text "Session" over "{duration} rounds" (R3-Q5, F29); whole

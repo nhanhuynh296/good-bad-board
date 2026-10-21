@@ -166,6 +166,10 @@ and **scrolls**, so every court stays reachable (as before this build).
 When viewport width is tablet or phone (<1080px)
 Then the waitlist renders as a horizontally-wrapping chip row above the courts, and courts stack
 below it at the minimum proportion (2 columns on tablet, 1 column on phone); the page scrolls.
+And the stat strip, then a compact round bar (the same states and buttons as RND-01, wrapped in
+a card), then the next-round strip show above the chips (as built in 8.5, 2026-10-21: the PR 45
+rotation bar is removed, 8.2.2). Tests: `test/features/dashboard_breakpoints_test.dart`,
+`test/features/dashboard_four_courts_fit_test.dart`.
 
 **NAV-08** — Table header rows hidden on phone
 Given the Players tab is active (with integrated check-in)
@@ -367,6 +371,8 @@ Then a dialog asks "Close without saving?". The buttons are "Close" and "Keep ed
 F03). The dialog follows the confirm pattern (F14, below).
 When the organizer clicks "Keep editing"
 Then nothing changes, and edit mode stays open with its changes.
+The dialog text is "Your changes to round {n+1} are lost." (as built in 8.5, 2026-10-21; no
+doc gave a body). A phase change does not close this dialog.
 When the organizer clicks "Close"
 Then the page leaves edit mode. The changes made since edit mode opened are lost.
 And if round n+1 was saved before, the saved lineup stays saved. If it was not saved, the
@@ -513,6 +519,9 @@ When the organizer clicks "Cancel" or presses Esc
 Then nothing changes.
 When the phase changes while the dialog shows (for example the time reaches 00:00)
 Then the dialog closes with no action, and nothing is discarded (F18).
+When the full label does not fit in the round bar, in any state that shows it, the button
+reads "Discard round {n}" (F16; as built in 8.5, 2026-10-21, F16 is applied to every state, not
+only PAUSED).
 When the organizer clicks "Discard round"
 Then the app does not log round n, now or later.
 And the new round uses the saved next-round lineup, or in TIME UP the planned round, or else a
@@ -579,6 +588,10 @@ the log (as built in 8.2, 2026-10-21; `TODO(Nathan)`: confirm).
 And no Undo message shows (RND-21 is on hold).
 Given the state is READY (round 1 not started)
 Then End session logs nothing.
+Given no lineup exists (as built in 8.5, 2026-10-21)
+When the organizer confirms "End session"
+Then nothing is logged and every player is checked out. `GameData.endSession()` refuses the
+no-lineup state, so the Courts tab checks out each player itself.
 
 **RND-21** — On hold (R6-Q6): Undo on the Courts tab for "Start round {n+1}", "Discard round
 {n} and start again" and "End session" is not in this build (R4-Q2 is paused). Note for
