@@ -19,12 +19,15 @@ import 'package:good_bad_board/repository/session_template_repository.dart';
 import 'package:good_bad_board/repository/session_log_repository.dart';
 import 'package:good_bad_board/state/lineup_error.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
+import 'package:good_bad_board/state/round_phase.dart';
+import 'package:good_bad_board/state/timer_data.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:trotter/trotter.dart';
 import 'package:uuid/uuid.dart';
 
 export 'package:good_bad_board/state/lineup_error.dart';
+export 'package:good_bad_board/state/round_phase.dart';
 
 typedef GameContainer = List<Game>;
 
@@ -65,9 +68,28 @@ abstract final class CourtCount {
 
 class GameData extends ChangeNotifier {
   /// [random] feeds the weighted player draws; tests pass a seeded one.
-  GameData({Random? random}) : _random = random;
+  ///
+  /// [timer] is the round clock the round state machine drives. `main.dart`
+  /// passes the one [TimerData] it provides, so the round bar watches the
+  /// same clock. Without one, GameData makes and owns its own.
+  GameData({Random? random, TimerData? timer})
+    : _random = random,
+      _timer = timer ?? TimerData(),
+      _ownsTimer = timer == null;
 
   final Random? _random;
+
+  final TimerData _timer;
+  final bool _ownsTimer;
+
+  /// The round clock (IMPLEMENTATION 8.2.3).
+  TimerData get timer => _timer;
+
+  @override
+  void dispose() {
+    if (_ownsTimer) _timer.dispose();
+    super.dispose();
+  }
 
   /// Number of random 4-player combinations a re-roll compares (COURT-02).
   static const int rerollSampleCount = 100;
@@ -287,10 +309,21 @@ class GameData extends ChangeNotifier {
   /// All court edits ([placePlayerInSlot], [makeSingleCourt],
   /// [removePlayerFromCourt]) apply to this container, so the organizer edits
   /// exactly what is on screen.
-  GameContainer get visibleMatches =>
-      _roundView == RoundView.next && _stagedLineup != null
-      ? _stagedLineup!
-      : stagingMatches;
+  ///
+  /// The round state machine (8.2) comes first: edit mode shows the edit
+  /// lineup; TIME UP shows the planned round and the changeover the saved
+  /// round (RND-03, RND-15).
+  GameContainer get visibleMatches {
+    final edit = _editLineup;
+    if (edit != null) return edit;
+    final next = _nextLineup;
+    if (next != null && (_phase == RoundPhase.timeUp || _inChangeover)) {
+      return next;
+    }
+    return _roundView == RoundView.next && _stagedLineup != null
+        ? _stagedLineup!
+        : stagingMatches;
+  }
 
   /// Runs [action] with [target] installed as the live lineup, then restores
   /// the original.
@@ -381,16 +414,7 @@ class GameData extends ChangeNotifier {
     if (_isRotating) return false;
     _isRotating = true;
     try {
-      // Every court that holds players is logged as played, including an
-      // incomplete one — the clock running out must never be blocked by a
-      // half-filled court. (Saving by hand still validates; see
-      // [saveCurrentGame].)
-      final finished = stagingMatches
-          .where((game) => game.playerIds.isNotEmpty)
-          .toList();
-      if (finished.isNotEmpty) {
-        await _logRound(finished);
-      }
+      await _logLiveRound();
     } finally {
       _isRotating = false;
     }
@@ -411,7 +435,476 @@ class GameData extends ChangeNotifier {
     return true;
   }
 
+  /// The one-at-a-time flag of every path that logs a round (R45-01,
+  /// 8.2.1, 8.2.4).
   bool _isRotating = false;
+
+  /// Logs the live round ([stagingMatches]) through [_logRound].
+  ///
+  /// Every court that holds players is logged as played, including an
+  /// incomplete one — the clock running out must never be blocked by a
+  /// half-filled court. (Saving by hand still validates; see
+  /// [saveCurrentGame].) Empty courts are left out: that rule stays until
+  /// ADR-0002 adds the round id.
+  Future<void> _logLiveRound() async {
+    final finished = stagingMatches
+        .where((game) => game.playerIds.isNotEmpty)
+        .toList();
+    if (finished.isNotEmpty) await _logRound(finished);
+  }
+
+  // ── Round state machine (IMPLEMENTATION 8.2) ─────────────────
+  //
+  // TODO(8.2.2): the PR 45 flow (rotateNow, RoundView, stageNextRound,
+  // cancelStagedRound, the time-mode saveCurrentGame path) stays until the
+  // 8.5 round bar replaces the dashboard controls that call it.
+
+  RoundPhase _phase = RoundPhase.noLineup;
+
+  /// Where the session is in its round. The UI reads this, never the timer.
+  RoundPhase get phase => _phase;
+
+  RoundPhase? _pausedFrom;
+
+  /// The phase that [resume] returns to: [RoundPhase.running] or
+  /// [RoundPhase.changeover]. `null` when not paused.
+  RoundPhase? get pausedFrom =>
+      _phase == RoundPhase.paused ? _pausedFrom : null;
+
+  /// Round n+1: made in edit mode, saved, or planned at TIME UP.
+  GameContainer? _nextLineup;
+  bool _nextSaved = false;
+
+  /// The round n+1 lineup, saved or not, or `null` when none exists.
+  GameContainer? get nextLineup => _nextLineup;
+
+  /// Whether round n+1 is saved (committed) and starts after round n.
+  bool get isNextRoundSaved => _nextLineup != null && _nextSaved;
+
+  /// The working copy of round n+1 while edit mode is open.
+  GameContainer? _editLineup;
+
+  /// The rosters of [_editLineup] when edit mode opened.
+  List<List<String>>? _editBase;
+
+  /// Whether edit mode for round n+1 is open. A flag beside the phase, kept
+  /// through Pause (F02).
+  bool get isEditingNext => _editLineup != null;
+
+  /// Whether the edit lineup changed since edit mode opened (R11-Q2, F03).
+  /// The "×" asks "Close without saving?" only when this is true.
+  bool get hasUnsavedEdits {
+    final edit = _editLineup;
+    final base = _editBase;
+    if (edit == null || base == null) return false;
+    return !const DeepCollectionEquality().equals(_rosters(edit), base);
+  }
+
+  bool _discarded = false;
+
+  /// Whether the changeover follows a discard: round n is never logged and
+  /// the new round keeps number n (R2-Q5, R9-Q1).
+  bool get discarded => _inChangeover && _discarded;
+
+  bool _waitingForEdit = false;
+
+  /// Whether the changeover reached 0:00 while edit mode had unsaved
+  /// changes; it waits for [saveNextRound] or [exitEditNext] (R9-Q4).
+  bool get waitingForEdit => _waitingForEdit;
+
+  Object? _roundLogError;
+
+  /// The error of the last round log that failed, or `null`. Round n+1 did
+  /// not start; [startNextNow] tries again (R45-01, RND-06).
+  Object? get roundLogError => _roundLogError;
+
+  /// The round start that the changeover clock began, if one is in flight.
+  Future<void>? _pendingStart;
+
+  /// Waits for a round start that the clock began at 0:00.
+  @visibleForTesting
+  Future<void> settle() async => _pendingStart;
+
+  bool get _inChangeover =>
+      _phase == RoundPhase.changeover ||
+      (_phase == RoundPhase.paused && _pausedFrom == RoundPhase.changeover);
+
+  /// RUNNING, or PAUSED with the round clock (not the changeover).
+  bool get _roundClockLive =>
+      _phase == RoundPhase.running ||
+      (_phase == RoundPhase.paused && _pausedFrom == RoundPhase.running);
+
+  /// The number on the round bar: in the changeover the round that starts
+  /// next (n+1, or n again after a discard), else [roundNumber].
+  int get displayRoundNumber =>
+      _inChangeover && !_discarded ? _roundNumber + 1 : _roundNumber;
+
+  /// The round that [endSession] logs, for the dialog text (F09): the
+  /// round that started last, or `null` when nothing is logged (READY, no
+  /// lineup, a changeover after a discard).
+  int? get roundToLog {
+    if (_roundClockLive || _phase == RoundPhase.timeUp) return _roundNumber;
+    if (_inChangeover && !_discarded) return _roundNumber;
+    return null;
+  }
+
+  /// Time left on the clock, for the "End round n now? mm:ss left." text.
+  Duration get timeLeft => _timer.remaining;
+
+  /// Whether "Start round n+1" asks "End round n now?" first: RUNNING with
+  /// time left only; never in PAUSED or TIME UP (R12-Q1, F05).
+  bool get startNeedsConfirm =>
+      _phase == RoundPhase.running &&
+      !isEditingNext &&
+      _timer.remaining > Duration.zero;
+
+  /// "Generate round 1": a matchmaker lineup, clock stopped (RND-12).
+  ///
+  /// Throws [NotEnoughPlayers] with fewer than 4 checked in (R45-39), and
+  /// [NoCourts] with no court. Does nothing outside [RoundPhase.noLineup].
+  void generateFirstRound() {
+    if (_phase != RoundPhase.noLineup) return;
+    if (numberOfCourt <= 0) throw const NoCourts();
+    if (_checkedInPlayers.length < Game.playerPerCourt) {
+      throw NotEnoughPlayers(count: _checkedInPlayers.length);
+    }
+    _generateLineup();
+    _phase = RoundPhase.ready;
+    notifyListeners();
+  }
+
+  /// "Discard & regenerate" on the draft: a new lineup, clock stopped
+  /// (RND-13).
+  bool regenerateDraft() {
+    if (_phase != RoundPhase.ready) return false;
+    if (_checkedInPlayers.length < Game.playerPerCourt) return false;
+    _generateLineup();
+    notifyListeners();
+    return true;
+  }
+
+  /// "Start round 1": round 1 runs at once from the full duration, with no
+  /// changeover (R9-Q2). Logs nothing.
+  bool startFirstRound() {
+    if (_phase != RoundPhase.ready) return false;
+    _phase = RoundPhase.running;
+    _timer.startRound(onExpired: _onClockZero);
+    notifyListeners();
+    return true;
+  }
+
+  /// "Make round n+1": a matchmaker lineup for round n+1 in edit mode. The
+  /// live courts do not change (RND-05). One next round at a time (RND-08).
+  bool makeNextRound() {
+    if (!_roundClockLive || isEditingNext || _nextLineup != null) {
+      return false;
+    }
+    final lineup = _computeFreshLineup();
+    if (lineup.isEmpty) return false;
+    _nextLineup = lineup;
+    _nextSaved = false;
+    _openEdit(lineup);
+    notifyListeners();
+    return true;
+  }
+
+  /// "Edit round n+1": edit mode with the saved lineup (RND-05).
+  bool editNextRound() {
+    final saved = _nextLineup;
+    if (!_roundClockLive || isEditingNext || saved == null || !_nextSaved) {
+      return false;
+    }
+    _openEdit(saved);
+    notifyListeners();
+    return true;
+  }
+
+  /// The strip "Save round n+1" in RUNNING: a matchmaker lineup, saved at
+  /// once, no edit mode. Logs nothing; the clock does not change (R12-Q2,
+  /// F28). A second click is a no-op (8.2.4).
+  bool quickSaveNextRound() {
+    if (_phase != RoundPhase.running || isEditingNext || _nextLineup != null) {
+      return false;
+    }
+    final lineup = _computeFreshLineup();
+    if (lineup.isEmpty) return false;
+    _nextLineup = lineup;
+    _nextSaved = true;
+    notifyListeners();
+    return true;
+  }
+
+  /// "Save round n+1" in edit mode (RND-14).
+  ///
+  /// Saves the edit lineup and leaves edit mode. In TIME UP it also starts
+  /// the changeover (R6-Q3). While the changeover waits at 0:00 it starts
+  /// round n+1 (R9-Q4): round n is logged first, so the future fails when
+  /// the write fails. A second click is a no-op (8.2.4).
+  Future<bool> saveNextRound() async {
+    if (!isEditingNext) return false;
+    final wasWaiting = _waitingForEdit;
+    _commitEdit();
+    if (wasWaiting) return _beginNextRound();
+    if (_phase == RoundPhase.timeUp) _enterChangeover(discarded: false);
+    notifyListeners();
+    return true;
+  }
+
+  /// "Discard & regenerate" in edit mode: a new round n+1 lineup; edit mode
+  /// stays open, and a waiting changeover keeps waiting (RND-14, R9-Q4).
+  bool regenerateNext() {
+    if (!isEditingNext) return false;
+    final lineup = _computeFreshLineup();
+    if (lineup.isEmpty) return false;
+    _editLineup = lineup;
+    notifyListeners();
+    return true;
+  }
+
+  /// "×" in edit mode: drops the edits (RND-07). The UI calls it after
+  /// "Close without saving?", or at once when [hasUnsavedEdits] is false.
+  ///
+  /// A saved round n+1 stays saved. An unsaved one is dropped, except the
+  /// planned round of TIME UP (RND-15). While the changeover waits, the saved
+  /// round n+1 starts unchanged (R11-Q2).
+  Future<bool> exitEditNext() async {
+    if (!isEditingNext) return false;
+    _closeEdit();
+    if (!_nextSaved && _phase != RoundPhase.timeUp && !_inChangeover) {
+      _nextLineup = null;
+    }
+    if (_waitingForEdit) {
+      _waitingForEdit = false;
+      return _beginNextRound();
+    }
+    notifyListeners();
+    return true;
+  }
+
+  /// "Pause": freezes the round or the changeover (R3-Q1, R4-Q5). Edit mode
+  /// stays as it is (F02). A changeover that waits at 0:00 has no time to
+  /// freeze.
+  bool pause() {
+    final canPause =
+        _phase == RoundPhase.running ||
+        (_phase == RoundPhase.changeover && !_waitingForEdit);
+    if (!canPause) return false;
+    _pausedFrom = _phase;
+    _phase = RoundPhase.paused;
+    _timer.pause();
+    notifyListeners();
+    return true;
+  }
+
+  /// "Resume round n" / "Resume changeover": continues from the paused time.
+  bool resume() {
+    final from = _pausedFrom;
+    if (_phase != RoundPhase.paused || from == null) return false;
+    _phase = from;
+    _pausedFrom = null;
+    _timer.resume();
+    notifyListeners();
+    return true;
+  }
+
+  /// "Start round n+1" (RND-04): saves round n+1 — the saved round, the
+  /// planned round of TIME UP, or a new matchmaker lineup; in paused edit
+  /// mode the edit lineup with its changes (R11-Q3) — and starts the
+  /// changeover (R6-Q1). Logs nothing at the click.
+  ///
+  /// In RUNNING the UI asks "End round n now?" first ([startNeedsConfirm]).
+  /// A second click is a no-op: the phase is CHANGEOVER (8.2.4).
+  bool startNextRound() {
+    final pausedEdit =
+        _phase == RoundPhase.paused &&
+        _pausedFrom == RoundPhase.running &&
+        isEditingNext;
+    final fromRound =
+        (_roundClockLive || _phase == RoundPhase.timeUp) && !isEditingNext;
+    if (!pausedEdit && !fromRound) return false;
+    if (pausedEdit) {
+      _commitEdit();
+    } else {
+      _adoptNextLineup();
+    }
+    _enterChangeover(discarded: false);
+    notifyListeners();
+    return true;
+  }
+
+  /// "Discard round n and start again" (RND-16), after its confirm dialog
+  /// (R9-Q3): the changeover starts as in [startNextRound], round n is never
+  /// logged, and the new round keeps number n (R2-Q5, R9-Q1).
+  bool discardAndStartNext() {
+    final allowed =
+        (_roundClockLive || _phase == RoundPhase.timeUp) && !isEditingNext;
+    if (!allowed) return false;
+    _adoptNextLineup();
+    _enterChangeover(discarded: true);
+    notifyListeners();
+    return true;
+  }
+
+  /// "Start round n+1 now": ends the changeover at once (RND-19). Round n is
+  /// logged (unless discarded) and round n+1 runs.
+  ///
+  /// Does nothing while edit mode has unsaved changes (the changeover then
+  /// waits for the save, R9-Q4). The future fails when the write fails, and
+  /// round n+1 does not start (R45-01).
+  Future<bool> startNextNow() async {
+    if (_phase != RoundPhase.changeover || _waitingForEdit) return false;
+    if (isEditingNext && hasUnsavedEdits) return false;
+    return _beginNextRound();
+  }
+
+  /// "End session" (RND-20), after its confirm dialog: logs [roundToLog]
+  /// once (R6-Q5), stops the clock, checks out every player, and returns to
+  /// [RoundPhase.noLineup] at round 1.
+  ///
+  /// The session's in-memory history ends with it; the disk keeps the log.
+  /// The future fails when the write fails, and the session does not end.
+  Future<bool> endSession() async {
+    if (_phase == RoundPhase.noLineup || _isRotating) return false;
+    final logs = roundToLog != null;
+    final wasRunning = _timer.isRunning;
+    _isRotating = true;
+    _timer.pause();
+    try {
+      if (logs) await _logLiveRound();
+    } catch (_) {
+      if (wasRunning) _timer.resume();
+      rethrow;
+    } finally {
+      _isRotating = false;
+    }
+    _timer.reset();
+    _checkedInPlayers.clear();
+    history.clear();
+    stagingMatches = [];
+    _padToCourtCount(stagingMatches);
+    _nextLineup = null;
+    _nextSaved = false;
+    _closeEdit();
+    _discarded = false;
+    _waitingForEdit = false;
+    _roundLogError = null;
+    _stagedLineup = null;
+    _roundView = RoundView.current;
+    _playingGameIds.clear();
+    _sessionRerollCount = 0;
+    _roundNumber = 1;
+    _pausedFrom = null;
+    _phase = RoundPhase.noLineup;
+    notifyListeners();
+    return true;
+  }
+
+  // TODO(8.3): swapPlayers() / undoSwap() with the swap memento (COURT-17).
+
+  /// The clock reached 0:00 (RND-03, RND-06, RND-15). Also called when a
+  /// duration change while paused puts the round past its end (SESS-02).
+  void _onClockZero() {
+    final from = _phase == RoundPhase.paused ? _pausedFrom : _phase;
+    if (from == RoundPhase.running) {
+      _pausedFrom = null;
+      if (isNextRoundSaved) {
+        _enterChangeover(discarded: false);
+      } else {
+        // The courts show the planned round n+1. Round n keeps its lineup
+        // for the log (RND-15). Edit mode stays as it is (R6-Q3).
+        _nextLineup ??= _computeFreshLineup();
+        _nextSaved = false;
+        _phase = RoundPhase.timeUp;
+      }
+      notifyListeners();
+      return;
+    }
+    if (from == RoundPhase.changeover) {
+      if (isEditingNext && hasUnsavedEdits) {
+        _waitingForEdit = true;
+        notifyListeners();
+        return;
+      }
+      // The error is kept in [roundLogError] for the UI; nothing else
+      // waits on this future.
+      _pendingStart = _beginNextRound().then<void>((_) {}, onError: (_) {});
+    }
+  }
+
+  /// Saves round n+1 for a start button: the saved round, the planned
+  /// round of TIME UP, or a new matchmaker lineup.
+  void _adoptNextLineup() {
+    _nextLineup ??= _computeFreshLineup();
+    _nextSaved = true;
+  }
+
+  void _enterChangeover({required bool discarded}) {
+    _phase = RoundPhase.changeover;
+    _pausedFrom = null;
+    _discarded = discarded;
+    _waitingForEdit = false;
+    _timer.startChangeover(onExpired: _onClockZero);
+  }
+
+  /// Ends the changeover: logs round n (unless discarded, 8.2.1), then
+  /// round n+1 runs from the full duration. One at a time (8.2.4).
+  Future<bool> _beginNextRound() async {
+    if (_isRotating || !_inChangeover) return false;
+    _isRotating = true;
+    try {
+      if (!_discarded) await _logLiveRound();
+    } catch (error) {
+      _roundLogError = error;
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isRotating = false;
+    }
+    _roundLogError = null;
+    if (!_discarded) _roundNumber++;
+    stagingMatches = _nextLineup ?? [];
+    _padToCourtCount(stagingMatches);
+    _nextLineup = null;
+    _nextSaved = false;
+    _closeEdit();
+    _discarded = false;
+    _waitingForEdit = false;
+    _pausedFrom = null;
+    _phase = RoundPhase.running;
+    _prunePlayingGameIds();
+    _timer.startRound(onExpired: _onClockZero);
+    notifyListeners();
+    return true;
+  }
+
+  void _openEdit(GameContainer source) {
+    _editLineup = [
+      for (final game in source)
+        Game(
+          playerIds: List.of(game.playerIds),
+          id: game.id,
+          createdDate: game.createdDate,
+        ),
+    ];
+    _editBase = _rosters(source);
+  }
+
+  /// Saves the edit lineup as round n+1 and leaves edit mode.
+  void _commitEdit() {
+    _nextLineup = _editLineup;
+    _nextSaved = true;
+    _closeEdit();
+    _waitingForEdit = false;
+  }
+
+  void _closeEdit() {
+    _editLineup = null;
+    _editBase = null;
+  }
+
+  static List<List<String>> _rosters(GameContainer lineup) => [
+    for (final game in lineup) List.of(game.playerIds),
+  ];
 
   /// Alias for [checkInPlayer] — the only door into session membership.
   ///
@@ -461,9 +954,18 @@ class GameData extends ChangeNotifier {
   ///
   /// A player who has left cannot be on the plan — otherwise the round
   /// rotates onto a court with a ghost on it.
+  ///
+  /// The round n+1 lineups of the round state machine (saved, planned, or
+  /// in edit mode) drop the player too.
+  // TODO(8.4.4): fill the freed place of round n+1 by the fill rule.
   void _removeFromStagedLineup(Player player) {
-    for (final game in _stagedLineup ?? const <Game>[]) {
-      game.playerIds.remove(player.id);
+    for (final lineup in [_stagedLineup, _nextLineup, _editLineup]) {
+      for (final game in lineup ?? const <Game>[]) {
+        game.playerIds.remove(player.id);
+      }
+    }
+    for (final roster in _editBase ?? const <List<String>>[]) {
+      roster.remove(player.id);
     }
   }
 
