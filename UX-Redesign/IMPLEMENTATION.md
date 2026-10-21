@@ -1587,6 +1587,55 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   `should_check_in_by_exact_sign_in_id_when_level_chip_hides_player` (Arrange: one chip on, the
   scanned player's tier not selected; Act: type the ID, Enter; Assert: the player is checked
   in). UAT PLY-14.
+- 8.7.8 **As built (2026-10-21).**
+  - Files: `lib/features/players/` `scan_field.dart` (`DesktopScanBar`), `scan_result.dart`
+    (`ScanKind`, `ScanResult`), `scan_result_box.dart` (`ScanResultBox`),
+    `desktop_player_row.dart` (`DesktopPlayerRow`, `DesktopPlayerTableHeader`),
+    `more_panel.dart` (`MorePanel`); `PendingRegistrationCard(desktop: true)`;
+    `players_page.dart` builds the desktop layout at ≥1080 px (`_buildDesktop`), and the PR 45
+    layout below it (`_buildCompact`). The buttons reuse `CourtsButton` and `FocusRing`, and the
+    Disabled and Delete confirms reuse `showCourtsConfirm` (one dialog pattern, F14).
+  - Desktop order: scan row → result box → at-capacity banner → pending card → tier chips →
+    table header → list (6 px between rows). The shell keeps its desktop padding (24 px sides,
+    32 px top and bottom).
+  - F01 (8.7.7) is fixed in the shared scan code, so phone and tablet get it too. The test
+    `should_check_in_by_exact_sign_in_id_when_level_chip_hides_player` in
+    `players_scanner_test.dart` uses the tablet Elo chips; the desktop tier-chip case is
+    `should_check_in_by_exact_sign_in_id_when_tier_chip_hides_player`.
+  - **Phone and tablet keep the PR 45 scan flow** (R6-Q7): bottom messages for scan results,
+    no scanned-twice guard, all text selected also after many matches. Shared with desktop: the
+    F01 match, Esc returns focus to the search field (F21), and the duplicate-ID refusal text
+    "ID {id} is used by {name}." (F23) in the profile.
+  - "waits for round {n}" reads `GameData.waitsForRound` (new getter): no lineup and READY →
+    round n (1 at the start; the READY draft is not saved); RUNNING, PAUSED and TIME UP → n+1,
+    or n+2 when round n+1 is saved; CHANGEOVER (also paused) → the starting round + 1. No doc
+    names READY and TIME UP here.
+  - "{X} takes Court {k} in round {n}" names the first `SlotFill` of `checkOutPlayer` (the
+    earliest round, then the lowest court). In PAUSED a check-out can fill round n and a saved
+    round n+1; the text names round n. No doc names this case.
+  - Scanned-twice guard: `_lastScanCheckInId`, set by a scan check-in only, no time limit.
+    It applies only while that player is checked in, so after a row-tap check-out the next
+    scan checks the player in again. "Check out" in the box clears it.
+  - Tier chips: no chip on = every tier; a chip on shows its tier (as on the canvas). The
+    tablet Elo chips keep the old rule (all on = every level).
+  - Membership in the More panel is a segmented choice "Member / Casual / Disabled" (the
+    board), not the PR 45 cycle: a tap picks that state. Disabled for a checked-in player asks
+    "Disable {name}?" first; not checked in, it sets at once.
+  - The More panel says "Saved." under the field after a save; desktop shows no bottom message
+    for a saved ID or a deleted player (bottom messages are only for a refused row tap, R4-Q1).
+  - Tests (110 + 11): `test/features/players_scan_box_test.dart` (52),
+    `players_row_test.dart` (27), `players_more_panel_test.dart` (31),
+    `players_desktop_fit_test.dart` (11: pending card, no overflow at 1080 and 1280 px in en,
+    fr, zh, zh_HK), `test/game_data_waits_for_round_test.dart` (8), harness
+    `test/support/players_harness.dart`. `players_scanner_test.dart` keeps the tablet cases
+    (not rewritten) plus the F01 cases. Integration: `players_test.dart` and
+    `players_add_player_test.dart` use the desktop row, More panel and "Add player".
+  - Not as the canvas: the shell padding (32 px top, canvas 16 px); the scan icon is the
+    Material `qr_code_scanner` glyph; the row not checked in and the READY box have the
+    `#e4d8c4` separator border (canvas `#8f826e`, ARCHITECTURE §2.4/§2.5 win); the Sign-in ID
+    field has the `#6f6352` input border (canvas `#8f826e`); the Disabled TYPE text is muted
+    `#6f6352` (canvas red); the pending line also shows the contact (PLY-01); "More" has
+    `Semantics(expanded:)` but Flutter has no `aria-controls`.
 
 ### 8.8 — l10n keys (en, fr, zh, zh_HK)
 New keys, prefix by feature. Courts: `courts_generate_round_one`, `courts_start_round` ("Start
@@ -1629,6 +1678,19 @@ history.") and `courts_end_session_nothing_logged` ("Nothing is logged."), each 
 ("Discard round {n} and start again", "Start round {n+1}", "Resume round {n}", "⋯"). If the
 labels do not fit, PAUSED uses the short label `courts_discard_round_short` ("Discard round
 {n}"); the dialog keeps the full text.
+As built for Players (8.7.8): the result box has a name part and a text part, so each state
+has a title and a text key: `players_scan_ready_title` / `_body`, `players_scan_not_found_title`
+/ `players_scan_not_found`, `players_scan_many_title` (plural) / `players_scan_many`,
+`players_scan_full_title` / `players_scan_full`, `players_scan_duplicate_title` /
+`players_scan_duplicate_body` (plural; `players_scan_duplicate_id` stays for the tablet bottom
+message); `players_scan_check_out`, `players_count_in`, `players_header_name`,
+`players_header_sign_in_id`, `players_header_level`, `players_header_type`,
+`players_membership_label`, `players_filter_by_level`, `players_row_checked_in`,
+`players_row_not_checked_in`, `players_row_disabled`, `players_more_about`, `players_details`,
+`players_lower_level`, `players_raise_level`, `players_delete_named`, `players_close_details`,
+`players_id_saved`, `players_disable_confirm_title`, `players_disable_confirm_body`. The
+Disabled confirm reuses `players_disable` and `cancel`. `players_sign_in_id_taken` stays for
+the Add-player dialog.
 Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads (for example
 `dashboard_rotate_now`, `dashboard_premake_next`, `dashboard_next_round_ready`,
 `dashboard_mode_time_based`) only after a grep shows no reader.
@@ -1647,7 +1709,7 @@ Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads
 | Waitlist panel (scrolls, not pressable while the clock runs, no-lineup list) | `test/features/courts_waitlist_test.dart` | WL-01, WL-04, RND-12 |
 | Shell | `test/shell/session_bar_test.dart`, `top_nav_test.dart` | NAV-01, NAV-09…11 |
 | Duration change while paused | `test/timer_data_test.dart` (update) | SESS-02 |
-| Scan result box; exact-ID match ignores the level chips (8.7.7, F01) | `test/features/players_scanner_test.dart` (rewrite) | PLY-14, PLY-16…19 |
+| Scan result box; exact-ID match ignores the level chips (8.7.7, F01) | `test/features/players_scan_box_test.dart` (desktop); `players_scanner_test.dart` keeps the tablet cases and F01 (as built, 8.7.8) | PLY-14, PLY-16…19 |
 | Player row, level chips | `test/features/players_row_test.dart` | PLY-05, PLY-06, PLY-08, NAV-08 |
 | More panel | `test/features/players_more_panel_test.dart` | PLY-05, PLY-06, PLY-09 |
 | Layout fit | `test/features/dashboard_four_courts_fit_test.dart` (update) | NAV-07 |
@@ -1762,7 +1824,12 @@ lib/
 │   │   ├── player_row.dart
 │   │   ├── level_adjuster.dart
 │   │   ├── player_profile_card.dart
-│   │   └── pending_registration.dart
+│   │   ├── pending_registration.dart
+│   │   ├── scan_field.dart            # Desktop scan row (8.7.1)
+│   │   ├── scan_result.dart           # ScanKind, ScanResult (8.7.2)
+│   │   ├── scan_result_box.dart       # Desktop result box (8.7.2)
+│   │   ├── desktop_player_row.dart    # Desktop row and header (8.7.3)
+│   │   └── more_panel.dart            # Desktop More panel (8.7.6)
 │   ├── sessions/
 │   │   ├── sessions.dart
 │   │   └── sessions_page.dart

@@ -443,6 +443,12 @@ Row states:
 The table header reads NAME · SIGN-IN ID · LEVEL · TYPE · (blank), 12/600 caps, 0.08em,
 `#6f6352`. Tablet/phone rows keep the PR 45 layout, with the stepper and pill (R6-Q7, UAT NAV-08).
 
+As built (2026-10-21): `DesktopPlayerRow` and `DesktopPlayerTableHeader`
+(`lib/features/players/desktop_player_row.dart`). TYPE uses `#5f5446` on a checked-in row. The
+"More" button has `Semantics(expanded:)` and the label "More about {name}"; Flutter has no
+`aria-controls`. An open row draws no border of its own: the accordion panel draws it (green
+when checked in).
+
 #### MorePanel (ExpandablePlayerProfile)
 **As drawn on the canvas board "Players · More panel" (R5-Q1, accepted R6-Q17).** An accordion
 under the row (row and panel in one rounded panel):
@@ -457,6 +463,13 @@ under the row (row and panel in one rounded panel):
 The row's "More" is a button with `aria-expanded` / `aria-controls` on the board and
 `Semantics(expanded:)` in Flutter (F23). The Disabled confirm is drawn on the board (F23).
 Desktop only; tablet/phone keep the PR 45 profile with the new tokens (R6-Q7).
+
+As built (2026-10-21, `lib/features/players/more_panel.dart`): line 1 is SIGN-IN ID (220 × 40
+field, 1 px `#6f6352`, Save) · LEVEL (40 px "−" / "+" with `#8f826e` border, opacity 0.35 at the
+ends) · MEMBERSHIP (40 px segmented control, `#8f826e` border, the picked segment `#221d18` with
+white text) · delete (40 × 40, `btn.danger-outline`) and close. Under the field: "Saved."
+(`#14532d`) or the refusal (`#b91c1c`). Line 2: three 160 × 64 tiles, partners, attendance.
+The Disabled and Delete confirms use the Courts confirm dialog (§4.6, F14).
 
 #### WaitlistPanel (desktop, 2026-10-17)
 ```
@@ -517,6 +530,14 @@ No capacity progress bar on desktop (R6-Q11). The at-capacity banner and pending
 restyled (R2-Q19). Level chips: 4 tier chips (Amateur, Intermediate, Advanced, Professional)
 replace the 8 Elo-code chips (R6-Q13); chip border `#8f826e`.
 
+As built (2026-10-21, `lib/features/players/scan_field.dart`): the focus ring shows whenever
+the field has focus (as the board's `.scan:focus`), not only for keyboard focus. Tier chips:
+32 px, radius 16, 14/600; on = `#221d18` fill and white text; no chip on = every tier. Pending
+card (desktop): `#fbf6ee`, 1 px `#8f826e`, radius 10, one 44 px line per sign-up ("Pending
+self-registrations ({n})" 14/600 on the first line, then "{name} · {tier} · {contact}" 14/400),
+32 px outline Reject (`#6f6352`) and Approve (`#1f7a3d` border, `#14532d` text) with a 40 px
+hit area (F27).
+
 #### ScanResultBox (Players, under the scan field)
 ```
 min-height 52px, radius 10, padding 8 16, gap 12, 1px border; role=status, polite live region
@@ -526,6 +547,9 @@ min-height 52px, radius 10, padding 8 16, gap 12, 1px border; role=status, polit
 └── Action (optional, right): 36px outline button in the text colour, 14/600
 Stays until the next scan. A row tap does not change it (R3-Q3). No "Undo" button in any state (R9-Q8).
 ```
+As built (2026-10-21, `scan_result_box.dart`): the READY border is the `#e4d8c4` separator, as
+this table says (the board draws `#8f826e`). Icons: Material chevron right, check, chevron left,
+`priority_high`, `close`, `question_mark`.
 
 | State | Fill | Text | Border | Icon (fill) | Name · text | Action |
 |---|---|---|---|---|---|---|

@@ -959,6 +959,12 @@ stay in the Players list, but a tap on their row does not check them in (CHK-06)
 Given a player's membership is "Disabled"
 When the organizer taps their membership control
 Then it advances back to "Member"; this does not automatically check them back in.
+As built on desktop (2026-10-21, IMPLEMENTATION 8.7.8): the More panel control is the segmented
+"Member / Casual / Disabled" of the board (R6-Q17), so a tap picks that state directly, not the
+next one. Disabled for a checked-in player asks "Disable {name}?" ("{name} is checked in.
+Disabled checks the player out now and removes the player from the court or the waitlist.",
+"Disable" / "Cancel", the one alert-dialog pattern); for a player who is not checked in it sets
+at once. Phone and tablet keep the cycle above.
 
 **PLY-07** — Delete player
 Given a player's expanded profile card is shown
@@ -1090,6 +1096,9 @@ When Enter is sent while an IME composition is active
 Then nothing happens (Enter confirms the composition). Two fast scans in a row are both handled.
 When the field is empty and Enter is sent
 Then nothing happens.
+As built (2026-10-21, IMPLEMENTATION 8.7.8): phone and tablet keep the PR 45 flow, with the
+result in a bottom message, no PLY-19 guard and all text selected also after many matches. The
+exact-ID rule (F01) and Esc (F21) apply on every size.
 
 **PLY-15** — Edit sign-in ID, and add-player checks (changed 2026-10-20: F23, F30)
 Given a player's profile panel is open
@@ -1106,6 +1115,8 @@ Then the save is refused with a message that names that player: "ID {id} is used
 (for example "ID BC-104 is used by Zoe Alvarez.", F23).
 When a player is added (PLY-13)
 Then the name and the ID are trimmed. A blank name, a duplicate name, or a duplicate ID is refused.
+As built on desktop (2026-10-21): after a save the panel reads "Saved." under the field, and no
+bottom message shows. The Add-player dialog keeps its own duplicate-ID text.
 
 **PLY-16** — Scan result box (added 2026-10-17: UX-02, R3-Q3; 2026-10-20: R9-Q8)
 Given the Players tab is active
@@ -1132,6 +1143,9 @@ lineup: the next round to start, or the round after a saved next round (1 before
 round starts).
 And the R4-Q3 text "{name} is in · joins round {n} on Court {k}" is no longer used: a late
 check-in never joins a saved round (R7-Q7).
+As built (2026-10-21): in READY {n} is the draft round (1), because the draft is not saved. In
+TIME UP {n} is n+1, because the planned round is not saved. In CHANGEOVER {n} is the round after
+the one that starts.
 
 **PLY-18** — CHECKED OUT result text (added 2026-10-17: R2-Q8, R4-Q3; 2026-10-20: R9-Q8)
 Given a scan checks a player out
@@ -1141,6 +1155,8 @@ When nobody takes a slot (the player was on the waitlist, or nobody can fill it)
 Then the box reads "{name} is out".
 And neither text has an "Undo" button (R9-Q8). To reverse a scan, the organizer scans or taps
 the player again.
+As built (2026-10-21): when one check-out fills two places (PAUSED: round n and a saved round
+n+1), the text names the earliest round, then the lowest court.
 
 **PLY-19** — Scanned twice guard (added 2026-10-17: UX-01, R2-Q11, R6-Q15; 2026-10-20: F20)
 Given player A is the last player checked in by a scan (no time limit, R6-Q15)
