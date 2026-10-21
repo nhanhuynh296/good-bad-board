@@ -3,11 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/importer.dart';
 import 'package:good_bad_board/design/design.dart';
+import 'package:good_bad_board/features/dashboard/courts/courts_button.dart';
+import 'package:good_bad_board/features/dashboard/courts/courts_confirm_dialog.dart';
 import 'package:good_bad_board/features/players/capacity_bar.dart';
+import 'package:good_bad_board/features/players/desktop_player_row.dart';
+import 'package:good_bad_board/features/players/more_panel.dart';
 import 'package:good_bad_board/features/players/player_profile_card.dart';
 import 'package:good_bad_board/features/players/player_profile_stats.dart';
 import 'package:good_bad_board/features/players/player_row.dart';
+import 'package:good_bad_board/features/players/scan_field.dart';
+import 'package:good_bad_board/features/players/scan_result.dart';
+import 'package:good_bad_board/features/players/scan_result_box.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
+import 'package:good_bad_board/l10n/skill_tier_l10n.dart';
 import 'package:good_bad_board/features/players/pending_registration.dart';
 import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/pending_registration.dart';
@@ -47,7 +55,22 @@ class _PlayersPageState extends State<PlayersPage> {
   /// alive, so a change of this value is how the page knows it was opened.
   bool _tabActive = false;
 
+  /// The 8 Elo-code chips of phone and tablet: empty = all selected.
   Set<Elo> _eloFilters = {};
+
+  /// The 4 tier chips of desktop (R6-Q13): the tiers whose chip is on;
+  /// empty = no chip on, so every tier shows.
+  final Set<SkillTier> _tierFilters = {};
+
+  /// Whether the last build used the desktop layout (≥1080 px).
+  bool _desktop = false;
+
+  /// What the last scan did; the desktop result box shows it (8.7.2).
+  ScanResult _scanResult = const ScanResult.ready();
+
+  /// The player that the last scan checked in: the double-scan guard
+  /// (8.7.4, R2-Q11, R6-Q15). Desktop only.
+  String? _lastScanCheckInId;
 
   String get _query => _searchController.text.trim().toUpperCase();
 
@@ -222,6 +245,13 @@ class _PlayersPageState extends State<PlayersPage> {
     if (refusal != null) _showSnackBar(refusal);
   }
 
+  /// The row tap on desktop: the check-in toggle, then focus goes back to
+  /// the scan field (PLY-14). The result box does not change (R3-Q3).
+  void _toggleCheckedInDesktop(Player player, GameData gameData) {
+    _toggleCheckedIn(player, gameData);
+    _refocusSearch();
+  }
+
   /// Why a check-in was refused, or `null` when it was not (R45-38).
   String? _refusalMessage(CheckInResult result, Player player) {
     final l10n = AppLocalizations.of(context)!;
@@ -235,25 +265,59 @@ class _PlayersPageState extends State<PlayersPage> {
   void _showSnackBar(String message) {
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
+    if (!_desktop) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+      );
+      return;
+    }
+    // The bottom message (ARCHITECTURE §2.8): bottom-centre, 360 px wide.
     messenger.showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTypography.body.copyWith(color: AppColors.headerText),
+        ),
+        backgroundColor: AppColors.headerBg,
+        behavior: SnackBarBehavior.floating,
+        width: 360,
+        duration: const Duration(seconds: 2),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.lgRadius),
+      ),
     );
   }
 
   // ── Scanner ──────────────────────────────────────────────
 
   /// The search field got Enter. A barcode scanner types the sign-in ID and
-  /// then sends Enter. The one listed player is checked in or out (a player
-  /// whose sign-in ID equals the text wins over longer IDs that contain
-  /// it). With no or many listed players nobody changes. The text always
-  /// stays and is selected, so the list still shows the result and the next
-  /// scan replaces the text.
+  /// then sends Enter (PLY-14). The player whose sign-in ID equals the text
+  /// is the target, looked for over all listed players (F01). With no such
+  /// ID, the one player in the list is the target. With no or many players
+  /// nobody changes. The text stays and is selected, so the list still
+  /// shows the result and the next scan replaces it; after MANY MATCHES on
+  /// desktop the caret goes to the end instead (F19).
+  ///
+  /// Desktop shows the result in the result box; phone and tablet show it
+  /// in a bottom message, as before (R6-Q7).
   void _onSearchSubmitted() {
     final typed = _searchController.text.trim();
     if (typed.isEmpty) return;
 
-    final l10n = AppLocalizations.of(context)!;
-    final listed = _listedPlayers();
+    final result = _scan(typed);
+    if (_desktop) {
+      setState(() => _scanResult = result);
+    } else {
+      _showSnackBar(_scanMessage(result));
+    }
+    if (_desktop && result.kind == ScanKind.manyMatches) {
+      _caretToEnd();
+    } else {
+      _selectSearchText();
+    }
+  }
+
+  /// Finds the target of a scan of [typed] and toggles its check-in.
+  ScanResult _scan(String typed) {
     final wanted = typed.toLowerCase();
     // F01: the exact ID match runs over all listed players, so a level chip
     // or the search text never hides the scanned card. The chips stay.
@@ -261,31 +325,100 @@ class _PlayersPageState extends State<PlayersPage> {
         .listedPlayers()
         .where((p) => p.signInId?.trim().toLowerCase() == wanted)
         .toList();
+    if (exact.length > 1) return ScanResult.duplicateId(typed, exact.length);
+    if (exact.length == 1) return _toggleByScan(exact.single);
 
-    final String message;
-    if (exact.length > 1) {
-      message = l10n.players_scan_duplicate_id(typed, exact.length);
-    } else if (exact.isEmpty && listed.isEmpty) {
-      message = l10n.players_scan_no_match(typed);
-    } else if (exact.isEmpty && listed.length > 1) {
-      message = l10n.players_scan_many_matches(listed.length);
-    } else {
-      message = _toggleByScan(exact.isEmpty ? listed.single : exact.single);
+    final listed = _listedPlayers();
+    if (listed.isEmpty) return ScanResult.notFound(typed);
+    if (listed.length > 1) return ScanResult.manyMatches(typed, listed.length);
+    return _toggleByScan(listed.single);
+  }
+
+  /// Checks [player] in or out for a scan. On desktop a scan of the player
+  /// that the last scan checked in changes nothing (PLY-19).
+  ScanResult _toggleByScan(Player player) {
+    final gameData = context.read<GameData>();
+    if (gameData.isPlayerCheckedIn(player)) {
+      if (_desktop && _lastScanCheckInId == player.id) {
+        return ScanResult.scannedTwice(player);
+      }
+      return _checkOutByScan(player, gameData);
     }
-    _showSnackBar(message);
+    return switch (gameData.checkInPlayer(player)) {
+      CheckInResult.disabled => ScanResult.disabled(player),
+      CheckInResult.sessionFull => ScanResult.sessionFull(
+        player,
+        checkedIn: gameData.checkedInCount,
+        capacity: gameData.sessionCapacity,
+      ),
+      CheckInResult.checkedIn => () {
+        _lastScanCheckInId = player.id;
+        return ScanResult.checkedIn(player, round: gameData.waitsForRound);
+      }(),
+    };
+  }
+
+  ScanResult _checkOutByScan(Player player, GameData gameData) {
+    final fills = gameData.checkOutPlayer(player);
+    return ScanResult.checkedOut(player, fill: ScanResult.firstFill(fills));
+  }
+
+  /// "Check out" in the SCANNED TWICE box: the box then shows CHECKED OUT
+  /// for that player, not READY (PLY-19, F20).
+  void _onResultCheckOut() {
+    final player = _scanResult.player;
+    if (player == null) return;
+    final gameData = context.read<GameData>();
+    _lastScanCheckInId = null;
+    setState(() {
+      _scanResult = gameData.isPlayerCheckedIn(player)
+          ? _checkOutByScan(player, gameData)
+          : ScanResult.checkedOut(player);
+    });
     _selectSearchText();
   }
 
-  /// Checks [player] in or out for a scan and returns the message to show.
-  String _toggleByScan(Player player) {
+  /// The bottom message of a scan on phone and tablet.
+  String _scanMessage(ScanResult result) {
     final l10n = AppLocalizations.of(context)!;
-    final gameData = context.read<GameData>();
-    if (gameData.isPlayerCheckedIn(player)) {
-      gameData.checkOutPlayer(player);
-      return l10n.players_scan_checked_out(player.name());
+    final name = result.player?.name() ?? '';
+    return switch (result.kind) {
+      ScanKind.duplicateId => l10n.players_scan_duplicate_id(
+        result.text,
+        result.count,
+      ),
+      ScanKind.notFound => l10n.players_scan_no_match(result.text),
+      ScanKind.manyMatches => l10n.players_scan_many_matches(result.count),
+      ScanKind.checkedOut => l10n.players_scan_checked_out(name),
+      ScanKind.checkedIn => l10n.players_scan_checked_in(name),
+      ScanKind.disabled => l10n.players_scan_disabled(name),
+      ScanKind.sessionFull => l10n.players_session_full_cannot_check_in,
+      // Phone and tablet have no guard, so no SCANNED TWICE.
+      ScanKind.scannedTwice || ScanKind.ready => '',
+    };
+  }
+
+  /// Keeps focus in the search field with the caret at the end and nothing
+  /// selected, so the organizer can type more (MANY MATCHES, F19).
+  void _caretToEnd() {
+    void toEnd() => _searchController.selection = TextSelection.collapsed(
+      offset: _searchController.text.length,
+    );
+    toEnd();
+    _searchFocus.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) toEnd();
+    });
+  }
+
+  /// Esc anywhere on the tab gives focus back to the scan field (F21).
+  KeyEventResult _onPageKey(FocusNode _, KeyEvent event) {
+    if (event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.escape) {
+      return KeyEventResult.ignored;
     }
-    return _refusalMessage(gameData.checkInPlayer(player), player) ??
-        l10n.players_scan_checked_in(player.name());
+    _selectSearchText();
+    return KeyEventResult.handled;
   }
 
   /// Keeps focus in the search field and selects all its text. It is done
@@ -307,6 +440,7 @@ class _PlayersPageState extends State<PlayersPage> {
   /// it and returns null. Empty text means no ID. No other field changes.
   String? _onSaveSignInId(Player player, String text) {
     final l10n = AppLocalizations.of(context)!;
+    final desktop = _desktop;
     final id = text.trim();
     if (id.isNotEmpty) {
       final taken = PlayerRepository.instance.listedPlayers().firstWhereOrNull(
@@ -315,13 +449,15 @@ class _PlayersPageState extends State<PlayersPage> {
             p.signInId?.trim().toLowerCase() == id.toLowerCase(),
       );
       if (taken != null) {
-        return l10n.players_sign_in_id_taken(id, taken.name());
+        return l10n.players_id_used_by(id, taken.name());
       }
     }
     context.read<GameData>().onUpdatePlayer(
       player.copyWith(signInId: id.isEmpty ? null : id),
     );
-    _showSnackBar(l10n.players_sign_in_id_saved);
+    // Desktop says "Saved." under the field (canvas board "Players · More
+    // panel"); a bottom message is only for a refused row tap (R4-Q1).
+    if (!desktop) _showSnackBar(l10n.players_sign_in_id_saved);
     return null;
   }
 
@@ -343,9 +479,12 @@ class _PlayersPageState extends State<PlayersPage> {
     final activeEloFilters = _eloFilters.isEmpty
         ? Elo.values.toSet()
         : _eloFilters;
+    bool levelShown(Player p) => _desktop
+        ? _tierFilters.isEmpty || _tierFilters.contains(p.elo.skillTier)
+        : activeEloFilters.contains(p.elo);
     return PlayerRepository.instance
         .listedPlayers()
-        .where((p) => activeEloFilters.contains(p.elo) && _matchesQuery(p))
+        .where((p) => levelShown(p) && _matchesQuery(p))
         .sortedBy<String>((p) => p.name())
         .toList();
   }
@@ -355,9 +494,22 @@ class _PlayersPageState extends State<PlayersPage> {
   @override
   Widget build(BuildContext context) {
     final gameData = context.watch<GameData>();
+    _desktop = isDesktop(MediaQuery.sizeOf(context).width);
 
     final filteredPlayers = _listedPlayers();
 
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onKeyEvent: _onPageKey,
+      child: _desktop
+          ? _buildDesktop(gameData, filteredPlayers)
+          : _buildCompact(gameData, filteredPlayers),
+    );
+  }
+
+  /// Phone and tablet: the PR 45 layout (R2-Q23, R6-Q7).
+  Widget _buildCompact(GameData gameData, List<Player> filteredPlayers) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -501,6 +653,172 @@ class _PlayersPageState extends State<PlayersPage> {
         ),
       ],
     );
+  }
+
+  /// Desktop (IMPLEMENTATION 8.7): the scan field, the result box, the
+  /// banner and the pending card, the tier chips, the table.
+  Widget _buildDesktop(GameData gameData, List<Player> players) {
+    final l10n = AppLocalizations.of(context)!;
+    const gap = SizedBox(height: 10);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DesktopScanBar(
+          controller: _searchController,
+          focusNode: _searchFocus,
+          onSubmitted: _onSearchSubmitted,
+          onTapOutside: _refocusSearch,
+          onChanged: () => setState(() {}),
+          checkedIn: gameData.checkedInCount,
+          capacity: gameData.sessionCapacity,
+          remaining: gameData.remainingCapacity,
+          onAddPlayer: _onAddPlayer,
+          onImport: widget.showImportButton ? _onImportCsv : null,
+        ),
+        gap,
+        ScanResultBox(result: _scanResult, onCheckOut: _onResultCheckOut),
+        if (gameData.isAtCapacity) ...[gap, const AtCapacityBanner()],
+        if (_pendingRegistrations.isNotEmpty) ...[
+          gap,
+          PendingRegistrationCard(
+            desktop: true,
+            pendingRegistrations: _pendingRegistrations,
+            processingIds: _processingRegistrationIds,
+            onApprove: (i) => _onApproveRegistration(i),
+            onReject: (i) => _onRejectRegistration(i),
+          ),
+        ],
+        gap,
+        _TierChips(selected: _tierFilters, onToggle: _onTierToggled),
+        gap,
+        const DesktopPlayerTableHeader(),
+        const SizedBox(height: 6),
+        Expanded(
+          child: players.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Text(
+                    _query.isEmpty
+                        ? l10n.players_no_players_yet
+                        : l10n.players_no_players_matching(
+                            _searchController.text.trim(),
+                          ),
+                    style: AppTypography.body.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                )
+              : ListView.separated(
+                  itemCount: players.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 6),
+                  itemBuilder: (context, index) =>
+                      _desktopItem(players[index], gameData),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _desktopItem(Player player, GameData gameData) {
+    final expanded = _profileOpenId == player.id;
+    final checkedIn = _isCheckedIn(player, gameData);
+    Widget row({bool inPanel = false}) => DesktopPlayerRow(
+      player: player,
+      isCheckedIn: checkedIn,
+      isExpanded: expanded,
+      inPanel: inPanel,
+      onToggleCheckin: () => _toggleCheckedInDesktop(player, gameData),
+      onToggleMore: () => _toggleProfile(player.id),
+    );
+    if (!expanded) return row();
+
+    final green = checkedIn && player.membership != MembershipStatus.disabled;
+    // The row and its panel sit in one rounded panel (PLY-09).
+    return DecoratedBox(
+      key: const Key('player-accordion-panel'),
+      position: DecorationPosition.foreground,
+      decoration: BoxDecoration(
+        borderRadius: AppRadii.mdRadius,
+        border: Border.all(
+          color: green ? AppColors.success : AppColors.cardBorder,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadii.mdRadius,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            row(inPanel: true),
+            MorePanel(
+              player: player,
+              stats: _computeStats(player),
+              onLevelDown: () => _adjustLevel(player, false),
+              onLevelUp: () => _adjustLevel(player, true),
+              onMembership: (status) =>
+                  _onPickMembership(player, status, gameData),
+              onDelete: () => _onDeletePlayerDesktop(player, gameData),
+              onClose: () => _toggleProfile(player.id),
+              onSaveSignInId: (text) => _onSaveSignInId(player, text),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onTierToggled(SkillTier tier) {
+    setState(() {
+      if (!_tierFilters.remove(tier)) _tierFilters.add(tier);
+    });
+    _refocusSearch();
+  }
+
+  /// A membership segment in the More panel (PLY-06). Disabled for a
+  /// checked-in player asks first, then checks the player out (F23).
+  Future<void> _onPickMembership(
+    Player player,
+    MembershipStatus status,
+    GameData gameData,
+  ) async {
+    if (status == player.membership) return;
+    if (status == MembershipStatus.disabled &&
+        gameData.isPlayerCheckedIn(player)) {
+      final l10n = AppLocalizations.of(context)!;
+      final confirmed = await showCourtsConfirm(
+        context,
+        title: l10n.players_disable_confirm_title(player.name()),
+        body: l10n.players_disable_confirm_body(player.name()),
+        cancelLabel: l10n.cancel,
+        actionLabel: l10n.players_disable,
+        closeOnPhaseChange: false,
+      );
+      _refocusSearch();
+      if (!confirmed || !mounted) return;
+    }
+    gameData.setMembership(player, status);
+    _refocusSearch();
+  }
+
+  /// Delete in the More panel (PLY-07), with the one confirm dialog of the
+  /// desktop build (F14). No bottom message after it (R4-Q1).
+  Future<void> _onDeletePlayerDesktop(Player player, GameData gameData) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showCourtsConfirm(
+      context,
+      title: l10n.players_delete_player_title,
+      body: l10n.players_delete_player_body(player.name()),
+      cancelLabel: l10n.cancel,
+      actionLabel: l10n.delete,
+      closeOnPhaseChange: false,
+    );
+    _refocusSearch();
+    if (!confirmed) return;
+    await gameData.deletePlayer(player);
+    if (!mounted) return;
+    setState(() => _profileOpenId = null);
+    _refocusSearch();
   }
 
   // ── Actions ──────────────────────────────────────────────
@@ -703,6 +1021,107 @@ class _PlayersPageState extends State<PlayersPage> {
 }
 
 // ── Sub-widgets ────────────────────────────────────────────
+
+/// The 4 tier chips of desktop (R6-Q13): a chip that is on shows its tier;
+/// with no chip on every tier shows. Chip border `#8f826e`.
+class _TierChips extends StatelessWidget {
+  const _TierChips({required this.selected, required this.onToggle});
+
+  final Set<SkillTier> selected;
+  final ValueChanged<SkillTier> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Semantics(
+      container: true,
+      label: l10n.players_filter_by_level,
+      explicitChildNodes: true,
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          for (final tier in SkillTier.values)
+            _TierChip(
+              key: Key('tier-chip-${tier.name}'),
+              label: tier.localizedLabel(l10n),
+              on: selected.contains(tier),
+              onTap: () => onToggle(tier),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TierChip extends StatefulWidget {
+  const _TierChip({
+    super.key,
+    required this.label,
+    required this.on,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool on;
+  final VoidCallback onTap;
+
+  @override
+  State<_TierChip> createState() => _TierChipState();
+}
+
+class _TierChipState extends State<_TierChip> {
+  bool _focused = false;
+
+  static const _shape = BorderRadius.all(Radius.circular(16));
+
+  @override
+  Widget build(BuildContext context) {
+    final on = widget.on;
+    return Semantics(
+      container: true,
+      button: true,
+      toggled: on,
+      label: widget.label,
+      excludeSemantics: true,
+      onTap: widget.onTap,
+      child: FocusRing(
+        focused: _focused,
+        color: AppColors.focusOnLight,
+        radius: 16,
+        child: Material(
+          color: on ? AppColors.textPrimary : AppColors.pageBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: _shape,
+            side: BorderSide(
+              color: on ? AppColors.textPrimary : AppColors.controlBorderSoft,
+            ),
+          ),
+          child: InkWell(
+            onTap: widget.onTap,
+            onFocusChange: (value) => setState(() => _focused = value),
+            borderRadius: _shape,
+            child: Container(
+              height: 32,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.label,
+                    style: AppTypography.button.copyWith(
+                      color: on ? AppColors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Search input + Elo filter chips + Add/Import buttons.
 class _SearchAndActionsBar extends StatelessWidget {

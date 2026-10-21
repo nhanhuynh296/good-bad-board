@@ -803,7 +803,7 @@ void main() {
 
       expect(PlayerRepository.instance.byId('Alice')!.signInId, 'A100');
       expect(
-        find.text('Sign In ID "b200" is already used by Bob Test'),
+        find.text('ID b200 is used by Bob Test.'),
         findsOneWidget,
       );
     });
