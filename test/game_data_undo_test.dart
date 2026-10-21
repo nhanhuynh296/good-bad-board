@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
 import 'package:good_bad_board/state/game_data.dart';
@@ -43,10 +42,9 @@ void main() {
     for (final game in lineup) List.of(game.playerIds),
   ];
 
-  Player onCourt(int court, [int slot = 0]) =>
-      PlayerRepository.instance.byId(
-        gameData.visibleMatches[court].playerIds[slot],
-      )!;
+  Player onCourt(int court, [int slot = 0]) => PlayerRepository.instance.byId(
+    gameData.visibleMatches[court].playerIds[slot],
+  )!;
 
   Player waiting() => gameData.visibleWaitlistedPlayers.first;
 
@@ -181,11 +179,7 @@ void main() {
 
     test('should_clear_undo_when_player_checks_in', () async {
       gameData.swapPlayers(onCourt(0), onCourt(1));
-      final late = Player.create(
-        firstName: 'Late',
-        lastName: 'X',
-        elo: Elo.b1,
-      );
+      final late = Player.create(firstName: 'Late', lastName: 'X', elo: Elo.b1);
       await PlayerRepository.instance.add(late);
 
       gameData.checkInPlayer(late);

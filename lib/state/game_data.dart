@@ -72,12 +72,16 @@ class GameData extends ChangeNotifier {
   /// [timer] is the round clock the round state machine drives. `main.dart`
   /// passes the one [TimerData] it provides, so the round bar watches the
   /// same clock. Without one, GameData makes and owns its own.
-  GameData({Random? random, TimerData? timer})
+  ///
+  /// [clock] tells the time for the swap Undo window; tests pass a fake one.
+  GameData({Random? random, TimerData? timer, DateTime Function()? clock})
     : _random = random,
       _timer = timer ?? TimerData(),
-      _ownsTimer = timer == null;
+      _ownsTimer = timer == null,
+      _clock = clock ?? DateTime.now;
 
   final Random? _random;
+  final DateTime Function() _clock;
 
   final TimerData _timer;
   final bool _ownsTimer;
@@ -558,6 +562,15 @@ class GameData extends ChangeNotifier {
       !isEditingNext &&
       _timer.remaining > Duration.zero;
 
+  /// Whether the courts on screen can change: place, swap, Re-roll and the
+  /// full slot menu (COURT-14). False while the clock runs (RUNNING, and
+  /// CHANGEOVER, R7-Q4), except in edit mode for round n+1. A paused
+  /// changeover follows the PAUSED rules (F17).
+  bool get canEditCourts {
+    if (isEditingNext) return true;
+    return _phase != RoundPhase.running && _phase != RoundPhase.changeover;
+  }
+
   /// "Generate round 1": a matchmaker lineup, clock stopped (RND-12).
   ///
   /// Throws [NotEnoughPlayers] with fewer than 4 checked in (R45-39), and
@@ -799,7 +812,96 @@ class GameData extends ChangeNotifier {
     return true;
   }
 
-  // TODO(8.3): swapPlayers() / undoSwap() with the swap memento (COURT-17).
+  // ── Swap Undo (IMPLEMENTATION 8.3, COURT-17) ─────────────────
+
+  /// How long the swap Undo stays available (R6-Q6).
+  static const Duration swapUndoWindow = Duration(seconds: 10);
+
+  /// The one Undo slot. Only [swapPlayers] sets it; every other change
+  /// clears it, because every change calls [notifyListeners] (R6-Q6).
+  _SwapMemento? _swapUndo;
+
+  /// Set while [swapPlayers] notifies, so its own notification keeps the
+  /// memento that it just set.
+  bool _keepSwapUndo = false;
+
+  @override
+  void notifyListeners() {
+    if (!_keepSwapUndo) _swapUndo = null;
+    super.notifyListeners();
+  }
+
+  /// Whether "Undo" in the "Swapped {A} and {B}" message still works: a swap
+  /// was the last change and less than [swapUndoWindow] passed.
+  bool get canUndoSwap {
+    final memento = _swapUndo;
+    return memento != null && _clock().difference(memento.at) < swapUndoWindow;
+  }
+
+  /// The two players of the swap that Undo can reverse, for the message
+  /// text, or `null`.
+  (Player, Player)? get lastSwap {
+    final memento = _swapUndo;
+    return canUndoSwap ? (memento!.first, memento.second) : null;
+  }
+
+  /// Swaps [first] and [second] in the round on screen (COURT-08, COURT-10):
+  /// two court players trade slots; a waitlisted player takes the slot of a
+  /// court player, who goes to the waitlist. Sets the swap Undo (COURT-17).
+  ///
+  /// Returns `false` and changes nothing when the courts cannot change now
+  /// ([canEditCourts]), when neither player is on a court, or when a court
+  /// of the swap holds a saved game-based game.
+  bool swapPlayers(Player first, Player second) {
+    if (!canEditCourts || first.id == second.id) return false;
+    final lineup = visibleMatches;
+    final firstCourt = _courtOf(lineup, first);
+    final secondCourt = _courtOf(lineup, second);
+    if (firstCourt == null && secondCourt == null) return false;
+    for (final court in [firstCourt, secondCourt].nonNulls) {
+      if (_playingGameIds.contains(court.id)) return false;
+    }
+    if (firstCourt == null && !isPlayerCheckedIn(first)) return false;
+    if (secondCourt == null && !isPlayerCheckedIn(second)) return false;
+
+    final memento = _SwapMemento(
+      lineup: lineup,
+      rosters: _rosters(lineup),
+      first: first,
+      second: second,
+      at: _clock(),
+    );
+    final firstSlot = firstCourt?.playerIds.indexOf(first.id);
+    final secondSlot = secondCourt?.playerIds.indexOf(second.id);
+    if (firstCourt != null) firstCourt.playerIds[firstSlot!] = second.id;
+    if (secondCourt != null) secondCourt.playerIds[secondSlot!] = first.id;
+
+    _keepSwapUndo = true;
+    try {
+      _swapUndo = memento;
+      notifyListeners();
+    } finally {
+      _keepSwapUndo = false;
+    }
+    return true;
+  }
+
+  /// "Undo" in the swap message: both players go back to their slots.
+  /// Returns `false` when [canUndoSwap] is false.
+  bool undoSwap() {
+    if (!canUndoSwap) return false;
+    final memento = _swapUndo!;
+    for (final (index, game) in memento.lineup.indexed) {
+      game.playerIds
+        ..clear()
+        ..addAll(memento.rosters[index]);
+    }
+    notifyListeners();
+    return true;
+  }
+
+  static Game? _courtOf(GameContainer lineup, Player player) =>
+      lineup.firstWhereOrNull((game) => game.playerIds.contains(player.id));
 
   /// The clock reached 0:00 (RND-03, RND-06, RND-15). Also called when a
   /// duration change while paused puts the round past its end (SESS-02).
@@ -1646,6 +1748,25 @@ class GameData extends ChangeNotifier {
     final file = File(targetFilePath);
     return file;
   }
+}
+
+/// The state before a swap: the rosters of the one lineup it changed
+/// (IMPLEMENTATION 8.3). A swap changes nothing else, and any other change
+/// clears the memento, so the rosters are all Undo must restore.
+class _SwapMemento {
+  _SwapMemento({
+    required this.lineup,
+    required this.rosters,
+    required this.first,
+    required this.second,
+    required this.at,
+  });
+
+  final GameContainer lineup;
+  final List<List<String>> rosters;
+  final Player first;
+  final Player second;
+  final DateTime at;
 }
 
 Iterable<Player> getPlayerFromGames(Iterable<Game> games) =>
