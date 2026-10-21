@@ -111,7 +111,9 @@ void main() {
       expect(gameData.waitlistedPlayers, contains(late));
     });
 
-    test('should_still_fill_a_part_full_court', () async {
+    // CHK-02 (R7-Q7): a late player never joins a court in time mode, also
+    // when a court has an open slot (was "should_still_fill_a_part_full_court").
+    test('should_waitlist_late_player_when_a_court_is_part_full', () async {
       final gameData = await savedSession(8, courts: 2);
       final first = gameData.checkedInPlayers.values.first;
       final second = gameData.checkedInPlayers.values.last;
@@ -121,7 +123,7 @@ void main() {
 
       gameData.checkInPlayer(late);
 
-      expect(gameData.stagingMatches[1].playerIds, contains(late.id));
+      expect(gameData.stagingMatches[1].playerIds, isNot(contains(late.id)));
     });
   });
 }

@@ -8,7 +8,8 @@ import 'support/prefs_sandbox.dart';
 import 'support/repository_sandbox.dart';
 
 /// WL-03: a freed court slot is refilled from the waitlist, and only that
-/// court is touched. Other open courts stay open, and a PLAYING court is
+/// court is touched. The order of the refill is the fill rule, tested in
+/// `game_data_fill_rule_test.dart`. Other open courts stay open, and a PLAYING court is
 /// never refilled.
 void main() {
   late RepositorySandbox sandbox;
@@ -82,27 +83,8 @@ void main() {
     expect(courtSizes(gameData), [4, 4, 0]);
   });
 
-  test('should_promote_highest_level_first_into_freed_court', () async {
-    // Arrange — 4 on court, 2 waiting with different levels.
-    final low = Player.create(firstName: 'Low', lastName: 'X', elo: Elo.c2);
-    final high = Player.create(firstName: 'High', lastName: 'X', elo: Elo.a1);
-    final four = [
-      for (var i = 0; i < 4; i++)
-        Player.create(firstName: 'C$i', lastName: 'X', elo: Elo.b2),
-    ];
-    await PlayerRepository.instance.addAll([...four, low, high]);
-    final gameData = GameData()..setNumberOfCourt(1);
-    four.forEach(gameData.checkInPlayer);
-    await gameData.makeGame();
-    gameData.checkInPlayer(low);
-    gameData.checkInPlayer(high);
-
-    // Act
-    gameData.checkOutPlayer(four.first);
-
-    // Assert
-    expect(gameData.stagingMatches[0].playerIds, contains(high.id));
-  });
+  // The level order of the freed slot ("highest level first") is replaced
+  // by the fill rule (IMPLEMENTATION 8.4.1): game_data_fill_rule_test.dart.
 
   test('should_not_refill_playing_court_when_its_player_checks_out', () async {
     // Arrange — game-based, 14 players, 3 courts, court 1 saved (PLAYING).
