@@ -6,6 +6,7 @@ import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/dashboard/courts/courts_button.dart';
 import 'package:good_bad_board/features/dashboard/courts/courts_confirm_dialog.dart';
 import 'package:good_bad_board/features/dashboard/courts/courts_menu.dart';
+import 'package:good_bad_board/features/dashboard/courts/round_status.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/timer_data.dart';
@@ -67,45 +68,20 @@ class _RoundBarView {
     RoundPhase.changeover => l10n.courts_sub_players_to_courts,
   };
 
-  String get chip => switch (phase) {
-    RoundPhase.noLineup || RoundPhase.ready => l10n.courts_chip_ready,
-    RoundPhase.running => l10n.courts_chip_running,
-    RoundPhase.paused => l10n.courts_chip_paused,
-    RoundPhase.timeUp => l10n.courts_chip_time_up,
-    RoundPhase.changeover => l10n.courts_chip_changeover,
-  };
+  RoundStatus get _status => RoundStatus(phase);
 
-  (Color, Color) get chipColours => switch (phase) {
-    RoundPhase.noLineup ||
-    RoundPhase.ready => (AppColors.barTrack, AppColors.headerText),
-    RoundPhase.running => (AppColors.success, AppColors.headerText),
-    RoundPhase.paused => (AppColors.warningBg, AppColors.warningText),
-    RoundPhase.timeUp => (AppColors.timeUpBg, AppColors.timeUpText),
-    RoundPhase.changeover => (
-      AppColors.accentPrimary,
-      AppColors.accentOnPrimary,
-    ),
-  };
+  String get chip => _status.chip(l10n);
 
-  bool get clockStopped =>
-      phase == RoundPhase.noLineup || phase == RoundPhase.ready;
+  (Color, Color) get chipColours => _status.chipColours;
 
-  String time(TimerData timer) {
-    if (clockStopped) return timer.duration.toDisplayString();
-    return timer.remainingLabel;
-  }
+  bool get clockStopped => _status.clockStopped;
+
+  String time(TimerData timer) => _status.time(timer);
 
   double progress(TimerData timer) => clockStopped ? 0 : timer.progress;
 
   /// The time colour, also the progress fill (RND-02, R6-Q8, R11-Q5).
-  Color timeColour(TimerData timer) => switch (phase) {
-    RoundPhase.noLineup || RoundPhase.ready => AppColors.headerText,
-    RoundPhase.running =>
-      timer.isUrgent ? AppColors.urgentOnDark : AppColors.headerText,
-    RoundPhase.paused => AppColors.headerSub,
-    RoundPhase.timeUp => AppColors.timeUpTime,
-    RoundPhase.changeover => AppColors.accentPrimary,
-  };
+  Color timeColour(TimerData timer) => _status.timeColour(timer);
 
   String get counts => l10n.courts_counts_in_waiting(
     gameData.checkedInCount,

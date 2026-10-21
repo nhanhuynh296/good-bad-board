@@ -7,4 +7,5 @@ export 'courts_menu.dart';
 export 'desktop_court_card.dart';
 export 'next_round_strip.dart';
 export 'round_bar.dart';
+export 'round_status.dart';
 export 'waitlist_panel.dart';
