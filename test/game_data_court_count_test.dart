@@ -133,10 +133,9 @@ void main() {
       gameData.loadTemplate(template(courts: 2));
 
       // Assert
-      expect(
-        [for (final game in gameData.stagingMatches) game.playerIds],
-        before,
-      );
+      expect([
+        for (final game in gameData.stagingMatches) game.playerIds,
+      ], before);
     },
   );
 
@@ -154,10 +153,9 @@ void main() {
       gameData.loadTemplate(template(courts: 3));
 
       // Assert
-      expect(
-        [for (final game in gameData.stagingMatches) game.playerIds],
-        before,
-      );
+      expect([
+        for (final game in gameData.stagingMatches) game.playerIds,
+      ], before);
     },
   );
 
