@@ -131,10 +131,8 @@ class MyApp extends StatelessWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       theme: lightThemeFor(locale),
       locale: locale,
-      darkTheme: darkTheme,
-      // The redesign defines a light palette only, and most widgets use
-      // AppColors directly. A dark system theme changed only the Material
-      // defaults, for example white text in light text fields.
+      // The app is light only (ARCHITECTURE.md §1.1): there is no dark
+      // theme, so a dark system theme changes nothing.
       themeMode: ThemeMode.light,
     );
   }

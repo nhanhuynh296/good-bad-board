@@ -21,6 +21,10 @@ abstract class AppColors {
   /// Header title text (#ffffff)
   static const Color headerText = Color(0xFFFFFFFF);
 
+  /// Round progress track, READY chip fill, separators on the dark
+  /// surfaces (#4a4038)
+  static const Color barTrack = Color(0xFF4A4038);
+
   /// Header subtitle / inactive tab (#c9c2b8)
   static const Color headerSub = Color(0xFFC9C2B8);
 
@@ -74,22 +78,6 @@ abstract class AppColors {
 
   /// Chart neutral — mid (#d9c7a8)
   static const Color chartNeutralMid = Color(0xFFD9C7A8);
-
-  // ── Dark Theme (Command Center) ─────────────────────────
-  /// Dark page bg (#12141c)
-  static const Color darkPageBg = Color(0xFF12141C);
-
-  /// Dark card bg (#181b26)
-  static const Color darkCardBg = Color(0xFF181B26);
-
-  /// Dark card border (#262a38)
-  static const Color darkCardBorder = Color(0xFF262A38);
-
-  /// Dark accent — pink (#e94ff5)
-  static const Color darkAccent = Color(0xFFE94FF5);
-
-  /// Dark secondary accent — lime (#c4ff5c)
-  static const Color darkSecondaryAccent = Color(0xFFC4FF5C);
 
   // ── Misc ─────────────────────────────────────────────────
   /// Pure black

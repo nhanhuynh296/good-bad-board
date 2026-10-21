@@ -96,7 +96,7 @@ class HamburgerMenu extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Divider(color: AppColors.darkCardBorder, height: 1),
+                  const Divider(color: AppColors.barTrack, height: 1),
                   const SizedBox(height: AppSpacing.sm),
                   // Tab list
                   ...tabs.map(

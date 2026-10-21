@@ -12,4 +12,24 @@ void main() {
 
     expect(named, isEmpty);
   });
+
+  test('should_not_define_a_dark_theme_in_lib', () {
+    // Arrange
+    final darkCode = RegExp(
+      r'AppTheme\.dark\b|\bdarkTheme\b|ColorScheme\.dark\b|'
+      r'AppColors\.dark\w*|static const Color dark\w*|darkOutlinedBorder',
+    );
+    final sources = Directory('lib')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.dart'));
+
+    // Act
+    final offenders = sources
+        .where((f) => darkCode.hasMatch(f.readAsStringSync()))
+        .map((f) => f.path);
+
+    // Assert
+    expect(offenders, isEmpty);
+  });
 }

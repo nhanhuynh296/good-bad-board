@@ -20,10 +20,6 @@ const lightOutlinedBorder = RoundedRectangleBorder(
   borderRadius: outlinedBorderRadius,
 );
 
-final darkOutlinedBorder = lightOutlinedBorder.copyWith(
-  side: outlinedBorderSide.copyWith(color: AppColors.white),
-);
-
 const commonButtonTheme = ButtonStyle(
   shape: WidgetStatePropertyAll(lightOutlinedBorder),
 );
@@ -36,7 +32,3 @@ final _lightThemes = <Locale?, ThemeData>{};
 /// Light theme with the Chinese font fallback for [locale] (R3-Q6).
 ThemeData lightThemeFor(Locale? locale) =>
     _lightThemes.putIfAbsent(locale, () => AppTheme.light(locale: locale));
-
-/// Dark theme — delegates to [AppTheme.dark].
-ThemeData? _cachedDarkTheme;
-ThemeData get darkTheme => _cachedDarkTheme ??= AppTheme.dark();

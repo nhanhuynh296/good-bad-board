@@ -52,4 +52,4 @@ Players can be dragged between the inactive player list and court positions. The
 
 ### Theme & Styling
 
-Design tokens live in `lib/design/`: colors (`AppColors`), typography (`AppTypography`), spacing (`AppSpacing`), radii (`AppRadii`), breakpoints (`AppBreakpoints`), and the theme factory (`AppTheme`). A consistent outlined border style (`_lightOutlinedBorder` / `_darkOutlinedBorder`) is applied to all Material components.
+Design tokens live in `lib/design/`: colors (`AppColors`), typography (`AppTypography`), spacing (`AppSpacing`), radii (`AppRadii`), breakpoints (`AppBreakpoints`), and the theme factory (`AppTheme`). The app is light only (no dark theme). A consistent outlined border style (`_lightOutlinedBorder`) is applied to all Material components. Text uses one bundled family, Source Sans 3, on a 6-size scale; `AppTheme.light(locale:)` adds the Chinese system font fallback for the locale.

@@ -19,10 +19,6 @@ const _lightOutlinedBorder = RoundedRectangleBorder(
   borderRadius: _outlinedBorderRadius,
 );
 
-final _darkOutlinedBorder = _lightOutlinedBorder.copyWith(
-  side: _outlinedBorderSide.copyWith(color: AppColors.white),
-);
-
 final _cardShadowColor = AppColors.grey.withValues(alpha: 0.25);
 
 const _badgeTheme = BadgeThemeData(
@@ -70,13 +66,10 @@ abstract class AppTheme {
 
   static InputDecorationTheme _inputDecorationTheme({
     required Color accentColor,
-    bool scaleFocusedBorder = false,
   }) {
     final greySide = _outlinedBorderSide.copyWith(color: AppColors.grey);
     final redSide = _outlinedBorderSide.copyWith(color: AppColors.error);
-    final focusedSide = scaleFocusedBorder
-        ? _outlinedBorderSide.scale(1.5).copyWith(color: accentColor)
-        : _outlinedBorderSide.copyWith(color: accentColor);
+    final focusedSide = _outlinedBorderSide.copyWith(color: accentColor);
 
     return InputDecorationTheme(
       border: OutlineInputBorder(
@@ -193,93 +186,6 @@ abstract class AppTheme {
       scrollbarTheme: const ScrollbarThemeData(
         thickness: WidgetStatePropertyAll(AppSpacing.sm),
         thumbColor: WidgetStatePropertyAll(AppColors.black),
-        minThumbLength: AppSpacing.xl2 * 2, // 64
-        mainAxisMargin: -AppSpacing.sm,
-      ),
-      badgeTheme: _badgeTheme,
-    );
-  }
-
-  /// Clubhouse dark theme.
-  static ThemeData dark() {
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: const ColorScheme.dark(
-        primary: AppColors.darkAccent,
-        onPrimary: AppColors.black,
-        secondary: AppColors.darkSecondaryAccent,
-        onSecondary: AppColors.black,
-        tertiary: AppColors.darkCardBorder,
-        onTertiary: AppColors.white,
-        error: AppColors.error,
-        onError: AppColors.white,
-        surface: AppColors.darkCardBg,
-        onSurface: AppColors.white,
-      ),
-      fontFamily: AppTypography.family,
-      scaffoldBackgroundColor: AppColors.darkPageBg,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        titleTextStyle: TextStyle(
-          fontFamily: AppTypography.family,
-          color: AppColors.darkAccent,
-        ),
-        elevation: 0,
-        iconTheme: IconThemeData(color: AppColors.darkAccent),
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: AppColors.darkPageBg,
-          statusBarIconBrightness: Brightness.light,
-          statusBarBrightness: Brightness.dark,
-        ),
-      ),
-      cardTheme: CardThemeData(
-        color: AppColors.darkCardBg,
-        shadowColor: _cardShadowColor,
-        elevation: 2,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadii.xlRadius),
-      ),
-      textTheme: _textTheme(AppColors.white, AppColors.darkAccent, const []),
-      dialogTheme: const DialogThemeData(
-        shape: RoundedRectangleBorder(borderRadius: AppRadii.xlRadius),
-      ),
-      inputDecorationTheme: _inputDecorationTheme(
-        accentColor: AppColors.darkAccent,
-        scaleFocusedBorder: true,
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ButtonStyle(
-          backgroundColor: const WidgetStatePropertyAll(AppColors.darkAccent),
-          foregroundColor: const WidgetStatePropertyAll(AppColors.black),
-          shape: WidgetStatePropertyAll(_darkOutlinedBorder),
-        ),
-      ),
-      textButtonTheme: const TextButtonThemeData(
-        style: ButtonStyle(
-          shape: WidgetStatePropertyAll(_noOutlinedBorder),
-          foregroundColor: WidgetStatePropertyAll(AppColors.darkAccent),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: ButtonStyle(
-          backgroundColor: const WidgetStatePropertyAll(AppColors.black),
-          shape: WidgetStatePropertyAll(_darkOutlinedBorder),
-        ),
-      ),
-      filledButtonTheme: const FilledButtonThemeData(
-        style: ButtonStyle(shape: WidgetStatePropertyAll(_noOutlinedBorder)),
-      ),
-      iconButtonTheme: const IconButtonThemeData(
-        style: ButtonStyle(shape: WidgetStatePropertyAll(_noOutlinedBorder)),
-      ),
-      searchBarTheme: SearchBarThemeData(
-        shape: WidgetStatePropertyAll(_darkOutlinedBorder),
-      ),
-      chipTheme: const ChipThemeData(
-        shape: RoundedRectangleBorder(borderRadius: AppRadii.xlRadius),
-      ),
-      scrollbarTheme: const ScrollbarThemeData(
-        thickness: WidgetStatePropertyAll(AppSpacing.sm),
-        thumbColor: WidgetStatePropertyAll(AppColors.white),
         minThumbLength: AppSpacing.xl2 * 2, // 64
         mainAxisMargin: -AppSpacing.sm,
       ),
