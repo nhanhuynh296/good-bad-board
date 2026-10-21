@@ -2,6 +2,7 @@
 library;
 
 export 'court_card.dart';
+export 'courts/courts.dart';
 export 'court_grid_layout.dart';
 export 'dashboard_page.dart';
 export 'discard_confirmation.dart';

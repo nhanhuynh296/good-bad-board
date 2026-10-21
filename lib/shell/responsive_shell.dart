@@ -289,8 +289,12 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
           TopNavBar(tabs: topTabs, isDesktop: isDesktop),
           Expanded(
             child: Padding(
+              // The desktop Courts tab draws its own full-width round bar
+              // under the nav (IMPLEMENTATION 8.5.1), so it gets no padding.
               padding: isDesktop
-                  ? AppSpacing.desktopPadding
+                  ? (_selectedIndex == 0
+                        ? EdgeInsets.zero
+                        : AppSpacing.desktopPadding)
                   : AppSpacing.tabletPadding,
               child: widget.navigationShell,
             ),

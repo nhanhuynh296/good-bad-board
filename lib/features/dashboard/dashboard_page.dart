@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/dashboard/dashboard.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
@@ -11,22 +11,31 @@ import 'package:good_bad_board/model/game.dart';
 import 'package:good_bad_board/model/player.dart';
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
-import 'package:good_bad_board/state/timer_data.dart';
 import 'package:provider/provider.dart';
 
 /// Court-count range, the same as on the Sessions tab.
 const int _minCourts = 1;
 const int _maxCourts = 8;
 
-/// Shortest court card the desktop grid accepts. A 4-slot card this tall
-/// still shows each slot in full (see the compact `CourtCard`).
-const double _minDesktopCourtHeight = 134;
+/// Shortest court card the PR 45 desktop grid (game-based mode) accepts.
+const double _minLegacyCourtHeight = 134;
 
-/// The Dashboard tab — court grid, waitlist, stat strip, and all game
-/// interactions (place/swap, re-roll, make game, save).
+/// Shortest desktop court card: a 40 px header and 4 slots of 40 px, with
+/// the card padding (IMPLEMENTATION 8.5.4).
+const double _minDesktopCourtHeight = 216;
+
+/// The Courts tab ("Dashboard" on tablet).
 ///
-/// Implements the click-to-select-then-click-to-place interaction pattern
-/// described in ARCHITECTURE.md Section 4.1.
+/// Time mode on desktop (≥1080 px) is the 2026-10-17 design
+/// (IMPLEMENTATION 8.5): the [RoundBar], the [NextRoundStrip], a 2×2 grid
+/// of [DesktopCourtCard]s and the [WaitlistPanel]. Phone and tablet keep
+/// their PR 45 layout (R2-Q23, R6-Q7) with the same round state and labels
+/// ([RoundBar] and [NextRoundStrip] in their compact form). Game-based mode
+/// (hidden in the release build) keeps the PR 45 page.
+///
+/// A tap selects a player; a second tap places or swaps them
+/// (ARCHITECTURE §4.1). A swap of two players shows the bottom message
+/// "Swapped {A} and {B}. Undo" for 10 s (COURT-17).
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -35,163 +44,405 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  /// The ID of the currently selected waitlist/court player for placement.
+  /// The ID of the player selected to place or swap.
   String? _selectedPlayerId;
 
-  Player? get _selectedPlayer {
-    if (_selectedPlayerId == null) return null;
+  /// The lineup the selection was made on. A new lineup on screen drops
+  /// the selection.
+  Object? _lineupKey;
+
+  GameData? _gameData;
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _swapMessage;
+  Timer? _swapTimer;
+  Object? _shownLogError;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     final gameData = context.read<GameData>();
-    return gameData.checkedInPlayers[_selectedPlayerId];
+    if (!identical(gameData, _gameData)) {
+      _gameData?.removeListener(_onGameData);
+      _gameData = gameData..addListener(_onGameData);
+    }
+  }
+
+  @override
+  void dispose() {
+    _gameData?.removeListener(_onGameData);
+    _swapTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Closes the swap message when Undo is no longer possible (any other
+  /// change, R6-Q6), and shows a round log that failed at the end of the
+  /// changeover (RND-06, R45-01).
+  void _onGameData() {
+    final gameData = _gameData;
+    if (gameData == null || !mounted) return;
+    if (_swapMessage != null && !gameData.canUndoSwap) _closeSwapMessage();
+    final error = gameData.roundLogError;
+    if (error == null) {
+      _shownLogError = null;
+    } else if (!identical(error, _shownLogError)) {
+      _shownLogError = error;
+      showCourtsError(context, error);
+    }
+  }
+
+  Player? get _selectedPlayer {
+    final id = _selectedPlayerId;
+    if (id == null) return null;
+    return context.read<GameData>().checkedInPlayers[id];
   }
 
   void _selectPlayer(Player player) {
     setState(() {
-      // Toggle selection if tapping the same player
-      if (_selectedPlayerId == player.id) {
-        _selectedPlayerId = null;
-      } else {
-        _selectedPlayerId = player.id;
-      }
+      _selectedPlayerId = _selectedPlayerId == player.id ? null : player.id;
     });
   }
+
+  void _clearSelection() => setState(() => _selectedPlayerId = null);
+
+  // ── Time mode: swap, place, re-roll, slot menu ──────────────
 
   void _onSlotTap(int courtIndex, int slotIndex) {
     final gameData = context.read<GameData>();
-    final court = gameData.visibleMatches[courtIndex];
+    final lineup = gameData.visibleMatches;
+    if (courtIndex >= lineup.length) return;
+    final court = lineup[courtIndex];
     final occupant = slotIndex < court.players.length
         ? court.players[slotIndex]
         : null;
-    final player = _selectedPlayer;
-    if (player == null) {
-      // Nothing selected: tapping a court player selects them to move.
-      setState(() => _selectedPlayerId = occupant?.id);
+    final selected = _selectedPlayer;
+    if (selected == null) {
+      // COURT-09: an open slot does nothing with no selection.
+      if (occupant != null) setState(() => _selectedPlayerId = occupant.id);
       return;
     }
-    if (player.id == occupant?.id) {
-      setState(() => _selectedPlayerId = null);
+    if (selected.id == occupant?.id) {
+      _clearSelection();
       return;
     }
-
-    // A player from the waitlist takes the slot; a player from another
-    // court swaps with the occupant.
-    gameData.placePlayerInSlot(player, courtIndex, slotIndex);
-
-    setState(() {
-      _selectedPlayerId = null;
-    });
-  }
-
-  void _onRemovePlayer(int courtIndex, int slotIndex) {
-    final gameData = context.read<GameData>();
-    final court = gameData.visibleMatches[courtIndex];
-    if (slotIndex >= court.players.length) return;
-    final player = court.players[slotIndex];
-    gameData.removePlayerFromCourt(player);
-    if (_selectedPlayerId == player.id) {
-      setState(() => _selectedPlayerId = null);
+    if (occupant != null) {
+      if (gameData.swapPlayers(selected, occupant)) _showSwapMessage();
+    } else {
+      // A move into an open slot is not a swap: no message (COURT-17).
+      gameData.placePlayerInSlot(selected, courtIndex, slotIndex);
     }
+    _clearSelection();
   }
 
-  /// Whether a time-based round is under way, so that a new lineup would
-  /// throw away games that are not in the history yet.
-  bool get _isRoundRunning =>
-      !_isGameBased && context.read<TimerData>().isRunning;
-
-  /// Asks the organizer to confirm before a running game is thrown away
-  /// (restored from main's "Game is currently running" warning).
-  Future<bool> _confirmDiscard({
-    required String title,
-    required String body,
-    required String confirmLabel,
-  }) => confirmDiscard(
-    context,
-    title: title,
-    body: body,
-    confirmLabel: confirmLabel,
-  );
-
-  Future<void> _onReroll(int courtIndex) async {
+  void _showSwapMessage() {
     final gameData = context.read<GameData>();
+    final swap = gameData.lastSwap;
     final l10n = AppLocalizations.of(context)!;
-    // COURT-03: nobody to rotate in — stay quiet, nothing to confirm either.
+    if (swap == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    _closeSwapMessage();
+    messenger.hideCurrentSnackBar();
+    final (a, b) = swap;
+    // Bottom-centre, 360 × 48; it blocks the pointer only inside its box
+    // (F15). No keyboard shortcut runs the Undo (R7-Q2).
+    final controller = messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          l10n.courts_swapped_undo(a.name(), b.name()),
+          style: AppTypography.body.copyWith(color: AppColors.headerText),
+        ),
+        backgroundColor: AppColors.headerBg,
+        behavior: SnackBarBehavior.floating,
+        width: 360,
+        duration: GameData.swapUndoWindow,
+        persist: false,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.lgRadius),
+        action: SnackBarAction(
+          label: l10n.common_undo,
+          textColor: AppColors.accentPrimary,
+          onPressed: gameData.undoSwap,
+        ),
+      ),
+    );
+    _swapMessage = controller;
+    _swapTimer = Timer(GameData.swapUndoWindow, _closeSwapMessage);
+    unawaited(
+      controller.closed.then((_) {
+        if (identical(_swapMessage, controller)) {
+          _swapMessage = null;
+          _swapTimer?.cancel();
+        }
+      }),
+    );
+  }
+
+  void _closeSwapMessage() {
+    _swapTimer?.cancel();
+    _swapTimer = null;
+    final message = _swapMessage;
+    _swapMessage = null;
+    message?.close();
+  }
+
+  void _onReroll(int courtIndex) {
+    final gameData = context.read<GameData>();
+    // COURT-03: nobody to rotate in, so it stays quiet.
     if (!gameData.canRerollCourt(courtIndex)) return;
-    final hasPlayers = gameData.visibleMatches[courtIndex].players.isNotEmpty;
-    if (_isRoundRunning &&
-        hasPlayers &&
-        gameData.roundView == RoundView.current) {
-      final confirmed = await _confirmDiscard(
-        title: l10n.dashboard_discard_court_title,
-        body: l10n.dashboard_discard_court_body,
-        confirmLabel: l10n.dashboard_reroll,
-      );
-      if (!confirmed || !mounted) return;
-    }
     try {
       gameData.makeSingleCourt(courtIndex);
-      // The re-roll moved players, so a pick may no longer be where it was.
-      setState(() => _selectedPlayerId = null);
-    } on Exception catch (e) {
-      _showError(e);
+    } on Exception catch (error) {
+      showCourtsError(context, error);
     }
+    _clearSelection();
   }
 
-  /// Shows [error] as a localised toast. A [LineupError] gets its own
-  /// message; anything else gets one generic message, never its text.
-  void _showError(Object error) {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    final message = switch (error) {
-      NoCourts() => l10n.dashboard_error_no_courts,
-      NotEnoughPlayers(:final count) => l10n.dashboard_error_not_enough_players(
-        Game.playerPerCourt,
-        count,
-      ),
-      UnbalancedCourts(:final courtNumbers) =>
-        l10n.dashboard_error_unbalanced_courts(
-          courtNumbers.length,
-          courtNumbers.join(', '),
-          Game.playerPerCourt,
+  /// Whether the courts on screen take a tap, a swap, Re-roll and the full
+  /// slot menu (COURT-14). With no lineup there is nothing to change.
+  static bool _canEdit(GameData gameData) =>
+      gameData.canEditCourts && gameData.phase != RoundPhase.noLineup;
+
+  // ── Build ────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final gameData = context.watch<GameData>();
+    // Watched, not read statically: switching mode on the Sessions tab has to
+    // rebuild this page.
+    final settings = context.watch<PersistentSetting>();
+    final isGameBased = settings.getGameType() == GameType.gameBased;
+    final width = MediaQuery.sizeOf(context).width;
+
+    final lineupKey = (
+      gameData.phase,
+      gameData.isEditingNext,
+      identityHashCode(gameData.visibleMatches),
+    );
+    if (lineupKey != _lineupKey) {
+      _lineupKey = lineupKey;
+      _selectedPlayerId = null;
+    }
+
+    if (isGameBased) return _buildGameBased(gameData, isDesktop(width));
+    if (isDesktop(width)) return _buildDesktop(gameData);
+    return _buildStacked(gameData);
+  }
+
+  // ── Desktop, time mode (IMPLEMENTATION 8.5.1) ───────────────
+
+  Widget _buildDesktop(GameData gameData) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const RoundBar(),
+        if (NextRoundStrip.showsFor(gameData)) const NextRoundStrip(),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.lg,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _buildDesktopGrid(gameData)),
+                const SizedBox(width: AppSpacing.lg),
+                _buildWaitlistPanel(gameData),
+              ],
+            ),
+          ),
         ),
-      NothingToSave() => l10n.dashboard_error_nothing_to_save,
-      _ => l10n.dashboard_error_generic,
-    };
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+      ],
+    );
   }
 
-  /// Whether the session runs in game-based mode, where courts are saved and
-  /// re-rolled by hand and no countdown runs.
-  bool get _isGameBased =>
-      context.read<PersistentSetting>().getGameType() == GameType.gameBased;
+  Widget _buildDesktopGrid(GameData gameData) {
+    final lineup = gameData.visibleMatches;
+    final count = gameData.numberOfCourt;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final layout = courtGridLayout(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          courtCount: count,
+          gap: AppSpacing.lg,
+          minCourtHeight: _minDesktopCourtHeight,
+        );
+        return GridView.builder(
+          physics: layout.scrolls ? null : const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: layout.columns,
+            mainAxisSpacing: AppSpacing.lg,
+            crossAxisSpacing: AppSpacing.lg,
+            mainAxisExtent: layout.courtHeight,
+          ),
+          itemCount: count,
+          itemBuilder: (context, index) => _buildDesktopCourt(
+            gameData,
+            index,
+            index < lineup.length ? lineup[index] : null,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopCourt(GameData gameData, int index, Game? game) {
+    final players = game?.players ?? const <Player>[];
+    final canEdit = _canEdit(gameData);
+    final selectionActive = _selectedPlayer != null;
+    final slots = [
+      for (var slot = 0; slot < Game.playerPerCourt; slot++)
+        _slotData(
+          gameData,
+          index,
+          slot,
+          slot < players.length ? players[slot] : null,
+          canEdit: canEdit,
+          selectionActive: selectionActive,
+        ),
+    ];
+    final timeUp =
+        gameData.phase == RoundPhase.timeUp && !gameData.isEditingNext;
+    return DesktopCourtCard(
+      courtIndex: index,
+      slots: slots,
+      levelGap: game?.tierGap() ?? 0,
+      isNextRound: gameData.isEditingNext,
+      roundTag: timeUp ? gameData.roundNumber + 1 : null,
+      onReroll: canEdit ? () => _onReroll(index) : null,
+    );
+  }
+
+  CourtSlotData _slotData(
+    GameData gameData,
+    int court,
+    int slot,
+    Player? player, {
+    required bool canEdit,
+    required bool selectionActive,
+  }) {
+    final SlotMenu menu;
+    if (player == null) {
+      menu = SlotMenu.none;
+    } else if (canEdit) {
+      menu = SlotMenu.full;
+    } else if (gameData.phase == RoundPhase.noLineup) {
+      menu = SlotMenu.none;
+    } else {
+      // A live court while the clock runs: "Check out" only (R7-Q4), and
+      // nothing for a player who is already checked out (R11-Q4).
+      menu = gameData.isCheckedOutOnLiveCourt(player)
+          ? SlotMenu.none
+          : SlotMenu.checkOutOnly;
+    }
+    final tappable = canEdit && (player != null || selectionActive);
+    return CourtSlotData(
+      player: player,
+      menu: menu,
+      isSelected: player != null && player.id == _selectedPlayerId,
+      onTap: tappable ? () => _onSlotTap(court, slot) : null,
+      onMoveToWaitlist: player == null
+          ? null
+          : () {
+              gameData.moveToWaitlist(player);
+              _clearSelection();
+            },
+      onCheckOut: player == null
+          ? null
+          : () {
+              // No bottom message on Courts (R7-Q5).
+              gameData.checkOutPlayer(player);
+              _clearSelection();
+            },
+    );
+  }
+
+  Widget _buildWaitlistPanel(GameData gameData) {
+    final l10n = AppLocalizations.of(context)!;
+    final canEdit = _canEdit(gameData);
+    final noLineup = gameData.phase == RoundPhase.noLineup;
+    final rounds = gameData.getCurrentPlayersHistory();
+    final next = gameData.nextLineup;
+    // "Next in": in the saved round n+1 while the courts show round n.
+    final showsNext = identical(gameData.visibleMatches, next);
+    final nextIds = gameData.isNextRoundSaved && !showsNext && next != null
+        ? {for (final game in next) ...game.playerIds}
+        : const <String>{};
+    final entries = [
+      for (final player in gameData.waitlistOrder)
+        (
+          player: player,
+          roundsPlayed: (rounds[player] ?? 0).toInt(),
+          nextIn: nextIds.contains(player.id),
+        ),
+    ];
+    final selected = entries.firstWhereOrNull(
+      (entry) => entry.player.id == _selectedPlayerId,
+    );
+    final String? hint;
+    if (noLineup) {
+      hint = null;
+    } else if (!canEdit) {
+      hint = l10n.courts_waitlist_hint_live;
+    } else if (_selectedPlayer != null) {
+      hint = l10n.dashboard_waitlist_hint_place(
+        (selected?.player ?? _selectedPlayer!).name(),
+      );
+    } else {
+      hint = l10n.dashboard_waitlist_hint_select;
+    }
+    return WaitlistPanel(
+      entries: entries,
+      hint: hint,
+      selectedPlayerId: _selectedPlayerId,
+      onSelect: canEdit ? _selectPlayer : null,
+    );
+  }
+
+  // ── Phone and tablet, time mode (R2-Q23, R6-Q7) ─────────────
+
+  Widget _buildStacked(GameData gameData) {
+    final canEdit = _canEdit(gameData);
+    final waitlisted = gameData.waitlistOrder;
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildStatStrip(gameData, waitlisted),
+          const SizedBox(height: AppSpacing.lg),
+          const RoundBar(compact: true),
+          if (NextRoundStrip.showsFor(gameData)) ...[
+            const SizedBox(height: AppSpacing.md),
+            const NextRoundStrip(compact: true),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          WaitlistChips(
+            players: waitlisted,
+            selectedPlayerId: _selectedPlayerId,
+            selectedPlayerName: _selectedPlayer?.name(),
+            onPlayerSelect: canEdit ? _selectPlayer : null,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildLegacyCourtGrid(
+            gameData,
+            fitToHeight: false,
+            canEdit: canEdit,
+            isGameBased: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Game-based mode: the PR 45 page (hidden in the release) ──
 
   Future<void> _onMakeGame() async {
     final gameData = context.read<GameData>();
-    final timerData = context.read<TimerData>();
-    final isGameBased = _isGameBased;
-    if (_isRoundRunning && gameData.hasAnyCourtLineup) {
-      final l10n = AppLocalizations.of(context)!;
-      final confirmed = await _confirmDiscard(
-        title: l10n.dashboard_discard_round_title,
-        body: l10n.dashboard_discard_round_body,
-        confirmLabel: l10n.regenerate,
-      );
-      if (!confirmed || !mounted) return;
-    }
     try {
       await gameData.makeGame();
-      if (!mounted) return;
-      setState(() {
-        _selectedPlayerId = null;
-      });
-      // Game-based rounds have no clock — the organizer drives each court.
-      if (isGameBased) return;
-      // Start (or restart) the countdown timer for the new game.
-      timerData.duration = PersistentSetting.instance.getGameDuration();
-      timerData.reset();
-      timerData.start(onExpired: _onAutoRotate);
-    } on Exception catch (e) {
-      _showError(e);
+      if (mounted) _clearSelection();
+    } on Exception catch (error) {
+      if (mounted) showCourtsError(context, error);
     }
   }
 
@@ -202,394 +453,159 @@ class _DashboardPageState extends State<DashboardPage> {
     if (courtIndex >= gameData.stagingMatches.length) return;
     try {
       await gameData.saveSingleGame(gameData.stagingMatches[courtIndex]);
-      if (!mounted) return;
-      setState(() {
-        _selectedPlayerId = null;
-      });
-    } on Exception catch (e) {
-      _showError(e);
+      if (mounted) _clearSelection();
+    } on Exception catch (error) {
+      if (mounted) showCourtsError(context, error);
     }
   }
 
-  Future<void> _onSaveGame() async {
+  void _onLegacySlotTap(int courtIndex, int slotIndex) {
     final gameData = context.read<GameData>();
-    final timerData = context.read<TimerData>();
-    try {
-      await gameData.saveCurrentGame();
-      if (!mounted) return;
-      timerData.reset();
-      setState(() {
-        _selectedPlayerId = null;
-      });
-    } on Exception catch (e) {
-      _showError(e);
+    final court = gameData.visibleMatches[courtIndex];
+    final occupant = slotIndex < court.players.length
+        ? court.players[slotIndex]
+        : null;
+    final player = _selectedPlayer;
+    if (player == null) {
+      setState(() => _selectedPlayerId = occupant?.id);
+      return;
     }
-  }
-
-  /// Ends the current round and starts the next one.
-  ///
-  /// The finished round is logged by [GameData.rotateNow], so this awaits the
-  /// write before restarting the clock.
-  Future<void> _rotate() async {
-    final gameData = context.read<GameData>();
-    final timerData = context.read<TimerData>();
-    try {
-      // A rotation already in flight owns the clock (R45-01).
-      if (!await gameData.rotateNow()) return;
-      if (!mounted) return;
-      setState(() {
-        _selectedPlayerId = null;
-      });
-      timerData.reset();
-      timerData.start(onExpired: _onAutoRotate);
-    } catch (e) {
-      // Deliberately catches Error as well as Exception: this also runs from
-      // the countdown's expiry callback, and a rotation that dies there would
-      // strand the session on a finished round with a stopped clock. A
-      // failed rotation changes nothing (R45-01), so restart the clock and
-      // the next expiry tries the same round again.
-      if (!mounted) return;
-      _showError(e);
-      timerData.reset();
-      timerData.start(onExpired: _onAutoRotate);
+    if (player.id == occupant?.id) {
+      _clearSelection();
+      return;
     }
+    gameData.placePlayerInSlot(player, courtIndex, slotIndex);
+    _clearSelection();
   }
 
-  void _onRotateNow() => unawaited(_rotate());
-
-  void _onStageNext() {
+  void _onRemovePlayer(int courtIndex, int slotIndex) {
     final gameData = context.read<GameData>();
-    gameData.stageNextRound();
-    // Staging selects the next round, so a player picked for the live round
-    // must not carry over into the plan.
-    setState(() {
-      _selectedPlayerId = null;
-    });
+    final court = gameData.visibleMatches[courtIndex];
+    if (slotIndex >= court.players.length) return;
+    final player = court.players[slotIndex];
+    gameData.removePlayerFromCourt(player);
+    if (_selectedPlayerId == player.id) _clearSelection();
   }
 
-  void _onCancelStaged() {
-    final gameData = context.read<GameData>();
-    gameData.cancelStagedRound();
-    setState(() {
-      _selectedPlayerId = null;
-    });
-  }
-
-  /// Switches the court grid between the live round and the pre-made one.
-  void _onSelectView(RoundView view) {
-    final gameData = context.read<GameData>();
-    gameData.setRoundView(view);
-    // A player selected against one lineup must not be placed into the other.
-    setState(() {
-      _selectedPlayerId = null;
-    });
-  }
-
-  /// Countdown expiry. A round that was started in time-based mode must not
-  /// rotate once the session has switched to game-based mode (GB-01).
-  void _onAutoRotate() {
-    if (!mounted || _isGameBased) return;
-    unawaited(_rotate());
-  }
-
-  Future<void> _onCourtCountChanged(int delta) async {
+  void _onCourtCountChanged(int delta) {
     final gameData = context.read<GameData>();
     final target = gameData.numberOfCourt + delta;
     // Same range as the Sessions tab (1 to 8).
     if (target < _minCourts || target > _maxCourts) return;
-    // A new court count reshuffles the lineup (SESS-04) — warn first when
-    // that would throw away a running round.
-    if (_isRoundRunning && gameData.wouldReshuffleLineup) {
-      final l10n = AppLocalizations.of(context)!;
-      final confirmed = await _confirmDiscard(
-        title: l10n.dashboard_discard_round_title,
-        body: l10n.dashboard_discard_round_body,
-        confirmLabel: l10n.sessions_reshuffle_confirm,
-      );
-      if (!confirmed || !mounted) return;
-    }
     gameData.setNumberOfCourt(target);
-    // The courts changed under the pick, so the hint would be out of date.
-    setState(() => _selectedPlayerId = null);
+    _clearSelection();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final gameData = context.watch<GameData>();
-    // Watched, not read statically: switching mode on the Sessions tab has to
-    // rebuild this page.
-    final settings = context.watch<PersistentSetting>();
-    final isGameBased = settings.getGameType() == GameType.gameBased;
-    // The grid, the sidebar and the stat strip all describe the round on
-    // screen — the live one, or the pre-made next one.
-    final visibleMatches = gameData.visibleMatches;
-    final isNextRound = gameData.roundView == RoundView.next;
+  Widget _buildGameBased(GameData gameData, bool desktop) {
     final waitlisted = gameData.visibleWaitlistedPlayers.toList();
-    final hasActiveGame = gameData.hasAnyCourtLineup;
-    final totalSlots = gameData.numberOfCourt * Game.playerPerCourt;
-    final playersOnCourt = visibleMatches.fold<int>(
-      0,
-      (sum, g) => sum + g.players.length,
-    );
-    final remainingSlots = totalSlots - playersOnCourt;
-
-    // Avg level across all players on courts
-    String avgLevel;
-    if (playersOnCourt > 0) {
-      final allElos = visibleMatches
-          .expand((g) => g.players)
-          .map((p) => p.elo.index)
-          .toList();
-      final avg = allElos.reduce((a, b) => a + b) / allElos.length;
-      // Map back to the closest Elo, then show its tier name (as the courts do)
-      const eloValues = Elo.values;
-      final closest = eloValues[(avg.round()).clamp(0, eloValues.length - 1)];
-      avgLevel = closest.skillTier.localizedLabel(
-        AppLocalizations.of(context)!,
-      );
-    } else {
-      avgLevel = '—';
-    }
-
-    // Average level gap across courts
-    String avgLevelGap;
-    final gaps = visibleMatches
-        .where((g) => g.players.length >= 2)
-        .map((g) => g.tierGap())
-        .toList();
-    if (gaps.isNotEmpty) {
-      final avgGap = gaps.reduce((a, b) => a + b) / gaps.length;
-      avgLevelGap = avgGap.toStringAsFixed(1);
-    } else {
-      avgLevelGap = '—';
-    }
-
     final header = <Widget>[
-      // ── Stat Strip ────────────────────────────────────
-      StatStrip(
-        checkedIn: '${gameData.checkedInPlayers.length}',
-        remainingSlots: '$remainingSlots',
-        waitlist: '${waitlisted.length}',
-        avgLevel: avgLevel,
-        avgLevelGap: avgLevelGap,
-        rerolls: '${gameData.sessionRerollCount}',
-      ),
+      _buildStatStrip(gameData, waitlisted),
       const SizedBox(height: AppSpacing.lg),
-
-      // ── Action Bar (Generate / Save / Courts) ─────────
       _ActionBar(
-        hasActiveGame: hasActiveGame,
         numberOfCourt: gameData.numberOfCourt,
         // Game-based generates every court once, at the start of the
-        // session; after that each court is driven on its own. Neither
-        // button belongs to the pre-made round: it is not the round being
-        // played, and "Cancel next" then "Pre-make next round" replaces it.
-        showGenerate:
-            !isNextRound && (!isGameBased || !gameData.hasAnyCourtLineup),
-        // Game-based saves court by court, so there is no global save.
-        showSave: !isGameBased && !isNextRound,
+        // session; after that each court is driven on its own.
+        showGenerate: !gameData.hasAnyCourtLineup,
         onMakeGame: _onMakeGame,
-        onSaveGame: _onSaveGame,
         onCourtCountChanged: _onCourtCountChanged,
       ),
-
-      // ── Round Rotation Bar (time-based only) ──────────
-      if (hasActiveGame && !isGameBased) ...[
-        const SizedBox(height: AppSpacing.lg),
-        _buildRoundRotationBar(gameData),
-      ],
       const SizedBox(height: AppSpacing.lg),
     ];
 
-    // Viewport width, not the width left after shell padding.
-    if (isDesktop(MediaQuery.sizeOf(context).width)) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ...header,
-          Expanded(
-            child: _buildDesktopLayout(
-              visibleMatches,
-              waitlisted,
-              gameData,
-              isGameBased,
-              isNextRound,
+    if (desktop) {
+      // The shell gives the Courts tab no padding on desktop.
+      return Padding(
+        padding: AppSpacing.desktopPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ...header,
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _buildLegacyCourtGrid(
+                      gameData,
+                      fitToHeight: true,
+                      canEdit: true,
+                      isGameBased: true,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xl),
+                  WaitlistSidebar(
+                    players: waitlisted,
+                    selectedPlayerId: _selectedPlayerId,
+                    selectedPlayerName: _selectedPlayer?.name(),
+                    onPlayerSelect: _selectPlayer,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
 
-    // Stacked layout: the whole page scrolls (UAT NAV-07).
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ...header,
-          ..._buildStackedLayout(
-            visibleMatches,
-            waitlisted,
+          WaitlistChips(
+            players: waitlisted,
+            selectedPlayerId: _selectedPlayerId,
+            selectedPlayerName: _selectedPlayer?.name(),
+            onPlayerSelect: _selectPlayer,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildLegacyCourtGrid(
             gameData,
-            isGameBased,
-            isNextRound,
+            fitToHeight: false,
+            canEdit: true,
+            isGameBased: true,
           ),
         ],
       ),
     );
   }
 
-  // ── Round Rotation Bar Builder ─────────────────────────
-
-  /// Builds the mode label for the round rotation bar per RND-09.
-  ///
-  /// Only reachable in time-based mode — game-based has no rotation bar.
-  String _buildModeLabel(AppLocalizations l10n) {
-    final duration = PersistentSetting.instance.getGameDuration();
-    return l10n.dashboard_mode_time_based(duration.toDisplayString());
-  }
-
-  /// Describes the pre-made next round, e.g. "16 players across 4 courts".
-  String _buildStagedSummary(AppLocalizations l10n, GameData gameData) {
-    final staged = gameData.stagedLineup;
-    if (staged == null) return '';
-    final playerCount = staged.fold<int>(
-      0,
-      (sum, g) => sum + g.playerIds.length,
-    );
-    final courtCount = staged.where((g) => g.playerIds.isNotEmpty).length;
-    return l10n.dashboard_staged_summary(
-      l10n.dashboard_player_count(playerCount),
-      l10n.dashboard_court_count(courtCount),
-    );
-  }
-
-  /// The bar watches [TimerData] through its own [Consumer], so a tick
-  /// rebuilds only the bar, not the whole page (R45-03).
-  Widget _buildRoundRotationBar(GameData gameData) {
+  Widget _buildStatStrip(GameData gameData, List<Player> waitlisted) {
     final l10n = AppLocalizations.of(context)!;
-    final modeLabel = _buildModeLabel(l10n);
-    final stagedSummary = _buildStagedSummary(l10n, gameData);
-    return Consumer<TimerData>(
-      builder: (context, timerData, _) => RoundRotationBar(
-        roundNumber: gameData.roundNumber,
-        modeLabel: modeLabel,
-        remainingLabel: timerData.remainingLabel,
-        pct: timerData.pct,
-        isUrgent: timerData.isUrgent,
-        isStaged: gameData.isStaged,
-        stagedSummary: stagedSummary,
-        stagedPct: 100.0 - timerData.pct, // fills up as main bar depletes
-        selectedView: gameData.roundView,
-        onSelectView: _onSelectView,
-        onRotateNow: _onRotateNow,
-        onStageNext: _onStageNext,
-        onCancelStaged: _onCancelStaged,
-      ),
-    );
-  }
-
-  // ── Desktop: Court Grid + Waitlist Sidebar ──────────────
-
-  Widget _buildDesktopLayout(
-    List<Game> courts,
-    List<Player> waitlisted,
-    GameData gameData,
-    bool isGameBased,
-    bool isNextRound,
-  ) {
-    final selectionActive =
-        _selectedPlayerId != null &&
-        gameData.checkedInPlayers.containsKey(_selectedPlayerId);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Court grid. The courts grow to fill the free height; when they
-        // cannot all fit at their minimum size, the grid scrolls.
-        Expanded(
-          child: _buildCourtGrid(
-            courts,
-            selectionActive,
-            gameData,
-            isGameBased,
-            isNextRound,
-            fitToHeight: true,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.xl),
-        // Waitlist sidebar
-        WaitlistSidebar(
-          players: waitlisted,
-          selectedPlayerId: _selectedPlayerId,
-          selectedPlayerName: gameData.checkedInPlayers[_selectedPlayerId]
-              ?.name(),
-          onPlayerSelect: _selectPlayer,
-        ),
-      ],
-    );
-  }
-
-  // ── Tablet/Phone: Waitlist Chips + Court Grid ──────────
-
-  List<Widget> _buildStackedLayout(
-    List<Game> courts,
-    List<Player> waitlisted,
-    GameData gameData,
-    bool isGameBased,
-    bool isNextRound,
-  ) {
-    final selectionActive =
-        _selectedPlayerId != null &&
-        gameData.checkedInPlayers.containsKey(_selectedPlayerId);
-
-    return [
-      // Waitlist chips
-      WaitlistChips(
-        players: waitlisted,
-        selectedPlayerId: _selectedPlayerId,
-        selectedPlayerName: gameData.checkedInPlayers[_selectedPlayerId]
-            ?.name(),
-        onPlayerSelect: _selectPlayer,
-      ),
-      const SizedBox(height: AppSpacing.lg),
-      // Court grid
-      _buildCourtGrid(
-        courts,
-        selectionActive,
-        gameData,
-        isGameBased,
-        isNextRound,
-        fitToHeight: false,
-      ),
-    ];
-  }
-
-  // ── Court Grid ─────────────────────────────────────────
-
-  Widget _buildCourtGrid(
-    List<Game> lineup,
-    bool selectionActive,
-    GameData gameData,
-    bool isGameBased,
-    bool isNextRound, {
-    required bool fitToHeight,
-  }) {
-    // Show courts up to numberOfCourt (pad with empty if needed)
-    final courtCount = gameData.numberOfCourt;
-    final courts = <_CourtDisplay>[];
-
-    for (var i = 0; i < courtCount; i++) {
-      final game = i < lineup.length ? lineup[i] : Game.create([]);
-      courts.add(
-        _CourtDisplay(
-          courtNumber: i + 1,
-          players: game.players,
-          spreadLevel: game.tierGap(),
-        ),
-      );
+    final visibleMatches = gameData.visibleMatches;
+    final totalSlots = gameData.numberOfCourt * Game.playerPerCourt;
+    final onCourt = visibleMatches.expand((g) => g.players).toList();
+    var avgLevel = '—';
+    if (onCourt.isNotEmpty) {
+      final avg = onCourt.map((p) => p.elo.index).average;
+      final closest = Elo.values[avg.round().clamp(0, Elo.values.length - 1)];
+      avgLevel = closest.skillTier.localizedLabel(l10n);
     }
+    final gaps = visibleMatches
+        .where((g) => g.players.length >= 2)
+        .map((g) => g.tierGap())
+        .toList();
+    return StatStrip(
+      checkedIn: '${gameData.checkedInPlayers.length}',
+      remainingSlots: '${totalSlots - onCourt.length}',
+      waitlist: '${waitlisted.length}',
+      avgLevel: avgLevel,
+      avgLevelGap: gaps.isEmpty ? '—' : gaps.average.toStringAsFixed(1),
+      rerolls: '${gameData.sessionRerollCount}',
+    );
+  }
 
-    if (courts.isEmpty) {
+  Widget _buildLegacyCourtGrid(
+    GameData gameData, {
+    required bool fitToHeight,
+    required bool canEdit,
+    required bool isGameBased,
+  }) {
+    final lineup = gameData.visibleMatches;
+    final courtCount = gameData.numberOfCourt;
+    final selectionActive = _selectedPlayer != null;
+
+    if (courtCount == 0) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -602,9 +618,7 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(height: AppSpacing.md),
             Text(
               AppLocalizations.of(context)!.dashboard_generate_hint,
-              style: const TextStyle(
-                fontFamily: AppTypography.family,
-                fontSize: AppTypography.sizeBody,
+              style: AppTypography.body.copyWith(
                 fontStyle: FontStyle.italic,
                 color: AppColors.textMuted,
               ),
@@ -621,13 +635,9 @@ class _DashboardPageState extends State<DashboardPage> {
         final layout = courtGridLayout(
           width: constraints.maxWidth,
           height: fitToHeight ? constraints.maxHeight : 0,
-          courtCount: courts.length,
+          courtCount: courtCount,
           gap: AppSpacing.lg,
-          // On desktop a court may be flatter than the default, down to
-          // _minDesktopCourtHeight, so 4 courts fit a 1280x720 window.
-          minCourtHeight: fitToHeight
-              ? _minDesktopCourtHeight
-              : double.infinity,
+          minCourtHeight: fitToHeight ? _minLegacyCourtHeight : double.infinity,
           maxColumnCount: fitToHeight
               ? null
               : (isPhone(MediaQuery.sizeOf(context).width) ? 1 : 2),
@@ -642,32 +652,33 @@ class _DashboardPageState extends State<DashboardPage> {
             crossAxisSpacing: AppSpacing.lg,
             mainAxisExtent: layout.courtHeight,
           ),
-          itemCount: courts.length,
+          itemCount: courtCount,
           itemBuilder: (context, index) {
-            final court = courts[index];
+            final game = index < lineup.length ? lineup[index] : null;
+            final players = game?.players ?? const <Player>[];
             final isPlaying = gameData.isCourtPlaying(index);
+            final editable = canEdit && !isPlaying;
             return CourtCard(
-              courtNumber: court.courtNumber,
-              players: court.players,
-              spreadLevel: court.spreadLevel,
-              isSelectionActive: selectionActive && !isPlaying,
+              courtNumber: index + 1,
+              players: players,
+              spreadLevel: game?.tierGap() ?? 0,
+              isSelectionActive: selectionActive && editable,
               isPlaying: isPlaying,
-              isNextRound: isNextRound,
-              onReroll: court.players.isNotEmpty
+              isNextRound: !isGameBased && gameData.isEditingNext,
+              onReroll: canEdit && players.isNotEmpty
                   ? () => _onReroll(index)
                   : null,
               // A saved lineup is locked — re-roll the court to end the game.
-              // Tapping a court player selects them; tapping another slot
-              // then moves or swaps them.
-              onSlotTap: !isPlaying
-                  ? (slotIndex) => _onSlotTap(index, slotIndex)
+              onSlotTap: editable
+                  ? (slot) => isGameBased
+                        ? _onLegacySlotTap(index, slot)
+                        : _onSlotTap(index, slot)
                   : null,
               selectedPlayerId: _selectedPlayerId,
-              onRemovePlayer: (slotIndex) => _onRemovePlayer(index, slotIndex),
-              // A plan has nothing to save — it is logged when it is played.
-              onSave: isGameBased && !isNextRound
-                  ? () => _onSaveCourt(index)
+              onRemovePlayer: canEdit
+                  ? (slot) => _onRemovePlayer(index, slot)
                   : null,
+              onSave: isGameBased ? () => _onSaveCourt(index) : null,
             );
           },
         );
@@ -676,48 +687,23 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-/// Lightweight data class for court display info.
-class _CourtDisplay {
-  const _CourtDisplay({
-    required this.courtNumber,
-    required this.players,
-    required this.spreadLevel,
-  });
-
-  final int courtNumber;
-  final List<Player> players;
-  final int spreadLevel;
-}
-
-/// The action bar below the stat strip: Generate Game, Save, and court
-/// count adjuster.
+/// The game-based action bar: Generate Game and the court count stepper
+/// (hidden in the release, R45-36).
 class _ActionBar extends StatelessWidget {
   const _ActionBar({
-    required this.hasActiveGame,
     required this.numberOfCourt,
     required this.showGenerate,
-    required this.showSave,
     required this.onMakeGame,
-    required this.onSaveGame,
     required this.onCourtCountChanged,
   });
 
-  final bool hasActiveGame;
   final int numberOfCourt;
-
-  /// Whether the Generate / Regenerate button is offered.
   final bool showGenerate;
-
-  /// Whether the global Save button is offered.
-  final bool showSave;
-
   final VoidCallback onMakeGame;
-  final VoidCallback onSaveGame;
   final void Function(int delta) onCourtCountChanged;
 
   @override
   Widget build(BuildContext context) {
-    final saveVisible = showSave && hasActiveGame;
     final l10n = AppLocalizations.of(context)!;
     // A Wrap, so that long labels (e.g. French) move the court count to a
     // second line on a phone instead of overflowing.
@@ -727,30 +713,12 @@ class _ActionBar extends StatelessWidget {
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: [
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            // Generate / Regenerate
-            if (showGenerate)
-              _ActionButton(
-                label: hasActiveGame ? l10n.regenerate : l10n.generate_game,
-                icon: Icons.casino_rounded,
-                isPrimary: !hasActiveGame,
-                onTap: onMakeGame,
-              ),
-            // Save
-            if (saveVisible)
-              _ActionButton(
-                key: const Key('dashboard-save-all'),
-                label: l10n.save,
-                icon: Icons.save_rounded,
-                isPrimary: true,
-                onTap: onSaveGame,
-              ),
-          ],
-        ),
-        // Court count, hidden in the release (R45-36)
+        if (showGenerate)
+          _ActionButton(
+            label: l10n.generate_game,
+            icon: Icons.casino_rounded,
+            onTap: onMakeGame,
+          ),
         if (CourtCount.editable)
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -778,19 +746,16 @@ class _ActionBar extends StatelessWidget {
   }
 }
 
-/// A button in the action bar.
+/// The primary button in the game-based action bar.
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
-    super.key,
     required this.label,
     required this.icon,
-    required this.isPrimary,
     required this.onTap,
   });
 
   final String label;
   final IconData icon;
-  final bool isPrimary;
   final VoidCallback onTap;
 
   @override
@@ -802,27 +767,19 @@ class _ActionButton extends StatelessWidget {
         borderRadius: AppRadii.mdRadius,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isPrimary ? AppColors.accentPrimary : AppColors.pillBg,
+          decoration: const BoxDecoration(
+            color: AppColors.accentPrimary,
             borderRadius: AppRadii.mdRadius,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 16,
-                color: isPrimary
-                    ? AppColors.accentOnPrimary
-                    : AppColors.textPrimary,
-              ),
+              Icon(icon, size: 16, color: AppColors.accentOnPrimary),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: AppTypography.button.copyWith(
-                  color: isPrimary
-                      ? AppColors.accentOnPrimary
-                      : AppColors.textPrimary,
+                  color: AppColors.accentOnPrimary,
                 ),
               ),
             ],
