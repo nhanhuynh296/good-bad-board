@@ -12,6 +12,8 @@ import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:provider/provider.dart';
 
+import 'courts_harness.dart';
+
 /// Builds the [ResponsiveShell] with the 5 real branches (IMPLEMENTATION
 /// 8.6) and a plain page in each, so the shell tests do not depend on the
 /// feature pages. Use it with `setUpCourtsSandbox` (temp-dir repositories,
@@ -81,36 +83,44 @@ class ShellHarness {
       ],
     );
     addTearDown(router.dispose);
-    addTearDown(timer.reset);
     await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<GameData>.value(value: gameData),
-          ChangeNotifierProvider<TimerData>.value(value: timer),
-          ChangeNotifierProvider<PersistentSetting>.value(
-            value: PersistentSetting.instance,
+      StopClockOnDispose(
+        timer: timer,
+        child: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GameData>.value(value: gameData),
+            ChangeNotifierProvider<TimerData>.value(value: timer),
+            ChangeNotifierProvider<PersistentSetting>.value(
+              value: PersistentSetting.instance,
+            ),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            locale: locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
           ),
-        ],
-        child: MaterialApp.router(
-          routerConfig: router,
-          locale: locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settle();
+  }
+
+  /// Lets the router and the menus finish. Not `pumpAndSettle`: a running
+  /// round clock schedules a frame every second, so it never settles.
+  Future<void> settle() async {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
   }
 
   /// The branch index the shell shows now.
-  int get currentIndex => pagePaths.indexOf(
-    router.routerDelegate.currentConfiguration.uri.path,
-  );
+  int get currentIndex =>
+      pagePaths.indexOf(router.routerDelegate.currentConfiguration.uri.path);
 
   /// Opens the branch at [index] through the router, as a tab tap does.
   Future<void> go(int index) async {
     router.go(pagePaths[index]);
-    await tester.pumpAndSettle();
+    await settle();
   }
 
   // ── Arrange helpers: the round phases (IMPLEMENTATION 8.2) ──

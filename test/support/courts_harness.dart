@@ -75,7 +75,7 @@ class CourtsHarness {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
-      _StopClockOnDispose(
+      StopClockOnDispose(
         timer: timer,
         child: MultiProvider(
           providers: [
@@ -159,17 +159,21 @@ Finder slotMoreFinder(int court, int slot) =>
 /// Stops the round clock when the test tree goes away, so no periodic timer
 /// outlives the test. It is the root, so it is disposed last, after every
 /// widget that listens to the clock.
-class _StopClockOnDispose extends StatefulWidget {
-  const _StopClockOnDispose({required this.timer, required this.child});
+class StopClockOnDispose extends StatefulWidget {
+  const StopClockOnDispose({
+    super.key,
+    required this.timer,
+    required this.child,
+  });
 
   final TimerData timer;
   final Widget child;
 
   @override
-  State<_StopClockOnDispose> createState() => _StopClockOnDisposeState();
+  State<StopClockOnDispose> createState() => _StopClockOnDisposeState();
 }
 
-class _StopClockOnDisposeState extends State<_StopClockOnDispose> {
+class _StopClockOnDisposeState extends State<StopClockOnDispose> {
   @override
   void dispose() {
     widget.timer.reset();

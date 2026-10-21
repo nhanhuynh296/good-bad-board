@@ -62,9 +62,7 @@ void main() {
       expect(inNav(find.text('12 min rounds')), findsOneWidget);
     });
 
-    testWidgets('should_show_french_header_when_locale_is_fr', (
-      tester,
-    ) async {
+    testWidgets('should_show_french_header_when_locale_is_fr', (tester) async {
       await ShellHarness(tester).pump(locale: const Locale('fr'));
 
       expect(inNav(find.text('Séance')), findsOneWidget);
@@ -118,9 +116,7 @@ void main() {
       );
     });
 
-    testWidgets('should_underline_active_tab_with_3_px_orange', (
-      tester,
-    ) async {
+    testWidgets('should_underline_active_tab_with_3_px_orange', (tester) async {
       await ShellHarness(tester).pump();
 
       final border = decoration(tester, tab(0))?.border as Border?;
@@ -183,9 +179,7 @@ void main() {
   });
 
   group('NAV-09 "⋯" menu', () {
-    testWidgets('should_open_menu_with_analytics_and_settings', (
-      tester,
-    ) async {
+    testWidgets('should_open_menu_with_analytics_and_settings', (tester) async {
       await ShellHarness(tester).pump();
 
       await tester.tap(more);
@@ -200,9 +194,7 @@ void main() {
       );
     });
 
-    testWidgets('should_label_more_button_for_screen_readers', (
-      tester,
-    ) async {
+    testWidgets('should_label_more_button_for_screen_readers', (tester) async {
       await ShellHarness(tester).pump();
 
       expect(
@@ -248,10 +240,10 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
 
-      expect((find.text('Analytics').evaluate().length, h.currentIndex), (
-        0,
-        0,
-      ));
+      expect(
+        (find.text('Analytics').evaluate().length, h.currentIndex),
+        (0, 0),
+      );
     });
 
     testWidgets('should_close_menu_on_outside_click_without_changing_tab', (
@@ -265,10 +257,10 @@ void main() {
       await tester.tapAt(const Offset(600, 500));
       await tester.pumpAndSettle();
 
-      expect((find.text('Analytics').evaluate().length, h.currentIndex), (
-        0,
-        0,
-      ));
+      expect(
+        (find.text('Analytics').evaluate().length, h.currentIndex),
+        (0, 0),
+      );
     });
 
     testWidgets('should_show_more_button_active_on_settings_tab', (

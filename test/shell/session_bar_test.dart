@@ -87,7 +87,7 @@ void main() {
       final h = await onPlayers(tester, arrange: (h) => h.toRunning());
 
       await tester.tap(inBar(find.text('View courts →')));
-      await tester.pumpAndSettle();
+      await h.settle();
 
       expect(h.currentIndex, 0);
     });
@@ -103,12 +103,28 @@ void main() {
       );
       expect(link, findsOneWidget);
     });
+    testWidgets('should_show_focus_ring_when_bar_has_keyboard_focus', (
+      tester,
+    ) async {
+      await onPlayers(tester, arrange: (h) => h.toRunning());
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
+      addTearDown(
+        () => FocusManager.instance.highlightStrategy =
+            FocusHighlightStrategy.automatic,
+      );
+
+      Focus.of(
+        tester.element(inBar(find.text('View courts →'))),
+      ).requestFocus();
+      await tester.pump();
+
+      expect(find.byKey(const Key('session-bar-focus-ring')), findsOneWidget);
+    });
   });
 
   group('NAV-10 content', () {
-    testWidgets('should_show_round_time_and_chip_when_running', (
-      tester,
-    ) async {
+    testWidgets('should_show_round_time_and_chip_when_running', (tester) async {
       await onPlayers(tester, arrange: (h) => h.toRunning());
 
       expect(
@@ -132,9 +148,7 @@ void main() {
       expect(xs, orderedEquals([...xs]..sort()));
     });
 
-    testWidgets('should_show_counts_and_next_round_not_saved', (
-      tester,
-    ) async {
+    testWidgets('should_show_counts_and_next_round_not_saved', (tester) async {
       await onPlayers(tester, arrange: (h) => h.toRunning());
 
       expect(
@@ -198,7 +212,8 @@ void main() {
       final live = find.ancestor(
         of: chip,
         matching: find.byWidgetPredicate(
-          (widget) => widget is Semantics && widget.properties.liveRegion == true,
+          (widget) =>
+              widget is Semantics && widget.properties.liveRegion == true,
         ),
       );
       expect(live, findsOneWidget);
@@ -210,7 +225,8 @@ void main() {
       final live = find.ancestor(
         of: time,
         matching: find.byWidgetPredicate(
-          (widget) => widget is Semantics && widget.properties.liveRegion == true,
+          (widget) =>
+              widget is Semantics && widget.properties.liveRegion == true,
         ),
       );
       expect(live, findsNothing);
@@ -249,9 +265,7 @@ void main() {
   });
 
   group('NAV-11 states', () {
-    testWidgets('should_show_no_round_yet_before_first_lineup', (
-      tester,
-    ) async {
+    testWidgets('should_show_no_round_yet_before_first_lineup', (tester) async {
       await onPlayers(tester);
 
       expect(inBar(find.text('No round yet')), findsOneWidget);
@@ -275,7 +289,8 @@ void main() {
     testWidgets('should_show_no_round_yet_after_end_session', (tester) async {
       final h = await onPlayers(tester, arrange: (h) => h.toRunning());
 
-      await h.gameData.endSession();
+      // Round 1 goes into the history: real file I/O, so out of fake time.
+      await tester.runAsync(h.gameData.endSession);
       await tester.pump();
 
       expect(inBar(find.text('No round yet')), findsOneWidget);
