@@ -802,10 +802,7 @@ void main() {
       await saveId(tester, 'b200');
 
       expect(PlayerRepository.instance.byId('Alice')!.signInId, 'A100');
-      expect(
-        find.text('ID b200 is used by Bob Test.'),
-        findsOneWidget,
-      );
+      expect(find.text('ID b200 is used by Bob Test.'), findsOneWidget);
     });
 
     testWidgets('should_accept_the_unchanged_id_of_the_same_player', (
