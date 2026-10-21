@@ -785,10 +785,6 @@
   "@players_session_full_cannot_check_in": {
     "description": "Snackbar when a check-in is refused because the session is full"
   },
-  "regenerate": "Regenerate",
-  "@regenerate": {
-    "description": "Recreate a game with new parameters"
-  },
   "regenerate_game": "Regenerate Game",
   "registration_contact": "Email or phone",
   "@registration_contact": {
@@ -1035,45 +1031,6 @@
   "@dashboard_courts_label": {
     "description": "Label beside the court count adjuster in the dashboard action bar"
   },
-  "dashboard_mode_time_based": "Time-based · {duration} rounds",
-  "@dashboard_mode_time_based": {
-    "description": "Mode label in the round rotation bar; duration is mm:ss",
-    "placeholders": {
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
-  "dashboard_staged_summary": "{players} placed across {courts}",
-  "@dashboard_staged_summary": {
-    "description": "Summary of the pre-made next round, e.g. '16 players placed across 4 courts'. players is dashboard_player_count, courts is dashboard_court_count",
-    "placeholders": {
-      "players": {
-        "type": "String"
-      },
-      "courts": {
-        "type": "String"
-      }
-    }
-  },
-  "dashboard_player_count": "{count, plural, =1{1 player} other{{count} players}}",
-  "@dashboard_player_count": {
-    "description": "Number of players, used inside dashboard_staged_summary",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "dashboard_court_count": "{count, plural, =1{1 court} other{{count} courts}}",
-  "@dashboard_court_count": {
-    "description": "Number of courts, used inside dashboard_staged_summary",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "dashboard_court_title": "COURT {number}",
   "@dashboard_court_title": {
     "description": "Uppercase title of a court card",
@@ -1095,14 +1052,6 @@
   "@dashboard_badge_playing": {
     "description": "Badge on a court card whose saved game is under way"
   },
-  "dashboard_current_round": "Current round",
-  "@dashboard_current_round": {
-    "description": "Label of the live-round panel in the round rotation bar"
-  },
-  "dashboard_next_round": "Next round",
-  "@dashboard_next_round": {
-    "description": "Label of the pre-made-round panel in the round rotation bar"
-  },
   "dashboard_round_label": "ROUND {number}",
   "@dashboard_round_label": {
     "description": "Uppercase round number in the round rotation bar",
@@ -1111,26 +1060,6 @@
         "type": "int"
       }
     }
-  },
-  "dashboard_until_rotation": "until rotation",
-  "@dashboard_until_rotation": {
-    "description": "Caption under the countdown timer"
-  },
-  "dashboard_premake_next": "Pre-make next round",
-  "@dashboard_premake_next": {
-    "description": "Button that stages the next round in advance"
-  },
-  "dashboard_rotate_now": "Rotate now",
-  "@dashboard_rotate_now": {
-    "description": "Button that ends the current round and starts the next"
-  },
-  "dashboard_next_round_ready": "NEXT ROUND · READY",
-  "@dashboard_next_round_ready": {
-    "description": "Badge on the staged next-round panel"
-  },
-  "dashboard_cancel_next": "Cancel next",
-  "@dashboard_cancel_next": {
-    "description": "Button that discards the pre-made next round"
   },
   "dashboard_open_slot": "Open slot",
   "@dashboard_open_slot": {
@@ -1233,14 +1162,6 @@
   "dashboard_discard_round_body": "The current round is not saved to history. Some players then get more court time than others.",
   "@dashboard_discard_round_body": {
     "description": "Body of the warning before Regenerate discards a running round"
-  },
-  "dashboard_discard_court_title": "Discard this court's game?",
-  "@dashboard_discard_court_title": {
-    "description": "Title of the warning before Re-roll discards a running court game"
-  },
-  "dashboard_discard_court_body": "This court's current game is not saved to history. Some players then get more court time than others.",
-  "@dashboard_discard_court_body": {
-    "description": "Body of the warning before Re-roll discards a running court game"
   },
   "dashboard_remove_from_court": "Remove from court",
   "@dashboard_remove_from_court": {
