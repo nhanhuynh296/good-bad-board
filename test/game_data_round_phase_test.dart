@@ -47,8 +47,9 @@ void main() {
     gameData.placePlayerInSlot(first, 1, 0);
   }
 
-  List<List<String>> ids(GameContainer lineup) =>
-      [for (final game in lineup) List.of(game.playerIds)];
+  List<List<String>> ids(GameContainer lineup) => [
+    for (final game in lineup) List.of(game.playerIds),
+  ];
 
   group('no lineup and draft (RND-12, RND-13)', () {
     test('should_start_with_no_lineup', () {
@@ -139,151 +140,156 @@ void main() {
     });
   });
 
-  group('make, save and edit the next round (RND-05, RND-07, RND-08, RND-14)', () {
-    test('should_open_edit_mode_when_next_round_made', () {
-      running();
+  group(
+    'make, save and edit the next round (RND-05, RND-07, RND-08, RND-14)',
+    () {
+      test('should_open_edit_mode_when_next_round_made', () {
+        running();
 
-      gameData.makeNextRound();
+        gameData.makeNextRound();
 
-      expect(gameData.isEditingNext, isTrue);
-    });
+        expect(gameData.isEditingNext, isTrue);
+      });
 
-    test('should_keep_live_courts_when_next_round_made', () {
-      running();
-      final live = ids(gameData.stagingMatches);
+      test('should_keep_live_courts_when_next_round_made', () {
+        running();
+        final live = ids(gameData.stagingMatches);
 
-      gameData.makeNextRound();
+        gameData.makeNextRound();
 
-      expect(ids(gameData.stagingMatches), live);
-    });
+        expect(ids(gameData.stagingMatches), live);
+      });
 
-    test('should_show_edit_lineup_when_next_round_made', () {
-      running();
+      test('should_show_edit_lineup_when_next_round_made', () {
+        running();
 
-      gameData.makeNextRound();
+        gameData.makeNextRound();
 
-      expect(identical(gameData.visibleMatches, gameData.stagingMatches),
-          isFalse);
-    });
+        expect(
+          identical(gameData.visibleMatches, gameData.stagingMatches),
+          isFalse,
+        );
+      });
 
-    test('should_refuse_second_next_round_when_one_is_saved', () {
-      running();
-      gameData.quickSaveNextRound();
+      test('should_refuse_second_next_round_when_one_is_saved', () {
+        running();
+        gameData.quickSaveNextRound();
 
-      final made = gameData.makeNextRound();
+        final made = gameData.makeNextRound();
 
-      expect(made, isFalse);
-    });
+        expect(made, isFalse);
+      });
 
-    test('should_save_next_round_without_edit_mode', () {
-      running();
+      test('should_save_next_round_without_edit_mode', () {
+        running();
 
-      gameData.quickSaveNextRound();
+        gameData.quickSaveNextRound();
 
-      expect(
-        (gameData.isNextRoundSaved, gameData.isEditingNext),
-        (true, false),
-      );
-    });
+        expect(
+          (gameData.isNextRoundSaved, gameData.isEditingNext),
+          (true, false),
+        );
+      });
 
-    test('should_keep_clock_when_next_round_quick_saved', () {
-      running();
-      timer.elapse(const Duration(minutes: 2));
+      test('should_keep_clock_when_next_round_quick_saved', () {
+        running();
+        timer.elapse(const Duration(minutes: 2));
 
-      gameData.quickSaveNextRound();
+        gameData.quickSaveNextRound();
 
-      expect(timer.remaining, const Duration(minutes: 8));
-    });
+        expect(timer.remaining, const Duration(minutes: 8));
+      });
 
-    test('should_refuse_quick_save_when_editing', () {
-      running();
-      gameData.makeNextRound();
+      test('should_refuse_quick_save_when_editing', () {
+        running();
+        gameData.makeNextRound();
 
-      final saved = gameData.quickSaveNextRound();
+        final saved = gameData.quickSaveNextRound();
 
-      expect(saved, isFalse);
-    });
+        expect(saved, isFalse);
+      });
 
-    test('should_save_next_round_and_leave_edit_mode', () async {
-      running();
-      gameData.makeNextRound();
+      test('should_save_next_round_and_leave_edit_mode', () async {
+        running();
+        gameData.makeNextRound();
 
-      await gameData.saveNextRound();
+        await gameData.saveNextRound();
 
-      expect(
-        (gameData.isNextRoundSaved, gameData.isEditingNext),
-        (true, false),
-      );
-    });
+        expect(
+          (gameData.isNextRoundSaved, gameData.isEditingNext),
+          (true, false),
+        );
+      });
 
-    test('should_keep_edits_when_next_round_saved', () async {
-      running();
-      gameData.makeNextRound();
-      changeLineup();
-      final edited = ids(gameData.visibleMatches);
+      test('should_keep_edits_when_next_round_saved', () async {
+        running();
+        gameData.makeNextRound();
+        changeLineup();
+        final edited = ids(gameData.visibleMatches);
 
-      await gameData.saveNextRound();
+        await gameData.saveNextRound();
 
-      expect(ids(gameData.nextLineup!), edited);
-    });
+        expect(ids(gameData.nextLineup!), edited);
+      });
 
-    test('should_open_saved_lineup_when_next_round_edited', () {
-      running();
-      gameData.quickSaveNextRound();
-      final saved = ids(gameData.nextLineup!);
+      test('should_open_saved_lineup_when_next_round_edited', () {
+        running();
+        gameData.quickSaveNextRound();
+        final saved = ids(gameData.nextLineup!);
 
-      gameData.editNextRound();
+        gameData.editNextRound();
 
-      expect(ids(gameData.visibleMatches), saved);
-    });
+        expect(ids(gameData.visibleMatches), saved);
+      });
 
-    test('should_report_no_unsaved_edits_when_edit_mode_opens', () {
-      running();
+      test('should_report_no_unsaved_edits_when_edit_mode_opens', () {
+        running();
 
-      gameData.makeNextRound();
+        gameData.makeNextRound();
 
-      expect(gameData.hasUnsavedEdits, isFalse);
-    });
+        expect(gameData.hasUnsavedEdits, isFalse);
+      });
 
-    test('should_report_unsaved_edits_when_edit_lineup_changes', () {
-      running();
-      gameData.makeNextRound();
+      test('should_report_unsaved_edits_when_edit_lineup_changes', () {
+        running();
+        gameData.makeNextRound();
 
-      changeLineup();
+        changeLineup();
 
-      expect(gameData.hasUnsavedEdits, isTrue);
-    });
+        expect(gameData.hasUnsavedEdits, isTrue);
+      });
 
-    test('should_keep_edit_mode_when_next_round_regenerated', () {
-      running();
-      gameData.makeNextRound();
+      test('should_keep_edit_mode_when_next_round_regenerated', () {
+        running();
+        gameData.makeNextRound();
 
-      gameData.regenerateNext();
+        gameData.regenerateNext();
 
-      expect(gameData.isEditingNext, isTrue);
-    });
+        expect(gameData.isEditingNext, isTrue);
+      });
 
-    test('should_drop_unsaved_next_round_when_edit_mode_closed', () async {
-      running();
-      gameData.makeNextRound();
+      test('should_drop_unsaved_next_round_when_edit_mode_closed', () async {
+        running();
+        gameData.makeNextRound();
 
-      await gameData.exitEditNext();
+        await gameData.exitEditNext();
 
-      expect(gameData.nextLineup, isNull);
-    });
+        expect(gameData.nextLineup, isNull);
+      });
 
-    test('should_keep_saved_next_round_when_edit_mode_closed', () async {
-      running();
-      gameData.quickSaveNextRound();
-      final saved = ids(gameData.nextLineup!);
-      gameData.editNextRound();
-      changeLineup();
+      test('should_keep_saved_next_round_when_edit_mode_closed', () async {
+        running();
+        gameData.quickSaveNextRound();
+        final saved = ids(gameData.nextLineup!);
+        gameData.editNextRound();
+        changeLineup();
 
-      await gameData.exitEditNext();
+        await gameData.exitEditNext();
 
-      expect(ids(gameData.nextLineup!), saved);
-    });
-  });
+        expect(ids(gameData.nextLineup!), saved);
+      });
+    },
+  );
 
   group('pause and resume (RND-17, RND-18)', () {
     test('should_pause_when_running', () {
@@ -450,6 +456,28 @@ void main() {
     });
   });
 
+  group('duration change while paused (R9-Q6, SESS-02)', () {
+    test('should_enter_time_up_when_paused_past_new_duration', () {
+      running();
+      timer.elapse(const Duration(minutes: 3));
+      gameData.pause();
+
+      timer.updateDuration(const Duration(minutes: 2));
+
+      expect(gameData.phase, RoundPhase.timeUp);
+    });
+
+    test('should_stay_paused_when_new_duration_leaves_time', () {
+      running();
+      timer.elapse(const Duration(minutes: 3));
+      gameData.pause();
+
+      timer.updateDuration(const Duration(minutes: 5));
+
+      expect(gameData.phase, RoundPhase.paused);
+    });
+  });
+
   group('start round n+1 (RND-04, R12-Q1)', () {
     test('should_start_changeover_when_start_next_clicked_in_running', () {
       running();
@@ -497,11 +525,21 @@ void main() {
 
       gameData.startNextRound();
 
-      expect(
-        (ids(gameData.nextLineup!), gameData.isEditingNext),
-        (edited, false),
-      );
+      expect(ids(gameData.nextLineup!), edited);
     });
+
+    test(
+      'should_leave_edit_mode_when_start_next_clicked_in_paused_edit_mode',
+      () {
+        running();
+        gameData.makeNextRound();
+        gameData.pause();
+
+        gameData.startNextRound();
+
+        expect(gameData.isEditingNext, isFalse);
+      },
+    );
 
     test('should_refuse_start_next_when_editing_while_running', () {
       running();
@@ -678,6 +716,16 @@ void main() {
       await gameData.endSession();
 
       expect(gameData.isEditingNext, isFalse);
+    });
+
+    test('should_clear_rounds_played_when_session_ends', () async {
+      running();
+      gameData.startNextRound();
+      await gameData.startNextNow();
+
+      await gameData.endSession();
+
+      expect(gameData.history, isEmpty);
     });
 
     test('should_refuse_end_session_when_no_lineup', () async {

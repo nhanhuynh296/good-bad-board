@@ -139,16 +139,18 @@ void main() {
       expect(gameData.nextLineup, isNull);
     });
 
-    test('should_leave_edit_mode_when_changeover_ends_with_no_changes',
-        () async {
-      gameData.quickSaveNextRound();
-      gameData.editNextRound();
-      timer.elapse(const Duration(minutes: 10));
+    test(
+      'should_leave_edit_mode_when_changeover_ends_with_no_changes',
+      () async {
+        gameData.quickSaveNextRound();
+        gameData.editNextRound();
+        timer.elapse(const Duration(minutes: 10));
 
-      await endChangeover();
+        await endChangeover();
 
-      expect(gameData.isEditingNext, isFalse);
-    });
+        expect(gameData.isEditingNext, isFalse);
+      },
+    );
 
     test('should_log_round_n_when_start_now_clicked', () async {
       gameData.startNextRound();
@@ -229,10 +231,9 @@ void main() {
 
       await gameData.saveNextRound();
 
-      expect(
-        [for (final game in gameData.stagingMatches) game.playerIds],
-        edited,
-      );
+      expect([
+        for (final game in gameData.stagingMatches) game.playerIds,
+      ], edited);
     });
 
     test('should_start_saved_round_unchanged_when_edit_closed', () async {
@@ -247,51 +248,59 @@ void main() {
 
       await gameData.exitEditNext();
 
-      expect(
-        [for (final game in gameData.stagingMatches) game.playerIds],
-        saved,
-      );
+      expect([
+        for (final game in gameData.stagingMatches) game.playerIds,
+      ], saved);
     });
 
-    test('should_not_start_round_when_start_now_clicked_while_waiting',
-        () async {
-      await waiting();
+    test(
+      'should_not_start_round_when_start_now_clicked_while_waiting',
+      () async {
+        await waiting();
 
-      await gameData.startNextNow();
+        await gameData.startNextNow();
 
-      expect(gameData.history, isEmpty);
-    });
+        expect(gameData.history, isEmpty);
+      },
+    );
   });
 
   group('end session (RND-20, R6-Q5)', () {
     test('should_log_running_round_once_when_session_ends', () async {
       await gameData.endSession();
 
-      expect(gameData.history.length, 1);
-    });
-
-    test('should_write_running_round_when_session_ends', () async {
-      await gameData.endSession();
-
       expect(SessionLogRepository.instance.getAll().length, 1);
     });
 
-    test('should_log_ended_round_once_when_session_ends_in_changeover',
-        () async {
-      final ended = gameData.stagingMatches.map((g) => g.id).toSet();
-      gameData.startNextRound();
+    test('should_write_running_round_games_when_session_ends', () async {
+      final live = gameData.stagingMatches.map((g) => g.id).toSet();
 
       await gameData.endSession();
 
-      expect(GameRepository.instance.getAll().map((g) => g.id).toSet(), ended);
+      expect(GameRepository.instance.getAll().map((g) => g.id).toSet(), live);
     });
+
+    test(
+      'should_log_ended_round_once_when_session_ends_in_changeover',
+      () async {
+        final ended = gameData.stagingMatches.map((g) => g.id).toSet();
+        gameData.startNextRound();
+
+        await gameData.endSession();
+
+        expect(
+          GameRepository.instance.getAll().map((g) => g.id).toSet(),
+          ended,
+        );
+      },
+    );
 
     test('should_log_time_up_round_when_session_ends', () async {
       timer.elapse(const Duration(minutes: 10));
 
       await gameData.endSession();
 
-      expect(gameData.history.length, 1);
+      expect(SessionLogRepository.instance.getAll().length, 1);
     });
 
     test('should_log_nothing_when_session_ends_after_discard', () async {
@@ -360,16 +369,18 @@ void main() {
       expect(gameData.history, isEmpty);
     });
 
-    test('should_start_one_changeover_when_time_up_save_clicked_twice',
-        () async {
-      gameData.makeNextRound();
-      timer.elapse(const Duration(minutes: 10));
+    test(
+      'should_start_one_changeover_when_time_up_save_clicked_twice',
+      () async {
+        gameData.makeNextRound();
+        timer.elapse(const Duration(minutes: 10));
 
-      await Future.wait([gameData.saveNextRound(), gameData.saveNextRound()]);
-      await endChangeover();
+        await Future.wait([gameData.saveNextRound(), gameData.saveNextRound()]);
+        await endChangeover();
 
-      expect(gameData.history.length, 1);
-    });
+        expect(gameData.history.length, 1);
+      },
+    );
 
     test('should_log_round_once_when_start_now_clicked_twice', () async {
       gameData.startNextRound();
@@ -387,8 +398,7 @@ void main() {
       expect(gameData.roundNumber, 2);
     });
 
-    test('should_log_once_when_start_now_clicked_as_changeover_ends',
-        () async {
+    test('should_log_once_when_start_now_clicked_as_changeover_ends', () async {
       gameData.startNextRound();
 
       final click = gameData.startNextNow();
