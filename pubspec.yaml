@@ -80,12 +80,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   fonts:
-    - family: OpenSans
+    # Source Sans 3 variable font (one wght axis), SIL OFL 1.1:
+    # see asset/font/SourceSans3-LICENSE.md.
+    - family: SourceSans3
       fonts:
-        - asset: asset/font/OpenSans-VariableFont_wdth,wght.ttf
-    - family: SpaceGrotesk
-      fonts:
-        - asset: asset/font/SpaceGrotesk-VariableFont_wght.ttf
+        - asset: asset/font/SourceSans3VF-Upright.ttf
 
   assets:
     - asset/image/

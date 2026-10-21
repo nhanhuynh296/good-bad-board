@@ -5,8 +5,8 @@ import 'package:good_bad_board/design/design.dart';
 // New code should import 'package:good_bad_board/design/design.dart' directly.
 export 'package:good_bad_board/design/design.dart' show AppColors;
 
-/// The app's single font family (body font — OpenSans, bundled as asset).
-const String fontFamily = 'OpenSans';
+/// The app's single font family (Source Sans 3, bundled as asset).
+const String fontFamily = 'SourceSans3';
 
 /// Legacy outlined border constants — kept for backward compatibility
 /// with existing widget code that references them directly.

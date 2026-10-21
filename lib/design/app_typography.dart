@@ -5,14 +5,13 @@ import 'package:good_bad_board/design/app_colors.dart';
 ///
 /// Reference: ARCHITECTURE.md Section 1.2.
 ///
-/// Display font: Space Grotesk (headings, KPI values, court labels)
-/// Body font: OpenSans (body text, player names, buttons, labels)
+/// One family: Source Sans 3 (bundled variable font, `wght` axis).
 abstract class AppTypography {
-  /// Display font family — Space Grotesk
-  static const String displayFont = 'SpaceGrotesk';
+  /// Display font family — Source Sans 3
+  static const String displayFont = 'SourceSans3';
 
-  /// Body font family — OpenSans
-  static const String bodyFont = 'OpenSans';
+  /// Body font family — Source Sans 3
+  static const String bodyFont = 'SourceSans3';
 
   // ── Type Scale ──────────────────────────────────────────
 
