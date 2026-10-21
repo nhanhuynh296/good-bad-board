@@ -121,6 +121,47 @@ void main() {
   });
 
   test(
+    'SESS-06: should_keep_the_lineup_when_the_template_has_the_same_courts',
+    () async {
+      // Arrange
+      final gameData = await session(12, courts: 2);
+      final before = [
+        for (final game in gameData.stagingMatches) [...game.playerIds],
+      ];
+
+      // Act
+      gameData.loadTemplate(template(courts: 2));
+
+      // Assert
+      expect(
+        [for (final game in gameData.stagingMatches) game.playerIds],
+        before,
+      );
+    },
+  );
+
+  test(
+    'SESS-06: should_keep_the_lineup_when_court_count_is_not_editable',
+    () async {
+      // Arrange
+      final gameData = await session(12, courts: 4);
+      final before = [
+        for (final game in gameData.stagingMatches) [...game.playerIds],
+      ];
+      CourtCount.editable = false;
+
+      // Act
+      gameData.loadTemplate(template(courts: 3));
+
+      // Assert
+      expect(
+        [for (final game in gameData.stagingMatches) game.playerIds],
+        before,
+      );
+    },
+  );
+
+  test(
     'should_report_reshuffle_pending_only_with_lineup_and_four_players',
     () async {
       // Arrange

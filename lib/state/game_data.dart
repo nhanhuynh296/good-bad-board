@@ -1606,15 +1606,18 @@ class GameData extends ChangeNotifier {
     _sessionCapacity = template.capacity < minSessionCapacity
         ? minSessionCapacity
         : template.capacity;
-    if (CourtCount.editable) numberOfCourt = template.courts;
+    final courtsChange =
+        CourtCount.editable && template.courts != numberOfCourt;
+    if (courtsChange) numberOfCourt = template.courts;
     // Restore game type and duration from the template. The release build
     // ignores the template mode: it only runs time-based.
     if (GameMode.enabled) {
       PersistentSetting.instance.setGameType(template.gameType);
     }
     PersistentSetting.instance.setGameDuration(template.duration);
-    // SESS-06: same full reshuffle as a court-count change (SESS-04).
-    _applyCourtCount();
+    // SESS-06 (F25): only a new court count reshuffles, as SESS-04 does.
+    // The same count keeps the lineup on the courts.
+    if (courtsChange) _applyCourtCount();
     notifyListeners();
   }
 
