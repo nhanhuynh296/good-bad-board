@@ -65,7 +65,9 @@ void main() {
   // CHK-02: Court placement on check-in
   // ---------------------------------------------------------------------------
 
-  test('CHK-02: should place checked-in player on first non-full court '
+  // R7-Q7 overrides the old CHK-02 placement: a late player waits, also
+  // when a court has an open slot (IMPLEMENTATION 8.4.3).
+  test('CHK-02: should waitlist checked-in player '
       'when court has space', () async {
     final gameData = GameData()..setNumberOfCourt(1);
     // Create 1 court with 4 players via makeGame
@@ -85,7 +87,7 @@ void main() {
     final displacedPlayer = players.first;
     gameData.removePlayerFromCourt(displacedPlayer);
 
-    // Add and check in a new player — should fill the open slot
+    // Add and check in a new player — waits, the open slot stays open
     final newPlayer = Player.create(
       firstName: 'New',
       lastName: 'Guy',
@@ -96,9 +98,7 @@ void main() {
     final result = gameData.checkInPlayer(newPlayer);
 
     expect(result, CheckInResult.checkedIn);
-    final court = gameData.gameContainingPlayer(newPlayer);
-    expect(court, isNotNull);
-    expect(court!.players, contains(newPlayer));
+    expect(gameData.gameContainingPlayer(newPlayer), isNull);
   });
 
   test('CHK-02: should place checked-in player on waitlist when all courts '

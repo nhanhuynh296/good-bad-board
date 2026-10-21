@@ -52,6 +52,13 @@ void main() {
     return gameData;
   }
 
+  /// A session with [players] checked in, in that order, and no lineup.
+  GameData checkedIn(List<Player> players) {
+    final gameData = GameData(timer: timer);
+    players.forEach(gameData.checkInPlayer);
+    return gameData;
+  }
+
   /// Gives [player] one logged round in this session.
   void playedOnce(GameData gameData, Player player) => gameData.history.add([
     Game.create([player]),
@@ -74,7 +81,7 @@ void main() {
       final court = Game.create((await four()).take(3));
       final played = await player('Played', Elo.b2);
       final fresh = await player('Fresh', Elo.s1);
-      final gameData = oneCourtDraft([], [played, fresh]);
+      final gameData = checkedIn([played, fresh]);
       playedOnce(gameData, played);
 
       expect(gameData.pickForSlot(court, [played, fresh]), fresh);
@@ -84,7 +91,7 @@ void main() {
       final court = Game.create((await four()).take(3));
       final far = await player('Far', Elo.s1);
       final near = await player('Near', Elo.b1);
-      final gameData = oneCourtDraft([], [far, near]);
+      final gameData = checkedIn([far, near]);
 
       expect(gameData.pickForSlot(court, [far, near]), near);
     });
@@ -93,7 +100,7 @@ void main() {
       final court = Game.create((await four(Elo.b2)).take(3));
       final sameTierFar = await player('B1', Elo.b1);
       final same = await player('B2', Elo.b2);
-      final gameData = oneCourtDraft([], [sameTierFar, same]);
+      final gameData = checkedIn([sameTierFar, same]);
 
       expect(gameData.pickForSlot(court, [sameTierFar, same]), same);
     });
@@ -102,14 +109,14 @@ void main() {
       final court = Game.create((await four()).take(3));
       final first = await player('First', Elo.b2);
       final second = await player('Second', Elo.b2);
-      final gameData = oneCourtDraft([], [first, second]);
+      final gameData = checkedIn([first, second]);
 
       expect(gameData.pickForSlot(court, [second, first]), first);
     });
 
     test('should_return_null_when_no_candidates', () async {
       final court = Game.create((await four()).take(3));
-      final gameData = oneCourtDraft([], []);
+      final gameData = checkedIn([]);
 
       expect(gameData.pickForSlot(court, []), isNull);
     });
@@ -515,11 +522,10 @@ void main() {
     });
 
     test('should_break_tie_by_gap_on_first_open_court', () async {
-      final court = await four();
+      final court = (await four()).take(3).toList();
       final far = await player('Far', Elo.s1);
       final near = await player('Near', Elo.b1);
       final gameData = oneCourtDraft(court, [far, near]);
-      gameData.stagingMatches[0].playerIds.removeLast();
 
       expect(gameData.waitlistOrder, [near, far]);
     });
