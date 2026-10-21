@@ -1964,5 +1964,204 @@
         "type": "String"
       }
     }
+  },
+  "sessions_round_settings": "Round settings",
+  "@sessions_round_settings": {
+    "description": "Title of the desktop Sessions card with the round settings"
+  },
+  "sessions_round_duration": "Round duration",
+  "@sessions_round_duration": {
+    "description": "Label of the round duration row on the desktop Sessions tab"
+  },
+  "sessions_duration_note_left": "Applies now · round {round} has {time} left",
+  "@sessions_duration_note_left": {
+    "description": "Note under the round duration while round {round} has its clock (SESS-02, R9-Q6); time is mm:ss",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sessions_duration_note_next": "Applies from round {round}",
+  "@sessions_duration_note_next": {
+    "description": "Note under the round duration in TIME UP and CHANGEOVER: the next round to start gets the new length",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_duration_note_ready": "Applies now to every round",
+  "@sessions_duration_note_ready": {
+    "description": "Note under the round duration before round 1 starts"
+  },
+  "sessions_duration_less": "One minute less",
+  "@sessions_duration_less": {
+    "description": "Screen reader label of the minus button of the round duration"
+  },
+  "sessions_duration_more": "One minute more",
+  "@sessions_duration_more": {
+    "description": "Screen reader label of the plus button of the round duration"
+  },
+  "sessions_minutes": "Minutes",
+  "@sessions_minutes": {
+    "description": "Screen reader label of the minutes field of the round duration"
+  },
+  "sessions_seconds": "Seconds",
+  "@sessions_seconds": {
+    "description": "Screen reader label of the seconds field of the round duration"
+  },
+  "sessions_capacity_note": "{count} checked in · min {min}",
+  "@sessions_capacity_note": {
+    "description": "Note under the session capacity: the checked-in count and the smallest capacity",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_capacity_note_over": "{count} checked in · no one is checked out",
+  "@sessions_capacity_note_over": {
+    "description": "Note under the session capacity when it is below the checked-in count (SESS-03: no one is bumped)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_capacity_less": "One player less",
+  "@sessions_capacity_less": {
+    "description": "Screen reader label of the minus button of the session capacity"
+  },
+  "sessions_capacity_more": "One player more",
+  "@sessions_capacity_more": {
+    "description": "Screen reader label of the plus button of the session capacity"
+  },
+  "sessions_courts_note": "Changing it reshuffles all courts",
+  "@sessions_courts_note": {
+    "description": "Note under the number of courts (SESS-04)"
+  },
+  "sessions_courts_less": "One court less",
+  "@sessions_courts_less": {
+    "description": "Screen reader label of the minus button of the number of courts"
+  },
+  "sessions_courts_more": "One court more",
+  "@sessions_courts_more": {
+    "description": "Screen reader label of the plus button of the number of courts"
+  },
+  "sessions_changeover": "Changeover",
+  "@sessions_changeover": {
+    "description": "Label of the read-only changeover row (R3-Q7)"
+  },
+  "sessions_changeover_value": "{seconds} s · fixed",
+  "@sessions_changeover_value": {
+    "description": "Value of the read-only changeover row, e.g. '20 s · fixed' (R3-Q7)",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_save_settings_label": "SAVE CURRENT SETTINGS",
+  "@sessions_save_settings_label": {
+    "description": "Caps label above the template name field"
+  },
+  "sessions_saves_summary": "Saves {summary}",
+  "@sessions_saves_summary": {
+    "description": "Line under the template name field: what Save current keeps; summary is a template summary",
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "sessions_template_summary_duration": "{duration} · {courts, plural, =1{1 court} other{{courts} courts}} · cap {capacity}",
+  "@sessions_template_summary_duration": {
+    "description": "Desktop summary of a template, e.g. '10 min · 4 courts · cap 20'; duration is '10 min' or 'm:ss'",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "courts": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_template_summary_duration_no_courts": "{duration} · cap {capacity}",
+  "@sessions_template_summary_duration_no_courts": {
+    "description": "Desktop summary of a template when the court count is fixed (CourtCount.editable off), e.g. '10 min · cap 20'",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "capacity": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_load_named": "Load {name}",
+  "@sessions_load_named": {
+    "description": "Screen reader label of the Load button of a template",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sessions_delete_named": "Delete {name}",
+  "@sessions_delete_named": {
+    "description": "Screen reader label and tooltip of the delete button of a template",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sessions_no_templates": "No templates yet",
+  "@sessions_no_templates": {
+    "description": "Text of the empty template list"
+  },
+  "sessions_reshuffle_confirm_title": "Discard round {round}?",
+  "@sessions_reshuffle_confirm_title": {
+    "description": "Title of the confirm before a new court count reshuffles a started round (SESS-04, F25)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_reshuffle_confirm_body": "Round {round} is discarded and not logged. Everyone is placed again on {courts, plural, =1{1 court} other{{courts} courts}}.",
+  "@sessions_reshuffle_confirm_body": {
+    "description": "Text of the confirm before a new court count reshuffles a started round (SESS-04, F25)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "courts": {
+        "type": "int"
+      }
+    }
+  },
+  "sessions_delete_template_confirm_title": "Delete template “{name}”?",
+  "@sessions_delete_template_confirm_title": {
+    "description": "Title of the confirm before a template is deleted (SESS-06, F25)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sessions_delete_template_confirm_body": "The template is deleted. The current settings do not change.",
+  "@sessions_delete_template_confirm_body": {
+    "description": "Text of the confirm before a template is deleted (SESS-06, F25)"
   }
 }
