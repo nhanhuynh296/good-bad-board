@@ -1243,8 +1243,8 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
 - `endSession()` also clears the in-memory `history` (the disk keeps the log), so every Player
   starts the next Session at 0 rounds and the round number is again logged rounds + 1. It pauses
   the clock during the write and resumes it if the write fails.
-- A check-out removes the player from the round n+1 lineups (saved, planned, edit) but does not
-  fill the place yet: `TODO(8.4.4)` in `_removeFromStagedLineup`. Swap Undo: `TODO(8.3)`.
+- A check-out removes the player from the round n+1 lineups (saved, planned, edit). The fill
+  of that place and the swap Undo came later: see 8.3.1 and 8.4.7.
 - **8.2.2 is not done yet.** `rotateNow`, `RoundView`, `stageNextRound`, `cancelStagedRound` and
   the time-mode `saveCurrentGame` path stay, because the PR 45 dashboard still calls them
   (`TODO(8.2.2)` in `game_data.dart`). Remove them with the 8.5 round bar.
@@ -1280,6 +1280,26 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   log + Undo are byte-equal to the files before the log. R6 answers: restore the clock time at
   the click; any other change cancels the Undo; round 1 included.
 
+8.3.1 **As built (2026-10-21).** State layer only; the 8.5 message does not call it yet.
+- `GameData.swapPlayers(a, b)` swaps in the round on screen (`visibleMatches`): two court
+  players trade slots (COURT-10), or a waitlisted player takes the slot of a court player, who
+  goes to the waitlist (COURT-08). It returns `false` when `canEditCourts` is false (8.4.6), when
+  neither player is on a court, or when a court holds a saved game-based game. The existing
+  drag-and-drop `swapPlayer` and `placePlayerInSlot` set no memento (a move to an open slot is
+  not a swap, COURT-17).
+- **Drift from the memento list above.** The memento is `_SwapMemento`: the rosters of the one
+  lineup that the swap changed, the two players, and the time. It holds no phase, clock,
+  `history` or check-in order. A swap changes only those rosters, and any other change clears
+  the memento, so there is nothing else to restore. Restoring the clock would turn back a
+  running round by up to 10 s. The full `SessionMemento` waits for the round Undo (on hold).
+- "Any other change clears it": `GameData.notifyListeners` clears the slot, except during the
+  swap's own notification. Every state change notifies, so a scan, a check-out, a round change
+  or a new swap clears it. A clock tick is a `TimerData` notification and does not.
+- `canUndoSwap` is true for `GameData.swapUndoWindow` (10 s) after the swap; `lastSwap` gives
+  `(A, B)` for the message text; `undoSwap()` restores the rosters and returns `false` after
+  the window. The time comes from the `clock:` constructor argument (tests pass a fake one).
+- Tests: `test/game_data_undo_test.dart` (21).
+
 ### 8.4 — Fill rule, late check-in, check-out (R2-Q8, R2-Q9, R3-Q12, R7-Q4…Q7, R10-Q1…Q3)
 - 8.4.0 **Scope of the fill rule (R10-Q1, narrows R2-Q9).** The fill rule fills **one** empty
   place only: a check-out, a delete or a set to Disabled, and "Move to waitlist". A full round
@@ -1314,6 +1334,36 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   filled by 8.4.1 from the other players who sit out that round (R7-Q6). UAT COURT-15, WL-02.
 - 8.4.6 CHANGEOVER counts as "the clock runs" for Re-roll and the slot menu (R7-Q4), except in
   edit mode for the new round. UAT COURT-10, COURT-14.
+- 8.4.7 **As built (2026-10-21).** State layer only; the 8.5 widgets do not call it yet.
+  - `pickForSlot(court, candidates)` sorts by rounds played, then the level gap of the court
+    with the candidate in it, then check-in order. The level gap is the tier gap (`tierGap()`),
+    then the Elo gap inside one tier (the re-roll's `_levelGap`); no doc gives the second key.
+  - `waitlistOrder` is the WL-01 list (new getter; `visibleWaitlistedPlayers` keeps check-in
+    order for the PR 45 sidebar). With no lineup it is check-in order (F22).
+  - `checkOutPlayer` returns `List<SlotFill>` (`player`, `courtIndex`, `round`) for PLY-18. It
+    names the fills of the live round and of round n+1; the edit-mode copy is filled too, but
+    not named. The fill puts the new player in the freed slot position, and the edit-mode base
+    gets the same change, so a fill alone is not an unsaved edit (R11-Q2).
+  - **Round n keeps the leaver in RUNNING, TIME UP and CHANGEOVER** (also a paused
+    changeover): the round is played and waits for its log. No doc names TIME UP here; the
+    TIME UP courts show the planned round, which is filled. In READY and a paused round the
+    live court is filled.
+  - `isCheckedOutOnLiveCourt(player)` is true for a checked-out player still on round n; the
+    8.5 slot hides "⋯" for that player (R11-Q4).
+  - `moveToWaitlist(player)` works on the round on screen when `canEditCourts` is true.
+  - `canEditCourts` (8.4.6) is false in RUNNING and CHANGEOVER, except in edit mode; true in
+    READY, PAUSED (both kinds, F17), TIME UP and with no lineup.
+  - `checkInPlayer` in time mode never seats the player. Game-based mode (hidden) keeps the old
+    first-non-full-court placement.
+  - 8.4.2 fixed: the PLAYING check of a fill reads the court's own game id
+    (`_playingGameIds`), not `isCourtPlaying(index)` on the round on screen. Also in
+    `removePlayerFromCourt`.
+  - A delete or a set to Disabled goes through the same check-out path.
+  - Changed old tests (behaviour replaced by R7-Q7 and 8.4.1): the highest-level refill in
+    `game_data_waitlist_promotion_test.dart` (removed; fill order now in the new file), the
+    part-full court check-in in `game_data_late_checkin_test.dart` and CHK-02 in
+    `game_data_stage5_test.dart` (now: the player waits).
+  - Tests: `test/game_data_fill_rule_test.dart` (48).
 
 ### 8.5 — Courts tab (desktop)
 - 8.5.1 Page structure: round bar → next-round strip → 2×2 grid + 280 px waitlist. Remove the

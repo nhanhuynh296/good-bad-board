@@ -981,6 +981,8 @@ And if the player is on a live court while the clock runs, COURT-16 applies (the
 there until the round ends).
 And if the player is on a court whose clock does not run, or in the saved next round, the app
 removes the player there and fills the slot by the fill rule (WL-02).
+And in TIME UP and CHANGEOVER the finished round n keeps the player for its log; the round n+1
+courts on screen lose the player and the fill rule fills the slot (IMPLEMENTATION 8.4.7).
 And if the player is on the waitlist, the app removes the player from it.
 
 **CHK-06** — Only non-Disabled players listed (can toggle check-in for Member/Casual players only)

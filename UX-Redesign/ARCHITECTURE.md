@@ -747,9 +747,11 @@ When a slot opens (check-out, delete, set Disabled) in a round that can change
 1. Candidates = players who sit out that round
 2. Fewest rounds played this session first (GameData.getCurrentPlayersHistory).
    A late player starts at 0 rounds: no average credit (R10-Q3)
-3. Tie: the candidate who gives the smallest level gap on that court (R10-Q2)
+3. Tie: the candidate who gives the smallest level gap on that court (R10-Q2):
+   tier gap, then Elo gap; then check-in order (as built, IMPLEMENTATION 8.4.7)
 4. Fill only the freed slot. A live court while the clock runs is never changed:
-   the leaving player stays there until the round ends.
+   the leaving player stays there until the round ends. Round N in TIME UP and
+   CHANGEOVER also keeps the player for its log.
 5. "Move to waitlist" opens a slot too; it is filled the same way (R7-Q6).
    In CHANGEOVER, round N+1 is the saved next round, so it is filled.
 Waitlist panel order (R10-Q2): the order the rule would use for the next open place
@@ -828,7 +830,8 @@ the shared `TimerData` (IMPLEMENTATION 8.2.5).
 ### 4.8 Undo (memento, one level, swap only)
 ```
 action (a swap on Courts — the only Undo in this build, R9-Q8)
-  1. take SessionMemento (in-memory session copy) — replaces any older memento
+  1. take the swap memento (the rosters of the lineup the swap changes; as built, 8.3.1)
+     — replaces any older memento
   2. run the swap (it logs no round)
 Undo
   3. restore the memento, notify
