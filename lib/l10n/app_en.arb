@@ -1147,6 +1147,70 @@
   "@shell_navigate": {
     "description": "Heading of the hamburger navigation menu"
   },
+  "shell_session_title": "Session",
+  "@shell_session_title": {
+    "description": "Top line of the desktop top nav header (NAV-01)"
+  },
+  "shell_session_header": "{duration} rounds",
+  "@shell_session_header": {
+    "description": "Second line of the desktop top nav header; duration is \"10 min\" or \"10:30\" (NAV-01)",
+    "placeholders": {
+      "duration": {
+        "type": "String",
+        "example": "10 min"
+      }
+    }
+  },
+  "shell_duration_minutes": "{minutes} min",
+  "@shell_duration_minutes": {
+    "description": "A round duration in whole minutes, used in shell_session_header",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+  "shell_more_menu": "More pages: Analytics, Settings",
+  "@shell_more_menu": {
+    "description": "Screen reader label of the \"⋯\" button in the desktop top nav (NAV-09)"
+  },
+  "shell_session_bar_saved": "{counts} · round {n} saved",
+  "@shell_session_bar_saved": {
+    "description": "Session bar text when the next round is saved; counts is courts_counts_in_waiting (NAV-10)",
+    "placeholders": {
+      "counts": {
+        "type": "String",
+        "example": "18/20 in · 2 waiting"
+      },
+      "n": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "shell_session_bar_not_saved": "{counts} · round {n} not saved",
+  "@shell_session_bar_not_saved": {
+    "description": "Session bar text when the next round is not saved; counts is courts_counts_in_waiting (NAV-10)",
+    "placeholders": {
+      "counts": {
+        "type": "String",
+        "example": "18/20 in · 2 waiting"
+      },
+      "n": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "shell_no_round_yet": "No round yet",
+  "@shell_no_round_yet": {
+    "description": "Session bar text before the first lineup, in place of the round, time and chip (NAV-11)"
+  },
+  "shell_view_courts": "View courts →",
+  "@shell_view_courts": {
+    "description": "Link text at the right of the session bar; the bar opens the Courts tab (NAV-10)"
+  },
   "common_search_players": "Search players…",
   "@common_search_players": {
     "description": "Default placeholder of the search input"
