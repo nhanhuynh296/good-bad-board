@@ -56,6 +56,11 @@ enum CheckInResult {
   sessionFull,
 }
 
+/// One place that the fill rule filled (IMPLEMENTATION 8.4.4): [player]
+/// took a slot on the court at [courtIndex] (0 = Court 1) in round [round].
+/// The CHECKED OUT scan text names it (PLY-18).
+typedef SlotFill = ({Player player, int courtIndex, int round});
+
 /// Release flag for the court-count controls (R45-36).
 ///
 /// Off in the release build: the club always uses
@@ -1052,25 +1057,6 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Drops [player] from the pre-made next round, if one is staged.
-  ///
-  /// A player who has left cannot be on the plan — otherwise the round
-  /// rotates onto a court with a ghost on it.
-  ///
-  /// The round n+1 lineups of the round state machine (saved, planned, or
-  /// in edit mode) drop the player too.
-  // TODO(8.4.4): fill the freed place of round n+1 by the fill rule.
-  void _removeFromStagedLineup(Player player) {
-    for (final lineup in [_stagedLineup, _nextLineup, _editLineup]) {
-      for (final game in lineup ?? const <Game>[]) {
-        game.playerIds.remove(player.id);
-      }
-    }
-    for (final roster in _editBase ?? const <List<String>>[]) {
-      roster.remove(player.id);
-    }
-  }
-
   /// Updates [player]'s club-membership status and persists it.
   ///
   /// Setting [MembershipStatus.disabled] also checks the player out of the
@@ -1470,7 +1456,7 @@ class GameData extends ChangeNotifier {
       final game = gameContainingPlayer(player);
       if (game == null) return;
       // A saved lineup is already in the history — re-roll to end it first.
-      if (isCourtPlaying(stagingMatches.indexOf(game))) return;
+      if (_playingGameIds.contains(game.id)) return;
       game.playerIds.remove(player.id);
     });
     notifyListeners();
@@ -1509,10 +1495,13 @@ class GameData extends ChangeNotifier {
   /// [checkedInPlayers] if not already present, no separate activation step
   /// is required.
   ///
-  /// On successful check-in the player is placed on the first non-full court
-  /// (by index order). If all courts are full the player is waitlisted. In
-  /// time mode a court with no players is skipped: after Save the courts are
-  /// empty, and a late player must not stand alone on one.
+  /// In time mode the player goes to the waitlist and never joins a court:
+  /// not a live court, not a draft, not a planned or saved round n+1, also
+  /// when one has an open slot (CHK-02, R7-Q7). The player starts at 0
+  /// rounds played (R10-Q3), so the next lineup favours them.
+  ///
+  /// In game-based mode (hidden in the release build) the player is placed
+  /// on the first non-full court, by index order, as before.
   CheckInResult checkInPlayer(Player player) {
     // Disabled players cannot be checked in
     if (player.membership == MembershipStatus.disabled) {
@@ -1531,11 +1520,13 @@ class GameData extends ChangeNotifier {
 
     _checkedInPlayers[player.id] = player;
 
-    // Try to place on the first non-full court
-    final skipEmpty =
-        PersistentSetting.instance.getGameType() == GameType.timeBased;
+    if (PersistentSetting.instance.getGameType() == GameType.timeBased) {
+      notifyListeners();
+      return CheckInResult.checkedIn;
+    }
+
+    // Game-based: place on the first non-full court.
     for (final game in stagingMatches) {
-      if (skipEmpty && game.playerIds.isEmpty) continue;
       if (game.playerIds.length < Game.playerPerCourt) {
         game.playerIds.add(player.id);
         notifyListeners();
@@ -1548,39 +1539,179 @@ class GameData extends ChangeNotifier {
     return CheckInResult.checkedIn;
   }
 
-  /// Checks [player] out of the session.
+  /// Checks [player] out of the session (CHK-05, IMPLEMENTATION 8.4.4).
   ///
-  /// The player is removed from [checkedInPlayers], their court
-  /// (or waitlist), and their checked-in status is cleared. Triggers WL-02
-  /// auto-promotion if a court slot opens up.
-  void checkOutPlayer(Player player) {
-    _removeAndRefillCourt(player);
+  /// The checked-in count drops at once (R2-Q8). A player on a live court
+  /// while its clock runs (RUNNING), or on round n while it waits for its
+  /// log (TIME UP, CHANGEOVER), stays there with no marker: the log holds
+  /// them (COURT-16). Round n+1 (saved, planned, or in edit mode) and a
+  /// live round whose clock does not run (READY, PAUSED) lose the player,
+  /// and the fill rule fills that one place (WL-02).
+  ///
+  /// Returns the places that the fill rule filled, for the PLY-18 text.
+  /// The edit-mode copy of round n+1 is not in it.
+  List<SlotFill> checkOutPlayer(Player player) {
+    final fills = _removeAndRefillCourt(player);
     notifyListeners();
+    return fills;
   }
 
-  /// Takes [player] out of the session and refills the court they left.
-  void _removeAndRefillCourt(Player player) {
-    final freedCourt = gameContainingPlayer(player);
-    _checkedInPlayers.remove(player.id);
-    freedCourt?.playerIds.remove(player.id);
-    _removeFromStagedLineup(player);
-    if (freedCourt != null) _autoPromoteFromWaitlist(freedCourt);
-  }
+  /// Whether [player] is checked out but still on the live round, because
+  /// its clock ran at the check-out (COURT-16). The slot then has no "⋯"
+  /// (R11-Q4).
+  bool isCheckedOutOnLiveCourt(Player player) =>
+      !isPlayerCheckedIn(player) &&
+      _liveMatches.any((game) => game.playerIds.contains(player.id));
 
-  /// Fills open slots on [court] with the highest-level waitlisted players
-  /// (WL-03).
+  /// "Move to waitlist" in the slot "⋯" menu (COURT-15, IMPLEMENTATION
+  /// 8.4.5): [player] leaves the court on screen and stays checked in. The
+  /// fill rule fills the place from the other players who sit out that
+  /// round (R7-Q6). With nobody to fill it, the slot stays open.
   ///
-  /// Only the court that lost a player is refilled. Other open courts stay
-  /// open, and a court that is playing keeps its saved lineup.
-  void _autoPromoteFromWaitlist(Game court) {
-    if (isCourtPlaying(stagingMatches.indexOf(court))) return;
-    while (court.playerIds.length < Game.playerPerCourt) {
-      final candidates = waitlistedPlayers.toList();
-      if (candidates.isEmpty) return;
-      // Highest level (index) first
-      candidates.sort((a, b) => b.elo.index.compareTo(a.elo.index));
-      court.playerIds.add(candidates.first.id);
+  /// Returns `false` and changes nothing when the courts cannot change now
+  /// ([canEditCourts]), when [player] is not on a court on screen, or when
+  /// the court holds a saved game-based game.
+  bool moveToWaitlist(Player player) {
+    if (!canEditCourts || !isPlayerCheckedIn(player)) return false;
+    final lineup = visibleMatches;
+    final court = _courtOf(lineup, player);
+    if (court == null || _playingGameIds.contains(court.id)) return false;
+    final slot = court.playerIds.indexOf(player.id);
+    court.playerIds.removeAt(slot);
+    final pick = pickForSlot(
+      court,
+      _sittingOut(lineup).where((other) => other.id != player.id),
+    );
+    if (pick != null) court.playerIds.insert(slot, pick.id);
+    notifyListeners();
+    return true;
+  }
+
+  /// The fill rule for one open place on [court] (IMPLEMENTATION 8.4.1,
+  /// R10-Q2): the candidate with the fewest rounds played this session
+  /// ([getCurrentPlayersHistory]). On a tie, the one that gives [court] the
+  /// smallest level gap (tier gap, then Elo gap); then the earliest
+  /// check-in. `null` when there is no candidate.
+  ///
+  /// It fills one place only. A full round comes from the matchmaker
+  /// ([_choosePlayer], [_improveEloSpread]), never from this (R10-Q1).
+  Player? pickForSlot(Game court, Iterable<Player> candidates) =>
+      _inFillOrder(court, candidates).firstOrNull;
+
+  /// The waitlist panel order (WL-01, R10-Q2): the order [pickForSlot]
+  /// uses for the next open place, the first court on screen (Court 1
+  /// first) with an open slot. With no open slot, or no lineup (F22), ties
+  /// go by check-in order, earliest first.
+  List<Player> get waitlistOrder {
+    final waiting = visibleWaitlistedPlayers.toList();
+    if (_phase == RoundPhase.noLineup && !hasAnyCourtLineup) return waiting;
+    final openCourt = visibleMatches.firstWhereOrNull(
+      (game) =>
+          game.playerIds.length < Game.playerPerCourt &&
+          !_playingGameIds.contains(game.id),
+    );
+    return _inFillOrder(openCourt, waiting);
+  }
+
+  List<Player> _inFillOrder(Game? court, Iterable<Player> candidates) {
+    final rounds = getCurrentPlayersHistory();
+    final checkInOrder = {
+      for (final (index, id) in _checkedInPlayers.keys.indexed) id: index,
+    };
+    final onCourt = court?.players ?? const <Player>[];
+    (int, int) gapWith(Player player) =>
+        court == null ? (0, 0) : _levelGap([...onCourt, player]);
+    return candidates.sorted((a, b) {
+      final byRounds = (rounds[a] ?? 0).compareTo(rounds[b] ?? 0);
+      if (byRounds != 0) return byRounds;
+      final gapA = gapWith(a);
+      final gapB = gapWith(b);
+      if (gapA != gapB) return _isLowerGap(gapA, gapB) ? -1 : 1;
+      return (checkInOrder[a.id] ?? checkInOrder.length).compareTo(
+        checkInOrder[b.id] ?? checkInOrder.length,
+      );
+    });
+  }
+
+  /// Checked-in players who hold no slot in [lineup].
+  Iterable<Player> _sittingOut(GameContainer lineup) {
+    final seated = {for (final game in lineup) ...game.playerIds};
+    return _checkedInPlayers.values.where((p) => !seated.contains(p.id));
+  }
+
+  /// Whether round n keeps a player who leaves: its clock runs, or it
+  /// waits for its log (TIME UP, CHANGEOVER). See [checkOutPlayer].
+  bool get _liveRoundKeepsLeaver =>
+      _phase == RoundPhase.running ||
+      _phase == RoundPhase.timeUp ||
+      _inChangeover;
+
+  /// The number of round n+1 for the [SlotFill] text.
+  int get _nextRoundNumber =>
+      _inChangeover ? displayRoundNumber : _roundNumber + 1;
+
+  /// Takes [player] out of the session and fills the places they leave.
+  List<SlotFill> _removeAndRefillCourt(Player player) {
+    _checkedInPlayers.remove(player.id);
+    final fills = <SlotFill>[];
+    if (!_liveRoundKeepsLeaver) {
+      final fill = _vacate(stagingMatches, player, round: _roundNumber);
+      if (fill != null) fills.add(fill);
     }
+    final next = _nextLineup;
+    if (next != null) {
+      final fill = _vacate(next, player, round: _nextRoundNumber);
+      if (fill != null) fills.add(fill);
+    }
+    final edit = _editLineup;
+    if (edit != null && !identical(edit, next)) {
+      _vacate(edit, player, round: _nextRoundNumber, base: _editBase);
+    }
+    // TODO(8.2.2): the PR 45 pre-made round only drops the player.
+    for (final game in _stagedLineup ?? const <Game>[]) {
+      game.playerIds.remove(player.id);
+    }
+    return fills;
+  }
+
+  /// Removes [player] from [lineup] and fills that one place by
+  /// [pickForSlot] from the players who sit out [lineup] (WL-02, WL-03).
+  /// Only that court changes.
+  ///
+  /// A court with a saved game-based game stays one player short (WL-03).
+  /// The check reads the court's own game id, not the court on screen
+  /// (8.4.2: `isCourtPlaying` read [visibleMatches], which can be another
+  /// round).
+  ///
+  /// [base] is the edit-mode base ([_editBase]). It gets the same change, so
+  /// a fill alone does not count as an unsaved edit (R11-Q2).
+  SlotFill? _vacate(
+    GameContainer lineup,
+    Player player, {
+    required int round,
+    List<List<String>>? base,
+  }) {
+    final courtIndex = lineup.indexWhere(
+      (game) => game.playerIds.contains(player.id),
+    );
+    final baseRoster = courtIndex == -1
+        ? null
+        : base?.elementAtOrNull(courtIndex);
+    final baseSlot = baseRoster?.indexOf(player.id) ?? -1;
+    for (final roster in base ?? const <List<String>>[]) {
+      roster.remove(player.id);
+    }
+    if (courtIndex == -1) return null;
+    final court = lineup[courtIndex];
+    final slot = court.playerIds.indexOf(player.id);
+    court.playerIds.removeAt(slot);
+    if (_playingGameIds.contains(court.id)) return null;
+
+    final pick = pickForSlot(court, _sittingOut(lineup));
+    if (pick == null) return null;
+    court.playerIds.insert(slot, pick.id);
+    if (baseSlot != -1) baseRoster!.insert(baseSlot, pick.id);
+    return (player: pick, courtIndex: courtIndex, round: round);
   }
 
   // ── Session Templates ──────────────────────────────────────
