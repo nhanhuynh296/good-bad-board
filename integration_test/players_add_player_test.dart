@@ -26,7 +26,8 @@ void main() {
     await navigateToTab(tester, playersTabIndex);
     expect(find.byType(PlayersPage), findsOneWidget);
 
-    await tester.tap(find.text('Add'));
+    // Desktop: the orange "Add player" button by the scan field (PLY-13).
+    await tester.tap(find.text('Add player'));
     await tester.pumpAndSettle();
     expect(find.byType(AddPlayerDialog), findsOneWidget);
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:good_bad_board/features/players/level_adjuster.dart';
+import 'package:good_bad_board/features/players/desktop_player_row.dart';
 import 'package:good_bad_board/features/players/player_row.dart';
 
 import 'helpers/test_utils.dart';
@@ -87,7 +87,7 @@ void main() {
       await tester.enterText(searchField.first, 'Player0');
       await tester.pumpAndSettle();
 
-      final whileFiltered = find.byType(PlayerRow).evaluate().length;
+      final whileFiltered = find.byType(DesktopPlayerRow).evaluate().length;
 
       // Clear search.
       await tester.enterText(searchField.first, '');
@@ -96,7 +96,7 @@ void main() {
       // After clearing, non-matching players should reappear. Counting rows
       // rather than naming one avoids depending on where the list scrolled to.
       expect(
-        find.byType(PlayerRow).evaluate().length,
+        find.byType(DesktopPlayerRow).evaluate().length,
         greaterThan(whileFiltered),
       );
     });
@@ -109,11 +109,12 @@ void main() {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
 
-      // LevelAdjuster renders its steppers as "+" and "−" (U+2212) labels,
-      // not icons.
-      expect(find.byType(LevelAdjuster), findsWidgets);
-      expect(find.text('+'), findsWidgets);
-      expect(find.text('−'), findsWidgets);
+      // Desktop: the stepper is in the More panel, not the row (R2-Q17).
+      await tester.tap(find.text('More').first);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('more-level-down')), findsOneWidget);
+      expect(find.byKey(const Key('more-level-up')), findsOneWidget);
     });
   });
 
@@ -126,10 +127,9 @@ void main() {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
 
-      // A row carries a membership pill and a check state icon.
-      expect(find.byType(PlayerRow), findsWidgets);
-      expect(find.text('Member'), findsWidgets);
-      // setupWithPlayers checks every seeded player in.
+      // Desktop rows have no membership pill (R2-Q17): TYPE is blank for a
+      // Member. setupWithPlayers checks every seeded player in.
+      expect(find.byType(DesktopPlayerRow), findsWidgets);
       expect(find.byKey(const Key('player-row-bar')), findsWidgets);
     });
   });
@@ -137,11 +137,14 @@ void main() {
   // ── PLY-07: Membership toggle ──────────────────────────────
 
   group('PLY-07 — Membership toggle', () {
-    testWidgets('membership toggle present on player rows', (tester) async {
+    testWidgets('membership control present in the More panel', (tester) async {
       await setupWithPlayers(tester, desktopSize);
       await navigateToTab(tester, playersTabIndex);
 
-      expect(find.text('Member'), findsWidgets);
+      await tester.tap(find.text('More').first);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('more-membership-member')), findsOneWidget);
     });
   });
 
@@ -189,7 +192,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Profile should show stat tiles.
-      expect(find.text('Current Level'), findsOneWidget);
+      expect(find.text('CURRENT LEVEL'), findsOneWidget);
     });
 
     testWidgets('only one profile expanded at a time', (tester) async {
@@ -202,7 +205,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Only one profile expanded.
-      expect(find.text('Current Level'), findsOneWidget);
+      expect(find.text('CURRENT LEVEL'), findsOneWidget);
     });
 
     testWidgets('tapping same More collapses profile', (tester) async {
@@ -211,11 +214,11 @@ void main() {
 
       await tester.tap(find.text('More').first);
       await tester.pumpAndSettle();
-      expect(find.text('Current Level'), findsOneWidget);
+      expect(find.text('CURRENT LEVEL'), findsOneWidget);
 
       await tester.tap(find.text('More').first);
       await tester.pumpAndSettle();
-      expect(find.text('Current Level'), findsNothing);
+      expect(find.text('CURRENT LEVEL'), findsNothing);
     });
   });
 
@@ -229,7 +232,7 @@ void main() {
       await tester.tap(find.text('More').first);
       await tester.pumpAndSettle();
 
-      expect(find.text('Current Level'), findsOneWidget);
+      expect(find.text('CURRENT LEVEL'), findsOneWidget);
     });
   });
 
@@ -241,9 +244,10 @@ void main() {
       await navigateToTab(tester, playersTabIndex);
 
       // The header cells render uppercased.
-      expect(find.text('NAME / ID'), findsWidgets);
+      expect(find.text('NAME'), findsWidgets);
+      expect(find.text('SIGN-IN ID'), findsWidgets);
       expect(find.text('LEVEL'), findsWidgets);
-      expect(find.text('MEMBERSHIP'), findsWidgets);
+      expect(find.text('TYPE'), findsWidgets);
       // The check state is the row itself, so there is no column for it.
       expect(find.text('CHECKED IN'), findsNothing);
     });
