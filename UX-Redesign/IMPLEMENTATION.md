@@ -1119,7 +1119,7 @@ shell with the session bar, the Players scan check-in, and the new type and colo
   ("1 round", "1 place left"). Run `flutter gen-l10n`.
 - **TDD.** Write the failing tests for each UAT ID first (repo `CLAUDE.md`). Tests never touch
   the real data directory (PERSISTENCE.md §2.2, §6 phase 4): use a temp dir through
-  `RepositoryService.initializeForTesting`.
+  `test/support/repository_sandbox.dart` (`RepositorySandbox.setUp`).
 - **Release flags.** No flag changes in this stage (see the flag table).
 
 ### Superseded by this stage
@@ -1220,6 +1220,40 @@ the pause of it (R4-Q5). Wire the existing unused `pause()`.
 and log round n once. Two fast clicks on the strip "Save round {n+1}" (R12-Q2) save one round n+1. The guard is a phase check plus the one-at-a-time flag of 8.2.1, so the
 second call is a no-op. Test: `test/game_data_round_logging_test.dart`
 `should_log_round_once_when_start_clicked_twice` (and one per button).
+
+8.2.5 **As built (2026-10-21).** State layer only; the 8.5 widgets do not call it yet.
+- `RoundPhase` is in `lib/state/round_phase.dart` (exported by `game_data.dart`). `GameData`
+  takes `timer:`; `main.dart` gives it the provided `TimerData`, with the duration from the
+  settings. Without `timer:` it owns its own clock.
+- Extra getters for the UI: `pausedFrom` (`running` or `changeover`), `nextLineup`,
+  `isNextRoundSaved`, `discarded`, `waitingForEdit`, `hasUnsavedEdits`, `displayRoundNumber`
+  (n+1 in the changeover, n again after a discard), `roundToLog`, `timeLeft`, and
+  `startNeedsConfirm` (R12-Q1: true only in RUNNING with time left, not in edit mode). The UI
+  shows the "End round {n} now?" dialog when `startNeedsConfirm` is true, then calls
+  `startNextRound()`. `visibleMatches` shows the edit lineup in edit mode, and `nextLineup` in
+  TIME UP and the changeover.
+- Every method returns `false` (or a `Future` of `false`) when the phase does not allow it.
+  That is the 8.2.4 guard. `saveNextRound`, `exitEditNext`, `startNextNow` and `endSession`
+  return a `Future`, because they can log a round. They share `rotateNow`'s `_isRotating` flag.
+- `startNextNow()` does nothing while edit mode has unsaved changes (the bar shows "Pause" only,
+  R4-Q9). `quickSaveNextRound()` works in RUNNING only, as the table says.
+- Write failure at the end of the changeover (RND-06, R45-01): the phase stays CHANGEOVER at
+  00:00, nothing is logged, and `roundLogError` holds the error for the message. "Start round
+  {n+1} now" (`startNextNow()`) tries again; that call throws when its write fails.
+- `endSession()` also clears the in-memory `history` (the disk keeps the log), so every Player
+  starts the next Session at 0 rounds and the round number is again logged rounds + 1. It pauses
+  the clock during the write and resumes it if the write fails.
+- A check-out removes the player from the round n+1 lineups (saved, planned, edit) but does not
+  fill the place yet: `TODO(8.4.4)` in `_removeFromStagedLineup`. Swap Undo: `TODO(8.3)`.
+- **8.2.2 is not done yet.** `rotateNow`, `RoundView`, `stageNextRound`, `cancelStagedRound` and
+  the time-mode `saveCurrentGame` path stay, because the PR 45 dashboard still calls them
+  (`TODO(8.2.2)` in `game_data.dart`). Remove them with the 8.5 round bar.
+- `TimerData`: `startRound`, `startChangeover`, `pause`, `resume`, `isPaused`, `isChangeover`,
+  `elapsed`, `progress` (elapsed ÷ length), `changeoverLength` = 20 s, default 10 min. The clock
+  now calls `onExpired` on the tick that reaches 0:00 (PR 45 waited one more tick). `pct` stays
+  for the PR 45 bar. `elapse()` is for tests only.
+- Tests: `test/game_data_round_phase_test.dart`, `test/game_data_round_logging_test.dart`,
+  `test/timer_data_test.dart` (updated).
 
 ### 8.3 — Undo: memento of session state, one level, swap only (R3-Q2, R6-Q6, R7-Q2, R9-Q8)
 - **Swap only (R9-Q8).** The only Undo in this build is the Courts swap (UAT COURT-17). A scan

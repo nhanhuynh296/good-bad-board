@@ -821,6 +821,9 @@ discarded · new lineup for round n" (F10). A paused changeover follows the PAUS
 round n+1 (F17). Edit mode is a flag, kept through Pause (F02). "Start round n+1" while
 RUNNING asks "End round n now?" first; PAUSED and TIME UP do not (R12-Q1). The RUNNING strip
 "Save round n+1" saves without edit mode (R12-Q2).
+State API as built: `GameData.phase` (`RoundPhase` in `lib/state/round_phase.dart`), with
+`pausedFrom`, `isEditingNext`, `discarded`, `waitingForEdit` and `startNeedsConfirm`; the clock is
+the shared `TimerData` (IMPLEMENTATION 8.2.5).
 
 ### 4.8 Undo (memento, one level, swap only)
 ```

@@ -336,7 +336,8 @@ And round n+1 becomes RUNNING with the full duration.
 And the saved lineup, with every edit the organizer made, is the live lineup.
 And no round n+2 exists yet. The strip reads "Round {n+2} not saved".
 And if the write fails, round n+1 does not start, nothing is logged, and the message reads
-"Something went wrong. Try again." (R45-01).
+"Something went wrong. Try again." (R45-01). The state stays CHANGEOVER at 00:00, and "Start
+round {n+1} now" tries the write again (as built in 8.2, 2026-10-21).
 Given the state is CHANGEOVER for round n+1 and edit mode for round n+1 is open with no changes
 that are not saved
 When the changeover time reaches 00:00
@@ -573,6 +574,8 @@ And round n is the round that started last: RUNNING or PAUSED, or the round that
 UP or before the CHANGEOVER (R6-Q5). A round that has not started (the planned or saved round
 n+1) is not logged. A discarded round is not logged.
 And the courts are empty, the round number is 1, and the state is as in RND-12.
+And the rounds played of every Player start again at 0 for the next Session. The disk keeps
+the log (as built in 8.2, 2026-10-21; `TODO(Nathan)`: confirm).
 And no Undo message shows (RND-21 is on hold).
 Given the state is READY (round 1 not started)
 Then End session logs nothing.
