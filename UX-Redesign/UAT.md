@@ -8,7 +8,7 @@ are superseded explorations — excluded (see "Excluded from scope").
 
 **2026-10-17 design build.** The approved design (artifact `9JBfi4Rk8igxQMVDexk6So`: Main,
 Players, ScanStates, TypeColour) and the decisions in
-`audit/design-diff-2026-10-17/decisions.md` (IDs R1-Q1 … R11-Q6; a later row overrides an
+`audit/design-diff-2026-10-17/decisions.md` (IDs R1-Q1 … R12-Q2; a later row overrides an
 earlier one) replace the old prototype for
 the Courts tab, the shell and the Players tab. A decision overrides the design HTML. A case
 changed by this build names its decision IDs in brackets, for example (R2-Q4). A removed case
@@ -25,8 +25,11 @@ RND-07); "Start round {n+1}" in paused edit mode saves the edits, then the chang
 (R11-Q3, RND-14); a checked-out player on a running live court has no "⋯" (R11-Q4, COURT-16);
 the TIME UP chip is red `#b91c1c` with white text and the time is `#ff6a2b` (R11-Q5, RND-09).
 The design review (`audit/design-review-2026-10-20/resolution.md`, findings F01 … F30) is
-applied: a case it changes names the finding, for example (F01). F05 and F28 wait for Nathan
-and change nothing yet.
+applied: a case it changes names the finding, for example (F01). Nathan answered F05 and F28
+(R12-Q1, R12-Q2): "Start round {n+1}" while RUNNING with time left asks "End round {n} now?"
+first, with no dialog in PAUSED or TIME UP (RND-04); the next-round strip in RUNNING, when round
+n+1 is not saved, also offers "Save round {n+1}", which saves the matchmaker lineup with no
+edit mode (RND-05, RND-22).
 
 Each case has an ID for traceability to future test names (e.g. `DASH-03` → `test('DASH-03: ...')`).
 Format: **Given / When / Then**. Numbers, thresholds and defaults below are taken directly from the
@@ -49,10 +52,10 @@ prototype's logic and should be treated as acceptance values, not approximations
 | Round modes in the release build | Time-based only. Game-based mode is hidden behind `GameMode.enabled` (`false` in release). `getGameType()` then returns time-based. A stored game-based setting, or the mode in a template, is ignored. The stored `gameType` preference is never rewritten. |
 | Other release flags (code kept, hidden in UI) | `PlayersPage.showImportButton=false` (CSV Import button), `SettingsPage.showSignupPreview=false` (signup preview link), `AnalyticsPage.showHiddenCards=false` (per-court gap and player mixing cards) |
 | Default round duration | **10 min** (R2-Q24). The organizer sets it as `mm:ss` on the Sessions tab (SESS-02) |
-| Changeover | **20 s**, fixed (R3-Q7). It runs before every new round after round 1: at 0:00 when the next round is saved (RND-03), and after "Start round {n+1}", "Discard round {n} and start again" and "Save round {n+1}" in TIME UP (R6-Q1, R6-Q3, R7-Q1, R9-Q1). "Start round 1" has no changeover: round 1 starts at once (R9-Q2). The changeover counts as "the clock runs" (R7-Q4). If edit mode has changes that are not saved when the changeover reaches 0:00, the changeover stops at 0:00 and waits for "Save round {n+1}" (R9-Q4, RND-06) |
+| Changeover | **20 s**, fixed (R3-Q7). It runs before every new round after round 1: at 0:00 when the next round is saved (RND-03), and after "Start round {n+1}" (in RUNNING after its confirm, R12-Q1), "Discard round {n} and start again" and "Save round {n+1}" in TIME UP (R6-Q1, R6-Q3, R7-Q1, R9-Q1). "Start round 1" has no changeover: round 1 starts at once (R9-Q2). The changeover counts as "the clock runs" (R7-Q4). If edit mode has changes that are not saved when the changeover reaches 0:00, the changeover stops at 0:00 and waits for "Save round {n+1}" (R9-Q4, RND-06) |
 | Round states | READY · RUNNING · PAUSED · TIME UP · CHANGEOVER. The round bar and the session bar show the state as a chip (R4-Q6) |
 | Rounds played | The number of logged Rounds of this Session that hold the Player (`GameData.getCurrentPlayersHistory`). A Round is logged when the next Round starts (R3-Q8). A Player who checks in late starts at 0 Rounds: the app gives no credit for the Rounds played before the check-in, such as the Session average (R10-Q3) |
-| Matchmaker (a full round) | To make a full lineup ("Generate round 1", "Discard & regenerate", "Make round {n+1}", the planned round at TIME UP, a fresh lineup at a start button), the app keeps the current algorithm: a weighted random pick of the Players (`GameData._choosePlayer`, weight `1 / exp(2 × (rounds played − Session average))`, so a Player with fewer Rounds is more likely to play), then the court swap optimiser (`GameData._improveEloSpread`, cost `0.1 × average court level gap + largest court level gap`). The fill rule does not make full rounds (R10-Q1) |
+| Matchmaker (a full round) | To make a full lineup ("Generate round 1", "Discard & regenerate", "Make round {n+1}", the strip "Save round {n+1}" (R12-Q2), the planned round at TIME UP, a fresh lineup at a start button), the app keeps the current algorithm: a weighted random pick of the Players (`GameData._choosePlayer`, weight `1 / exp(2 × (rounds played − Session average))`, so a Player with fewer Rounds is more likely to play), then the court swap optimiser (`GameData._improveEloSpread`, cost `0.1 × average court level gap + largest court level gap`). The fill rule does not make full rounds (R10-Q1) |
 | Fill rule (one open place) | Used only when the app fills **one** open place: a check-out, a delete or a set to Disabled (WL-02), and "Move to waitlist" (COURT-15). The app takes the waiting Player who has played the fewest Rounds this Session. On a tie, it takes the Player who gives the smallest level gap on that court (R2-Q9, UX-01, R10-Q1, R10-Q2) |
 | Waitlist order | The waitlist panel lists the Players in the order the fill rule would use for the next open place: fewest Rounds first; on a tie, the smallest level gap on the first court (Court 1 first) that has an open place; with no open place to compare, check-in order, earliest first (R10-Q2, WL-01) |
 | Level text | Tier name (for example "Intermediate") in every user-facing place. The Elo code (for example "B1") shows only in the Players More panel (R2-Q18). The Players level chips are the 4 tiers, not the 8 Elo codes (R6-Q13) |
@@ -273,11 +276,11 @@ And the courts count as "the clock runs": no "Re-roll", and the slot "⋯" shows
 only, except while the organizer edits round n+1 in edit mode (R7-Q4, COURT-14).
 And if edit mode for round n+1 is open, it stays open (RND-14).
 
-**RND-04** — "Start round {n+1}" (changed 2026-10-17: UX-07, R3-Q8, R6-Q1, R6-Q14, R6-Q18, R7-Q1; 2026-10-20: R9-Q5)
+**RND-04** — "Start round {n+1}" (changed 2026-10-17: UX-07, R3-Q8, R6-Q1, R6-Q14, R6-Q18, R7-Q1; 2026-10-20: R9-Q5; 2026-10-21: R12-Q1, F05)
 Was "Save and start new round".
 Given round n is RUNNING, PAUSED or TIME UP and the page is not in edit mode, or round n is
 PAUSED and edit mode is open (RND-14, R9-Q5)
-When the organizer clicks "Start round {n+1}"
+When the organizer clicks "Start round {n+1}" (in RUNNING: and confirms it, below)
 Then round n+1 is saved with its lineup: the saved round n+1, or in TIME UP the planned round
 on the courts (RND-15), or else a new matchmaker lineup. The click saves it (R2-Q4).
 And the state becomes CHANGEOVER for round n+1, as in RND-03 (R6-Q1). The courts show the
@@ -286,12 +289,40 @@ And round n is not logged at the click. It is logged when round n+1 starts (RND-
 court with fewer than 4 players is logged as it stands.
 And no Undo message shows (RND-21 is on hold, R6-Q6).
 And a double click starts one changeover, and round n is logged once (R6-Q18).
+Confirm in RUNNING (R12-Q1, F05):
+Given round n is RUNNING with time left and the page is not in edit mode
+When the organizer clicks "Start round {n+1}" in the round bar
+Then a dialog asks "End round {n} now?" and says "{mm:ss} left." ({mm:ss} is the time left
+on the clock). The buttons are "Start round {n+1}" and "Cancel". The dialog follows the
+confirm pattern (RND-07): initial focus on "Cancel", Esc = "Cancel".
+And the clock continues while the dialog shows.
+When the organizer clicks "Cancel" or presses Esc
+Then nothing changes, and round n keeps running.
+When the phase changes while the dialog shows (for example the time reaches 00:00)
+Then the dialog closes with no action. The state that the phase change makes applies (RND-03,
+RND-15).
+When the organizer clicks "Start round {n+1}" in the dialog
+Then the cases above apply: round n+1 is saved and the changeover starts.
+And a double click on that button starts one changeover (R6-Q18).
+Given round n is PAUSED (also in edit mode) or TIME UP
+When the organizer clicks "Start round {n+1}"
+Then no dialog shows, and the changeover starts at once as above (R12-Q1).
 
-**RND-05** — "Make round {n+1}" opens edit mode (changed 2026-10-17: R2-Q6, UX-10)
+**RND-05** — "Make round {n+1}" opens edit mode; "Save round {n+1}" saves at once (changed 2026-10-17: R2-Q6, UX-10; 2026-10-21: R12-Q2, F28)
 Given round n is RUNNING or PAUSED and round n+1 is not saved
 When the organizer clicks "Make round {n+1}" in the next-round strip
 Then the app makes a round n+1 lineup with the matchmaker. It does not change the live courts.
-And the page enters edit mode (RND-10).
+And the page enters edit mode (RND-10). (R2-Q6 is unchanged: this is the way to review the
+lineup first.)
+Given round n is RUNNING, round n+1 is not saved, and the page is not in edit mode
+When the organizer clicks "Save round {n+1}" in the next-round strip
+Then the app makes a round n+1 lineup with the matchmaker and saves it at once. The page does
+not enter edit mode, and the live courts do not change (R12-Q2, F28).
+And the result is the same as "Make round {n+1}" and then "Save round {n+1}" with no change:
+the strip reads "Round {n+1} saved" with "Edit round {n+1}" (RND-22), and at 0:00 the
+changeover starts (RND-03).
+And nothing is logged, and the clock of round n does not change.
+And a double click saves one round n+1 (R6-Q18, RND-08).
 Given round n+1 is saved
 When the organizer clicks "Edit round {n+1}"
 Then the page enters edit mode with the saved lineup.
@@ -344,16 +375,16 @@ Given the page is in edit mode for round n+1 and no change was made since edit m
 When the organizer clicks "×"
 Then no dialog shows, and the page leaves edit mode as above (F03).
 Confirm pattern (F14): every confirm dialog on the Courts tab ("Close without saving?",
-"Discard round {n}?" RND-16, "End session?" RND-20) is an alert dialog with a title and a
+"End round {n} now?" RND-04, "Discard round {n}?" RND-16, "End session?" RND-20) is an alert dialog with a title and a
 description that screen readers read. The initial focus is on the cancel button ("Keep
 editing" or "Cancel"), and Esc is the same as the cancel button. A phase change while the
-"Discard round {n}?" or "End session?" dialog shows closes it with no action (F18, RND-16,
-RND-20).
+"End round {n} now?", "Discard round {n}?" or "End session?" dialog shows closes it with no
+action (F18, R12-Q1, RND-04, RND-16, RND-20).
 
 **RND-08** — One next round at a time (changed 2026-10-17)
 Given round n+1 exists (saved, or open in edit mode)
-Then the app has no control to make a second next round. "Make round {n+1}" shows only when no
-round n+1 exists.
+Then the app has no control to make a second next round. "Make round {n+1}" and the strip
+"Save round {n+1}" (R12-Q2) show only when no round n+1 exists.
 
 **RND-09** — Round sub-label and mode (changed 2026-10-17: R4-Q8, R6-Q12; 2026-10-20: R11-Q5, F04, F08)
 Given round mode is "Time-based"
@@ -553,12 +584,13 @@ restores the session and the clock time at the click, deletes the log entry the 
 and closes when any other change happens. The only Undo in this build is the swap Undo
 (COURT-17). The Players scan Undo is removed (R9-Q8, PLY-20).
 
-**RND-22** — Next-round strip (added 2026-10-17: R2-Q4, R3-Q7, R6-Q2, R6-Q4; 2026-10-20: F10)
+**RND-22** — Next-round strip (added 2026-10-17: R2-Q4, R3-Q7, R6-Q2, R6-Q4; 2026-10-20: F10; 2026-10-21: R12-Q2, F28)
 Given round n is RUNNING or PAUSED and the page is not in edit mode
 Then a 48 px strip shows under the round bar.
 When round n+1 is not saved
-Then it reads "Round {n+1} not saved" (amber title) and "Clock stops at 0:00 if not saved.",
-with the button "Make round {n+1}" (RND-05).
+Then it reads "Round {n+1} not saved" (amber title) and "Clock stops at 0:00 if not saved."
+And in RUNNING it has two buttons, "Save round {n+1}" and "Make round {n+1}" (R12-Q2, F28,
+RND-05). In PAUSED it has the button "Make round {n+1}" only.
 When round n+1 is saved
 Then it reads "Round {n+1} saved" (green title) and "Starts 20 s after round {n} ends.", with
 the button "Edit round {n+1}".
@@ -1421,5 +1453,6 @@ in this build; 7 of them (GB-01…07) are hidden in the release build. The 2026-
 added 24 IDs (NAV-09…11, RND-12…22, COURT-14…17, WL-04, PLY-16…20), removed 3 and put 1 on hold.
 The 2026-10-20 decisions (R9-Q1 … R10-Q3) removed PLY-20 (R9-Q8) and added no ID.
 The 2026-10-20 decisions R11-Q1 … R11-Q6 and the design review (F01 … F30) changed cases
-in place and added or removed no ID.
+in place and added or removed no ID. The 2026-10-21 decisions R12-Q1 and R12-Q2 (F05, F28)
+changed RND-04, RND-05, RND-07, RND-08 and RND-22 in place and added no ID.
 Before it: 97 IDs, 94 active (the old line said 77; that count was out of date).

@@ -1075,14 +1075,17 @@ Build the approved 2026-10-17 design on desktop: the new round lifecycle, the Co
 shell with the session bar, the Players scan check-in, and the new type and colour tokens.
 
 ### Rules for this stage
-- **Authority.** `audit/design-diff-2026-10-17/decisions.md` (87 rows, IDs R1-Q1 … R11-Q6; a
+- **Authority.** `audit/design-diff-2026-10-17/decisions.md` (89 rows, IDs R1-Q1 … R12-Q2; a
   later row overrides an earlier one) overrides the design HTML and the UX review resolutions.
   R11-Q2 … Q5 are in force: "×" in edit mode asks "Close without saving?" first, also while the
   changeover waits; "Start round {n+1}" in paused edit mode saves the edits, then the changeover
   starts; a checked-out player on a running live court has no slot "⋯"; the TIME UP chip is red
   `#b91c1c` with white text, time `#ff6a2b`. The design review
   `audit/design-review-2026-10-20/resolution.md` (F01 … F30) is written into UAT.md and this
-  stage; F05 and F28 wait for Nathan and are not built.
+  stage. Nathan answered F05 and F28 (R12-Q1, R12-Q2): "Start round {n+1}" while RUNNING with
+  time left asks "End round {n} now? {mm:ss} left." first (no dialog in PAUSED or TIME UP);
+  the RUNNING strip with round n+1 not saved also offers "Save round {n+1}" (matchmaker
+  lineup, saved at once, no edit mode). Both are built in this stage.
   R6-Q12…18 accept the recommendations in `review-round6.md`. On a new conflict, ask Nathan and
   investigate first (R1-Q2). UAT.md is the feature source of truth.
 - **Order.** Docs first, Nathan reviews (R1-Q3). Then the design canvas is updated (R3-Q13).
@@ -1139,6 +1142,10 @@ board changes (`audit/design-review-2026-10-20/resolution.md`). The spec texts a
   states PAUSED + edit ("Start round {n+1}", "Resume round {n}"), TIME UP + edit (no bar
   buttons; "Save round {n+1}" in the strip), CHANGEOVER + edit, and the changeover waiting at
   00:00 (no bar buttons).
+- **Main (R12-Q1, R12-Q2).** Draw the RUNNING confirm "End round {n} now? {mm:ss} left."
+  ("Start round {n+1}" / "Cancel", alert dialog, focus on Cancel; none in PAUSED or TIME UP,
+  F05), and the RUNNING not-saved strip with "Save round {n+1}" beside "Make round {n+1}"
+  (F28).
 - **Main.** "×" confirm "Close without saving?" (F03, R11-Q2); TIME UP chip `#b91c1c` /
   `#ffffff` (F04, R11-Q5); slot "⋯" on focus-within and menu keys (F06); focus ring `#ff6a2b`
   on dark surfaces (F07); TIME UP card tag "ROUND {n+1}" (F08); End session text by state
@@ -1176,11 +1183,12 @@ changeover also keeps a `discarded` flag for the round it follows (R2-Q5, R9-Q1)
 | `regenerateDraft()` | ready | New lineup; clock stays stopped | RND-13 |
 | `startFirstRound()` | ready | Save round 1 → `running` at once, clock from full duration. No changeover (R9-Q2). No Undo | RND-13 |
 | `makeNextRound()` / `editNextRound()` | running, paused | Lineup for n+1 → `isEditingNext` | RND-05, RND-10 |
+| `quickSaveNextRound()` | running, not edit mode, n+1 not saved | Matchmaker lineup for n+1, saved at once; `isEditingNext` stays false. Same result as `makeNextRound()` + `saveNextRound()` with no change (R12-Q2, F28). Logs nothing; clock unchanged. Test first: `should_save_next_round_without_edit_mode` | RND-05, RND-08, RND-22 |
 | `saveNextRound()` / `regenerateNext()` / `exitEditNext()` | edit mode | Save n+1 / new n+1 lineup / drop edits (× ). `exitEditNext()` is called only after the "Close without saving?" dialog ("Close" / "Keep editing"), or with no dialog when nothing changed since edit mode opened; add `hasUnsavedEdits` (R11-Q2, F03). In `timeUp`, `saveNextRound()` also starts the changeover (R6-Q3). In `changeover` with `waitingForEdit`, `saveNextRound()` and `exitEditNext()` start round n+1 (log round n, → `running`; × starts the saved round unchanged, R11-Q2); `regenerateNext()` keeps waiting (R9-Q4) | RND-14, RND-07, RND-06 |
 | `pause()` / `resume()` | running, changeover | `paused` keeps remaining time and the phase to return to ("Resume round n" / "Resume changeover"). `pause()` never changes `isEditingNext` (F02). Paused in edit mode: the round bar shows "Start round {n+1}" and "Resume round {n}" (R9-Q5). A paused changeover follows the PAUSED rules for round n+1: Re-roll, swap and the full slot menu (F17) | RND-17, RND-18, RND-14, COURT-14 |
 | tick at 0:00 | running | Saved n+1 → `changeover` (20 s, `TimerData` second countdown). Else `timeUp`, and the matchmaker makes the planned n+1 lineup that the courts show (R6-Q4). `isEditingNext` stays as it is in both cases (R6-Q3, R7-Q4) | RND-03, RND-14, RND-15 |
 | changeover end / `startNextNow()` | changeover | Log round n (8.2.1) unless `discarded`, n+1 → `running`, leave edit mode. If edit mode has unsaved changes at the end, the countdown stops at 0:00 and sets `waitingForEdit`; nothing is logged until `saveNextRound()` (R9-Q4) | RND-06, RND-19 |
-| `startNextRound()` (was `saveAndStartNew`) | running, paused, timeUp, not edit mode; or paused in edit mode (R9-Q5) | Save n+1 (saved, planned, or fresh lineup; in paused edit mode the edit lineup with its changes, saved, R11-Q3) → `changeover` (R6-Q1, R6-Q14, R7-Q1). Logs nothing at the click | RND-04, RND-14 |
+| `startNextRound()` (was `saveAndStartNew`) | running, paused, timeUp, not edit mode; or paused in edit mode (R9-Q5) | Save n+1 (saved, planned, or fresh lineup; in paused edit mode the edit lineup with its changes, saved, R11-Q3) → `changeover` (R6-Q1, R6-Q14, R7-Q1). Logs nothing at the click. In `running` the UI calls it only after the "End round {n} now?" confirm (R12-Q1, F05); in `paused` and `timeUp` it calls it at once. Add `timeLeft` for the dialog text | RND-04, RND-14 |
 | `discardAndStartNext()` (was `discardAndStartNew`) | running, paused, timeUp; not edit mode | Called only after the confirm dialog (R9-Q3). → `changeover` with `discarded = true`; never logs round n; number n again, label "Discard round {n} and start again" (R2-Q5, R9-Q1) | RND-16 |
 | `endSession()` | any with a lineup | Log the round that started last once (also the round that ended in `timeUp` / before `changeover`; never a discarded or not-started round, R6-Q5), stop clock, check out all, `noLineup`, round 1. Add `roundToLog` (n, n−1 in `changeover`, or none) for the dialog text (F09) | RND-20 |
 | `swapPlayers()` / `undoSwap()` | any state that allows a swap | Swap two players; keep one swap memento for 10 s; any other change clears it (R6-Q6, R7-Q2) | COURT-08, COURT-10, COURT-17 |
@@ -1206,9 +1214,10 @@ RUNNING with ≤60 s, never while PAUSED (UX-09, R6-Q8); the round bar and the s
 read it. Progress = elapsed ÷ duration (R4-Q7). Add the 20 s changeover countdown (R3-Q7) and
 the pause of it (R4-Q5). Wire the existing unused `pause()`.
 
-8.2.4 **Double-click guard (R6-Q18).** Two fast clicks on "Start round {n+1}", "Discard round
+8.2.4 **Double-click guard (R6-Q18).** Two fast clicks on "Start round {n+1}" (also the
+"End round {n} now?" confirm, R12-Q1), "Discard round
 {n} and start again" (dialog confirm), "Save round {n+1}" or "Start round {n+1} now" start one changeover
-and log round n once. The guard is a phase check plus the one-at-a-time flag of 8.2.1, so the
+and log round n once. Two fast clicks on the strip "Save round {n+1}" (R12-Q2) save one round n+1. The guard is a phase check plus the one-at-a-time flag of 8.2.1, so the
 second call is a no-op. Test: `test/game_data_round_logging_test.dart`
 `should_log_round_once_when_start_clicked_twice` (and one per button).
 
@@ -1282,13 +1291,23 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   RUNNING, not PAUSED (R6-Q8). Labels "Start round {n}" (R7-Q1) and "Discard round {n} and
   start again" (R9-Q1), which opens a confirm dialog first (R9-Q3); PAUSED also has "Start
   round {n+1}" (R6-Q14); PAUSED in edit mode shows "Start round {n+1}" and "Resume round {n}"
-  only (R9-Q5); paused changeover "Resume changeover" (R6-Q12); a changeover waiting at 0:00
+  only (R9-Q5); paused changeover "Resume changeover" (R6-Q12); "Start round {n+1}" in RUNNING
+  opens the confirm "End round {n} now? {mm:ss} left." ("Start round {n+1}" / "Cancel"; 8.5.6),
+  and in PAUSED and TIME UP starts at once (R12-Q1, F05). Test first:
+  `should_ask_before_ending_round_early` (Arrange: RUNNING with 04:12 left; Act: tap "Start
+  round 4"; Assert: the dialog "End round 3 now?" shows and the phase is still `running`), then
+  `should_start_round_without_dialog_when_paused` and `..._when_time_up`; a changeover waiting at 0:00
   for an edit shows no buttons (R9-Q4). No "COURTS − 4 +" stepper (R2-Q2). TIME UP chip `#b91c1c`
   / `#ffffff`, time `#ff6a2b`, sub-label "Clock stopped at 0:00" (R11-Q5, F04). The state chip is
   `Semantics(liveRegion: true)`; the time is not (F24). Focus ring `#ff6a2b` on the bar (F07).
   Each 32 px button gets a 40 px hit area (F27). UAT RND-01, RND-02, RND-04, RND-09,
   RND-12, RND-13, RND-15…19, RND-06.
-- 8.5.3 `NextRoundStrip` and edit mode: strip texts, dashed NEXT cards, edit strip with
+- 8.5.3 `NextRoundStrip` and edit mode: strip texts; in RUNNING with round n+1 not saved two
+  buttons, "Save round {n+1}" (calls `quickSaveNextRound()`, no edit mode) and "Make round
+  {n+1}" (opens edit mode, unchanged); in PAUSED "Make round {n+1}" only (R12-Q2, F28). Test
+  first: `should_save_next_round_without_edit_mode` (Arrange: RUNNING, round n+1 not saved; Act:
+  tap "Save round {n+1}"; Assert: the strip reads "Round {n+1} saved" and edit mode is not
+  open), then `should_show_make_round_only_when_paused`; dashed NEXT cards, edit strip with
   "Discard & regenerate", "Save round {n+1}", "×"; round bar shows Pause only while RUNNING
   (R4-Q9), and "Start round {n+1}" + "Resume round {n}" while PAUSED (R9-Q5). Court tag
   "{count} players" (for example "3 players", ICU plural) on a court one player short (UX-04). CHANGEOVER
@@ -1320,10 +1339,11 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   "Nothing is logged. Everyone is checked out." Discard confirm dialog: "Discard round {n}?",
   "Round {n} is not logged. The next lineup goes on the courts and round {n} starts again.",
   "Discard round" / "Cancel" (R9-Q3; this text wins over the board, F14). "Close without
-  saving?" dialog: "Close" / "Keep editing" (R11-Q2, F03). One confirm widget for all three
-  (F14): alert dialog semantics with title and description, initial focus on the cancel
-  button, Esc = cancel; it pops itself (ARCHITECTURE §4.6). A phase change while the Discard or
-  End session dialog is open closes it with no action (F18). The swap Undo bottom message (10 s,
+  saving?" dialog: "Close" / "Keep editing" (R11-Q2, F03). Early start confirm (R12-Q1,
+  F05): "End round {n} now?", "{mm:ss} left.", "Start round {n+1}" / "Cancel", RUNNING only. One
+  confirm widget for all four (F14): alert dialog semantics with title and description, initial focus on the cancel
+  button, Esc = cancel; it pops itself (ARCHITECTURE §4.6). A phase change while the early start, Discard or
+  End session dialog is open closes it with no action (F18, R12-Q1). The swap Undo bottom message (10 s,
   "Swapped {A} and {B}. Undo", no keyboard shortcut, R7-Q2) stays bottom-centre and blocks
   pointer input only inside its own 360 × 48 px box (F15). UAT RND-07, RND-16, RND-20,
   COURT-17.
@@ -1395,7 +1415,10 @@ round {n}", also round 1; replaces `courts_save_and_start_round` and `courts_sav
 `courts_discard_and_regenerate`, `courts_discard_and_start_round` ("Discard round {n} and start
 again", R9-Q1; replaces `courts_discard_and_start_new`), `courts_discard_confirm_title`,
 `courts_discard_confirm_body`, `courts_discard_confirm_action` (R9-Q3), `courts_pause`, `courts_resume_round`,
-`courts_resume_changeover`, `courts_start_round_now`, `courts_chip_ready`,
+`courts_resume_changeover`, `courts_start_round_now`, `courts_end_round_confirm_title` ("End
+round {n} now?"), `courts_end_round_confirm_body` ("{time} left.") (R12-Q1, F05; the button
+reuses `courts_start_round`, Cancel reuses the existing cancel key), `courts_save_round` also on
+the strip (R12-Q2, F28; no new key), `courts_chip_ready`,
 `courts_chip_running`, `courts_chip_paused`, `courts_chip_time_up`, `courts_chip_changeover`,
 `courts_sub_not_started`, `courts_sub_paused`, `courts_sub_time_up`,
 `courts_sub_players_to_courts`, `courts_counts_in_waiting`, `courts_next_not_saved`,
@@ -1438,10 +1461,10 @@ Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads
 | Logging, round number, double-click guard (8.2.4) | `test/game_data_round_logging_test.dart` | RND-04, RND-06, RND-16, RND-19, RND-20 |
 | Swap Undo (memento; a scan sets none, R9-Q8) | `test/game_data_undo_test.dart` | COURT-17 |
 | Fill rule (one place), waitlist order, late player at 0 rounds, full round still uses `_choosePlayer` (8.4.0) | `test/game_data_fill_rule_test.dart` (replaces the level order in `game_data_waitlist_promotion_test.dart`) | WL-01…03, CHK-02, CHK-05, COURT-15, COURT-16 |
-| Round bar, strip, edit mode | `test/features/courts_round_bar_test.dart` | RND-01, RND-02, RND-09, RND-10, RND-15, RND-22 |
+| Round bar, strip, edit mode, strip "Save round {n+1}" (R12-Q2) | `test/features/courts_round_bar_test.dart` | RND-01, RND-02, RND-05, RND-09, RND-10, RND-15, RND-22 |
 | Slot menu, re-roll visibility | `test/features/courts_slot_menu_test.dart` | COURT-01, COURT-10, COURT-14, COURT-15 |
 | Swap Undo message | `test/features/courts_swap_undo_test.dart` | COURT-17 |
-| Confirm dialogs: "×" asks first, End session text by state, focus and Esc, a phase change closes the dialog (R11-Q2, F03, F09, F14, F18) | `test/features/courts_confirm_dialog_test.dart` | RND-06, RND-07, RND-16, RND-20 |
+| Confirm dialogs: "×" asks first, End session text by state, early start confirm in RUNNING only (R12-Q1), focus and Esc, a phase change closes the dialog (R11-Q2, F03, F09, F14, F18) | `test/features/courts_confirm_dialog_test.dart` | RND-04, RND-06, RND-07, RND-16, RND-20 |
 | Waitlist panel (scrolls, not pressable while the clock runs, no-lineup list) | `test/features/courts_waitlist_test.dart` | WL-01, WL-04, RND-12 |
 | Shell | `test/shell/session_bar_test.dart`, `top_nav_test.dart` | NAV-01, NAV-09…11 |
 | Duration change while paused | `test/timer_data_test.dart` (update) | SESS-02 |
@@ -1459,7 +1482,8 @@ Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads
 - [ ] All TODO(Nathan) points in UAT.md are answered and the specs updated
 - [ ] The design canvas shows every decided change (R3-Q13), and the More panel is drawn (R5-Q1);
       the design-review canvas pass (8.0) is done
-- [ ] F05 and F28 (design review) are not built until Nathan answers them
+- [ ] F05 and F28 are built as decided: the RUNNING early start confirm, no dialog in PAUSED or
+      TIME UP (R12-Q1); the RUNNING strip "Save round {n+1}" with no edit mode (R12-Q2)
 - [ ] Two fast clicks on any start or save button log round n once (R6-Q18, 8.2.4)
 - [ ] No Courts round Undo ships (R6-Q6); no scan Undo ships (R9-Q8); the swap Undo has no
       keyboard shortcut (R7-Q2)

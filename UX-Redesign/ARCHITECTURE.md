@@ -3,7 +3,7 @@
 > Extracted from the UX-Redesign HTML handoff (`Badminton App.dc.html`, `Analytics Dashboard.dc.html`, `Dashboard Options.dc.html`, `Responsive Layouts.dc.html`, `Self Registration.dc.html`).
 > This document defines a **reusable design system** to guide the Flutter implementation.
 >
-> **2026-10-17 design build.** The approved design (`Main`, `Players`, `ScanStates`, `TypeColour` `.dc.html`, artifact `9JBfi4Rk8igxQMVDexk6So`) and `audit/design-diff-2026-10-17/decisions.md` (R1-Q1 … R11-Q6; a later row overrides an earlier one) and the 2026-10-20 design review (`audit/design-review-2026-10-20/resolution.md`, F01 … F30; F05 and F28 wait for Nathan) replace §1.1, §1.2 and the desktop components of the Courts tab, the shell and the Players tab. Phone and tablet keep the PR 45 components as they are now (R2-Q23, R6-Q7). UAT.md is the feature source of truth; "TODO" marks points Nathan has not decided. Courts round Undo is on hold (R6-Q6, UAT RND-21). The Players scan Undo is removed (R9-Q8): the only Undo is the Courts swap. **Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3).
+> **2026-10-17 design build.** The approved design (`Main`, `Players`, `ScanStates`, `TypeColour` `.dc.html`, artifact `9JBfi4Rk8igxQMVDexk6So`) and `audit/design-diff-2026-10-17/decisions.md` (R1-Q1 … R12-Q2; a later row overrides an earlier one) and the 2026-10-20 design review (`audit/design-review-2026-10-20/resolution.md`, F01 … F30; F05 and F28 decided by R12-Q1 and R12-Q2) replace §1.1, §1.2 and the desktop components of the Courts tab, the shell and the Players tab. Phone and tablet keep the PR 45 components as they are now (R2-Q23, R6-Q7). UAT.md is the feature source of truth; "TODO" marks points Nathan has not decided. Courts round Undo is on hold (R6-Q6, UAT RND-21). The Players scan Undo is removed (R9-Q8): the only Undo is the Courts swap. **Sessions tab redesign: canvas board "Sessions", pending** (R7-Q3).
 
 ---
 
@@ -293,7 +293,7 @@ Full-width band under the top nav: 80px, bg #2b241e, no radius, padding 0 24px
 |---|---|---|---|---|
 | No lineup | READY | "Not started" | `#ffffff` | "Generate round 1" |
 | READY (draft) | READY | "Not started" | `#ffffff` | "Discard & regenerate" (outline), "Start round 1" (R7-Q1) |
-| RUNNING | RUNNING | none (R4-Q8) | `#ffffff`; `#ffb38a` at ≤60 s (R6-Q8) | "Pause" (text), "Discard round N and start again" (outline, R9-Q1), "Start round N+1" |
+| RUNNING | RUNNING | none (R4-Q8) | `#ffffff`; `#ffb38a` at ≤60 s (R6-Q8) | "Pause" (text), "Discard round N and start again" (outline, R9-Q1), "Start round N+1" (asks "End round N now?" first, R12-Q1) |
 | RUNNING + edit mode | RUNNING | none | as RUNNING | "Pause" only (R4-Q9) |
 | PAUSED | PAUSED | "Clock paused" | `#c9c2b8` (never amber, R6-Q8) | "Discard round N and start again" (outline), "Start round N+1" (outline, R6-Q14), "Resume round N" |
 | PAUSED + edit mode | PAUSED | "Clock paused" | `#c9c2b8` | "Start round N+1" (outline), "Resume round N" (R9-Q5, as the board "Courts · Paused") |
@@ -315,7 +315,7 @@ Focus ring on the bar: `#ff6a2b` (F07). Edit mode is a flag beside the phase, ne
 |--------|-------------|
 | `generateFirstRound` | Fills the courts for round 1; clock stays stopped |
 | `startFirstRound` | "Start round 1": starts the round 1 clock at once, no changeover (R9-Q2) |
-| `startNextRound` | "Start round N+1": saves round N+1 (saved, planned or fresh lineup; in paused edit mode the edit lineup, R9-Q5) → 20 s changeover; round N is logged when N+1 starts (R6-Q1, R6-Q2) |
+| `startNextRound` | "Start round N+1": in RUNNING a confirm first ("End round N now? mm:ss left.", "Start round N+1" / "Cancel", R12-Q1, F05); none in PAUSED or TIME UP. Then saves round N+1 (saved, planned or fresh lineup; in paused edit mode the edit lineup, R9-Q5) → 20 s changeover; round N is logged when N+1 starts (R6-Q1, R6-Q2) |
 | `discardAndStartNext` | "Discard round N and start again": confirm dialog first ("Discard round N?", "Discard round" / "Cancel", R9-Q3; the UAT RND-16 text, F14) → 20 s changeover; round N is never logged; the new round keeps number N (R2-Q5, R9-Q1) |
 | `pause` / `resume` | Freezes / continues the round or the changeover |
 | `startNextNow` | Ends the changeover at once; logs round N (unless discarded) |
@@ -324,21 +324,25 @@ Focus ring on the bar: `#ff6a2b` (F07). Edit mode is a flag beside the phase, ne
 Every start button has a double-click guard: two fast clicks start one changeover and log once (R6-Q18).
 
 **Confirm dialogs (F14, F18).** "Close without saving?" ("Close" / "Keep editing", R11-Q2,
-only when the edit has changes, F03), "Discard round N?" and "End session?" use one pattern:
+only when the edit has changes, F03), "End round N now?" ("mm:ss left.", "Start round N+1" /
+"Cancel", RUNNING only, R12-Q1), "Discard round N?" and "End session?" use one pattern:
 alert dialog semantics with title and description, initial focus on the cancel button, Esc =
-cancel, the dialog pops itself (§4.6). A phase change while the Discard or End session dialog
-is open closes it with no action.
+cancel, the dialog pops itself (§4.6). A phase change while the early start, Discard or End session
+dialog is open closes it with no action.
 
 #### NextRoundStrip (desktop)
 ```
 48px band under the round bar, padding 0 24px, bg #f3eadb, bottom 1px #e4d8c4
 ├── Title (14/600): "Round N+1 not saved" (#9a3412) or "Round N+1 saved" (#1f7a3d)
 ├── Text (14/400, #221d18): "Clock stops at 0:00 if not saved." / "Starts 20 s after round N ends."
-└── Right: "Make round N+1" or "Edit round N+1" (36px, 1px #6f6352 border, #fffdfa fill)
+└── Right: not saved, RUNNING: "Save round N+1" + "Make round N+1" (R12-Q2); not saved, PAUSED:
+    "Make round N+1"; saved: "Edit round N+1" (36px, 1px #6f6352 border, #fffdfa fill)
 Edit mode: bg #fde7c8, bottom 1px #c2410c, title "Editing round N+1" (#9a3412)
 └── Right: "Discard & regenerate" (outline #9a3412), "Save round N+1" (primary), "×" (far right)
 ```
-Shown in RUNNING and PAUSED (and edit mode). CHANGEOVER: title "Round N ended", no button
+Shown in RUNNING and PAUSED (and edit mode). The strip "Save round N+1" saves the matchmaker
+lineup at once with no edit mode, the same as "Make round N+1" then "Save round N+1" with no
+change (R12-Q2, F28); "Make round N+1" still opens edit mode (R2-Q6). CHANGEOVER: title "Round N ended", no button
 (R6-Q2); after a discard: "Round N discarded · new lineup for round N" (F10). "×" asks
 "Close without saving?" first when the edit has changes (R11-Q2, F03). Not shown in TIME UP (the courts show the planned next round, R6-Q4), READY or with
 no lineup.
@@ -791,9 +795,11 @@ stays as it is.
       └── 0:00, not saved ──► [TIME UP n] ──────┤ Start round n+1 / Discard… / Save round n+1 (edit open)
                               courts show the   │
                               planned round n+1 │
- Start round n+1  (RUNNING, PAUSED, TIME UP) ───┤ saves n+1, logs nothing at the click
+ Start round n+1  (RUNNING, PAUSED, TIME UP) ───┤ saves n+1, logs nothing at the click;
+                                                │ RUNNING asks "End round n now?" first (R12-Q1)
  Discard round n and start again (same; confirm) ┘ round n never logged; number n again (R9-Q1, R9-Q3)
  Make / Edit round n+1 (RUNNING, PAUSED) → edit mode → Save round n+1 | Discard & regenerate | ×
+ Save round n+1 in the strip (RUNNING, not saved) → n+1 saved, no edit mode (R12-Q2)
 ```
 Rules: every new round after round 1 goes through the 20 s changeover (R6-Q1). A round is
 logged only when the next round starts (R3-Q8, R6-Q2). Round number = logged rounds this session
@@ -808,7 +814,9 @@ asks first and keeps the number (R9-Q1, R9-Q3). Paused in edit mode: "Start roun
 saved round n+1 unchanged (R11-Q2). "Start round n+1" in paused edit mode saves the edits,
 then the changeover starts (R11-Q3). The changeover strip after a discard reads "Round n
 discarded · new lineup for round n" (F10). A paused changeover follows the PAUSED rules for
-round n+1 (F17). Edit mode is a flag, kept through Pause (F02).
+round n+1 (F17). Edit mode is a flag, kept through Pause (F02). "Start round n+1" while
+RUNNING asks "End round n now?" first; PAUSED and TIME UP do not (R12-Q1). The RUNNING strip
+"Save round n+1" saves without edit mode (R12-Q2).
 
 ### 4.8 Undo (memento, one level, swap only)
 ```
