@@ -61,14 +61,16 @@ void main() {
     expect(find.byIcon(Icons.add_rounded), findsNothing);
   });
 
-  testWidgets('should_show_the_court_stepper_when_the_flag_is_on', (
+  // R2-Q2: the Courts tab has no "COURTS − 4 +" stepper, even with the flag
+  // on. Only the Sessions field changes the count (SESS-04).
+  testWidgets('should_hide_the_court_stepper_when_the_flag_is_on', (
     tester,
   ) async {
     CourtCount.editable = true;
     desktop(tester);
     await tester.pumpWidget(wrap(const DashboardPage(), GameData()));
 
-    expect(find.byIcon(Icons.add_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.add_rounded), findsNothing);
   });
 
   testWidgets('should_hide_the_courts_field_on_sessions', (tester) async {

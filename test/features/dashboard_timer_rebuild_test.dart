@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 import '../support/prefs_sandbox.dart';
 import '../support/repository_sandbox.dart';
 
-/// R45-03: a timer tick rebuilds the rotation bar, not the whole Dashboard.
+/// R45-03: a timer tick rebuilds the round bar time, not the whole Courts tab.
 void main() {
   late RepositorySandbox sandbox;
 
@@ -28,14 +28,16 @@ void main() {
     tester.view.physicalSize = const Size(1600, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    final gameData = GameData();
+    final timerData = TimerData();
+    final gameData = GameData(timer: timerData);
     for (var i = 0; i < 8; i++) {
       final p = Player.create(firstName: 'P', lastName: '$i', elo: Elo.b1);
       PlayerRepository.instance.add(p);
       gameData.checkInPlayer(p);
     }
-    await gameData.makeGame();
-    final timerData = TimerData();
+    gameData
+      ..generateFirstRound()
+      ..startFirstRound();
     await tester.pumpWidget(
       MultiProvider(
         providers: [
@@ -52,21 +54,20 @@ void main() {
         ),
       ),
     );
-    timerData.start();
     await tester.pump();
     return (gameData, timerData);
   }
 
-  testWidgets('should_not_rebuild_the_stat_strip_on_a_timer_tick', (
+  testWidgets('should_not_rebuild_the_court_cards_on_a_timer_tick', (
     tester,
   ) async {
     final (_, timerData) = await pumpRunningRound(tester);
-    final before = tester.widget<StatStrip>(find.byType(StatStrip));
+    final before = tester.widget(find.byType(DesktopCourtCard).first);
 
     await tester.pump(const Duration(seconds: 1));
 
     final rebuilt = !identical(
-      tester.widget<StatStrip>(find.byType(StatStrip)),
+      tester.widget(find.byType(DesktopCourtCard).first),
       before,
     );
     timerData.reset();

@@ -61,10 +61,10 @@ void main() {
     return gameData;
   }
 
-  /// A surface tall enough for the desktop layout but short enough that four
-  /// courts cannot all fit — the situation the operator hit.
+  /// A desktop surface so short that four courts at their 216 px minimum
+  /// cannot all fit under the round bar.
   void useShortDesktopSurface(WidgetTester tester) {
-    tester.view.physicalSize = const Size(1400, 700);
+    tester.view.physicalSize = const Size(1400, 500);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -80,18 +80,23 @@ void main() {
       )
       .first;
 
+  /// The same on the desktop Courts tab (IMPLEMENTATION 8.5).
+  Finder desktopGridScrollable() => find
+      .ancestor(
+        of: find.byType(DesktopCourtCard).first,
+        matching: find.byType(Scrollable),
+      )
+      .first;
+
   testWidgets('should_put_the_desktop_court_grid_inside_a_scroll_view', (
     tester,
   ) async {
     useShortDesktopSurface(tester);
-    final gameData = seed(16, 4);
-    await gameData.makeGame();
+    final gameData = seed(16, 4)..generateFirstRound();
 
     await tester.pumpWidget(wrap(gameData, TimerData()));
 
-    // The grid's own physics are NeverScrollable, so without an enclosing
-    // scroll view the courts below the first row are unreachable.
-    expect(courtGridScrollable(), findsOneWidget);
+    expect(desktopGridScrollable(), findsOneWidget);
     expect(tester.takeException(), isNull);
     tester.binding.delayed(const Duration(seconds: 1));
   });
@@ -100,15 +105,14 @@ void main() {
     tester,
   ) async {
     useShortDesktopSurface(tester);
-    final gameData = seed(16, 4);
-    await gameData.makeGame();
+    final gameData = seed(16, 4)..generateFirstRound();
     await tester.pumpWidget(wrap(gameData, TimerData()));
 
-    // COURT 4 sits on the second grid row, below the fold.
-    final lastCourt = find.text('COURT 4');
+    // Court 4 sits on the second grid row, below the fold.
+    final lastCourt = find.text('Court 4');
     final before = tester.getTopLeft(lastCourt).dy;
 
-    await tester.drag(courtGridScrollable(), const Offset(0, -300));
+    await tester.drag(desktopGridScrollable(), const Offset(0, -300));
     await tester.pump();
 
     // It moved up the screen, so the organizer can reach it.

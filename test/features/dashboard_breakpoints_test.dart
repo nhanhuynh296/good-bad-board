@@ -100,8 +100,6 @@ void main() {
       719.0: [2, 2],
       720.0: [3, 3],
       1079.0: [3, 3],
-      1080.0: [6],
-      1127.0: [6],
     }.entries) {
       testWidgets(
         'should_arrange_stats_as_${entry.value.join("x")}_at_${entry.key.toInt()}px',
@@ -112,20 +110,30 @@ void main() {
         },
       );
     }
+
+    // The desktop Courts tab has no stat strip: the round bar replaces it
+    // (IMPLEMENTATION 8.5.1, 8.2.2).
+    for (final width in [1080.0, 1127.0]) {
+      testWidgets('should_show_no_stat_strip_at_${width.toInt()}px', (
+        tester,
+      ) async {
+        await pumpDashboard(tester, width);
+
+        expect(find.byType(AppStatCell), findsNothing);
+      });
+    }
   });
 
   group('NAV-07 dashboard arrangement', () {
     for (final width in [1080.0, 1127.0]) {
       testWidgets(
-        'should_place_waitlist_sidebar_right_of_courts_at_${width.toInt()}px',
+        'should_place_waitlist_panel_right_of_courts_at_${width.toInt()}px',
         (tester) async {
           await pumpDashboard(tester, width);
 
-          final sidebarLeft = tester
-              .getTopLeft(find.byType(WaitlistSidebar))
-              .dx;
+          final sidebarLeft = tester.getTopLeft(find.byType(WaitlistPanel)).dx;
           final courtsRight = tester
-              .getTopRight(find.byType(CourtCard).first)
+              .getTopRight(find.byType(DesktopCourtCard).first)
               .dx;
           expect(sidebarLeft, greaterThan(courtsRight));
           expect(find.byType(WaitlistChips), findsNothing);

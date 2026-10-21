@@ -12,8 +12,11 @@ import 'package:provider/provider.dart';
 import '../support/prefs_sandbox.dart';
 import '../support/repository_sandbox.dart';
 
-/// Release fixes on the Dashboard: Save then slot tap (F1), court stepper
-/// (F3), tier gap and tier name (F4, F5), selection cleared (F11).
+/// Release fixes on the Courts tab: court stepper (F3, game-based page
+/// only), tier gap and tier name (F4, F5), selection cleared (F11).
+///
+/// F1 (Save then slot tap) tested the time-mode global Save, which 8.2.2
+/// removed.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -64,40 +67,35 @@ void main() {
       PlayerRepository.instance.add(player);
       gameData.checkInPlayer(player);
     }
-    await gameData.makeGame();
+    gameData.generateFirstRound();
     return gameData;
   }
 
   Future<GameData> seed(int total, int courts) =>
       seedElos([for (var i = 0; i < total; i++) Elo.values[i % 8]], courts);
 
+  /// The stat strip shows on phone and tablet only (8.5.1).
+  void useTabletSurface(WidgetTester tester) {
+    tester.view.physicalSize = const Size(900, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+  }
+
   StatStrip strip(WidgetTester tester) =>
       tester.widget<StatStrip>(find.byType(StatStrip));
 
-  group('F1 Save then slot tap', () {
-    testWidgets('should_not_throw_when_a_slot_is_tapped_after_save', (
-      tester,
-    ) async {
-      useDesktopSurface(tester);
-      final gameData = await seed(8, 2);
-      await tester.pumpWidget(wrap(gameData, TimerData()));
-      await tester.tap(find.byKey(const Key('dashboard-save-all')));
-      // Saving writes to disk, which needs real async.
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 300)),
-      );
-      await tester.pump();
-
-      await tester.tap(find.byType(PlayerSlot).first);
-      await tester.pump();
-
-      expect(tester.takeException(), isNull);
-    });
-  });
-
+  // R2-Q2: the time-mode Courts tab has no stepper. The game-based page
+  // (hidden in the release) keeps it.
   group('F3 court stepper', () {
+    Future<void> useGameBased() async {
+      GameMode.enabled = true;
+      addTearDown(() => GameMode.enabled = false);
+      await PersistentSetting.instance.setGameType(GameType.gameBased);
+    }
+
     testWidgets('should_not_go_above_eight_courts', (tester) async {
       useDesktopSurface(tester);
+      await useGameBased();
       final gameData = await seed(8, 8);
       await tester.pumpWidget(wrap(gameData, TimerData()));
 
@@ -109,6 +107,7 @@ void main() {
 
     testWidgets('should_not_go_below_one_court', (tester) async {
       useDesktopSurface(tester);
+      await useGameBased();
       final gameData = await seed(8, 1);
       await tester.pumpWidget(wrap(gameData, TimerData()));
 
@@ -133,7 +132,7 @@ void main() {
     testWidgets('should_average_the_tier_gap_in_the_stat_strip', (
       tester,
     ) async {
-      useDesktopSurface(tester);
+      useTabletSurface(tester);
       // One court: amateur + professional = gap 3.
       final gameData = await seedElos([Elo.c2, Elo.c2, Elo.s1, Elo.s1], 1);
       await tester.pumpWidget(wrap(gameData, TimerData()));
@@ -144,7 +143,7 @@ void main() {
 
   group('F5 average level', () {
     testWidgets('should_show_the_tier_name_not_the_elo_code', (tester) async {
-      useDesktopSurface(tester);
+      useTabletSurface(tester);
       final gameData = await seedElos([Elo.b2, Elo.b2, Elo.b1, Elo.b1], 1);
       await tester.pumpWidget(wrap(gameData, TimerData()));
 
@@ -157,7 +156,7 @@ void main() {
       useDesktopSurface(tester);
       final gameData = await seed(9, 2);
       await tester.pumpWidget(wrap(gameData, TimerData()));
-      await tester.tap(find.byType(PlayerSlot).first);
+      await tester.tap(find.byType(DesktopPlayerSlot).first);
       await tester.pump();
 
       await tester.tap(find.text('Re-roll').first);
@@ -165,7 +164,7 @@ void main() {
 
       expect(
         tester
-            .widget<WaitlistSidebar>(find.byType(WaitlistSidebar))
+            .widget<WaitlistPanel>(find.byType(WaitlistPanel))
             .selectedPlayerId,
         isNull,
       );
@@ -177,15 +176,16 @@ void main() {
       useDesktopSurface(tester);
       final gameData = await seed(9, 2);
       await tester.pumpWidget(wrap(gameData, TimerData()));
-      await tester.tap(find.byType(PlayerSlot).first);
+      await tester.tap(find.byType(DesktopPlayerSlot).first);
       await tester.pump();
 
-      await tester.tap(find.byIcon(Icons.add_rounded));
+      // The Sessions tab changes the count (R2-Q2, SESS-04).
+      gameData.setNumberOfCourt(3);
       await tester.pump();
 
       expect(
         tester
-            .widget<WaitlistSidebar>(find.byType(WaitlistSidebar))
+            .widget<WaitlistPanel>(find.byType(WaitlistPanel))
             .selectedPlayerId,
         isNull,
       );

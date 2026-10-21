@@ -12,9 +12,13 @@ import 'package:provider/provider.dart';
 import '../support/prefs_sandbox.dart';
 import '../support/repository_sandbox.dart';
 
-/// Editing courts by hand on the Dashboard: swap players between courts,
-/// remove a player from an incomplete court, and the warnings before a
-/// running round is thrown away.
+/// Editing courts by hand on the desktop Courts tab (8.5): swap players
+/// between courts, move a player to the waitlist, and a quiet Re-roll.
+///
+/// The old warnings before a running round was thrown away ("Discard the
+/// current round?" on Regenerate and Re-roll, and the game-based rotation
+/// guard) went with the PR 45 flow in 8.2.2. The new confirm dialogs are in
+/// `courts_confirm_dialog_test.dart`.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -54,7 +58,7 @@ void main() {
       PlayerRepository.instance.add(player);
       gameData.checkInPlayer(player);
     }
-    await gameData.makeGame();
+    gameData.generateFirstRound();
     return gameData;
   }
 
@@ -66,7 +70,7 @@ void main() {
 
   Finder slotOf(Player player) => find.ancestor(
     of: find.text(player.name()),
-    matching: find.byType(PlayerSlot),
+    matching: find.byType(DesktopPlayerSlot),
   );
 
   group('Swap between courts', () {
@@ -106,7 +110,7 @@ void main() {
     });
   });
 
-  group('Remove from an incomplete court', () {
+  group('Move to waitlist', () {
     testWidgets('should_send_the_player_to_the_waitlist', (tester) async {
       useDesktopSurface(tester);
       final gameData = await seed(8, 2);
@@ -114,121 +118,23 @@ void main() {
       final a = gameData.stagingMatches[0].players[0];
       await tester.pumpWidget(wrap(gameData, TimerData()));
 
-      await tester.tap(
-        find.descendant(
-          of: slotOf(a),
-          matching: find.byKey(const Key('slot-remove-button')),
-        ),
-      );
-      await tester.pump();
+      await tester.tap(find.byKey(const Key('slot-more-0-0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Move to waitlist'));
+      await tester.pumpAndSettle();
 
       expect(gameData.waitlistedPlayers, contains(a));
     });
   });
 
-  group('Warnings', () {
-    Future<GameData> runningRound(
-      WidgetTester tester,
-      TimerData timer, {
-      int players = 8,
-    }) async {
-      useDesktopSurface(tester);
-      final gameData = await seed(players, 2);
-      // The clock counts down; no real timer is needed for the dialog.
-      timer.isRunning = true;
-      await tester.pumpWidget(wrap(gameData, timer));
-      return gameData;
-    }
-
-    testWidgets('should_warn_before_regenerating_a_running_round', (
-      tester,
-    ) async {
-      final timer = TimerData();
-      await runningRound(tester, timer);
-
-      await tester.tap(find.text('Regenerate'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Discard the current round?'), findsOneWidget);
-    });
-
-    testWidgets('should_keep_the_round_when_regenerate_is_cancelled', (
-      tester,
-    ) async {
-      final timer = TimerData();
-      final gameData = await runningRound(tester, timer);
-      final lineup = [...gameData.stagingMatches[0].players];
-
-      await tester.tap(find.text('Regenerate'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-
-      expect(gameData.stagingMatches[0].players, lineup);
-    });
-
-    testWidgets('should_not_warn_when_no_round_is_running', (tester) async {
-      useDesktopSurface(tester);
-      final gameData = await seed(8, 2);
-      final timer = TimerData();
-      await tester.pumpWidget(wrap(gameData, timer));
-
-      await tester.tap(find.text('Regenerate'));
-      await tester.pump();
-
-      expect(find.text('Discard the current round?'), findsNothing);
-      // Regenerate started the clock; stop it so no timer outlives the test.
-      timer.reset();
-    });
-
-    testWidgets('should_warn_before_re_rolling_a_court_in_a_running_round', (
-      tester,
-    ) async {
-      final timer = TimerData();
-      // A ninth player gives the re-roll someone to rotate in (COURT-03).
-      await runningRound(tester, timer, players: 9);
-
-      await tester.tap(find.text('Re-roll').first);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Discard this court\'s game?'), findsOneWidget);
-    });
-
-    testWidgets('should_not_rotate_when_countdown_expires_in_game_based_mode', (
-      tester,
-    ) async {
-      useDesktopSurface(tester);
-      final gameData = await seed(8, 2);
-      final timer = TimerData();
-      await tester.pumpWidget(wrap(gameData, timer));
-      // Start a time-based round, then switch the session to game-based mode
-      // without stopping the clock.
-      await tester.tap(find.text('Regenerate'));
-      await tester.pump();
-      // Empty the courts, so a rotation would finish without a disk write.
-      for (final player in [...gameData.checkedInPlayers.values]) {
-        gameData.removePlayerFromCourt(player);
-      }
-      GameMode.enabled = true;
-      addTearDown(() => GameMode.enabled = false);
-      await PersistentSetting.instance.setGameType(GameType.gameBased);
-      await tester.pump(const Duration(seconds: 2));
-
-      // Act — the countdown runs out.
-      timer.updateDuration(const Duration(seconds: 1));
-      await tester.pump();
-
-      // Assert
-      expect(gameData.roundNumber, 1);
-      timer.reset();
-    });
-
+  group('Re-roll', () {
     testWidgets('should_stay_quiet_when_re_roll_has_nobody_to_rotate_in', (
       tester,
     ) async {
-      final timer = TimerData();
+      useDesktopSurface(tester);
       // Exactly 8 players on 2 courts: the pool is 4, so nothing changes.
-      final gameData = await runningRound(tester, timer);
+      final gameData = await seed(8, 2);
+      await tester.pumpWidget(wrap(gameData, TimerData()));
 
       await tester.tap(find.text('Re-roll').first);
       await tester.pumpAndSettle();

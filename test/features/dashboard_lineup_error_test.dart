@@ -75,7 +75,7 @@ void main() {
     desktop(tester);
     await tester.pumpWidget(wrap(await session(tester, 2)));
 
-    await tapGenerate(tester, 'Generate Game');
+    await tapGenerate(tester, 'Generate round 1');
 
     expect(find.text('Check in at least 4 players. 2 checked in.'), findsOne);
   });
@@ -84,7 +84,7 @@ void main() {
     desktop(tester);
     await tester.pumpWidget(wrap(await session(tester, 2)));
 
-    await tapGenerate(tester, 'Generate Game');
+    await tapGenerate(tester, 'Generate round 1');
 
     expect(find.textContaining('Exception'), findsNothing);
   });
@@ -97,7 +97,7 @@ void main() {
     await tester.pumpWidget(wrap(gameData, locale: const Locale('fr')));
     final fr = lookupAppLocalizations(const Locale('fr'));
 
-    await tapGenerate(tester, fr.generate_game);
+    await tapGenerate(tester, fr.courts_generate_round_one);
 
     expect(
       find.text(fr.dashboard_error_not_enough_players(Game.playerPerCourt, 2)),
@@ -105,38 +105,28 @@ void main() {
     );
   });
 
-  testWidgets('should_show_the_unbalanced_court_message_on_save', (
-    tester,
-  ) async {
-    desktop(tester);
-    final gameData = await session(tester, 8);
-    await tester.runAsync(gameData.makeGame);
-    gameData.removePlayerFromCourt(gameData.stagingMatches[1].players.first);
-    await tester.pumpWidget(wrap(gameData));
-
-    await tester.tap(find.byKey(const Key('dashboard-save-all')));
-    await tester.pump();
-    await tester.pump();
-
-    expect(find.text('Court 2 needs 4 players.'), findsOne);
-  });
-
-  // R45-01 with R45-02: a failed rotation shows one generic message.
-  testWidgets('should_show_the_generic_message_when_rotate_fails', (
+  // R45-01 with R45-02: a failed round log shows one generic message.
+  testWidgets('should_show_the_generic_message_when_round_log_fails', (
     tester,
   ) async {
     desktop(tester);
     final timerData = TimerData();
-    final gameData = await session(tester, 8);
+    final created = await tester.runAsync(() => createTestPlayers(8));
+    final gameData = GameData(timer: timerData)..setNumberOfCourt(2);
+    created!.forEach(gameData.checkInPlayer);
+    gameData
+      ..generateFirstRound()
+      ..startFirstRound()
+      ..quickSaveNextRound()
+      ..startNextRound();
     await tester.pumpWidget(wrap(gameData, timerData: timerData));
-    await tapGenerate(tester, 'Generate Game');
     Directory(
       '${sandbox.tempDir.path}/${GameRepository.databaseFilename}.tmp',
     ).createSync();
 
     // The write runs real file IO, so the tap runs outside fake time.
     await tester.runAsync(() async {
-      await tester.tap(find.text('Rotate now'));
+      await tester.tap(find.text('Start round 2 now'));
       await Future<void>.delayed(const Duration(milliseconds: 200));
     });
     await tester.pump();

@@ -95,7 +95,7 @@ void main() {
   // No countdown in game-based mode
   // ---------------------------------------------------------------------
 
-  testWidgets('should_hide_round_rotation_bar_when_game_based', (tester) async {
+  testWidgets('should_hide_round_bar_when_game_based', (tester) async {
     // Arrange
     useDesktopSurface(tester);
     final gameData = seed(4);
@@ -105,10 +105,10 @@ void main() {
     await tester.pumpWidget(wrap(gameData, TimerData()));
 
     // Assert
-    expect(find.byType(RoundRotationBar), findsNothing);
+    expect(find.byType(RoundBar), findsNothing);
   });
 
-  testWidgets('should_show_round_rotation_bar_when_time_based', (tester) async {
+  testWidgets('should_show_round_bar_when_time_based', (tester) async {
     // Arrange
     useDesktopSurface(tester);
     await setMode('timeBased');
@@ -119,7 +119,7 @@ void main() {
     await tester.pumpWidget(wrap(gameData, TimerData()));
 
     // Assert
-    expect(find.byType(RoundRotationBar), findsOneWidget);
+    expect(find.byType(RoundBar), findsOneWidget);
 
     // The countdown ticks — settle it before the test ends.
     tester.binding.delayed(const Duration(seconds: 1));
@@ -157,22 +157,6 @@ void main() {
     expect(find.byKey(const Key('dashboard-save-all')), findsNothing);
   });
 
-  testWidgets('should_show_global_save_when_time_based', (tester) async {
-    // Arrange
-    useDesktopSurface(tester);
-    await setMode('timeBased');
-    final gameData = seed(4);
-    await gameData.makeGame();
-
-    // Act
-    await tester.pumpWidget(wrap(gameData, TimerData()));
-
-    // Assert
-    expect(find.byKey(const Key('dashboard-save-all')), findsOneWidget);
-
-    tester.binding.delayed(const Duration(seconds: 1));
-  });
-
   testWidgets('should_show_generate_before_the_first_game_when_game_based', (
     tester,
   ) async {
@@ -203,20 +187,20 @@ void main() {
     expect(find.text('Regenerate'), findsNothing);
   });
 
+  // 8.5: the time-mode draft offers "Discard & regenerate" on the round bar.
   testWidgets('should_keep_regenerate_after_a_lineup_exists_when_time_based', (
     tester,
   ) async {
     // Arrange
     useDesktopSurface(tester);
     await setMode('timeBased');
-    final gameData = seed(4);
-    await gameData.makeGame();
+    final gameData = seed(4)..generateFirstRound();
 
     // Act
     await tester.pumpWidget(wrap(gameData, TimerData()));
 
     // Assert
-    expect(find.text('Regenerate'), findsOneWidget);
+    expect(find.text('Discard & regenerate'), findsOneWidget);
 
     tester.binding.delayed(const Duration(seconds: 1));
   });
