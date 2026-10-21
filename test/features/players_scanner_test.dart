@@ -289,6 +289,35 @@ void main() {
       expect([alice, bob].map(gameData.isPlayerCheckedIn), [isTrue, isFalse]);
     });
 
+    // F01, IMPLEMENTATION 8.7.7: the exact sign-in ID match runs over all
+    // listed players, before the level chips and the search text.
+    testWidgets(
+      'should_check_in_by_exact_sign_in_id_when_level_chip_hides_player',
+      (tester) async {
+        final alice = _player('Alice', Elo.b1, signInId: 'A100');
+        await pumpPage(tester, players: [alice, _player('Bob', Elo.a2)]);
+        await tester.tap(find.widgetWithText(AppChip, 'B1'));
+        await tester.pump();
+
+        await scan(tester, 'A100');
+
+        expect(gameData.isPlayerCheckedIn(alice), isTrue);
+      },
+    );
+
+    testWidgets('should_keep_the_level_chips_after_an_exact_id_scan', (
+      tester,
+    ) async {
+      final alice = _player('Alice', Elo.b1, signInId: 'A100');
+      await pumpPage(tester, players: [alice, _player('Bob', Elo.a2)]);
+      await tester.tap(find.widgetWithText(AppChip, 'B1'));
+      await tester.pump();
+
+      await scan(tester, 'A100');
+
+      expect(find.text('Alice Test'), findsNothing);
+    });
+
     testWidgets('should_refuse_the_scan_when_the_session_is_at_capacity', (
       tester,
     ) async {

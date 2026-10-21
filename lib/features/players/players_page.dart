@@ -255,7 +255,10 @@ class _PlayersPageState extends State<PlayersPage> {
     final l10n = AppLocalizations.of(context)!;
     final listed = _listedPlayers();
     final wanted = typed.toLowerCase();
-    final exact = listed
+    // F01: the exact ID match runs over all listed players, so a level chip
+    // or the search text never hides the scanned card. The chips stay.
+    final exact = PlayerRepository.instance
+        .listedPlayers()
         .where((p) => p.signInId?.trim().toLowerCase() == wanted)
         .toList();
 
