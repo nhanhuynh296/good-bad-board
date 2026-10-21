@@ -119,10 +119,12 @@ bundled for Chinese (0 MB). These fonts have Regular and Bold only, so Chinese t
 | `text.body` | 14px | 400 / 600 | Body and data (400); slot names, buttons, tabs (600) |
 | `text.caption` | 12px | 400 / 600 caps | Secondary lines (400); caps labels, chips, tags (600, letter-spacing 0.08em) |
 
-Mapping of old sizes: 9.5–13 px → 12 or 14; 15 → 16; 18–22 → 20; 24–26 → 28. Nothing on desktop is
-smaller than 12 px. The family applies to every size of screen; phone and tablet keep their
-PR 45 sizes until they are redesigned (R2-Q23). The sizes in the older component specs below
-(phone nav, charts) are PR 45 values.
+Mapping of old sizes: 9.5–13 px → 12 or 14; 15 → 16; 18–22 → 20; 24–26 → 28. Nothing is
+smaller than 12 px. The family **and the 6-size scale** apply to every size of screen: 8.1
+replaced every literal size in `lib/`, so phone and tablet use the scale too, and their 10 and
+11 px labels became 12 px (as built in 8.1, 2026-10-21). Phone and tablet keep their PR 45
+layouts (R2-Q23). The sizes in the older component specs below (phone nav, charts) are PR 45
+values; read them through the mapping above.
 
 ### 1.3 Spacing
 
@@ -565,8 +567,10 @@ Vertical list of selectable cards
 
 ### 2.6 Buttons (2026-10-17)
 
-One orange primary button per view (UX-21). All buttons use 14/600, radius 8 (10 on the 52px
-Players row).
+One orange primary button per view (UX-21). Buttons use 14/600 (`AppTypography.button`), radius
+8 (10 on the 52px Players row). Small buttons use 12/600 (`AppTypography.buttonSm`):
+`AppButton.secondary`, `AppButton.success`, `AppButton.dangerOutline` and `AppToggleButton`.
+At 14 px their labels overflowed on the Sessions tab (as built in 8.1, 2026-10-21).
 
 | Variant | Background | Color | Border | Height | Use |
 |---------|-----------|-------|--------|--------|-----|
