@@ -1504,6 +1504,42 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   ≤60 s while RUNNING, not PAUSED (R6-Q8); click → Courts; no round-change message (R4-Q4,
   R4-Q6). It watches `TimerData` through a `Consumer` so only the bar rebuilds on a tick
   (R45-03). UAT NAV-10, NAV-11.
+- 8.6.3 **As built (2026-10-21).**
+  - Files: `lib/shell/desktop_top_nav_bar.dart` (`DesktopTopNavBar`, `roundDurationText`),
+    `lib/shell/session_bar.dart` (`SessionBar`), `lib/shell/inset_focus_ring.dart`, wired in
+    `responsive_shell.dart` (`_buildDesktopLayout`). Tablet keeps `TopNavBar` (5 tabs,
+    "Dashboard"); phone is unchanged.
+  - The chip text, chip colours, time and time colour come from one class,
+    `lib/features/dashboard/courts/round_status.dart` (`RoundStatus`), so the round bar and the
+    session bar always agree (NAV-11). The session bar watches `GameData`; its time is a
+    `Consumer<TimerData>`. The header reads the duration with `context.select`, so a tick does
+    not rebuild it.
+  - Header duration: whole minutes "{m} min" (`shell_duration_minutes`), else `m:ss` with no
+    leading zero on the minutes ("10:30", "5:30").
+  - "· round {n+1} saved / not saved" shows only while round n has its clock: RUNNING, PAUSED
+    (round clock) and TIME UP. READY, CHANGEOVER and a paused changeover show only
+    "{in}/{capacity} in · {waiting} waiting". In CHANGEOVER the bar shows "ROUND {n+1}", as the
+    round bar does. "No round yet" replaces the round, time and chip; the counts stay.
+  - The "⋯" menu uses the Courts menu (`courtsMenuAnchor`: card fill, 1 px `#6f6352` border,
+    40 px items; Esc and a click outside close it; focus goes back to "⋯"). "⋯" is a 44 px
+    `CourtsIconButton` (outset ring); the tabs and the session bar draw an inset 3 px
+    `#ff6a2b` ring (canvas `outline-offset: -3px`). "⋯" has the label "More pages: Analytics,
+    Settings" (`shell_more_menu`).
+  - Fix: on desktop the page area is a `Semantics(container: true)` boundary. Without it the
+    modal barrier of the branch route (`BlockSemantics`) hid the top nav and the session bar
+    from screen readers. Tablet and phone do not have this boundary yet (unchanged layout).
+  - Tests: `test/shell/top_nav_test.dart` (26), `test/shell/session_bar_test.dart` (35), with
+    `test/support/shell_harness.dart` (the 5 real branches with plain pages).
+    `integration_test/shell_navigation_test.dart` and the `navigateToTab` helper use the desktop
+    tabs and the "⋯" menu. For 8.5, `generateGame` became `generateRoundOne` ("Generate round
+    1"), `dashboard_courts_test.dart` finds "Court N", and `dashboard_layout_test.dart` expects
+    no desktop stat strip (R3-Q4).
+  - Integration tests run on the Linux desktop one file at a time:
+    `xvfb-run -a flutter test integration_test/<file>_test.dart -d linux`. With the whole
+    folder in one run, every file after the first fails to start the app ("Error waiting for a
+    debug connection").
+  - Not as the canvas: hover fills on the tabs (`#2b241e`) and the bar (`#221d18`), which the
+    canvas does not draw; the menu is the Courts menu style, not drawn on the canvas.
 
 ### 8.7 — Players tab (desktop)
 - 8.7.1 Scan field ("CHECK IN" label, scan icon, "Scan card or search name", 52 px, 2 px
@@ -1700,7 +1736,10 @@ lib/
 ├── shell/                             # NEW
 │   ├── shell.dart                     # Barrel
 │   ├── responsive_shell.dart
-│   ├── top_nav_bar.dart
+│   ├── top_nav_bar.dart               # Tablet (5 tabs)
+│   ├── desktop_top_nav_bar.dart       # Desktop (8.6.1)
+│   ├── session_bar.dart               # Desktop, every tab except Courts (8.6.2)
+│   ├── inset_focus_ring.dart
 │   ├── compact_header.dart
 │   ├── bottom_tab_bar.dart
 │   ├── hamburger_menu.dart

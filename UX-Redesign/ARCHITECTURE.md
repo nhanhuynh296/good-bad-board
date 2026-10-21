@@ -184,6 +184,13 @@ values; read them through the mapping above.
 Focus on the bar: 3px #ff6a2b ring (`color.focus.onDark`) on the tabs and "⋯" (F07)
 ```
 Tablet (720–1079px) keeps the PR 45 bar (5 tabs with "Dashboard", pill style) (R6-Q7, UAT NAV-01).
+As built (2026-10-21): `DesktopTopNavBar` (`lib/shell/desktop_top_nav_bar.dart`); tablet keeps
+`TopNavBar`. The "⋯" menu uses the Courts menu style (`courtsMenuAnchor`, §2.3); "⋯" has the
+screen-reader label "More pages: Analytics, Settings". Tabs and the session bar draw the ring
+inside the box (`InsetFocusRing`, canvas `outline-offset: -3px`); "⋯" draws it outside. Hover:
+tab `#2b241e`, session bar `#221d18` (not on the canvas). The desktop page area is a
+`Semantics(container: true)` boundary, so the route's modal barrier does not hide the nav from
+screen readers.
 
 #### SessionBar (desktop, every tab except Courts)
 ```
@@ -198,6 +205,10 @@ Before the first lineup: "No round yet" in place of round, chip and time.
 No toast on a round change (R4-Q4). Order ROUND · time · chip, as on the round bar (F29).
 Focus: 3px #ff6a2b ring on the link (F07).
 ```
+As built (2026-10-21): `SessionBar` (`lib/shell/session_bar.dart`). Chip and time come from
+`RoundStatus` (`lib/features/dashboard/courts/round_status.dart`), the same class as the round
+bar. "· round N+1 saved / not saved" shows in RUNNING, PAUSED (round clock) and TIME UP only;
+READY and CHANGEOVER show the counts only. "No round yet" keeps the counts after it.
 
 #### CompactHeader (Phone)
 ```

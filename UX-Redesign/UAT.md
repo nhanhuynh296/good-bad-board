@@ -110,6 +110,9 @@ And the compact phone header and the bottom bar or hamburger are not shown.
 Given viewport width 720–1079px (tablet)
 Then the top nav stays as before this build: 5 tabs (Dashboard, Players, Sessions, Analytics,
 Settings), with the label "Dashboard" (R2-Q23, R6-Q7).
+As built (8.6.3, 2026-10-21): the minutes in `m:ss` have no leading zero ("5:30 rounds"). The
+tabs and "⋯" have the 3 px `#ff6a2b` focus ring (F07). Tests: `test/shell/top_nav_test.dart`,
+`integration_test/shell_navigation_test.dart`.
 
 **NAV-02** — Phone compact header
 Given viewport width < 720px
@@ -196,6 +199,8 @@ Given the current tab is Analytics or Settings
 Then the "⋯" button shows the active style (white, 3 px orange underline), and no other tab does.
 When the organizer presses Esc or clicks outside the menu
 Then the menu closes and the tab does not change.
+And a screen reader reads the "⋯" button as "More pages: Analytics, Settings". Test:
+`test/shell/top_nav_test.dart`.
 
 **NAV-10** — Session bar on the other tabs (added 2026-10-17: UX-05, R4-Q4, R4-Q6; 2026-10-20: F24, F29)
 Given viewport width ≥ 1080px and the current tab is not Courts
@@ -211,6 +216,11 @@ When the organizer clicks the session bar
 Then the app shows the Courts tab.
 When a round starts or ends while the organizer is on another tab
 Then the session bar updates. The app shows no other message (R4-Q4).
+As built (8.6.3, 2026-10-21): "· round {n+1} saved" or "· round {n+1} not saved" shows only
+while round n has its clock (RUNNING, PAUSED, TIME UP). READY and CHANGEOVER show only the
+counts. In CHANGEOVER the bar shows "ROUND {n+1}", as the round bar does. The bar has the 3 px
+`#ff6a2b` focus ring (F07) and is a link for screen readers. Test:
+`test/shell/session_bar_test.dart`.
 
 **NAV-11** — Session bar states (added 2026-10-17: R4-Q6)
 Given no lineup exists (session start, or after End session)
@@ -222,6 +232,9 @@ Given the state is PAUSED and 60 s or less remain
 Then the time is not amber (R6-Q8).
 Given the state is READY, PAUSED, TIME UP or CHANGEOVER
 Then the chip shows that state, and the time shows the same value as the Courts round bar.
+And with no lineup the counts still show after "No round yet". The time colours are those of
+the round bar: PAUSED `#c9c2b8`, TIME UP `#ff6a2b`, CHANGEOVER `#ff6a2b` (one `RoundStatus`
+class gives both bars their chip and time). Test: `test/shell/session_bar_test.dart`.
 
 **START-01** — Data file fails to load at start-up
 Given a data file cannot be loaded when the app starts
