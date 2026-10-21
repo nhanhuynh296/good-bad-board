@@ -175,15 +175,16 @@ Future<void> navigateToTab(WidgetTester tester, int index) async {
 
 // ── Dashboard interaction ──────────────────────────────────────
 
-/// Tap the "Generate Game" button and wait for the result.
-Future<void> generateGame(WidgetTester tester) async {
-  await tester.tap(find.text('Generate Game'));
+/// Tap "Generate round 1" on the round bar and wait for the result. The
+/// round is READY: its clock has not started (IMPLEMENTATION 8.2, 8.5.2).
+Future<void> generateRoundOne(WidgetTester tester) async {
+  await tester.tap(find.text('Generate round 1'));
   await tester.pumpAndSettle();
 }
 
 /// Select a waitlisted player by name.
 ///
-/// Works on both desktop ([WaitlistSidebar]) and tablet/phone
+/// Works on both desktop ([WaitlistPanel]) and tablet/phone
 /// ([WaitlistChips]) since both render the player name as text.
 ///
 /// Prefer [selectWaitlistedPlayer] where the exact name does not matter —
@@ -245,7 +246,7 @@ String playerOnCourt(WidgetTester tester, {int index = 0}) {
 
 /// Tap an "Open slot" text widget on a specific court.
 ///
-/// [courtNumber] is 1-indexed (matches "COURT N" label).
+/// [courtNumber] is 1-indexed (matches the "Court N" label).
 /// [slotIndex] is 0-indexed within the empty slots visible on screen.
 ///
 /// This is a best-effort helper; test files with complex court layouts

@@ -11,14 +11,14 @@ void main() {
 
   // ── Shared setup ──────────────────────────────────────────
 
-  /// Pump with N players seeded, then generate a game.
+  /// Pump with N players seeded, then generate round 1 (READY).
   Future<void> setupWithNPlayers(WidgetTester tester, int count) async {
     await pumpAppWithPlayers(
       tester,
       playerCount: count,
       surfaceSize: desktopSize,
     );
-    await generateGame(tester);
+    await generateRoundOne(tester);
   }
 
   // ── COURT-01: Court display ────────────────────────────────
@@ -29,8 +29,8 @@ void main() {
     ) async {
       await setupWithNPlayers(tester, 5);
 
-      // Court labels are present.
-      expect(find.textContaining('COURT'), findsWidgets);
+      // Court labels are present: "Court 1" on desktop (8.5.4).
+      expect(find.textContaining('Court '), findsWidgets);
 
       // Player names appear in court slots.
       // With 5 players and 2 courts, 4 go to court 1, 1 waitlisted,

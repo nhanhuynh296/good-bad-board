@@ -14,23 +14,22 @@ void main() {
     await pumpAppWithPlayers(tester, playerCount: 5, surfaceSize: size);
 
     // Generate a game from the 5 players.
-    await generateGame(tester);
+    await generateRoundOne(tester);
   }
 
   // ── NAV-06: Stat strip reflow ─────────────────────────────
 
   group('NAV-06 — Stat strip reflow', () {
-    testWidgets('desktop shows 6 stats in a single row', (tester) async {
+    testWidgets('desktop shows no stat strip, the round bar shows counts', (
+      tester,
+    ) async {
       await setupWithGame(tester, desktopSize);
 
-      // All 6 stat labels should be present on desktop.
-      // AppStatCell uppercases labels, so search for uppercase.
-      expect(find.text('CHECKED IN'), findsWidgets);
-      expect(find.text('REMAINING SLOTS'), findsWidgets);
-      expect(find.text('WAITLIST'), findsWidgets);
-      expect(find.text('AVG LEVEL'), findsWidgets);
-      expect(find.text('AVG LEVEL GAP'), findsWidgets);
-      expect(find.text('RE-ROLLS'), findsWidgets);
+      // R3-Q4: no stat strip on desktop. The round bar shows
+      // "{in}/{capacity} in · {waiting} waiting" instead (RND-01).
+      expect(find.text('REMAINING SLOTS'), findsNothing);
+      expect(find.text('RE-ROLLS'), findsNothing);
+      expect(find.text('5/20 in · 1 waiting'), findsOneWidget);
     });
 
     testWidgets('tablet shows all 6 stats', (tester) async {
@@ -58,17 +57,14 @@ void main() {
   // ── NAV-07: Dashboard layout reflow ───────────────────────
 
   group('NAV-07 — Dashboard layout reflow', () {
-    testWidgets('desktop shows court grid with waitlist sidebar', (
-      tester,
-    ) async {
+    testWidgets('desktop shows court grid with waitlist panel', (tester) async {
       await setupWithGame(tester, desktopSize);
 
-      // Desktop layout has a Waitlist sidebar with title.
-      // At desktop width, the sidebar renders as a card.
+      // Desktop layout has a Waitlist panel with title (8.5.5).
       expect(find.text('Waitlist'), findsWidgets);
 
-      // Court labels should be present.
-      expect(find.textContaining('COURT'), findsWidgets);
+      // Court labels "Court 1" … (8.5.4).
+      expect(find.textContaining('Court '), findsWidgets);
     });
 
     testWidgets('tablet/phone shows chips above courts', (tester) async {
