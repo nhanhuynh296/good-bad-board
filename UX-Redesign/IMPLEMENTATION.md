@@ -1699,6 +1699,20 @@ As built for Sessions (8.10): `sessions_round_settings`, `sessions_round_duratio
 `_duration_no_courts`, `sessions_load_named`, `sessions_delete_named`, `sessions_no_templates`,
 `sessions_reshuffle_confirm_title` / `_body` (plural), `sessions_delete_template_confirm_title`
 / `_body`. The actions reuse `sessions_reshuffle_confirm`, `delete` and `cancel`.
+**l10n check (2026-10-21).** A script compared the 140 stage 8 keys in en, fr, zh and zh_HK:
+no key is missing, the placeholders match, and every en plural is a plural in the other three.
+Kept as they are: fr "Pause", "TYPE", "Minutes" and "{minutes} min" (French words equal to the
+English); zh and zh_HK "Enter" (the key name). fr adds a plural to
+`sessions_capacity_note` / `_over` ("1 présent", "2 présents"), which en does not need.
+Fixed: `history` and `to_current_session` were en only and had no reader, so they are removed.
+F16 measured in `test/features/courts_label_width_test.dart` (RUNNING and PAUSED at 1280 px,
+real Source Sans 3, a system CJK font for zh): every bar label shows in full in all four
+locales. In fr PAUSED the counts were cut ("20/20 présents · 4 en atte…"), because the width
+check kept only 120 px for them. The check now keeps the full counts width, so fr PAUSED uses
+`courts_discard_round_short` ("Annuler la manche {n}"); en, zh and zh_HK keep the full label.
+The check also measures with the ambient text style, so Chinese is measured in YaHei or
+JhengHei. A probe found no other cut text on the desktop Courts (every phase), Players and
+Sessions tabs.
 Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads (for example
 `dashboard_rotate_now`, `dashboard_premake_next`, `dashboard_next_round_ready`,
 `dashboard_mode_time_based`) only after a grep shows no reader.
@@ -1723,6 +1737,7 @@ Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads
 | Layout fit | `test/features/dashboard_four_courts_fit_test.dart` (update) | NAV-07 |
 | Contrast | `test/design/contrast_test.dart` | ARCHITECTURE §1.1 |
 | Sessions tab (desktop, 8.10) | `test/features/sessions_desktop_test.dart`, `test/game_data_court_count_test.dart` (update), `integration_test/sessions_test.dart` | SESS-01…06 |
+| Round bar labels at 1280 px (F16, 8.8) | `test/features/courts_label_width_test.dart` | NAV-07, F16 |
 
 ### 8.10 — Sessions tab (desktop, R7-Q3)
 Built 2026-10-21 from the canvas board "Sessions" (R7-Q3: no approval needed; Nathan fixes it
