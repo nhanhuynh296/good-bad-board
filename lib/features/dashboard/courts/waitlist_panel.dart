@@ -110,7 +110,14 @@ class _WaitlistPanelState extends State<WaitlistPanel> {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                Text(l10n.dashboard_waitlist, style: AppTypography.subtitle),
+                Flexible(
+                  child: Text(
+                    l10n.dashboard_waitlist,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.subtitle,
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text('${widget.entries.length}', style: AppTypography.md),
               ],
