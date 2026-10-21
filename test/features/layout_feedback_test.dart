@@ -266,7 +266,8 @@ void main() {
       await pumpSessions(tester, GameData());
 
       final field = tester.getSize(find.byKey(const Key('template-name')));
-      final save = tester.getSize(_buttonOf('Save current'));
+      // The desktop board (R7-Q3) draws its buttons with an InkWell.
+      final save = tester.getSize(_inkWellOf('Save current'));
       expect(save.height, field.height);
     });
 
@@ -286,7 +287,7 @@ void main() {
       await pumpSessions(tester, gameData);
       await tester.pump();
 
-      final load = tester.getSize(_buttonOf('Load'));
+      final load = tester.getSize(_inkWellOf('Load'));
       final text = tester.getSize(find.text('Load'));
       expect(load.height - text.height, greaterThanOrEqualTo(16));
     });

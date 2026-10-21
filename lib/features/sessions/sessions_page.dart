@@ -7,10 +7,14 @@ import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/dashboard/dashboard.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/session_template.dart';
+import 'package:good_bad_board/shell/desktop_top_nav_bar.dart'
+    show roundDurationText;
 import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:provider/provider.dart';
+
+part 'desktop_sessions.dart';
 
 /// Largest session capacity the organizer can type in.
 const int _maxSessionCapacity = 200;
@@ -19,10 +23,15 @@ const int _maxSessionCapacity = 200;
 const int _minCourts = 1;
 const int _maxCourts = 8;
 
+/// Longest round the `mm:ss` control accepts: 99:59.
+const Duration _maxDuration = Duration(minutes: 99, seconds: 59);
+
 /// The Sessions tab — round mode configuration, session capacity, court count,
 /// and session templates.
 ///
-/// Implements SESS-01 through SESS-06 from the UAT spec.
+/// Implements SESS-01 through SESS-06 from the UAT spec. At desktop width
+/// (≥1080 px) it shows the canvas board "Sessions" (R7-Q3): two cards with
+/// no page scroll. Tablet and phone keep the PR 45 layout (R6-Q7).
 class SessionsPage extends StatefulWidget {
   const SessionsPage({super.key});
 
@@ -40,6 +49,8 @@ class _SessionsPageState extends State<SessionsPage> {
   bool get _isTimeBased =>
       PersistentSetting.instance.getGameType() == GameType.timeBased;
 
+  bool get _isDesktop => isDesktop(MediaQuery.sizeOf(context).width);
+
   @override
   void dispose() {
     _templateNameController.dispose();
@@ -54,6 +65,16 @@ class _SessionsPageState extends State<SessionsPage> {
     if (!timeBased) context.read<TimerData>().reset();
   }
 
+  /// Sets the round duration and recalculates the clock at once, in every
+  /// round phase (SESS-02, R9-Q6).
+  void _setDuration(Duration duration) {
+    if (duration <= Duration.zero) return;
+    final clamped = duration > _maxDuration ? _maxDuration : duration;
+    if (clamped == PersistentSetting.instance.getGameDuration()) return;
+    PersistentSetting.instance.setGameDuration(clamped);
+    context.read<TimerData>().updateDuration(clamped);
+  }
+
   Future<void> _saveTemplate(GameData gameData) async {
     final saved = await gameData.saveTemplate(
       _templateNameController.text,
@@ -66,37 +87,58 @@ class _SessionsPageState extends State<SessionsPage> {
     if (saved && mounted) _templateNameController.clear();
   }
 
-  /// Whether a change that reshuffles the lineup (court count, template Load)
-  /// may go ahead.
+  /// Whether a new court count ([courts]) may reshuffle the lineup.
   ///
-  /// When a time-based round is running and the lineup holds players, the
-  /// organizer first confirms throwing the round away — the same warning as
-  /// Regenerate on the Dashboard.
-  Future<bool> _confirmReshuffle(GameData gameData) async {
-    final running = _isTimeBased && context.read<TimerData>().isRunning;
-    if (!running || !gameData.wouldReshuffleLineup) return true;
+  /// When round n has started (RUNNING, PAUSED, TIME UP or CHANGEOVER) and
+  /// the lineup holds players, the organizer first confirms throwing round n
+  /// away (SESS-04, F25).
+  Future<bool> _confirmReshuffle(GameData gameData, int courts) async {
+    final started = switch (gameData.phase) {
+      RoundPhase.noLineup || RoundPhase.ready => false,
+      _ => true,
+    };
+    if (!_isTimeBased || !started || !gameData.wouldReshuffleLineup) {
+      return true;
+    }
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await confirmDiscard(
-      context,
-      title: l10n.dashboard_discard_round_title,
-      body: l10n.dashboard_discard_round_body,
-      confirmLabel: l10n.sessions_reshuffle_confirm,
-    );
+    final round = gameData.displayRoundNumber;
+    final title = l10n.sessions_reshuffle_confirm_title(round);
+    final body = l10n.sessions_reshuffle_confirm_body(round, courts);
+    final confirmed = _isDesktop
+        ? await showCourtsConfirm(
+            context,
+            title: title,
+            body: body,
+            cancelLabel: l10n.cancel,
+            actionLabel: l10n.sessions_reshuffle_confirm,
+          )
+        : await confirmDiscard(
+            context,
+            title: title,
+            body: body,
+            confirmLabel: l10n.sessions_reshuffle_confirm,
+          );
     return confirmed && mounted;
   }
 
   Future<bool> _changeCourts(GameData gameData, int courts) async {
-    if (!await _confirmReshuffle(gameData)) return false;
+    if (!await _confirmReshuffle(gameData, courts)) return false;
     gameData.setNumberOfCourt(courts);
     return true;
   }
 
+  /// SESS-06 (F25): the duration and the capacity apply at once. Only a new
+  /// court count asks first, as SESS-04 does.
   Future<void> _loadTemplate(
     GameData gameData,
     SessionTemplate template,
   ) async {
     final timerData = context.read<TimerData>();
-    if (!await _confirmReshuffle(gameData)) return;
+    final courtsChange =
+        CourtCount.editable && template.courts != gameData.numberOfCourt;
+    if (courtsChange && !await _confirmReshuffle(gameData, template.courts)) {
+      return;
+    }
     gameData.loadTemplate(template);
     // The new round length must reach the countdown, running or not (F2).
     timerData.updateDuration(template.duration);
@@ -106,17 +148,66 @@ class _SessionsPageState extends State<SessionsPage> {
     }
   }
 
+  /// Deletes [template] after a confirm (SESS-06, F25). The current
+  /// settings do not change.
+  Future<void> _deleteTemplate(
+    GameData gameData,
+    SessionTemplate template,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showCourtsConfirm(
+      context,
+      title: l10n.sessions_delete_template_confirm_title(template.name),
+      body: l10n.sessions_delete_template_confirm_body,
+      cancelLabel: l10n.cancel,
+      actionLabel: l10n.delete,
+      closeOnPhaseChange: false,
+    );
+    if (!confirmed || !mounted) return;
+    final index = gameData.templates.indexWhere((t) => t.id == template.id);
+    await gameData.deleteTemplate(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     final gameData = context.watch<GameData>();
     // Watched so the mode description tracks duration edits and template loads.
     context.watch<PersistentSetting>();
     final width = MediaQuery.of(context).size.width;
+    if (isDesktop(width)) return _buildDesktop(gameData);
     final isWide = width >= 720;
 
     return SingleChildScrollView(
       padding: AppSpacing.desktopPadding,
       child: isWide ? _buildWideLayout(gameData) : _buildNarrowLayout(gameData),
+    );
+  }
+
+  /// The desktop board (R7-Q3): round settings and templates side by side,
+  /// filling the page with no scroll. The shell gives the page padding.
+  Widget _buildDesktop(GameData gameData) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: _DesktopSettingsCard(
+            gameData: gameData,
+            onDuration: _setDuration,
+            onCapacity: gameData.setSessionCapacity,
+            onCourts: (courts) => _changeCourts(gameData, courts),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.xl),
+        Expanded(
+          child: _DesktopTemplatesCard(
+            gameData: gameData,
+            nameController: _templateNameController,
+            onSave: () => _saveTemplate(gameData),
+            onLoad: (template) => _loadTemplate(gameData, template),
+            onDelete: (template) => _deleteTemplate(gameData, template),
+          ),
+        ),
+      ],
     );
   }
 
@@ -355,7 +446,11 @@ class _ModeToggle extends StatelessWidget {
 /// traversal from minutes to seconds, and lets each segment be selected whole
 /// so the next keystroke replaces it.
 class _DurationField extends StatefulWidget {
-  const _DurationField();
+  const _DurationField({this.desktop = false});
+
+  /// Draws only the 128 × 52 `mm:ss` box of the desktop board; the row
+  /// around it gives the label and the steppers.
+  final bool desktop;
 
   @override
   State<_DurationField> createState() => _DurationFieldState();
@@ -401,6 +496,8 @@ class _DurationFieldState extends State<_DurationField> {
   }
 
   void _onFocusChange(FocusNode node) {
+    // The desktop box draws its focus border from [_hasFocus].
+    if (widget.desktop && mounted) setState(() {});
     if (node.hasFocus) {
       _selectAll(node);
     } else {
@@ -457,6 +554,7 @@ class _DurationFieldState extends State<_DurationField> {
     final duration = context.watch<PersistentSetting>().getGameDuration();
     if (!_hasFocus) _writeFields(duration);
     final l10n = AppLocalizations.of(context)!;
+    if (widget.desktop) return _buildDesktopBox(l10n);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,6 +596,81 @@ class _DurationFieldState extends State<_DurationField> {
           ),
         ),
       ],
+    );
+  }
+
+  /// The desktop `mm:ss` box: 128 × 52, 1 px `#6f6352`, white, 28/600
+  /// digits (canvas board "Sessions").
+  Widget _buildDesktopBox(AppLocalizations l10n) {
+    return Container(
+      width: _DesktopSizes.valueWidth,
+      height: _DesktopSizes.control,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        border: _hasFocus
+            ? Border.all(color: AppColors.focusOnLight, width: 3)
+            : Border.all(color: AppColors.controlBorder),
+        borderRadius: AppRadii.lgRadius,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _desktopSegment(
+            key: const Key('duration-minutes'),
+            controller: _minutesController,
+            focusNode: _minutesFocus,
+            label: l10n.sessions_minutes,
+          ),
+          const ExcludeSemantics(
+            child: Text(':', style: _DesktopSizes.valueStyle),
+          ),
+          _desktopSegment(
+            key: const Key('duration-seconds'),
+            controller: _secondsController,
+            focusNode: _secondsFocus,
+            label: l10n.sessions_seconds,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _desktopSegment({
+    required Key key,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required String label,
+  }) {
+    // Flexible: a wide fallback font must not overflow the 128 px box.
+    return Flexible(
+      child: SizedBox(
+        width: 44,
+        child: Semantics(
+          label: label,
+          child: TextField(
+            key: key,
+            controller: controller,
+            focusNode: focusNode,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            maxLength: 2,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: _DesktopSizes.valueStyle,
+            decoration: const InputDecoration(
+              isDense: true,
+              counterText: '',
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              filled: false,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onTap: () => _selectAll(focusNode),
+            onSubmitted: (_) => _commit(),
+          ),
+        ),
+      ),
     );
   }
 
@@ -557,7 +730,12 @@ class _NumberField extends StatefulWidget {
     required this.min,
     required this.max,
     required this.onChanged,
+    this.desktop = false,
   });
+
+  /// Draws only the 128 × 52 field of the desktop board; the row around it
+  /// gives the label and the steppers.
+  final bool desktop;
 
   final Key fieldKey;
   final String label;
@@ -635,6 +813,50 @@ class _NumberFieldState extends State<_NumberField> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.desktop) {
+      return SizedBox(
+        width: _DesktopSizes.valueWidth,
+        height: _DesktopSizes.control,
+        child: Semantics(
+          label: widget.label,
+          child: TextField(
+            key: widget.fieldKey,
+            controller: _controller,
+            focusNode: _focus,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            textAlignVertical: TextAlignVertical.center,
+            // Fill the 52 px box.
+            expands: true,
+            maxLines: null,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(3),
+            ],
+            style: _DesktopSizes.valueStyle,
+            decoration: const InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: AppColors.white,
+              contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              border: OutlineInputBorder(
+                borderRadius: AppRadii.lgRadius,
+                borderSide: BorderSide(color: AppColors.controlBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: AppRadii.lgRadius,
+                borderSide: BorderSide(color: AppColors.controlBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: AppRadii.lgRadius,
+                borderSide: BorderSide(color: AppColors.focusOnLight, width: 3),
+              ),
+            ),
+            onSubmitted: (_) => _commit(),
+          ),
+        ),
+      );
+    }
     return Row(
       children: [
         Expanded(

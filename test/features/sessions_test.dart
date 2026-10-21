@@ -6,22 +6,28 @@ import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:good_bad_board/state/timer_data.dart';
 import 'package:provider/provider.dart';
+import '../support/courts_harness.dart' show StopClockOnDispose;
 import '../support/prefs_sandbox.dart';
 import '../support/repository_sandbox.dart';
 
 Widget createTestWidget({GameData? gameData, TimerData? timerData}) {
-  return MultiProvider(
-    providers: [
-      ChangeNotifierProvider<GameData>.value(value: gameData ?? GameData()),
-      ChangeNotifierProvider<PersistentSetting>.value(
-        value: PersistentSetting.instance,
+  final timer = timerData ?? TimerData();
+  // Stops a running round clock when the tree goes away.
+  return StopClockOnDispose(
+    timer: timer,
+    child: MultiProvider(
+      providers: [
+        ChangeNotifierProvider<GameData>.value(value: gameData ?? GameData()),
+        ChangeNotifierProvider<PersistentSetting>.value(
+          value: PersistentSetting.instance,
+        ),
+        ChangeNotifierProvider<TimerData>.value(value: timer),
+      ],
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: SessionsPage()),
       ),
-      ChangeNotifierProvider<TimerData>.value(value: timerData ?? TimerData()),
-    ],
-    child: const MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: SessionsPage()),
     ),
   );
 }
@@ -319,13 +325,20 @@ void main() {
     const capacityField = Key('sessions-capacity-field');
     const courtsField = Key('sessions-courts-field');
 
-    /// Twelve checked-in players dealt over two courts.
-    Future<GameData> runningSession() async {
-      final gameData = GameData()..setNumberOfCourt(2);
-      for (final player in await createTestPlayers(12)) {
+    /// Twelve checked-in players dealt over two courts, round 1 READY.
+    /// With [start], round 1 is RUNNING on [timer].
+    Future<GameData> session(
+      WidgetTester tester,
+      TimerData timer, {
+      bool start = true,
+    }) async {
+      final gameData = GameData(timer: timer)..setNumberOfCourt(2);
+      final players = (await tester.runAsync(() => createTestPlayers(12)))!;
+      for (final player in players) {
         gameData.checkInPlayer(player);
       }
-      await gameData.makeGame();
+      gameData.generateFirstRound();
+      if (start) gameData.startFirstRound();
       return gameData;
     }
 
@@ -463,8 +476,8 @@ void main() {
     testWidgets('SESS-04: should_ask_before_reshuffling_a_running_round', (
       tester,
     ) async {
-      final gameData = (await tester.runAsync(runningSession))!;
-      final timerData = TimerData()..isRunning = true;
+      final timerData = TimerData();
+      final gameData = await session(tester, timerData);
       await tester.pumpWidget(
         createTestWidget(gameData: gameData, timerData: timerData),
       );
@@ -473,14 +486,14 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
-      expect(find.text('Discard the current round?'), findsOneWidget);
+      expect(find.text('Discard round 1?'), findsOneWidget);
     });
 
     testWidgets('SESS-04: should_keep_the_court_count_when_cancelled', (
       tester,
     ) async {
-      final gameData = (await tester.runAsync(runningSession))!;
-      final timerData = TimerData()..isRunning = true;
+      final timerData = TimerData();
+      final gameData = await session(tester, timerData);
       await tester.pumpWidget(
         createTestWidget(gameData: gameData, timerData: timerData),
       );
@@ -497,8 +510,8 @@ void main() {
     testWidgets('SESS-04: should_restore_the_field_when_cancelled', (
       tester,
     ) async {
-      final gameData = (await tester.runAsync(runningSession))!;
-      final timerData = TimerData()..isRunning = true;
+      final timerData = TimerData();
+      final gameData = await session(tester, timerData);
       await tester.pumpWidget(
         createTestWidget(gameData: gameData, timerData: timerData),
       );
@@ -516,8 +529,8 @@ void main() {
     });
 
     testWidgets('SESS-04: should_reshuffle_when_confirmed', (tester) async {
-      final gameData = (await tester.runAsync(runningSession))!;
-      final timerData = TimerData()..isRunning = true;
+      final timerData = TimerData();
+      final gameData = await session(tester, timerData);
       await tester.pumpWidget(
         createTestWidget(gameData: gameData, timerData: timerData),
       );
@@ -534,21 +547,24 @@ void main() {
     testWidgets('SESS-04: should_not_ask_when_no_round_is_running', (
       tester,
     ) async {
-      final gameData = (await tester.runAsync(runningSession))!;
-      await tester.pumpWidget(createTestWidget(gameData: gameData));
+      final timerData = TimerData();
+      final gameData = await session(tester, timerData, start: false);
+      await tester.pumpWidget(
+        createTestWidget(gameData: gameData, timerData: timerData),
+      );
 
       await tester.enterText(find.byKey(courtsField), '3');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
-      expect(find.text('Discard the current round?'), findsNothing);
+      expect(find.text('Discard round 1?'), findsNothing);
     });
 
     testWidgets('SESS-06: should_keep_everything_when_load_is_cancelled', (
       tester,
     ) async {
-      final gameData = (await tester.runAsync(runningSession))!;
-      final timerData = TimerData()..isRunning = true;
+      final timerData = TimerData();
+      final gameData = await session(tester, timerData);
       await tester.pumpWidget(
         createTestWidget(gameData: gameData, timerData: timerData),
       );
