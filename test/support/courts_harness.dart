@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'dart:math';
+
+import 'package:flutter/services.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,8 +21,19 @@ import 'repository_sandbox.dart';
 /// Sets up the preferences and a temp-dir repository sandbox for a Courts
 /// widget test file. Tests never touch the real data directory
 /// (PERSISTENCE.md §2.2).
+///
+/// It also loads the bundled Source Sans 3, so text has its real width and
+/// the layout tests (NAV-07, F16) measure what the club sees.
 void setUpCourtsSandbox(String name) {
   late RepositorySandbox sandbox;
+  setUpAll(() async {
+    final bytes = File(
+      'asset/font/SourceSans3VF-Upright.ttf',
+    ).readAsBytesSync();
+    final loader = FontLoader(AppTypography.family)
+      ..addFont(Future.value(ByteData.sublistView(bytes)));
+    await loader.load();
+  });
   setUp(() async {
     mockPreferences({});
     await PersistentSetting.instance.initialize();
@@ -60,29 +74,30 @@ class CourtsHarness {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    // A running clock must not outlive the test.
-    addTearDown(timer.reset);
     await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<GameData>.value(value: gameData),
-          ChangeNotifierProvider<TimerData>.value(value: timer),
-          ChangeNotifierProvider<PersistentSetting>.value(
-            value: PersistentSetting.instance,
-          ),
-        ],
-        child: MaterialApp(
-          locale: locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
-            backgroundColor: AppColors.pageBg,
-            body: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(height: 56),
-                Expanded(child: DashboardPage()),
-              ],
+      _StopClockOnDispose(
+        timer: timer,
+        child: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GameData>.value(value: gameData),
+            ChangeNotifierProvider<TimerData>.value(value: timer),
+            ChangeNotifierProvider<PersistentSetting>.value(
+              value: PersistentSetting.instance,
+            ),
+          ],
+          child: MaterialApp(
+            locale: locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(
+              backgroundColor: AppColors.pageBg,
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 56),
+                  Expanded(child: DashboardPage()),
+                ],
+              ),
             ),
           ),
         ),
@@ -140,3 +155,27 @@ Finder slotFinder(int court, int slot) => find.byKey(Key('slot-$court-$slot'));
 /// The "⋯" button of that slot.
 Finder slotMoreFinder(int court, int slot) =>
     find.byKey(Key('slot-more-$court-$slot'));
+
+/// Stops the round clock when the test tree goes away, so no periodic timer
+/// outlives the test. It is the root, so it is disposed last, after every
+/// widget that listens to the clock.
+class _StopClockOnDispose extends StatefulWidget {
+  const _StopClockOnDispose({required this.timer, required this.child});
+
+  final TimerData timer;
+  final Widget child;
+
+  @override
+  State<_StopClockOnDispose> createState() => _StopClockOnDisposeState();
+}
+
+class _StopClockOnDisposeState extends State<_StopClockOnDispose> {
+  @override
+  void dispose() {
+    widget.timer.reset();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}

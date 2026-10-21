@@ -165,7 +165,11 @@ void main() {
     await h.tap(slotFinder(1, 0));
     await tester.pumpAndSettle();
 
-    final size = tester.getSize(find.byType(SnackBar));
-    expect(size.width <= 400 && size.height <= 64, isTrue);
+    final box = find.descendant(
+      of: find.byType(SnackBar),
+      matching: find.byType(Material),
+    );
+    final size = tester.getSize(box.first);
+    expect(size.width == 360 && size.height <= 64, isTrue);
   });
 }

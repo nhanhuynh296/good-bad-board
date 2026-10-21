@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_bad_board/features/dashboard/dashboard.dart';
+import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/game.dart';
 
 import '../support/courts_harness.dart';
@@ -218,10 +219,15 @@ void main() {
       find.byKey(Key('waitlist-item-${last.id}')),
       100,
       scrollable: find.descendant(
-        of: find.byType(WaitlistPanel),
+        of: find.descendant(
+          of: find.byType(WaitlistPanel),
+          matching: find.byType(ListView),
+        ),
         matching: find.byType(Scrollable),
       ),
     );
+    await tester.ensureVisible(find.byKey(Key('waitlist-item-${last.id}')));
+    await tester.pumpAndSettle();
 
     expect(find.byKey(Key('waitlist-item-${last.id}')).hitTestable(), findsOne);
     expect(inPanel(find.text('SEARCH WAITLIST')).hitTestable(), findsOne);
