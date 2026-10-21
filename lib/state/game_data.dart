@@ -414,6 +414,18 @@ class GameData extends ChangeNotifier {
   int get displayRoundNumber =>
       _inChangeover && !_discarded ? _roundNumber + 1 : _roundNumber;
 
+  /// The round that a player checked in now waits for (PLY-17): the first
+  /// round with no saved lineup. That is the next round to start, or the
+  /// round after a saved next round. Before the first round starts, and in
+  /// READY (round 1 is a draft), it is [roundNumber].
+  int get waitsForRound {
+    if (_inChangeover) return displayRoundNumber + 1;
+    return switch (_phase) {
+      RoundPhase.noLineup || RoundPhase.ready => _roundNumber,
+      _ => _roundNumber + (isNextRoundSaved ? 2 : 1),
+    };
+  }
+
   /// The round that [endSession] logs, for the dialog text (F09): the
   /// round that started last, or `null` when nothing is logged (READY, no
   /// lineup, a changeover after a discard).
