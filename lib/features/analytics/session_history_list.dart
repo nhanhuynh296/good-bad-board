@@ -40,8 +40,8 @@ class SessionHistoryList extends StatelessWidget {
             Text(
               l10n.analytics_no_sessions_logged,
               style: const TextStyle(
-                fontFamily: AppTypography.bodyFont,
-                fontSize: 13,
+                fontFamily: AppTypography.family,
+                fontSize: AppTypography.sizeBody,
                 fontStyle: FontStyle.italic,
                 color: AppColors.textSubtle,
               ),
@@ -63,8 +63,8 @@ class SessionHistoryList extends StatelessWidget {
                           .map((p) => playerDisplayName(p, l10n))
                           .join(', '),
                       style: const TextStyle(
-                        fontFamily: AppTypography.bodyFont,
-                        fontSize: 12,
+                        fontFamily: AppTypography.family,
+                        fontSize: AppTypography.sizeCaption,
                         color: AppColors.textPrimary,
                       ),
                     ),

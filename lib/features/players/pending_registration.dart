@@ -47,9 +47,9 @@ class PendingRegistrationCard extends StatelessWidget {
               context,
             )!.players_pending_registrations_title(count),
             style: const TextStyle(
-              fontFamily: AppTypography.bodyFont,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeCaption,
+              fontWeight: AppTypography.semibold,
               color: AppColors.textPrimary,
             ),
           ),

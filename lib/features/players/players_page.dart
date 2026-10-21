@@ -420,8 +420,8 @@ class _PlayersPageState extends State<PlayersPage> {
                             context,
                           )!.players_no_players_matching(_query),
                     style: const TextStyle(
-                      fontFamily: AppTypography.bodyFont,
-                      fontSize: 13,
+                      fontFamily: AppTypography.family,
+                      fontSize: AppTypography.sizeBody,
                       fontStyle: FontStyle.italic,
                       color: AppColors.textSubtle,
                     ),
@@ -881,9 +881,9 @@ class _HeaderLabel extends StatelessWidget {
     return Text(
       label.toUpperCase(),
       style: const TextStyle(
-        fontFamily: AppTypography.bodyFont,
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
+        fontFamily: AppTypography.family,
+        fontSize: AppTypography.sizeCaption,
+        fontWeight: AppTypography.semibold,
         color: AppColors.textSubtle,
       ),
     );

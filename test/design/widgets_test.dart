@@ -197,22 +197,22 @@ void main() {
       expect(shape.borderRadius, AppRadii.smRadius);
     });
 
-    testWidgets('should_use_11px_text_for_the_secondary_variant', (
+    testWidgets('should_use_12px_text_for_the_secondary_variant', (
       tester,
     ) async {
       await tester.pumpWidget(
         wrap(AppButton.secondary(label: 'Cancel', onPressed: () {})),
       );
 
-      expect(tester.widget<Text>(find.text('Cancel')).style!.fontSize, 11);
+      expect(tester.widget<Text>(find.text('Cancel')).style!.fontSize, 12);
     });
 
-    testWidgets('should_use_12px_text_for_the_primary_variant', (tester) async {
+    testWidgets('should_use_14px_text_for_the_primary_variant', (tester) async {
       await tester.pumpWidget(
         wrap(AppButton.primary(label: 'Save', onPressed: () {})),
       );
 
-      expect(tester.widget<Text>(find.text('Save')).style!.fontSize, 12);
+      expect(tester.widget<Text>(find.text('Save')).style!.fontSize, 14);
     });
 
     testWidgets('onPressed can be null', (tester) async {

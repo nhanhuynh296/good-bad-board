@@ -5,9 +5,6 @@ import 'package:good_bad_board/design/design.dart';
 // New code should import 'package:good_bad_board/design/design.dart' directly.
 export 'package:good_bad_board/design/design.dart' show AppColors;
 
-/// The app's single font family (Source Sans 3, bundled as asset).
-const String fontFamily = 'SourceSans3';
-
 /// Legacy outlined border constants — kept for backward compatibility
 /// with existing widget code that references them directly.
 const outlinedBorderSide = BorderSide(width: 2);
@@ -32,8 +29,13 @@ const commonButtonTheme = ButtonStyle(
 );
 
 /// Light theme — delegates to [AppTheme.light].
-ThemeData? _cachedLightTheme;
-ThemeData get lightTheme => _cachedLightTheme ??= AppTheme.light();
+ThemeData get lightTheme => lightThemeFor(null);
+
+final _lightThemes = <Locale?, ThemeData>{};
+
+/// Light theme with the Chinese font fallback for [locale] (R3-Q6).
+ThemeData lightThemeFor(Locale? locale) =>
+    _lightThemes.putIfAbsent(locale, () => AppTheme.light(locale: locale));
 
 /// Dark theme — delegates to [AppTheme.dark].
 ThemeData? _cachedDarkTheme;

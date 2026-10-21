@@ -82,8 +82,8 @@ class PlayerSlot extends StatelessWidget {
                     : Text(
                         AppLocalizations.of(context)!.dashboard_open_slot,
                         style: const TextStyle(
-                          fontFamily: AppTypography.bodyFont,
-                          fontSize: 13,
+                          fontFamily: AppTypography.family,
+                          fontSize: AppTypography.sizeBody,
                           fontStyle: FontStyle.italic,
                           color: AppColors.textSubtle,
                         ),
@@ -96,9 +96,9 @@ class PlayerSlot extends StatelessWidget {
                     AppLocalizations.of(context)!,
                   ),
                   style: const TextStyle(
-                    fontFamily: AppTypography.bodyFont,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontFamily: AppTypography.family,
+                    fontSize: AppTypography.sizeBody,
+                    fontWeight: AppTypography.semibold,
                     color: AppColors.accentPrimary,
                   ),
                 ),

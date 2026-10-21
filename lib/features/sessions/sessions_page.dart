@@ -274,7 +274,7 @@ class _SessionsPageState extends State<SessionsPage> {
                         Text(
                           template.name,
                           style: AppTypography.body.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.semibold,
                           ),
                         ),
                         Text(
@@ -464,7 +464,7 @@ class _DurationFieldState extends State<_DurationField> {
         Text(
           l10n.sessions_rotation_duration,
           style: AppTypography.body.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.semibold,
             color: AppColors.textPrimary,
           ),
         ),
@@ -640,7 +640,9 @@ class _NumberFieldState extends State<_NumberField> {
         Expanded(
           child: Text(
             widget.label,
-            style: AppTypography.body.copyWith(fontWeight: FontWeight.w600),
+            style: AppTypography.body.copyWith(
+              fontWeight: AppTypography.semibold,
+            ),
           ),
         ),
         SizedBox(

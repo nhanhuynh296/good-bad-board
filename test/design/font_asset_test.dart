@@ -5,10 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// The font families that `pubspec.yaml` declares.
 List<String> _declaredFamilies() {
   final pubspec = File('pubspec.yaml').readAsStringSync();
-  return RegExp(r'^\s*- family:\s*(\S+)\s*$', multiLine: true)
-      .allMatches(pubspec)
-      .map((m) => m.group(1)!)
-      .toList();
+  return RegExp(
+    r'^\s*- family:\s*(\S+)\s*$',
+    multiLine: true,
+  ).allMatches(pubspec).map((m) => m.group(1)!).toList();
 }
 
 void main() {

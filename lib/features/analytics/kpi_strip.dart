@@ -101,9 +101,9 @@ class _RangeChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontFamily: AppTypography.bodyFont,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeCaption,
+              fontWeight: AppTypography.semibold,
               color: isSelected
                   ? AppColors.accentOnPrimary
                   : AppColors.textPrimary,

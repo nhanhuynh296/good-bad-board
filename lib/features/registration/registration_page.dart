@@ -132,9 +132,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
             l10n.registration_review_note,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontFamily: AppTypography.bodyFont,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeCaption,
+              fontWeight: AppTypography.regular,
               color: AppColors.textSubtle,
             ),
           ),

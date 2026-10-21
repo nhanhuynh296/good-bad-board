@@ -41,9 +41,9 @@ class ConfirmationScreen extends StatelessWidget {
             l10n.registration_thanks(firstName),
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontFamily: AppTypography.displayFont,
-              fontSize: 19,
-              fontWeight: FontWeight.w700,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeTitle,
+              fontWeight: AppTypography.semibold,
               color: AppColors.textPrimary,
             ),
           ),

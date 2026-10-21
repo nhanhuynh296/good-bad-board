@@ -5,236 +5,321 @@ import 'package:good_bad_board/design/app_colors.dart';
 ///
 /// Reference: ARCHITECTURE.md Section 1.2.
 ///
-/// One family: Source Sans 3 (bundled variable font, `wght` axis).
+/// One family: Source Sans 3 (bundled variable font, `wght` axis). Hierarchy
+/// comes from 6 sizes and 3 weights, not from a second family (UX-25, R3-Q6).
 abstract class AppTypography {
-  /// Display font family — Source Sans 3
-  static const String displayFont = 'SourceSans3';
+  /// The only bundled font family — Source Sans 3.
+  static const String family = 'SourceSans3';
 
-  /// Body font family — Source Sans 3
-  static const String bodyFont = 'SourceSans3';
+  // ── Sizes (R2-Q20) ─────────────────────────────────────
 
-  // ── Type Scale ──────────────────────────────────────────
+  /// `text.timer` — round bar time.
+  static const double sizeTimer = 50;
 
-  /// Stat strip labels, KPI labels — 10px, 700, uppercase, letter-spacing 0.05em
-  static const TextStyle statLabel = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 10,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textMuted,
-    letterSpacing: 0.05 * 10, // 0.05em at 10px
-  );
+  /// `text.display` — page titles, check-in count, KPI values.
+  static const double sizeDisplay = 28;
 
-  /// Helper text, hints, table headers, chart labels — 11px, 600
-  static const TextStyle helper = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textMuted,
-  );
+  /// `text.title` — scan field text, result box name, session bar time.
+  static const double sizeTitle = 20;
 
-  /// Helper bold — 11px, 700
-  static const TextStyle helperBold = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textMuted,
-  );
+  /// `text.subtitle` — court titles, row names, panel titles, result text.
+  static const double sizeSubtitle = 16;
 
-  /// Secondary info, tab buttons, chip text — 12px, 500
-  static const TextStyle sm = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    color: AppColors.textMuted,
-  );
+  /// `text.body` — body and data, slot names, buttons, tabs.
+  static const double sizeBody = 14;
 
-  /// Secondary info bold — 12px, 700
-  static const TextStyle smBold = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 12,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
+  /// `text.caption` — secondary lines, caps labels, chips, tags.
+  static const double sizeCaption = 12;
 
-  /// Body text, list items, form labels — 13px, 500
-  static const TextStyle body = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 13,
-    fontWeight: FontWeight.w500,
-    color: AppColors.textPrimary,
-  );
+  /// The 6 sizes of the type scale, largest first.
+  static const List<double> scale = [
+    sizeTimer,
+    sizeDisplay,
+    sizeTitle,
+    sizeSubtitle,
+    sizeBody,
+    sizeCaption,
+  ];
 
-  /// Player names, section titles — 14px, 600
-  static const TextStyle md = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
-  );
+  // ── Weights ────────────────────────────────────────────
 
-  /// Card titles (Space Grotesk) — 15px, 700
-  static const TextStyle cardTitle = TextStyle(
-    fontFamily: displayFont,
-    fontSize: 15,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
+  /// Body and data: levels, IDs, helper text, result text.
+  static const FontWeight regular = FontWeight.w400;
 
-  /// Tight card title variant — 14px, 700
-  static const TextStyle cardTitleTight = TextStyle(
-    fontFamily: displayFont,
-    fontSize: 14,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
+  /// Names, buttons, titles, timers, counts, caps labels, tags, chips.
+  static const FontWeight semibold = FontWeight.w600;
 
-  /// Stat values — 16px, 700
-  static const TextStyle statValueSm = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 16,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
+  /// Page titles only.
+  static const FontWeight extraBold = FontWeight.w800;
 
-  /// Stat values, header titles — 19px, 800
-  static const TextStyle statValue = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 19,
-    fontWeight: FontWeight.w800,
-    color: AppColors.textPrimary,
-  );
+  /// Letter spacing of caps labels, chips and tags (0.08em at 12px).
+  static const double capsLetterSpacing = 0.08 * sizeCaption;
 
-  /// Header title — 19px, 700
-  static const TextStyle xl = TextStyle(
-    fontFamily: displayFont,
-    fontSize: 19,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
+  /// Letter spacing of court titles (0.04em at 16px).
+  static const double courtTitleLetterSpacing = 0.04 * sizeSubtitle;
 
-  /// KPI values (dashboard), club name — 22px, 700
-  static const TextStyle kpiValue = TextStyle(
-    fontFamily: displayFont,
-    fontSize: 22,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
+  // ── Locale fallback (R3-Q6) ────────────────────────────
 
-  /// Page titles — 26px, 700
-  static const TextStyle pageTitle = TextStyle(
-    fontFamily: displayFont,
-    fontSize: 26,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
+  /// The Windows system font for Chinese text. Source Sans 3 has no Chinese
+  /// glyphs, and nothing is bundled for Chinese.
+  static List<String> fallbackFor(Locale? locale) {
+    if (locale == null || locale.languageCode != 'zh') return const [];
+    return locale.countryCode == 'HK'
+        ? const ['Microsoft JhengHei']
+        : const ['Microsoft YaHei'];
+  }
 
-  /// Large KPI value — 26px, 700
-  static const TextStyle kpiValueLarge = TextStyle(
-    fontFamily: displayFont,
-    fontSize: 26,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
+  // ── Scale styles (ARCHITECTURE.md §1.2) ────────────────
 
-  /// KPI card label — 10.5px, 800, uppercase
-  static const TextStyle kpiLabel = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 10.5,
-    fontWeight: FontWeight.w800,
-    color: AppColors.textMuted,
-    letterSpacing: 0.05 * 10,
-  );
-
-  /// Text input value and hint — 14px, 500
-  static const TextStyle input = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: AppColors.textPrimary,
-  );
-
-  // ── KPI delta ──────────────────────────────────────────
-
-  /// KPI delta label — 11px, 700
-  static const TextStyle kpiDelta = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-  );
-
-  // ── Chip / Pill ────────────────────────────────────────
-
-  /// Chip text — 11px, 700
-  static const TextStyle chip = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textMuted,
-  );
-
-  // ── Button ─────────────────────────────────────────────
-
-  /// Primary button text — 12px, 700
-  static const TextStyle button = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 12,
-    fontWeight: FontWeight.w700,
-  );
-
-  /// Small button text — 11px, 700
-  static const TextStyle buttonSm = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-  );
-
-  // ── Tab / Nav ──────────────────────────────────────────
-
-  /// Tab button text — 12px
-  static const TextStyle tab = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-  );
-
-  /// Bottom tab label — 10px, 700
-  static const TextStyle bottomTabLabel = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 10,
-    fontWeight: FontWeight.w700,
-  );
-
-  // ── Header ─────────────────────────────────────────────
-
-  /// Club name in header — 22px, Space Grotesk, 700, white
-  static const TextStyle clubName = TextStyle(
-    fontFamily: displayFont,
-    fontSize: 22,
-    fontWeight: FontWeight.w700,
+  /// `text.timer` — 50px, 600, tabular figures.
+  static const TextStyle timer = TextStyle(
+    fontFamily: family,
+    fontSize: sizeTimer,
+    fontWeight: semibold,
+    fontFeatures: [FontFeature.tabularFigures()],
     color: AppColors.headerText,
   );
 
-  /// Header subtitle — 12px, headerSub color
+  /// `text.display` page title — 28px, 800.
+  static const TextStyle pageTitle = TextStyle(
+    fontFamily: family,
+    fontSize: sizeDisplay,
+    fontWeight: extraBold,
+    color: AppColors.textPrimary,
+  );
+
+  /// `text.display` number — 28px, 600.
+  static const TextStyle display = TextStyle(
+    fontFamily: family,
+    fontSize: sizeDisplay,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// `text.title` — 20px, 600.
+  static const TextStyle title = TextStyle(
+    fontFamily: family,
+    fontSize: sizeTitle,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// `text.subtitle` — 16px, 600.
+  static const TextStyle subtitle = TextStyle(
+    fontFamily: family,
+    fontSize: sizeSubtitle,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// `text.body` — 14px, 400.
+  static const TextStyle body = TextStyle(
+    fontFamily: family,
+    fontSize: sizeBody,
+    fontWeight: regular,
+    color: AppColors.textPrimary,
+  );
+
+  /// `text.body` strong — 14px, 600. Player names, section titles.
+  static const TextStyle md = TextStyle(
+    fontFamily: family,
+    fontSize: sizeBody,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// `text.caption` — 12px, 400, muted.
+  static const TextStyle sm = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: regular,
+    color: AppColors.textMuted,
+  );
+
+  /// `text.caption` strong — 12px, 600.
+  static const TextStyle smBold = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// `text.caption` caps label — 12px, 600, letter-spacing 0.08em, muted.
+  static const TextStyle statLabel = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: semibold,
+    color: AppColors.textMuted,
+    letterSpacing: capsLetterSpacing,
+  );
+
+  // ── Role styles (all on the scale) ─────────────────────
+
+  /// Helper text, hints, table headers, chart labels — 12px, 400.
+  static const TextStyle helper = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: regular,
+    color: AppColors.textMuted,
+  );
+
+  /// Helper bold — 12px, 600.
+  static const TextStyle helperBold = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: semibold,
+    color: AppColors.textMuted,
+  );
+
+  /// Card / court titles — 16px, 600, letter-spacing 0.04em.
+  static const TextStyle cardTitle = TextStyle(
+    fontFamily: family,
+    fontSize: sizeSubtitle,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+    letterSpacing: courtTitleLetterSpacing,
+  );
+
+  /// Tight card title variant — 14px, 600.
+  static const TextStyle cardTitleTight = TextStyle(
+    fontFamily: family,
+    fontSize: sizeBody,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// Small stat values — 16px, 600.
+  static const TextStyle statValueSm = TextStyle(
+    fontFamily: family,
+    fontSize: sizeSubtitle,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// Stat values — 20px, 600.
+  static const TextStyle statValue = TextStyle(
+    fontFamily: family,
+    fontSize: sizeTitle,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// Large title — 20px, 600.
+  static const TextStyle xl = TextStyle(
+    fontFamily: family,
+    fontSize: sizeTitle,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// KPI values (Analytics) — 28px, 600.
+  static const TextStyle kpiValue = TextStyle(
+    fontFamily: family,
+    fontSize: sizeDisplay,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// Large KPI value — 28px, 600.
+  static const TextStyle kpiValueLarge = TextStyle(
+    fontFamily: family,
+    fontSize: sizeDisplay,
+    fontWeight: semibold,
+    color: AppColors.textPrimary,
+  );
+
+  /// KPI card caps label — 12px, 600, letter-spacing 0.08em.
+  static const TextStyle kpiLabel = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: semibold,
+    color: AppColors.textMuted,
+    letterSpacing: capsLetterSpacing,
+  );
+
+  /// Text input value and hint — 14px, 400.
+  static const TextStyle input = TextStyle(
+    fontFamily: family,
+    fontSize: sizeBody,
+    fontWeight: regular,
+    color: AppColors.textPrimary,
+  );
+
+  /// KPI delta label — 12px, 600.
+  static const TextStyle kpiDelta = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: semibold,
+  );
+
+  /// Chip text — 12px, 600.
+  static const TextStyle chip = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: semibold,
+    color: AppColors.textMuted,
+  );
+
+  /// Button text — 14px, 600 (ARCHITECTURE.md §2.6: all buttons 14/600).
+  static const TextStyle button = TextStyle(
+    fontFamily: family,
+    fontSize: sizeBody,
+    fontWeight: semibold,
+  );
+
+  /// Small toggle and chip-button text — 12px, 600.
+  ///
+  /// Kept at 12px until the Sessions and Players controls are redrawn to
+  /// the §2.6 buttons (14/600); 14px overflows their current layouts.
+  static const TextStyle buttonSm = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: semibold,
+  );
+
+  /// Tab button text — 14px, 600.
+  static const TextStyle tab = TextStyle(
+    fontFamily: family,
+    fontSize: sizeBody,
+    fontWeight: semibold,
+  );
+
+  /// Bottom tab label — 12px, 600.
+  static const TextStyle bottomTabLabel = TextStyle(
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: semibold,
+  );
+
+  /// Club name in header — 20px, 600, white.
+  static const TextStyle clubName = TextStyle(
+    fontFamily: family,
+    fontSize: sizeTitle,
+    fontWeight: semibold,
+    color: AppColors.headerText,
+  );
+
+  /// Header subtitle — 12px, 400, headerSub colour.
   static const TextStyle headerSubtitle = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: regular,
     color: AppColors.headerSub,
   );
 
-  /// Compact header club name — 16px, white
+  /// Compact header club name — 16px, 600, white.
   static const TextStyle clubNameCompact = TextStyle(
-    fontFamily: displayFont,
-    fontSize: 16,
-    fontWeight: FontWeight.w700,
+    fontFamily: family,
+    fontSize: sizeSubtitle,
+    fontWeight: semibold,
     color: AppColors.headerText,
   );
 
-  /// Compact header tab label — 11px, headerSub color
+  /// Compact header tab label — 12px, 400, headerSub colour.
   static const TextStyle headerTabLabel = TextStyle(
-    fontFamily: bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w500,
+    fontFamily: family,
+    fontSize: sizeCaption,
+    fontWeight: regular,
     color: AppColors.headerSub,
   );
 }

@@ -78,9 +78,9 @@ class _TierCard extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: AppTypography.bodyFont,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                  fontFamily: AppTypography.family,
+                  fontSize: AppTypography.sizeBody,
+                  fontWeight: AppTypography.semibold,
                   color: textColor,
                 ),
               ),
@@ -88,9 +88,9 @@ class _TierCard extends StatelessWidget {
               Text(
                 description,
                 style: TextStyle(
-                  fontFamily: AppTypography.bodyFont,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontFamily: AppTypography.family,
+                  fontSize: AppTypography.sizeCaption,
+                  fontWeight: AppTypography.regular,
                   color: textColor.withValues(alpha: 0.75),
                 ),
               ),

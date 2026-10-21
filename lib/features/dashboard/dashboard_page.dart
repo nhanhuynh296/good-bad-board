@@ -20,7 +20,7 @@ const int _maxCourts = 8;
 
 /// Shortest court card the desktop grid accepts. A 4-slot card this tall
 /// still shows each slot in full (see the compact `CourtCard`).
-const double _minDesktopCourtHeight = 136;
+const double _minDesktopCourtHeight = 134;
 
 /// The Dashboard tab — court grid, waitlist, stat strip, and all game
 /// interactions (place/swap, re-roll, make game, save).
@@ -603,8 +603,8 @@ class _DashboardPageState extends State<DashboardPage> {
             Text(
               AppLocalizations.of(context)!.dashboard_generate_hint,
               style: const TextStyle(
-                fontFamily: AppTypography.bodyFont,
-                fontSize: 13,
+                fontFamily: AppTypography.family,
+                fontSize: AppTypography.sizeBody,
                 fontStyle: FontStyle.italic,
                 color: AppColors.textSubtle,
               ),

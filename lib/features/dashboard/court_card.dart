@@ -252,7 +252,7 @@ class _NextRoundBadge extends StatelessWidget {
             AppLocalizations.of(context)!.dashboard_badge_next,
             style: AppTypography.chip.copyWith(
               color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: AppTypography.semibold,
             ),
           ),
         ],
@@ -282,7 +282,7 @@ class _PlayingBadge extends StatelessWidget {
             AppLocalizations.of(context)!.dashboard_badge_playing,
             style: AppTypography.chip.copyWith(
               color: AppColors.success,
-              fontWeight: FontWeight.w800,
+              fontWeight: AppTypography.semibold,
             ),
           ),
         ],

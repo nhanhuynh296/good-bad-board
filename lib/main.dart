@@ -122,15 +122,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = context.select(
+      (PersistentSetting persistentSetting) => persistentSetting.getLanguage(),
+    );
     return MaterialApp.router(
       routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      theme: lightTheme,
-      locale: context.select(
-        (PersistentSetting persistentSetting) =>
-            persistentSetting.getLanguage(),
-      ),
+      theme: lightThemeFor(locale),
+      locale: locale,
       darkTheme: darkTheme,
       // The redesign defines a light palette only, and most widgets use
       // AppColors directly. A dark system theme changed only the Material

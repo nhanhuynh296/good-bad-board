@@ -157,9 +157,9 @@ class RoundRotationBar extends StatelessWidget {
                     Text(
                       l10n.dashboard_round_label(roundNumber),
                       style: const TextStyle(
-                        fontFamily: AppTypography.displayFont,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                        fontFamily: AppTypography.family,
+                        fontSize: AppTypography.sizeTitle,
+                        fontWeight: AppTypography.semibold,
                         color: Colors.white,
                       ),
                     ),
@@ -167,8 +167,8 @@ class RoundRotationBar extends StatelessWidget {
                     Text(
                       modeLabel,
                       style: const TextStyle(
-                        fontFamily: AppTypography.bodyFont,
-                        fontSize: 12,
+                        fontFamily: AppTypography.family,
+                        fontSize: AppTypography.sizeCaption,
                         color: AppColors.headerSub,
                       ),
                     ),
@@ -190,9 +190,9 @@ class RoundRotationBar extends StatelessWidget {
                       Text(
                         remainingLabel,
                         style: TextStyle(
-                          fontFamily: AppTypography.displayFont,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
+                          fontFamily: AppTypography.family,
+                          fontSize: AppTypography.sizeDisplay,
+                          fontWeight: AppTypography.semibold,
                           fontFeatures: const [FontFeature.tabularFigures()],
                           color: countdownColor,
                         ),
@@ -201,9 +201,9 @@ class RoundRotationBar extends StatelessWidget {
                       Text(
                         l10n.dashboard_until_rotation,
                         style: const TextStyle(
-                          fontFamily: AppTypography.bodyFont,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                          fontFamily: AppTypography.family,
+                          fontSize: AppTypography.sizeCaption,
+                          fontWeight: AppTypography.semibold,
                           color: AppColors.headerSub,
                         ),
                       ),
@@ -277,9 +277,9 @@ class RoundRotationBar extends StatelessWidget {
                 child: Text(
                   l10n.dashboard_next_round_ready,
                   style: const TextStyle(
-                    fontFamily: AppTypography.bodyFont,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
+                    fontFamily: AppTypography.family,
+                    fontSize: AppTypography.sizeCaption,
+                    fontWeight: AppTypography.semibold,
                     letterSpacing: 0.06 * 10,
                     color: AppColors.headerBg,
                   ),
@@ -297,8 +297,8 @@ class RoundRotationBar extends StatelessWidget {
           Text(
             stagedSummary,
             style: const TextStyle(
-              fontFamily: AppTypography.bodyFont,
-              fontSize: 12,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeCaption,
               color: AppColors.headerSub,
             ),
           ),
@@ -406,9 +406,9 @@ class _SelectablePanel extends StatelessWidget {
           Text(
             label.toUpperCase(),
             style: TextStyle(
-              fontFamily: AppTypography.bodyFont,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeCaption,
+              fontWeight: AppTypography.semibold,
               letterSpacing: 0.06 * 10,
               color: selected ? accent : AppColors.headerSub,
             ),
@@ -443,9 +443,9 @@ class _GhostButton extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              fontFamily: AppTypography.bodyFont,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeCaption,
+              fontWeight: AppTypography.semibold,
               color: Colors.white,
             ),
           ),
@@ -478,9 +478,9 @@ class _AccentButton extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              fontFamily: AppTypography.bodyFont,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeCaption,
+              fontWeight: AppTypography.semibold,
               color: AppColors.accentOnPrimary,
             ),
           ),

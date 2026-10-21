@@ -24,8 +24,8 @@ class NewPlayerIntegrationCard extends StatelessWidget {
             Text(
               l10n.analytics_no_new_players,
               style: const TextStyle(
-                fontFamily: AppTypography.bodyFont,
-                fontSize: 13,
+                fontFamily: AppTypography.family,
+                fontSize: AppTypography.sizeBody,
                 fontStyle: FontStyle.italic,
                 color: AppColors.textSubtle,
               ),
@@ -43,9 +43,9 @@ class NewPlayerIntegrationCard extends StatelessWidget {
                           Text(
                             entry.name,
                             style: const TextStyle(
-                              fontFamily: AppTypography.bodyFont,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              fontFamily: AppTypography.family,
+                              fontSize: AppTypography.sizeBody,
+                              fontWeight: AppTypography.semibold,
                               color: AppColors.textPrimary,
                             ),
                           ),
@@ -78,9 +78,9 @@ class NewPlayerIntegrationCard extends StatelessWidget {
                           entry.pctWithRegulars.toStringAsFixed(0),
                         ),
                         style: TextStyle(
-                          fontFamily: AppTypography.bodyFont,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                          fontFamily: AppTypography.family,
+                          fontSize: AppTypography.sizeCaption,
+                          fontWeight: AppTypography.semibold,
                           color: entry.isFavorable
                               ? AppColors.success
                               : AppColors.warningText,

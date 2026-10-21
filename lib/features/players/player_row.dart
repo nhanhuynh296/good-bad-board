@@ -164,9 +164,6 @@ class PlayerRow extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: AppTypography.md.copyWith(
                                     color: nameColor,
-                                    fontWeight: checked
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
                                   ),
                                 ),
                               ),
@@ -254,9 +251,9 @@ class _MembershipPill extends StatelessWidget {
   final VoidCallback? onTap;
 
   static const _textStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
+    fontFamily: AppTypography.family,
+    fontSize: AppTypography.sizeCaption,
+    fontWeight: AppTypography.semibold,
   );
 
   @override

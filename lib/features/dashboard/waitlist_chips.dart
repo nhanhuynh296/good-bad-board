@@ -42,8 +42,8 @@ class WaitlistChips extends StatelessWidget {
         child: Text(
           l10n.dashboard_waitlist_empty,
           style: const TextStyle(
-            fontFamily: AppTypography.bodyFont,
-            fontSize: 13,
+            fontFamily: AppTypography.family,
+            fontSize: AppTypography.sizeBody,
             fontStyle: FontStyle.italic,
             color: AppColors.textSubtle,
           ),

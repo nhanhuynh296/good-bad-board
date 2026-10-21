@@ -257,9 +257,9 @@ class _StatTrioCell extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-              fontFamily: AppTypography.bodyFont,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeTitle,
+              fontWeight: AppTypography.semibold,
               color: AppColors.textPrimary,
             ),
           ),

@@ -120,7 +120,7 @@ class _MembershipCard extends StatelessWidget {
                 l10n.settings_preview_signup,
                 style: AppTypography.body.copyWith(
                   color: AppColors.accentPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.semibold,
                 ),
               ),
             ),

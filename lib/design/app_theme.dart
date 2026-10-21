@@ -32,23 +32,39 @@ const _badgeTheme = BadgeThemeData(
 
 /// Theme factory that wires design tokens into Material [ThemeData].
 abstract class AppTheme {
-  static TextTheme _textTheme(Color textColor, Color labelColor) {
+  /// Every Material text style on the 6-size scale (ARCHITECTURE.md §1.2),
+  /// in Source Sans 3, with the locale's Chinese fallback.
+  static TextTheme _textTheme(
+    Color textColor,
+    Color labelColor,
+    List<String> fallback,
+  ) {
+    TextStyle style(double size, FontWeight weight, Color color) => TextStyle(
+      fontFamily: AppTypography.family,
+      fontFamilyFallback: fallback,
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+    );
+
+    const regular = AppTypography.regular;
+    const semibold = AppTypography.semibold;
     return TextTheme(
-      displayLarge: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-      displayMedium: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-      displaySmall: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-      headlineLarge: TextStyle(color: textColor),
-      headlineMedium: TextStyle(color: textColor),
-      headlineSmall: TextStyle(color: textColor),
-      titleLarge: TextStyle(color: textColor),
-      titleMedium: TextStyle(color: textColor),
-      titleSmall: TextStyle(color: textColor),
-      bodyLarge: TextStyle(color: textColor),
-      bodyMedium: TextStyle(color: textColor),
-      bodySmall: TextStyle(color: textColor),
-      labelLarge: TextStyle(color: labelColor),
-      labelMedium: TextStyle(color: labelColor),
-      labelSmall: TextStyle(color: labelColor),
+      displayLarge: style(AppTypography.sizeTimer, semibold, textColor),
+      displayMedium: style(AppTypography.sizeDisplay, semibold, textColor),
+      displaySmall: style(AppTypography.sizeDisplay, semibold, textColor),
+      headlineLarge: style(AppTypography.sizeDisplay, regular, textColor),
+      headlineMedium: style(AppTypography.sizeDisplay, regular, textColor),
+      headlineSmall: style(AppTypography.sizeTitle, regular, textColor),
+      titleLarge: style(AppTypography.sizeTitle, semibold, textColor),
+      titleMedium: style(AppTypography.sizeSubtitle, semibold, textColor),
+      titleSmall: style(AppTypography.sizeBody, semibold, textColor),
+      bodyLarge: style(AppTypography.sizeSubtitle, regular, textColor),
+      bodyMedium: style(AppTypography.sizeBody, regular, textColor),
+      bodySmall: style(AppTypography.sizeCaption, regular, textColor),
+      labelLarge: style(AppTypography.sizeBody, semibold, labelColor),
+      labelMedium: style(AppTypography.sizeCaption, semibold, labelColor),
+      labelSmall: style(AppTypography.sizeCaption, semibold, labelColor),
     );
   }
 
@@ -92,7 +108,10 @@ abstract class AppTheme {
   }
 
   /// Clubhouse light theme.
-  static ThemeData light() {
+  ///
+  /// [locale] picks the Chinese system font fallback (R3-Q6).
+  static ThemeData light({Locale? locale}) {
+    final fallback = AppTypography.fallbackFor(locale);
     return ThemeData(
       useMaterial3: true,
       colorScheme: const ColorScheme.light(
@@ -107,17 +126,17 @@ abstract class AppTheme {
         surface: AppColors.cardBg,
         onSurface: AppColors.textPrimary,
       ),
-      fontFamily: AppTypography.bodyFont,
+      fontFamily: AppTypography.family,
+      fontFamilyFallback: fallback,
       scaffoldBackgroundColor: AppColors.pageBg,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
-        titleTextStyle: TextStyle(
-          fontFamily: AppTypography.displayFont,
-          color: AppColors.textPrimary,
+        titleTextStyle: AppTypography.title.copyWith(
+          fontFamilyFallback: fallback,
         ),
         elevation: 0,
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
-        systemOverlayStyle: SystemUiOverlayStyle(
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: AppColors.pageBg,
           statusBarIconBrightness: Brightness.dark,
           statusBarBrightness: Brightness.light,
@@ -129,7 +148,11 @@ abstract class AppTheme {
         elevation: 2,
         shape: const RoundedRectangleBorder(borderRadius: AppRadii.xlRadius),
       ),
-      textTheme: _textTheme(AppColors.textPrimary, AppColors.textPrimary),
+      textTheme: _textTheme(
+        AppColors.textPrimary,
+        AppColors.textPrimary,
+        fallback,
+      ),
       dialogTheme: const DialogThemeData(
         shape: RoundedRectangleBorder(borderRadius: AppRadii.xlRadius),
       ),
@@ -193,12 +216,12 @@ abstract class AppTheme {
         surface: AppColors.darkCardBg,
         onSurface: AppColors.white,
       ),
-      fontFamily: AppTypography.bodyFont,
+      fontFamily: AppTypography.family,
       scaffoldBackgroundColor: AppColors.darkPageBg,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          fontFamily: AppTypography.displayFont,
+          fontFamily: AppTypography.family,
           color: AppColors.darkAccent,
         ),
         elevation: 0,
@@ -215,7 +238,7 @@ abstract class AppTheme {
         elevation: 2,
         shape: const RoundedRectangleBorder(borderRadius: AppRadii.xlRadius),
       ),
-      textTheme: _textTheme(AppColors.white, AppColors.darkAccent),
+      textTheme: _textTheme(AppColors.white, AppColors.darkAccent, const []),
       dialogTheme: const DialogThemeData(
         shape: RoundedRectangleBorder(borderRadius: AppRadii.xlRadius),
       ),

@@ -31,8 +31,8 @@ class BarChart extends StatelessWidget {
           child: Text(
             AppLocalizations.of(context)!.analytics_no_session_data,
             style: const TextStyle(
-              fontFamily: AppTypography.bodyFont,
-              fontSize: 13,
+              fontFamily: AppTypography.family,
+              fontSize: AppTypography.sizeBody,
               fontStyle: FontStyle.italic,
               color: AppColors.textSubtle,
             ),
@@ -61,9 +61,9 @@ class BarChart extends StatelessWidget {
                       Text(
                         points[i].valueLabel!,
                         style: const TextStyle(
-                          fontFamily: AppTypography.bodyFont,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          fontFamily: AppTypography.family,
+                          fontSize: AppTypography.sizeCaption,
+                          fontWeight: AppTypography.semibold,
                           color: AppColors.textMuted,
                         ),
                       ),
@@ -95,8 +95,8 @@ class BarChart extends StatelessWidget {
                     Text(
                       points[i].label,
                       style: const TextStyle(
-                        fontFamily: AppTypography.bodyFont,
-                        fontSize: 9.5,
+                        fontFamily: AppTypography.family,
+                        fontSize: AppTypography.sizeCaption,
                         color: AppColors.textSubtle,
                       ),
                       maxLines: 1,
@@ -129,8 +129,8 @@ class HorizontalBarList extends StatelessWidget {
       return Text(
         AppLocalizations.of(context)!.analytics_no_data,
         style: const TextStyle(
-          fontFamily: AppTypography.bodyFont,
-          fontSize: 13,
+          fontFamily: AppTypography.family,
+          fontSize: AppTypography.sizeBody,
           fontStyle: FontStyle.italic,
           color: AppColors.textSubtle,
         ),
@@ -155,9 +155,9 @@ class HorizontalBarList extends StatelessWidget {
                     Text(
                       entry.label,
                       style: const TextStyle(
-                        fontFamily: AppTypography.bodyFont,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontFamily: AppTypography.family,
+                        fontSize: AppTypography.sizeCaption,
+                        fontWeight: AppTypography.semibold,
                         color: AppColors.textPrimary,
                       ),
                       maxLines: 1,
@@ -167,8 +167,8 @@ class HorizontalBarList extends StatelessWidget {
                       Text(
                         entry.caption!,
                         style: const TextStyle(
-                          fontFamily: AppTypography.bodyFont,
-                          fontSize: 10,
+                          fontFamily: AppTypography.family,
+                          fontSize: AppTypography.sizeCaption,
                           color: AppColors.textSubtle,
                         ),
                         maxLines: 1,
@@ -195,9 +195,9 @@ class HorizontalBarList extends StatelessWidget {
                 child: Text(
                   entry.valueLabel ?? entry.value.toStringAsFixed(1),
                   style: const TextStyle(
-                    fontFamily: AppTypography.bodyFont,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                    fontFamily: AppTypography.family,
+                    fontSize: AppTypography.sizeCaption,
+                    fontWeight: AppTypography.semibold,
                     color: AppColors.textMuted,
                   ),
                 ),

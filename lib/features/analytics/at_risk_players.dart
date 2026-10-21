@@ -24,8 +24,8 @@ class AtRiskPlayersCard extends StatelessWidget {
             Text(
               l10n.analytics_no_lapsed,
               style: const TextStyle(
-                fontFamily: AppTypography.bodyFont,
-                fontSize: 13,
+                fontFamily: AppTypography.family,
+                fontSize: AppTypography.sizeBody,
                 fontStyle: FontStyle.italic,
                 color: AppColors.textSubtle,
               ),
@@ -40,9 +40,9 @@ class AtRiskPlayersCard extends StatelessWidget {
                       child: Text(
                         entry.name,
                         style: const TextStyle(
-                          fontFamily: AppTypography.bodyFont,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          fontFamily: AppTypography.family,
+                          fontSize: AppTypography.sizeBody,
+                          fontWeight: AppTypography.semibold,
                           color: AppColors.textPrimary,
                         ),
                       ),
@@ -58,7 +58,7 @@ class AtRiskPlayersCard extends StatelessWidget {
                       l10n.analytics_weeks_since_seen(entry.weeksSinceLastSeen),
                       style: AppTypography.helperBold.copyWith(
                         color: AppColors.warningText,
-                        fontSize: 11,
+                        fontSize: AppTypography.sizeCaption,
                       ),
                     ),
                   ],

@@ -32,9 +32,9 @@ class LevelAdjuster extends StatelessWidget {
   bool get _canIncrease => currentLevel != Elo.values.last;
 
   static const _levelTextStyle = TextStyle(
-    fontFamily: AppTypography.bodyFont,
-    fontSize: 13,
-    fontWeight: FontWeight.w800,
+    fontFamily: AppTypography.family,
+    fontSize: AppTypography.sizeBody,
+    fontWeight: AppTypography.semibold,
     color: AppColors.accentPrimary,
   );
 
@@ -101,9 +101,9 @@ class _AdjustButton extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                fontFamily: AppTypography.bodyFont,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
+                fontFamily: AppTypography.family,
+                fontSize: AppTypography.sizeSubtitle,
+                fontWeight: AppTypography.semibold,
                 color: AppColors.textPrimary,
               ),
             ),

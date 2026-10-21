@@ -27,7 +27,7 @@ class CapacityBar extends StatelessWidget {
             context,
           )!.players_capacity_left(checkedIn, capacity, remaining),
           style: AppTypography.body.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.semibold,
             color: AppColors.textPrimary,
           ),
         ),
@@ -68,7 +68,7 @@ class AtCapacityBanner extends StatelessWidget {
         AppLocalizations.of(context)!.players_at_capacity_banner,
         style: AppTypography.body.copyWith(
           color: AppColors.warningText,
-          fontWeight: FontWeight.w600,
+          fontWeight: AppTypography.semibold,
         ),
       ),
     );
