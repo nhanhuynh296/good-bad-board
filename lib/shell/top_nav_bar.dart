@@ -14,12 +14,11 @@ class TopNavTab {
   final bool isActive;
 }
 
-/// The top navigation bar shown on desktop and tablet.
+/// The tablet top navigation bar: a scrollable row of the 5 tabs, kept as
+/// before the 2026-10-17 design (R2-Q23, R6-Q7). The desktop uses
+/// `DesktopTopNavBar` (IMPLEMENTATION 8.6.1).
 ///
-/// A scrollable tab row. Desktop uses more padding than tablet.
-///
-/// The [isDesktop] parameter is computed by the owning [ResponsiveShell]
-/// and avoids duplicating breakpoint logic.
+/// [isDesktop] picks the larger padding; the shell passes `false`.
 ///
 /// Uses the dark header background ([AppColors.headerBg]).
 class TopNavBar extends StatelessWidget {

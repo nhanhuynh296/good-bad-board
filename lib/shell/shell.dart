@@ -8,6 +8,8 @@ library;
 
 export 'responsive_shell.dart';
 export 'top_nav_bar.dart';
+export 'desktop_top_nav_bar.dart';
+export 'session_bar.dart';
 export 'compact_header.dart';
 export 'bottom_tab_bar.dart';
 export 'hamburger_menu.dart';

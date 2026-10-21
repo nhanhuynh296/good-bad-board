@@ -4,8 +4,10 @@ import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/shell/bottom_tab_bar.dart';
 import 'package:good_bad_board/shell/compact_header.dart';
+import 'package:good_bad_board/shell/desktop_top_nav_bar.dart';
 import 'package:good_bad_board/shell/hamburger_menu.dart';
 import 'package:good_bad_board/shell/more_bottom_sheet.dart';
+import 'package:good_bad_board/shell/session_bar.dart';
 import 'package:good_bad_board/shell/top_nav_bar.dart';
 
 /// Metadata for a single navigation tab.
@@ -50,8 +52,9 @@ String _settingsLabel(AppLocalizations l10n) => l10n.settings;
 /// Renders different navigation patterns based on available width:
 /// - **Phone** (<720px): [CompactHeader] + page + [BottomTabBar]
 ///   with [HamburgerMenu] overlay and [MoreBottomSheet] for secondary tabs.
-/// - **Tablet** (720–1079px): [TopNavBar] (stacked layout) + page.
-/// - **Desktop** (≥1080px): [TopNavBar] (row layout) + page.
+/// - **Tablet** (720–1079px): [TopNavBar] (5 tabs) + page.
+/// - **Desktop** (≥1080px): [DesktopTopNavBar] (Courts, Players, Sessions,
+///   "⋯") + [SessionBar] on every tab except Courts + page.
 ///
 /// Designed to be used with [StatefulShellRoute.indexedStack] from go_router.
 /// The [navigationShell] manages the indexed stack of tab pages.
@@ -268,6 +271,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   // ── Desktop / Tablet Layout ───────────────────────────────
 
   Widget _buildDesktopTabletLayout(bool isDesktop) {
+    if (isDesktop) return _buildDesktopLayout();
     final l10n = AppLocalizations.of(context)!;
     final topTabs = <TopNavTab>[];
     for (var i = 0; i < ResponsiveShell.tabs.length; i++) {
@@ -286,16 +290,10 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TopNavBar(tabs: topTabs, isDesktop: isDesktop),
+          TopNavBar(tabs: topTabs, isDesktop: false),
           Expanded(
             child: Padding(
-              // The desktop Courts tab draws its own full-width round bar
-              // under the nav (IMPLEMENTATION 8.5.1), so it gets no padding.
-              padding: isDesktop
-                  ? (_selectedIndex == 0
-                        ? EdgeInsets.zero
-                        : AppSpacing.desktopPadding)
-                  : AppSpacing.tabletPadding,
+              padding: AppSpacing.tabletPadding,
               child: widget.navigationShell,
             ),
           ),
@@ -303,4 +301,56 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
       ),
     );
   }
+
+  /// Desktop (IMPLEMENTATION 8.6): the top nav with Courts, Players,
+  /// Sessions and "⋯" (Analytics, Settings), then the session bar on every
+  /// tab except Courts. The routes stay the same 5 branches.
+  Widget _buildDesktopLayout() {
+    final l10n = AppLocalizations.of(context)!;
+    TopNavTab navTab(int index, String label) => TopNavTab(
+      label: label,
+      isActive: _selectedIndex == index,
+      onTap: () => _onTabSelected(index),
+    );
+    final onCourts = _selectedIndex == _courtsIndex;
+
+    return Scaffold(
+      backgroundColor: AppColors.pageBg,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DesktopTopNavBar(
+            tabs: [
+              navTab(_courtsIndex, l10n.shell_tab_courts),
+              navTab(1, _playersLabel(l10n)),
+              navTab(2, _sessionsLabel(l10n)),
+            ],
+            menuTabs: [
+              navTab(3, _analyticsLabel(l10n)),
+              navTab(4, _settingsLabel(l10n)),
+            ],
+          ),
+          if (!onCourts)
+            SessionBar(onOpenCourts: () => _onTabSelected(_courtsIndex)),
+          Expanded(
+            // A semantics boundary: the modal barrier of the branch route
+            // blocks the semantics painted before it, so without one a
+            // screen reader does not find the top nav and the session bar.
+            child: Semantics(
+              container: true,
+              child: Padding(
+                // The desktop Courts tab draws its own full-width round bar
+                // under the nav (IMPLEMENTATION 8.5.1), so it gets no
+                // padding.
+                padding: onCourts ? EdgeInsets.zero : AppSpacing.desktopPadding,
+                child: widget.navigationShell,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static const int _courtsIndex = 0;
 }
