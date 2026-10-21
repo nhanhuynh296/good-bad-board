@@ -66,8 +66,16 @@ class _AppLoaderState extends State<AppLoader> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: PersistentSetting.instance),
-        ChangeNotifierProvider(create: (_) => GameData()),
-        ChangeNotifierProvider(create: (_) => TimerData()),
+        // One clock: the round state machine in GameData drives the same
+        // TimerData that the round bar watches (IMPLEMENTATION 8.2).
+        ChangeNotifierProvider(
+          create: (_) =>
+              TimerData()
+                ..duration = PersistentSetting.instance.getGameDuration(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => GameData(timer: context.read<TimerData>()),
+        ),
       ],
       child: FutureBuilder(
         future: completer,
