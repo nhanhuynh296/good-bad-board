@@ -232,26 +232,28 @@ class _CourtActionButton extends StatelessWidget {
 class _NextRoundBadge extends StatelessWidget {
   const _NextRoundBadge();
 
-  /// The amber the rotation bar uses for the staged round.
-  static const Color _amber = Color(0xFFFFB38A);
-
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: AppSpacing.chipPadding,
-      decoration: BoxDecoration(
-        color: _amber.withValues(alpha: 0.25),
+      // The NEXT tag (ARCHITECTURE.md §1.1: color.warning.bg / .text).
+      decoration: const BoxDecoration(
+        color: AppColors.warningBg,
         borderRadius: AppRadii.fullRadius,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.schedule_rounded, size: 10, color: _amber),
+          const Icon(
+            Icons.schedule_rounded,
+            size: 10,
+            color: AppColors.warningText,
+          ),
           const SizedBox(width: 4),
           Text(
             AppLocalizations.of(context)!.dashboard_badge_next,
             style: AppTypography.chip.copyWith(
-              color: AppColors.textPrimary,
+              color: AppColors.warningText,
               fontWeight: AppTypography.semibold,
             ),
           ),
@@ -270,7 +272,7 @@ class _PlayingBadge extends StatelessWidget {
     return Container(
       padding: AppSpacing.chipPadding,
       decoration: const BoxDecoration(
-        color: AppColors.successBg,
+        color: AppColors.checkedInBg,
         borderRadius: AppRadii.fullRadius,
       ),
       child: Row(

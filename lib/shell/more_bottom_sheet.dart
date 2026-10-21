@@ -111,7 +111,7 @@ class MoreBottomSheet extends StatelessWidget {
                 size: 20,
                 color: tab.isActive
                     ? AppColors.accentPrimary
-                    : AppColors.textSubtle,
+                    : AppColors.textMuted,
               ),
             ],
           ),

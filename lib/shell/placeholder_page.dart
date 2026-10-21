@@ -22,7 +22,7 @@ class PlaceholderPage extends StatelessWidget {
           Text(
             AppLocalizations.of(context)!.coming_soon,
             style: AppTypography.body.copyWith(
-              color: AppColors.textSubtle,
+              color: AppColors.textMuted,
               fontStyle: FontStyle.italic,
             ),
           ),

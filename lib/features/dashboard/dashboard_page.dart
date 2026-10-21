@@ -597,7 +597,7 @@ class _DashboardPageState extends State<DashboardPage> {
             const Icon(
               Icons.sports_tennis_rounded,
               size: 48,
-              color: AppColors.textSubtle,
+              color: AppColors.textMuted,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
@@ -606,7 +606,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 fontFamily: AppTypography.family,
                 fontSize: AppTypography.sizeBody,
                 fontStyle: FontStyle.italic,
-                color: AppColors.textSubtle,
+                color: AppColors.textMuted,
               ),
             ),
           ],

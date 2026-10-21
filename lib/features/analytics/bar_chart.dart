@@ -34,7 +34,7 @@ class BarChart extends StatelessWidget {
               fontFamily: AppTypography.family,
               fontSize: AppTypography.sizeBody,
               fontStyle: FontStyle.italic,
-              color: AppColors.textSubtle,
+              color: AppColors.textMuted,
             ),
           ),
         ),
@@ -97,7 +97,7 @@ class BarChart extends StatelessWidget {
                       style: const TextStyle(
                         fontFamily: AppTypography.family,
                         fontSize: AppTypography.sizeCaption,
-                        color: AppColors.textSubtle,
+                        color: AppColors.textMuted,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -132,7 +132,7 @@ class HorizontalBarList extends StatelessWidget {
           fontFamily: AppTypography.family,
           fontSize: AppTypography.sizeBody,
           fontStyle: FontStyle.italic,
-          color: AppColors.textSubtle,
+          color: AppColors.textMuted,
         ),
       );
     }
@@ -169,7 +169,7 @@ class HorizontalBarList extends StatelessWidget {
                         style: const TextStyle(
                           fontFamily: AppTypography.family,
                           fontSize: AppTypography.sizeCaption,
-                          color: AppColors.textSubtle,
+                          color: AppColors.textMuted,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

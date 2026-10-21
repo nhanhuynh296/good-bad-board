@@ -27,7 +27,7 @@ class ConfirmationScreen extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: const BoxDecoration(
-              color: AppColors.successBg,
+              color: AppColors.checkedInBg,
               shape: BoxShape.circle,
             ),
             child: const Icon(

@@ -67,7 +67,9 @@ abstract class AppTheme {
   static InputDecorationTheme _inputDecorationTheme({
     required Color accentColor,
   }) {
-    final greySide = _outlinedBorderSide.copyWith(color: AppColors.grey);
+    final greySide = _outlinedBorderSide.copyWith(
+      color: AppColors.controlBorder,
+    );
     final redSide = _outlinedBorderSide.copyWith(color: AppColors.error);
     final focusedSide = _outlinedBorderSide.copyWith(color: accentColor);
 
@@ -109,7 +111,7 @@ abstract class AppTheme {
       useMaterial3: true,
       colorScheme: const ColorScheme.light(
         primary: AppColors.accentPrimary,
-        onPrimary: AppColors.white,
+        onPrimary: AppColors.accentOnPrimary,
         secondary: AppColors.headerBg,
         onSecondary: AppColors.white,
         tertiary: AppColors.pillBg,
@@ -149,13 +151,14 @@ abstract class AppTheme {
       dialogTheme: const DialogThemeData(
         shape: RoundedRectangleBorder(borderRadius: AppRadii.xlRadius),
       ),
+      // The focused field gets the light-surface focus ring (F07).
       inputDecorationTheme: _inputDecorationTheme(
-        accentColor: AppColors.accentPrimary,
+        accentColor: AppColors.focusOnLight,
       ),
       elevatedButtonTheme: const ElevatedButtonThemeData(
         style: ButtonStyle(
           backgroundColor: WidgetStatePropertyAll(AppColors.accentPrimary),
-          foregroundColor: WidgetStatePropertyAll(AppColors.white),
+          foregroundColor: WidgetStatePropertyAll(AppColors.accentOnPrimary),
           shape: WidgetStatePropertyAll(_lightOutlinedBorder),
         ),
       ),

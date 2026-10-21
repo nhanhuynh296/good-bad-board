@@ -423,7 +423,7 @@ class _PlayersPageState extends State<PlayersPage> {
                       fontFamily: AppTypography.family,
                       fontSize: AppTypography.sizeBody,
                       fontStyle: FontStyle.italic,
-                      color: AppColors.textSubtle,
+                      color: AppColors.textMuted,
                     ),
                   ),
                 )
@@ -884,7 +884,7 @@ class _HeaderLabel extends StatelessWidget {
         fontFamily: AppTypography.family,
         fontSize: AppTypography.sizeCaption,
         fontWeight: AppTypography.semibold,
-        color: AppColors.textSubtle,
+        color: AppColors.textMuted,
       ),
     );
   }

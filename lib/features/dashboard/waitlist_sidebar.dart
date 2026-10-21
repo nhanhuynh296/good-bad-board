@@ -56,7 +56,7 @@ class WaitlistSidebar extends StatelessWidget {
                   fontFamily: AppTypography.family,
                   fontSize: AppTypography.sizeBody,
                   fontStyle: FontStyle.italic,
-                  color: AppColors.textSubtle,
+                  color: AppColors.textMuted,
                 ),
               )
             else
@@ -133,7 +133,7 @@ class _WaitlistItem extends StatelessWidget {
                     '$position',
                     style: AppTypography.helper.copyWith(
                       color: isSelected
-                          ? AppColors.white.withValues(alpha: 0.8)
+                          ? AppColors.accentOnPrimary
                           : AppColors.textMuted,
                     ),
                   ),
@@ -143,7 +143,7 @@ class _WaitlistItem extends StatelessWidget {
                   child: Text(
                     player.name(),
                     style: AppTypography.md.copyWith(
-                      color: isSelected ? AppColors.white : null,
+                      color: isSelected ? AppColors.accentOnPrimary : null,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -156,7 +156,7 @@ class _WaitlistItem extends StatelessWidget {
                   ),
                   style: AppTypography.statLabel.copyWith(
                     color: isSelected
-                        ? AppColors.white.withValues(alpha: 0.85)
+                        ? AppColors.accentOnPrimary
                         : AppColors.accentPrimary,
                   ),
                 ),

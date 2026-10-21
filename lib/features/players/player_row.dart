@@ -88,7 +88,7 @@ class PlayerRow extends StatelessWidget {
     final checked = isCheckedIn && !isDisabled;
 
     final background = checked
-        ? AppColors.successBg
+        ? AppColors.checkedInBg
         : isExpanded
         ? AppColors.pillBg.withValues(alpha: 0.4)
         : Colors.transparent;
@@ -109,7 +109,7 @@ class PlayerRow extends StatelessWidget {
           );
 
     final nameColor = isDisabled
-        ? AppColors.textSubtle
+        ? AppColors.textMuted
         : isExpanded
         ? AppColors.accentPrimary
         : AppColors.textPrimary;
@@ -172,7 +172,9 @@ class PlayerRow extends StatelessWidget {
                                 player.signInId ?? '—',
                                 maxLines: 1,
                                 style: AppTypography.sm.copyWith(
-                                  color: AppColors.textSubtle,
+                                  color: checked
+                                      ? AppColors.textMutedOnCheckedIn
+                                      : AppColors.textMuted,
                                 ),
                               ),
                             ],
@@ -259,7 +261,10 @@ class _MembershipPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color bgColor, Color textColor) = switch (status) {
-      MembershipStatus.member => (AppColors.accentPrimary, AppColors.white),
+      MembershipStatus.member => (
+        AppColors.accentPrimary,
+        AppColors.accentOnPrimary,
+      ),
       MembershipStatus.casual => (AppColors.warningBg, AppColors.warningText),
       MembershipStatus.disabled => (
         AppColors.toggleOff,

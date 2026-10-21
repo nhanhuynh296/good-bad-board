@@ -27,7 +27,7 @@ class AtRiskPlayersCard extends StatelessWidget {
                 fontFamily: AppTypography.family,
                 fontSize: AppTypography.sizeBody,
                 fontStyle: FontStyle.italic,
-                color: AppColors.textSubtle,
+                color: AppColors.textMuted,
               ),
             )
           else

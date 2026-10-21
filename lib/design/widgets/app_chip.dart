@@ -23,7 +23,7 @@ class AppChip extends StatelessWidget {
   final bool compact;
 
   static final _selectedStyle = AppTypography.chip.copyWith(
-    color: AppColors.white,
+    color: AppColors.accentOnPrimary,
   );
 
   static const _unselectedStyle = AppTypography.chip;

@@ -78,13 +78,14 @@ class RoundRotationBar extends StatelessWidget {
   /// Callback when the organizer taps "Cancel next".
   final VoidCallback? onCancelStaged;
 
-  /// The accent / urgent amber color from the design tokens.
-  static const Color _amber = Color(0xFFFFB38A);
-
   @override
   Widget build(BuildContext context) {
-    final fillColor = isUrgent ? _amber : AppColors.accentPrimary;
-    final countdownColor = isUrgent ? _amber : Colors.white;
+    final fillColor = isUrgent
+        ? AppColors.urgentOnDark
+        : AppColors.accentPrimary;
+    final countdownColor = isUrgent
+        ? AppColors.urgentOnDark
+        : AppColors.headerText;
     final currentSelected = selectedView == RoundView.current;
     final l10n = AppLocalizations.of(context)!;
 
@@ -120,7 +121,7 @@ class RoundRotationBar extends StatelessWidget {
               panelKey: nextPanelKey,
               label: l10n.dashboard_next_round,
               selected: !currentSelected,
-              accent: _amber,
+              accent: AppColors.urgentOnDark,
               onTap: onSelectView != null
                   ? () => onSelectView!(RoundView.next)
                   : null,
@@ -271,7 +272,7 @@ class RoundRotationBar extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: const BoxDecoration(
-                  color: _amber,
+                  color: AppColors.urgentOnDark,
                   borderRadius: BorderRadius.all(Radius.circular(999)),
                 ),
                 child: Text(
@@ -306,7 +307,7 @@ class RoundRotationBar extends StatelessWidget {
           // Striped progress bar (fills up)
           StripedProgressBar(
             value: (stagedPct / 100.0).clamp(0.0, 1.0),
-            color: _amber,
+            color: AppColors.urgentOnDark,
             backgroundColor: const Color(0x24FFFFFF),
           ),
         ],

@@ -467,7 +467,7 @@ void main() {
         wrap(NewPlayerIntegrationCard(entries: [newcomer(50)])),
       );
 
-      expect(badgeColor(tester), AppColors.successBg);
+      expect(badgeColor(tester), AppColors.checkedInBg);
     });
 
     testWidgets('should_style_under_50_percent_as_needing_attention', (

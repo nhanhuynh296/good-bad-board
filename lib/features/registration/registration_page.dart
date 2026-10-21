@@ -135,7 +135,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               fontFamily: AppTypography.family,
               fontSize: AppTypography.sizeCaption,
               fontWeight: AppTypography.regular,
-              color: AppColors.textSubtle,
+              color: AppColors.textMuted,
             ),
           ),
         ],

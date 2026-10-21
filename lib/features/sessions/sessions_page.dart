@@ -475,7 +475,7 @@ class _DurationFieldState extends State<_DurationField> {
             vertical: AppSpacing.xs,
           ),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.inputBorder),
+            border: Border.all(color: AppColors.controlBorder),
             borderRadius: AppRadii.mdRadius,
           ),
           child: Row(

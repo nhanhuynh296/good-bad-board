@@ -683,7 +683,7 @@ void main() {
             .first,
       );
 
-      expect(material.color, AppColors.successBg);
+      expect(material.color, AppColors.checkedInBg);
     });
 
     testWidgets('should_show_the_name_in_subtle_text_on_a_disabled_row', (
@@ -697,7 +697,7 @@ void main() {
       );
 
       final name = tester.widget<Text>(find.text('Dave Test'));
-      expect(name.style?.color, AppColors.textSubtle);
+      expect(name.style?.color, AppColors.textMuted);
     });
 
     testWidgets('should_hide_the_import_button_by_default', (tester) async {

@@ -39,7 +39,7 @@ class AppSearchInput extends StatelessWidget {
 
   static const _enabledBorder = OutlineInputBorder(
     borderRadius: AppRadii.mdRadius,
-    borderSide: BorderSide(color: AppColors.inputBorder, width: 1),
+    borderSide: BorderSide(color: AppColors.controlBorder, width: 1),
   );
 
   static const _focusedBorder = OutlineInputBorder(
@@ -55,7 +55,7 @@ class AppSearchInput extends StatelessWidget {
   static const _inputStyle = AppTypography.input;
 
   static final _hintStyle = AppTypography.input.copyWith(
-    color: AppColors.textSubtle,
+    color: AppColors.textMuted,
   );
 
   @override

@@ -90,11 +90,11 @@ class AppButton extends StatelessWidget {
       label: label,
       onPressed: onPressed,
       backgroundColor: Colors.transparent,
-      foregroundColor: AppColors.dangerOutline,
+      foregroundColor: AppColors.error,
       borderRadius: AppRadii.smRadius,
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       textStyle: AppTypography.buttonSm,
-      border: const BorderSide(color: AppColors.dangerOutline),
+      border: const BorderSide(color: AppColors.error),
     );
   }
 
@@ -109,7 +109,7 @@ class AppButton extends StatelessWidget {
       label: label,
       onPressed: onPressed,
       backgroundColor: Colors.transparent,
-      foregroundColor: AppColors.textSubtle,
+      foregroundColor: AppColors.textMuted,
       padding: EdgeInsets.zero,
       textStyle: AppTypography.buttonSm,
     );
