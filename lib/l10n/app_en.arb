@@ -1694,5 +1694,275 @@
         "type": "String"
       }
     }
+  },
+  "players_check_in_label": "CHECK IN",
+  "@players_check_in_label": {
+    "description": "Caps label over the desktop scan field (PLY-14)"
+  },
+  "players_scan_placeholder": "Scan card or search name",
+  "@players_scan_placeholder": {
+    "description": "Placeholder of the desktop scan field (PLY-14)"
+  },
+  "players_count_in": "/ {capacity} in",
+  "@players_count_in": {
+    "description": "After the big checked-in number at the right of the scan field (CHK-01)",
+    "placeholders": {
+      "capacity": {
+        "type": "int"
+      }
+    }
+  },
+  "players_places_left": "{count, plural, =1{1 place left} other{{count} places left}}",
+  "@players_places_left": {
+    "description": "Places left under the check-in count (CHK-01)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "players_add_player": "Add player",
+  "@players_add_player": {
+    "description": "Orange button at the right of the scan field (PLY-13)"
+  },
+  "players_scan_ready_title": "Ready to scan",
+  "@players_scan_ready_title": {
+    "description": "Scan result box before the first scan: name part (PLY-16)"
+  },
+  "players_scan_ready_body": "Scan a card, or type a name and press Enter.",
+  "@players_scan_ready_body": {
+    "description": "Scan result box before the first scan: text part (PLY-16)"
+  },
+  "players_scan_in_waits": "is in · waits for round {round}",
+  "@players_scan_in_waits": {
+    "description": "Scan result CHECKED IN, after the player name (PLY-17)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "players_scan_out_takes": "is out · {player} takes Court {court} in round {round}",
+  "@players_scan_out_takes": {
+    "description": "Scan result CHECKED OUT when the fill rule fills the slot, after the player name (PLY-18)",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      },
+      "court": {
+        "type": "int"
+      },
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "players_scan_out": "is out",
+  "@players_scan_out": {
+    "description": "Scan result CHECKED OUT when nobody takes a slot, after the player name (PLY-18)"
+  },
+  "players_scan_twice": "is already in (same card as the last scan). Nothing changed.",
+  "@players_scan_twice": {
+    "description": "Scan result SCANNED TWICE, after the player name (PLY-19)"
+  },
+  "players_scan_check_out": "Check out",
+  "@players_scan_check_out": {
+    "description": "Button in the SCANNED TWICE result box (PLY-19)"
+  },
+  "players_scan_not_found_title": "No match",
+  "@players_scan_not_found_title": {
+    "description": "Scan result NOT FOUND: name part (PLY-14)"
+  },
+  "players_scan_not_found": "for “{text}”. Check the card, or add the player.",
+  "@players_scan_not_found": {
+    "description": "Scan result NOT FOUND: text part (PLY-14)",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_many_title": "{count, plural, =1{1 player matches} other{{count} players match}}",
+  "@players_scan_many_title": {
+    "description": "Scan result MANY MATCHES: name part (PLY-14)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "players_scan_many": "“{text}” · nothing changed. Tap a row, or type more.",
+  "@players_scan_many": {
+    "description": "Scan result MANY MATCHES: text part (PLY-14, F19)",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_full_title": "Session full",
+  "@players_scan_full_title": {
+    "description": "Scan result SESSION FULL: name part (PLY-14)"
+  },
+  "players_scan_full": "{checkedIn} / {capacity} in · {name} is not checked in.",
+  "@players_scan_full": {
+    "description": "Scan result SESSION FULL: text part (PLY-14)",
+    "placeholders": {
+      "checkedIn": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_disabled_more": "is disabled · enable the player in More to check in.",
+  "@players_scan_disabled_more": {
+    "description": "Scan result DISABLED, after the player name (PLY-14)"
+  },
+  "players_scan_duplicate_title": "ID {id}",
+  "@players_scan_duplicate_title": {
+    "description": "Scan result DUPLICATE ID: name part (PLY-14, R6-Q12)",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "players_scan_duplicate_body": "{count, plural, =1{is used by 1 player · nothing changed. Fix the ID in More.} other{is used by {count} players · nothing changed. Fix the ID in More.}}",
+  "@players_scan_duplicate_body": {
+    "description": "Scan result DUPLICATE ID: text part (PLY-14, R6-Q12)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "players_header_name": "NAME",
+  "@players_header_name": {
+    "description": "Desktop player table header (PLY-08)"
+  },
+  "players_header_sign_in_id": "SIGN-IN ID",
+  "@players_header_sign_in_id": {
+    "description": "Desktop player table header and More panel label (PLY-08, PLY-15)"
+  },
+  "players_header_level": "LEVEL",
+  "@players_header_level": {
+    "description": "Desktop player table header and More panel label (PLY-05, PLY-08)"
+  },
+  "players_header_type": "TYPE",
+  "@players_header_type": {
+    "description": "Desktop player table header (PLY-08)"
+  },
+  "players_membership_label": "MEMBERSHIP",
+  "@players_membership_label": {
+    "description": "More panel label over the membership control (PLY-06)"
+  },
+  "players_filter_by_level": "Filter by level",
+  "@players_filter_by_level": {
+    "description": "Screen reader label of the level chips (R6-Q13)"
+  },
+  "players_row_checked_in": "{name}, checked in. Tap to check out",
+  "@players_row_checked_in": {
+    "description": "Screen reader label of a checked-in desktop row (PLY-08)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_row_not_checked_in": "{name}, not checked in. Tap to check in",
+  "@players_row_not_checked_in": {
+    "description": "Screen reader label of a desktop row that is not checked in (PLY-08)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_row_disabled": "{name}, disabled",
+  "@players_row_disabled": {
+    "description": "Screen reader label of a Disabled desktop row (PLY-08, CHK-06)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_more_about": "More about {name}",
+  "@players_more_about": {
+    "description": "Screen reader label of the row More button (PLY-09, F23)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_details": "{name} details",
+  "@players_details": {
+    "description": "Screen reader label of the More panel (PLY-09)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_lower_level": "Lower level",
+  "@players_lower_level": {
+    "description": "Screen reader label of the level − button in the More panel (PLY-05)"
+  },
+  "players_raise_level": "Raise level",
+  "@players_raise_level": {
+    "description": "Screen reader label of the level + button in the More panel (PLY-05)"
+  },
+  "players_delete_named": "Delete {name}",
+  "@players_delete_named": {
+    "description": "Screen reader label of the delete button in the More panel (PLY-07)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_close_details": "Close details",
+  "@players_close_details": {
+    "description": "Screen reader label of the close button in the More panel (PLY-11)"
+  },
+  "players_id_saved": "Saved.",
+  "@players_id_saved": {
+    "description": "Under the sign-in ID field after a save (PLY-15)"
+  },
+  "players_id_used_by": "ID {id} is used by {name}.",
+  "@players_id_used_by": {
+    "description": "Sign-in ID save refused: the ID belongs to another player (PLY-15, F23)",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_disable_confirm_title": "Disable {name}?",
+  "@players_disable_confirm_title": {
+    "description": "Title of the confirm before a checked-in player is set to Disabled (PLY-06, F23)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "players_disable_confirm_body": "{name} is checked in. Disabled checks the player out now and removes the player from the court or the waitlist.",
+  "@players_disable_confirm_body": {
+    "description": "Body of the confirm before a checked-in player is set to Disabled (PLY-06, F23)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }
