@@ -109,6 +109,66 @@ void main() {
     });
   });
 
+  group('Two-column layout (canvas comment 2026-10-22)', () {
+    double middle(WidgetTester tester) =>
+        tester.getCenter(find.byType(MorePanel)).dx;
+
+    testWidgets('should_put_the_edit_controls_in_the_left_column', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      await h.openMore('Alice');
+
+      expect(
+        tester.getTopRight(find.text('MEMBERSHIP')).dx,
+        lessThan(middle(tester)),
+      );
+    });
+
+    testWidgets('should_put_the_stats_in_the_right_column', (tester) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      await h.openMore('Alice');
+
+      expect(
+        tester.getTopLeft(find.text('CURRENT LEVEL')).dx,
+        greaterThan(middle(tester)),
+      );
+    });
+
+    testWidgets('should_put_the_stats_level_with_the_sign_in_id', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      await h.openMore('Alice');
+
+      expect(
+        tester.getTopLeft(find.text('CURRENT LEVEL')).dy,
+        lessThan(tester.getTopLeft(find.text('MEMBERSHIP')).dy),
+      );
+    });
+
+    for (final locale in const [
+      Locale('fr'),
+      Locale('zh'),
+      Locale('zh', 'HK'),
+    ]) {
+      testWidgets('should_fit_without_overflow_in_$locale', (tester) async {
+        final h = PlayersHarness(tester);
+        await h.pump(players: [alice], locale: locale);
+
+        await h.openMore('Alice');
+
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
+
   group('Level (PLY-05)', () {
     testWidgets('should_show_the_tier_name_in_the_panel', (tester) async {
       final h = PlayersHarness(tester);
