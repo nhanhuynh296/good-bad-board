@@ -40,6 +40,7 @@ dependencies:
   uuid: ^4.5.1
   json_annotation: ^4.9.0
   path_provider: ^2.1.5
+  path: ^1.9.1
   intl: any
   file_picker: ^10.2.0
   csv: ^6.0.0
@@ -63,6 +64,9 @@ dev_dependencies:
   build_runner: ^2.5.2
   freezed: ^3.0.6
   test: ^1.25.15
+  shared_preferences_platform_interface: ^2.4.1
+  integration_test:
+    sdk: flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -76,9 +80,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   fonts:
-    - family: Gotham
+    # Source Sans 3 variable font (one wght axis), SIL OFL 1.1:
+    # see asset/font/SourceSans3-LICENSE.md.
+    - family: SourceSans3
       fonts:
-        - asset: asset/font/NotoSans-VariableFont_wdth,wght.ttf
+        - asset: asset/font/SourceSans3VF-Upright.ttf
 
   assets:
     - asset/image/

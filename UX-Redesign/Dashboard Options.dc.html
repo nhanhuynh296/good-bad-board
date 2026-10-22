@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#f0eee9;font-family:'Inter',system-ui,sans-serif}
+  .dv-turn{padding:40px 44px 60px;scroll-margin-top:16px}
+  .dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+  .dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+  .dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}
+  .dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+  .dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+  .dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+  .dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}
+  .dv-card{max-width:100%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.14);overflow:hidden}
+  .dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}
+  .tabbtn{border:none;cursor:pointer;font-family:inherit;font-weight:700;transition:all .15s ease}
+  .tabbtn:hover{opacity:.85}
+  .slotrow{display:flex;align-items:center;justify-content:space-between}
+  .elobtn{cursor:pointer;border:none;font-weight:800;transition:transform .1s ease}
+  .elobtn:active{transform:scale(.9)}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t3">
+  <div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Full feature build on the agreed <a class="dv-oid" href="#2a">2a</a> theme — check-in/capacity, session setup &amp; templates, round modes, schedule, deeper analytics, player profiles, membership, settings</span></div>
+  <div class="dv-opts">
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Full app — 7 tabs, same light/warm theme</div>
+      <div class="dv-card" style="width:1280px;background:#fffdfa;font-family:'Inter',sans-serif;position:relative">
+
+        <div style="{{ eTheme.header }}">
+          <div>
+            <div style="{{ eTheme.headerTitle }}">Riverside Badminton Club</div>
+            <div style="{{ eTheme.headerSub }}">Tuesday Evening Session · 7:00–9:00 PM · {{ eSettings.roundModeLabel }}</div>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;max-width:640px;justify-content:flex-end">
+            <button class="tabbtn" onClick="{{ eSetTabDashboard }}" style="{{ eTabStyle_dashboard }}">Dashboard</button>
+            <button class="tabbtn" onClick="{{ eSetTabCheckin }}" style="{{ eTabStyle_checkin }}">Check-in</button>
+            <button class="tabbtn" onClick="{{ eSetTabPlayers }}" style="{{ eTabStyle_players }}">Players</button>
+            <button class="tabbtn" onClick="{{ eSetTabSessions }}" style="{{ eTabStyle_sessions }}">Sessions</button>
+            <button class="tabbtn" onClick="{{ eSetTabSchedule }}" style="{{ eTabStyle_schedule }}">Schedule</button>
+            <button class="tabbtn" onClick="{{ eSetTabAnalytics }}" style="{{ eTabStyle_analytics }}">Analytics</button>
+            <button class="tabbtn" onClick="{{ eSetTabSettings }}" style="{{ eTabStyle_settings }}">Settings</button>
+          </div>
+        </div>
+
+        <div style="{{ eTheme.statStrip }}">
+          <div style="{{ eTheme.statCell }}"><div style="{{ eTheme.statLabel }}">CHECKED IN</div><div style="{{ eTheme.statValue }}">{{ eStats.checkedIn }}/{{ eStats.capacity }}</div></div>
+          <div style="{{ eTheme.statCell }}"><div style="{{ eTheme.statLabel }}">REMAINING SLOTS</div><div style="{{ eTheme.statValue }}">{{ eStats.remaining }}</div></div>
+          <div style="{{ eTheme.statCell }}"><div style="{{ eTheme.statLabel }}">WAITLIST</div><div style="{{ eTheme.statValueAccent }}">{{ eStats.waitlistCount }}</div></div>
+          <div style="{{ eTheme.statCell }}"><div style="{{ eTheme.statLabel }}">AVG LEVEL</div><div style="{{ eTheme.statValue }}">{{ eStats.avgLevelLabel }}</div></div>
+          <div style="{{ eTheme.statCell }}"><div style="{{ eTheme.statLabel }}">AVG LEVEL GAP</div><div style="{{ eTheme.statValue }}">{{ eStats.avgLevelGap }}</div></div>
+          <div style="{{ eTheme.statCell }}"><div style="{{ eTheme.statLabel }}">RE-ROLLS</div><div style="{{ eTheme.statValue }}">{{ eStats.rerollCount }}</div></div>
+        </div>
+
+        <sc-if value="{{ eTabIsDashboard }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ eLayoutBalanced }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:{{ eTheme.gapRaw }};padding:24px 32px 32px">
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:{{ eTheme.gapRaw }}">
+              <sc-for list="{{ eCourts }}" as="court" hint-placeholder-count="4">
+                <div style="{{ eTheme.card }}">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <div style="{{ eTheme.sectionTitleNoMargin }}">COURT {{ court.number }}</div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="{{ eTheme.spreadPill }}">{{ court.spread }}</span>
+                      <button class="tabbtn" onClick="{{ court.reroll }}" style="{{ eTheme.rerollBtn }}">Re-roll ⟲</button>
+                    </div>
+                  </div>
+                  <sc-for list="{{ court.slots }}" as="slot" hint-placeholder-count="4">
+                    <div class="slotrow" onClick="{{ slot.onSlotClick }}" style="{{ slot.rowStyle }}">
+                      <sc-if value="{{ slot.occupied }}" hint-placeholder-val="{{ true }}">
+                        <span style="{{ eTheme.slotName }}">{{ slot.player.name }}</span>
+                        <span style="{{ eTheme.courtEloText }}">{{ slot.player.level }}</span>
+                      </sc-if>
+                      <sc-if value="{{ slot.empty }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:13px;color:#b3a891;font-style:italic;padding:6px 4px">Open slot</span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+            <div style="width:270px;{{ eTheme.card }}">
+              <div style="{{ eTheme.sectionTitleNoMargin }}">Waitlist</div>
+              <sc-for list="{{ eWaitlist }}" as="wp" hint-placeholder-count="2">
+                <div class="slotrow" onClick="{{ wp.onSelect }}" style="{{ wp.rowStyle }}">
+                  <span style="font-size:13px;font-weight:600">{{ wp.pos }}. {{ wp.name }}</span>
+                  <span style="font-size:12px;font-weight:700">{{ wp.level }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ eWaitlistEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#b3a891;font-style:italic;padding:8px 0">No one waiting</div>
+              </sc-if>
+              <div style="{{ eTheme.hintText }}">{{ eSwapHint }}</div>
+            </div>
+          </div>
+          </sc-if>
+          <sc-if value="{{ eLayoutFocused }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px">
+            <div style="{{ eTheme.card }}">
+              <div style="{{ eTheme.sectionTitleNoMargin }}">Waitlist</div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+                <sc-for list="{{ eWaitlist }}" as="wp" hint-placeholder-count="2">
+                  <div onClick="{{ wp.onSelect }}" style="{{ wp.rowStyle }}">
+                    <span style="font-size:13px;font-weight:600">{{ wp.pos }}. {{ wp.name }}</span>
+                    <span style="font-size:12px;font-weight:700;margin-left:6px">{{ wp.level }}</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ eWaitlistEmpty }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:13px;color:#b3a891;font-style:italic">No one waiting</div>
+                </sc-if>
+              </div>
+              <div style="{{ eTheme.hintText }}">{{ eSwapHint }}</div>
+            </div>
+            <div style="height:16px"></div>
+            <div style="display:grid;grid-template-columns:1fr;gap:{{ eTheme.gapRaw }}">
+              <sc-for list="{{ eCourts }}" as="court" hint-placeholder-count="4">
+                <div style="{{ eTheme.card }}">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <div style="{{ eTheme.sectionTitleNoMargin }}">COURT {{ court.number }}</div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="{{ eTheme.spreadPill }}">{{ court.spread }}</span>
+                      <button class="tabbtn" onClick="{{ court.reroll }}" style="{{ eTheme.rerollBtn }}">Re-roll ⟲</button>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <sc-for list="{{ court.slots }}" as="slot" hint-placeholder-count="4">
+                      <div class="slotrow" onClick="{{ slot.onSlotClick }}" style="{{ slot.rowStyle }}">
+                        <sc-if value="{{ slot.occupied }}" hint-placeholder-val="{{ true }}">
+                          <span style="{{ eTheme.slotName }}">{{ slot.player.name }}</span>
+                          <span style="{{ eTheme.courtEloText }}">{{ slot.player.level }}</span>
+                        </sc-if>
+                        <sc-if value="{{ slot.empty }}" hint-placeholder-val="{{ false }}">
+                          <span style="font-size:13px;color:#b3a891;font-style:italic;padding:6px 4px">Open slot</span>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ eTabIsCheckin }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+              <div style="flex:1;background:{{ eTheme.pillBgRaw }};border-radius:8px;height:12px;overflow:hidden"><div style="height:100%;background:{{ eTheme.accentColor }};width:{{ eStats.capacityPct }}"></div></div>
+              <div style="font-size:13px;font-weight:700;color:#221d18;white-space:nowrap">{{ eStats.checkedIn }} / {{ eStats.capacity }} · {{ eStats.remaining }} slots left</div>
+            </div>
+            <sc-if value="{{ eStats.atCapacity }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fdeee4;color:#a8481a;font-size:12px;font-weight:700;padding:8px 12px;border-radius:8px;margin-bottom:14px">Session at capacity — new check-ins will join the waitlist.</div>
+            </sc-if>
+            <div style="display:flex;font-size:11px;font-weight:700;color:#b3a891;text-transform:uppercase;padding:0 4px 8px">
+              <div style="flex:2">Name</div><div style="width:110px">Level</div><div style="width:100px">Status</div><div style="width:110px">Present</div>
+            </div>
+            <sc-for list="{{ eCheckinPlayers }}" as="p" hint-placeholder-count="8">
+              <div style="display:flex;align-items:center;padding:9px 4px;border-top:1px solid #f0e6d6">
+                <div style="flex:2;font-size:14px;font-weight:600;color:#221d18">{{ p.name }}</div>
+                <div style="{{ eTheme.checkinEloText }}">{{ p.level }}</div>
+                <div style="width:100px;font-size:12px;color:#b3a891">{{ p.statusLabel }}</div>
+                <div style="width:110px"><button class="tabbtn" onClick="{{ p.toggleCheckin }}" style="{{ p.checkinStyle }}">{{ p.checkinLabel }}</button></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ eTabIsPlayers }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px">
+            <sc-if value="{{ ePendingCount }}" hint-placeholder-val="{{ false }}">
+              <div style="{{ eTheme.card }};margin-bottom:16px">
+                <div style="font-size:12px;font-weight:800;color:{{ eTheme.titleColorRaw }};margin-bottom:8px">Pending self-registrations ({{ ePendingCount }})</div>
+                <sc-for list="{{ ePending }}" as="pr" hint-placeholder-count="2">
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid #f0e6d6">
+                    <span style="font-size:13px;color:#221d18">{{ pr.name }} <span style="color:#b3a891">· est. {{ pr.estLevel }} · {{ pr.contact }}</span></span>
+                    <div style="display:flex;gap:6px">
+                      <button class="tabbtn" onClick="{{ pr.approve }}" style="background:#2ea043;color:#fff;font-size:11px;padding:5px 10px;border-radius:6px">Approve</button>
+                      <button class="tabbtn" onClick="{{ pr.reject }}" style="background:#f0e6d6;color:#8a7c68;font-size:11px;padding:5px 10px;border-radius:6px">Reject</button>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <input value="{{ eSearch }}" onChange="{{ eSetSearch }}" placeholder="Search players…" style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:8px;border:1px solid #e2d8c8;font-size:14px;margin-bottom:14px;font-family:inherit">
+            <div style="display:flex;font-size:11px;font-weight:700;color:#b3a891;text-transform:uppercase;padding:0 4px 8px">
+              <div style="flex:2">Name</div><div style="width:70px">ID</div><div style="width:120px">Level</div><div style="width:90px">Status</div><div style="width:100px">Member</div><div style="width:90px">Checked in</div>
+            </div>
+            <sc-for list="{{ eFilteredPlayers }}" as="p" hint-placeholder-count="8">
+              <div style="border-top:1px solid #f0e6d6">
+                <div style="display:flex;align-items:center;padding:9px 4px">
+                  <div style="flex:2;font-size:14px;font-weight:600;color:#221d18;cursor:pointer;text-decoration:underline;text-decoration-color:#e2d8c8" onClick="{{ p.toggleProfile }}">{{ p.name }}</div>
+                  <div style="width:70px;font-size:12px;color:#b3a891">{{ p.code }}</div>
+                  <div style="width:120px;display:flex;align-items:center;gap:5px">
+                    <button class="elobtn" onClick="{{ p.levelDown }}" disabled="{{ p.levelDownDisabled }}" style="width:20px;height:20px;border-radius:6px;background:#f0e6d6;color:#221d18;opacity:{{ p.levelDownDisabled }}">−</button>
+                    <span style="{{ eTheme.tableEloText }};width:82px">{{ p.level }}</span>
+                    <button class="elobtn" onClick="{{ p.levelUp }}" disabled="{{ p.levelUpDisabled }}" style="width:20px;height:20px;border-radius:6px;background:#f0e6d6;color:#221d18;opacity:{{ p.levelUpDisabled }}">+</button>
+                  </div>
+                  <div style="width:90px"><button class="tabbtn" onClick="{{ p.toggleActive }}" style="{{ p.statusStyle }}">{{ p.statusLabel }}</button></div>
+                  <div style="width:100px"><button class="tabbtn" onClick="{{ p.toggleMembership }}" style="{{ p.membershipStyle }}">{{ p.membershipLabel }}</button></div>
+                  <div style="width:90px"><button class="tabbtn" onClick="{{ p.toggleCheckin }}" style="{{ p.checkinStyle }}">{{ p.checkinLabel }}</button></div>
+                </div>
+                <sc-if value="{{ p.expanded }}" hint-placeholder-val="{{ false }}">
+                  <div style="{{ eTheme.card }};margin:0 4px 14px">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+                      <div style="font-size:12px;color:#b3a891">{{ p.profile.membershipLabel }}</div>
+                      <button class="tabbtn" onClick="{{ p.toggleProfile }}" style="background:{{ eTheme.pillBgRaw }};color:{{ eTheme.titleColorRaw }};border-radius:6px;width:24px;height:24px">✕</button>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-bottom:18px">
+                      <div style="flex:1;background:{{ eTheme.pageBgRaw }};border-radius:10px;padding:10px;text-align:center;border:1px solid {{ eTheme.cardBorderRaw }}"><div style="font-size:18px;font-weight:800;color:{{ eTheme.accentColor }}">{{ p.level }}</div><div style="font-size:10px;color:#8a7c68;font-weight:700">CURRENT LEVEL</div></div>
+                      <div style="flex:1;background:{{ eTheme.pageBgRaw }};border-radius:10px;padding:10px;text-align:center;border:1px solid {{ eTheme.cardBorderRaw }}"><div style="font-size:20px;font-weight:800;color:{{ eTheme.titleColorRaw }}">{{ p.profile.matches }}</div><div style="font-size:10px;color:#8a7c68;font-weight:700">MATCHES</div></div>
+                      <div style="flex:1;background:{{ eTheme.pageBgRaw }};border-radius:10px;padding:10px;text-align:center;border:1px solid {{ eTheme.cardBorderRaw }}"><div style="font-size:20px;font-weight:800;color:{{ eTheme.titleColorRaw }}">{{ p.profile.diversity }}</div><div style="font-size:10px;color:#8a7c68;font-weight:700">DIVERSITY</div></div>
+                    </div>
+                    <div style="display:flex;gap:20px">
+                      <div style="flex:1">
+                        <div style="font-size:12px;font-weight:700;color:#221d18;margin-bottom:8px">Level progression</div>
+                        <svg width="100%" height="70" viewBox="0 0 260 80">
+                          <polyline points="{{ p.profile.levelPoints }}" fill="none" stroke="{{ eTheme.accentColor }}" stroke-width="2.5"></polyline>
+                        </svg>
+                      </div>
+                      <div style="flex:1">
+                        <div style="font-size:12px;font-weight:700;color:#221d18;margin-bottom:8px">Most frequent partners</div>
+                        <sc-for list="{{ p.profile.topPartners }}" as="tp" hint-placeholder-count="3">
+                          <div class="slotrow" style="padding:4px 0"><span style="font-size:13px;color:#221d18">{{ tp.name }}</span><span style="font-size:12px;color:#8a7c68;font-weight:700">{{ tp.count }}×</span></div>
+                        </sc-for>
+                        <sc-if value="{{ p.profile.hasRival }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:11px;color:#8a7c68;margin-top:10px">Frequent court-mate (proxy rival): <strong style="color:#221d18">{{ p.profile.rivalName }}</strong> — {{ p.profile.rivalCount }}×</div>
+                        </sc-if>
+                      </div>
+                    </div>
+                    <div style="font-size:12px;font-weight:700;color:#221d18;margin:16px 0 6px">Session attendance history</div>
+                    <div style="font-size:12px;color:#8a7c68;line-height:1.7">{{ p.profile.attendanceHistory }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ eTabIsSessions }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px;display:flex;gap:20px">
+            <div style="flex:1;{{ eTheme.card }}">
+              <div style="{{ eTheme.sectionTitle }}">Round mode (applies to all courts)</div>
+              <div style="display:flex;gap:8px;margin-bottom:16px">
+                <button class="tabbtn" onClick="{{ eSetRoundGame }}" style="{{ eRoundModeStyle_game }}">Game-based</button>
+                <button class="tabbtn" onClick="{{ eSetRoundTime }}" style="{{ eRoundModeStyle_time }}">Time-based</button>
+              </div>
+              <div style="font-size:12px;color:#8a7c68;margin-bottom:16px;line-height:1.5">{{ eSettings.roundModeDesc }}</div>
+              <sc-if value="{{ eSettings.isTimeBased }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-bottom:16px">
+                  <label style="font-size:12px;font-weight:700;color:#221d18;display:block;margin-bottom:6px">Rotation duration: {{ eSettings.roundDuration }} min</label>
+                  <input type="range" min="10" max="45" step="5" value="{{ eSettings.roundDuration }}" onChange="{{ eSetDuration }}" style="width:100%">
+                </div>
+              </sc-if>
+              <label style="font-size:12px;font-weight:700;color:#221d18;display:block;margin-bottom:6px">Session capacity</label>
+              <input type="number" value="{{ eSettings.sessionCapacity }}" onChange="{{ eSetCapacity }}" style="width:100px;padding:8px 10px;border-radius:8px;border:1px solid #e2d8c8;font-size:13px;margin-bottom:16px;font-family:inherit">
+              <label style="font-size:12px;font-weight:700;color:#221d18;display:block;margin-bottom:6px">Number of courts</label>
+              <input type="number" value="{{ eSettings.courtsCount }}" onChange="{{ eSetCourtsCount }}" style="width:100px;padding:8px 10px;border-radius:8px;border:1px solid #e2d8c8;font-size:13px;font-family:inherit">
+            </div>
+            <div style="flex:1;{{ eTheme.card }}">
+              <div style="{{ eTheme.sectionTitle }}">Session templates</div>
+              <div style="display:flex;gap:8px;margin-bottom:14px">
+                <input value="{{ eTemplateName }}" onChange="{{ eSetTemplateName }}" placeholder="Template name…" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid #e2d8c8;font-size:13px;font-family:inherit">
+                <button class="tabbtn" onClick="{{ eSaveTemplate }}" style="{{ eTheme.saveBtn }}">Save current</button>
+              </div>
+              <sc-for list="{{ eTemplates }}" as="tpl" hint-placeholder-count="2">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid #f0e6d6">
+                  <div>
+                    <div style="font-size:13px;font-weight:700;color:#221d18">{{ tpl.name }}</div>
+                    <div style="font-size:11px;color:#b3a891">{{ tpl.summary }}</div>
+                  </div>
+                  <button class="tabbtn" onClick="{{ tpl.load }}" style="{{ eTheme.loadBtn }}">Load</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ eTabIsSchedule }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px">
+            <div style="{{ eTheme.sectionTitle }}">Recurring sessions</div>
+            <sc-for list="{{ eScheduleItems }}" as="sch" hint-placeholder-count="3">
+              <div style="display:flex;justify-content:space-between;align-items:center;{{ eTheme.card }};margin-bottom:10px">
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#221d18">{{ sch.day }} · {{ sch.time }}</div>
+                  <div style="font-size:12px;color:#8a7c68">{{ sch.note }}</div>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:#2ea043;background:#e6f4ea;padding:5px 10px;border-radius:999px">Auto check-in opens 30 min prior</span>
+              </div>
+            </sc-for>
+            <div style="font-size:12px;color:#b3a891;margin-top:8px">Public calendar view and reminder scheduling live under Settings.</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ eTabIsAnalytics }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+              <div style="{{ eTheme.card }}">
+                <div style="{{ eTheme.sectionTitleTight }}">Attendance trend (last 8 sessions)</div>
+                <div style="display:flex;align-items:flex-end;gap:6px;height:70px">
+                  <sc-for list="{{ eAttendanceBars }}" as="b" hint-placeholder-count="8">
+                    <div style="flex:1;background:{{ eTheme.barMain }};border-radius:3px 3px 0 0;height:{{ b.h }}" title="{{ b.label }}"></div>
+                  </sc-for>
+                </div>
+                <div style="font-size:11px;color:#8a7c68;margin-top:8px">Month-over-month growth: {{ eKpis.momGrowth }}</div>
+              </div>
+              <div style="{{ eTheme.card }}">
+                <div style="{{ eTheme.sectionTitleTight }}">Court utilization (fill rate)</div>
+                <sc-for list="{{ eCourtUtil }}" as="u" hint-placeholder-count="4">
+                  <div style="margin-bottom:8px">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#8a7c68;margin-bottom:3px"><span>Court {{ u.number }}</span><span>{{ u.pct }}</span></div>
+                    <div style="background:{{ eTheme.pillBgRaw }};border-radius:6px;height:8px;overflow:hidden"><div style="height:100%;background:{{ eTheme.barMain }};width:{{ u.pct }}"></div></div>
+                  </div>
+                </sc-for>
+                <div style="font-size:11px;color:#8a7c68;margin-top:6px">Avg session duration: {{ eKpis.avgDuration }} · Peak: {{ eKpis.peakTime }}</div>
+              </div>
+              <div style="{{ eTheme.card }}">
+                <div style="{{ eTheme.sectionTitleTight }}">Matchmaking quality — level gap over time</div>
+                <div style="display:flex;align-items:flex-end;gap:6px;height:60px">
+                  <sc-for list="{{ eSpreadBars }}" as="b" hint-placeholder-count="8">
+                    <div style="flex:1;background:{{ eTheme.barSecondary }};border-radius:3px 3px 0 0;height:{{ b.h }}" title="{{ b.label }}"></div>
+                  </sc-for>
+                </div>
+                <div style="font-size:11px;color:#8a7c68;margin-top:8px">Re-roll frequency: {{ eKpis.rerollFreq }} · Waitlist pressure: {{ eKpis.waitlistPressure }}</div>
+              </div>
+              <div style="{{ eTheme.card }}">
+                <div style="{{ eTheme.sectionTitleTight }}">Level distribution</div>
+                <div style="display:flex;align-items:flex-end;gap:5px;height:60px">
+                  <sc-for list="{{ eBellBars }}" as="b" hint-placeholder-count="9">
+                    <div style="flex:1;background:{{ eTheme.barTertiary }};border-radius:3px 3px 0 0;height:{{ b.h }}" title="{{ b.label }}"></div>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ eStagnationCount }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:11px;color:#a8481a;margin-top:8px;font-weight:700">⚠ {{ eStagnationCount }} players flat on level for 6+ sessions</div>
+                </sc-if>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+              <div style="{{ eTheme.card }}"><div style="font-size:11px;color:#8a7c68;font-weight:700">CHURN RATE</div><div style="font-size:22px;font-weight:800;color:{{ eTheme.titleColorRaw }}">{{ eKpis.churnRate }}</div></div>
+              <div style="{{ eTheme.card }}"><div style="font-size:11px;color:#8a7c68;font-weight:700">RE-ACTIVATION RATE</div><div style="font-size:22px;font-weight:800;color:{{ eTheme.titleColorRaw }}">{{ eKpis.reactivationRate }}</div></div>
+              <div style="{{ eTheme.card }}"><div style="font-size:11px;color:#8a7c68;font-weight:700">NEW PLAYER ONBOARDING</div><div style="font-size:22px;font-weight:800;color:{{ eTheme.titleColorRaw }}">{{ eKpis.onboarding }}</div></div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ eTabIsSettings }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px;display:flex;gap:20px">
+            <div style="flex:1;{{ eTheme.card }}">
+              <div style="{{ eTheme.sectionTitle }}">Notifications</div>
+              <div class="slotrow" style="padding:9px 0;border-top:1px solid #f0e6d6"><span style="font-size:13px;color:#221d18">Session reminders</span><button class="tabbtn" onClick="{{ eToggleReminders }}" style="{{ eSettings.remindersStyle }}">{{ eSettings.remindersLabel }}</button></div>
+              <div class="slotrow" style="padding:9px 0;border-top:1px solid #f0e6d6"><span style="font-size:13px;color:#221d18">Court assignment alerts</span><button class="tabbtn" onClick="{{ eToggleCourtAlerts }}" style="{{ eSettings.courtAlertsStyle }}">{{ eSettings.courtAlertsLabel }}</button></div>
+              <div class="slotrow" style="padding:9px 0;border-top:1px solid #f0e6d6"><span style="font-size:13px;color:#221d18">General announcements</span><button class="tabbtn" onClick="{{ eToggleAnnouncements }}" style="{{ eSettings.announcementsStyle }}">{{ eSettings.announcementsLabel }}</button></div>
+            </div>
+            <div style="flex:1;{{ eTheme.card }}">
+              <div style="{{ eTheme.sectionTitle }}">Membership &amp; self-registration</div>
+              <div style="font-size:12px;color:#8a7c68;margin-bottom:10px;line-height:1.5">Members: {{ eKpis.memberCount }} · Fees outstanding: {{ eKpis.feesOutstanding }}</div>
+              <div style="font-size:12px;font-weight:700;color:#221d18;margin-bottom:6px">Invite link</div>
+              <div style="display:flex;gap:8px;margin-bottom:12px">
+                <input value="{{ eInviteLink }}" readonly="{{ true }}" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid #e2d8c8;font-size:12px;font-family:inherit;color:#8a7c68">
+              </div>
+              <a href="Self Registration.dc.html" target="_blank" style="{{ eTheme.linkAccent }}">Preview signup page →</a>
+              <div style="font-size:12px;font-weight:700;color:#221d18;margin:14px 0 6px">Level calibration</div>
+              <div style="font-size:12px;color:#8a7c68;line-height:1.5">New players self-estimate their level on the signup page; organizers can override any estimate from the Players tab.</div>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </div>
+  <p class="dv-next">Try next: "add the profile card share view" · "wire the analytics numbers to real session data instead of mocks" · "let organizers edit the schedule"</p>
+</section>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Combining <a class="dv-oid" href="#1c">1c</a>'s layout with <a class="dv-oid" href="#1a">1a</a>'s light warm palette · manual waitlist→court swap · 4-tier skill mapping</span></div>
+  <div class="dv-opts">
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Light command layout — header + stat strip, court grid, manual swap</div>
+      <div class="dv-card" style="width:1220px;background:#fffdfa;font-family:'Inter',sans-serif">
+        <div style="padding:26px 32px;border-bottom:1px solid #eee4d8;display:flex;justify-content:space-between;align-items:center;background:#221d18">
+          <div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;letter-spacing:-0.01em;color:#fff">Riverside Badminton Club</div>
+            <div style="font-size:13px;color:#c9c2b8;margin-top:4px">Tuesday Evening Session · 7:00–9:00 PM</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="tabbtn" onClick="{{ dSetTabDashboard }}" style="{{ dTabBtnStyleDashboard }}">Dashboard</button>
+            <button class="tabbtn" onClick="{{ dSetTabPlayers }}" style="{{ dTabBtnStylePlayers }}">Players</button>
+            <button class="tabbtn" onClick="{{ dSetTabAnalytics }}" style="{{ dTabBtnStyleAnalytics }}">Analytics</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#eee4d8;border-bottom:1px solid #eee4d8">
+          <div style="background:#fffdfa;padding:14px 18px"><div style="font-size:10px;color:#8a7c68;font-weight:700">CHECKED IN</div><div style="font-size:20px;font-weight:800;color:#221d18">{{ dStats.checkedIn }}/{{ dStats.total }}</div></div>
+          <div style="background:#fffdfa;padding:14px 18px"><div style="font-size:10px;color:#8a7c68;font-weight:700">WAITLIST</div><div style="font-size:20px;font-weight:800;color:#ff6a2b">{{ dStats.waitlistCount }}</div></div>
+          <div style="background:#fffdfa;padding:14px 18px"><div style="font-size:10px;color:#8a7c68;font-weight:700">AVG ELO</div><div style="font-size:20px;font-weight:800;color:#221d18">{{ dStats.avgElo }}</div></div>
+          <div style="background:#fffdfa;padding:14px 18px"><div style="font-size:10px;color:#8a7c68;font-weight:700">AVG SPREAD</div><div style="font-size:20px;font-weight:800;color:#221d18">{{ dStats.avgSpread }}</div></div>
+          <div style="background:#fffdfa;padding:14px 18px"><div style="font-size:10px;color:#8a7c68;font-weight:700">RE-ROLLS</div><div style="font-size:20px;font-weight:800;color:#221d18">{{ dStats.rerollCount }}</div></div>
+        </div>
+
+        <sc-if value="{{ dTabIsDashboard }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:20px;padding:24px 32px 32px">
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <sc-for list="{{ dCourts }}" as="court" hint-placeholder-count="4">
+                <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18">COURT {{ court.number }}</div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="font-size:11px;font-weight:700;color:#8a7c68;background:#f0e6d6;padding:4px 8px;border-radius:999px">{{ court.spread }} spread</span>
+                      <button class="tabbtn" onClick="{{ court.reroll }}" style="background:#ff6a2b;color:#221d18;border-radius:8px;padding:6px 10px;font-size:11px">Re-roll ⟲</button>
+                    </div>
+                  </div>
+                  <sc-for list="{{ court.slots }}" as="slot" hint-placeholder-count="4">
+                    <div class="slotrow" onClick="{{ slot.onSlotClick }}" style="{{ slot.rowStyle }}">
+                      <sc-if value="{{ slot.occupied }}" hint-placeholder-val="{{ true }}">
+                        <span style="font-size:14px;font-weight:600;color:#221d18;padding:6px 4px">{{ slot.player.name }}</span>
+                        <span style="font-size:13px;font-weight:800;color:#ff6a2b;padding:6px 4px">{{ slot.player.elo }}</span>
+                      </sc-if>
+                      <sc-if value="{{ slot.empty }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:13px;color:#b3a891;font-style:italic;padding:6px 4px">Open slot</span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+            <div style="width:270px;background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:10px">Waitlist</div>
+              <sc-for list="{{ dWaitlist }}" as="wp" hint-placeholder-count="2">
+                <div class="slotrow" onClick="{{ wp.onSelect }}" style="{{ wp.rowStyle }}">
+                  <span style="font-size:13px;font-weight:600">{{ wp.pos }}. {{ wp.name }}</span>
+                  <span style="font-size:12px;font-weight:700">{{ wp.elo }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ dWaitlistEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#b3a891;font-style:italic;padding:8px 0">No one waiting</div>
+              </sc-if>
+              <div style="font-size:11px;color:#8a7c68;margin-top:14px;line-height:1.5;font-weight:600">{{ dSwapHint }}</div>
+              <div style="font-size:11px;color:#b3a891;margin-top:10px;line-height:1.5">Turning off check-in also auto-promotes the next waitlisted player.</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ dTabIsPlayers }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px">
+            <input value="{{ dSearch }}" onChange="{{ dSetSearch }}" placeholder="Search players…" style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:8px;border:1px solid #e2d8c8;font-size:14px;margin-bottom:14px;font-family:inherit">
+            <div style="display:flex;font-size:11px;font-weight:700;color:#b3a891;text-transform:uppercase;padding:0 4px 8px;letter-spacing:.03em">
+              <div style="flex:2">Name</div><div style="width:70px">ID</div><div style="width:110px">ELO</div><div style="width:100px">Status</div><div style="width:90px">Checked in</div>
+            </div>
+            <sc-for list="{{ dFilteredPlayers }}" as="p" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;padding:10px 4px;border-top:1px solid #f0e6d6">
+                <div style="flex:2;font-size:14px;font-weight:600;color:#221d18">{{ p.name }}</div>
+                <div style="width:70px;font-size:12px;color:#b3a891">{{ p.code }}</div>
+                <div style="width:110px;display:flex;align-items:center;gap:6px">
+                  <button class="elobtn" onClick="{{ p.eloDown }}" style="width:22px;height:22px;border-radius:6px;background:#f0e6d6;color:#221d18">−</button>
+                  <span style="font-size:14px;font-weight:800;color:#ff6a2b;width:36px;text-align:center">{{ p.elo }}</span>
+                  <button class="elobtn" onClick="{{ p.eloUp }}" style="width:22px;height:22px;border-radius:6px;background:#f0e6d6;color:#221d18">+</button>
+                </div>
+                <div style="width:100px">
+                  <button class="tabbtn" onClick="{{ p.toggleActive }}" style="{{ p.statusStyle }}">{{ p.statusLabel }}</button>
+                </div>
+                <div style="width:90px">
+                  <button class="tabbtn" onClick="{{ p.toggleCheckin }}" style="{{ p.checkinStyle }}">{{ p.checkinLabel }}</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ dTabIsAnalytics }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px">
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px">
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">CHECKED IN</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ dStats.checkedIn }}</div></div>
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">AVG ELO</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ dStats.avgElo }}</div></div>
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">AVG SPREAD</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ dStats.avgSpread }}</div></div>
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">WAITLIST</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ dStats.waitlistCount }}</div></div>
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">RE-ROLLS LOGGED</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ dStats.rerollCount }}</div></div>
+            </div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:12px">Skill tier breakdown</div>
+            <sc-for list="{{ dTiers }}" as="tier" hint-placeholder-count="4">
+              <div style="margin-bottom:10px">
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#8a7c68;margin-bottom:4px"><span>{{ tier.label }}</span><span>{{ tier.count }}</span></div>
+                <div style="background:#f0e6d6;border-radius:6px;height:10px;overflow:hidden"><div style="height:100%;background:#ff6a2b;width:{{ tier.pct }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  <p class="dv-next">Try next: "make the swap a drag instead of click" · "add a session-templates tab" · "apply this same light command layout to a mobile check-in screen"</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Organizer dashboard — 3 visual directions (all fully interactive: check-in, court re-roll, waitlist auto-promote, ELO adjust)</span></div>
+  <div class="dv-opts">
+
+    <!-- OPTION 1A: COURT-FIRST / BOLD SPORTY -->
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Court Court — big court tiles, warm bold accent</div>
+      <div class="dv-card" style="width:1220px;background:#fffdfa;font-family:'Inter',sans-serif">
+        <div style="background:#221d18;color:#fff;padding:26px 32px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;letter-spacing:-0.01em">Riverside Badminton Club</div>
+            <div style="font-size:13px;color:#c9c2b8;margin-top:4px">Tuesday Evening Session · 7:00–9:00 PM</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <div style="background:#ff6a2b;color:#221d18;padding:8px 16px;border-radius:999px;font-weight:800;font-size:13px">{{ aStats.checkedIn }}/{{ aStats.total }} checked in</div>
+            <div style="background:#39392f;color:#fff;padding:8px 16px;border-radius:999px;font-weight:700;font-size:13px">{{ aStats.waitlistCount }} waiting</div>
+            <div style="background:#39392f;color:#fff;padding:8px 16px;border-radius:999px;font-weight:700;font-size:13px">{{ aStats.rerollCount }} re-rolls</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:6px;padding:16px 32px 0;background:#fffdfa;border-bottom:1px solid #eee4d8">
+          <button class="tabbtn" onClick="{{ aSetTabDashboard }}" style="{{ aTabBtnStyleDashboard }}">Dashboard</button>
+          <button class="tabbtn" onClick="{{ aSetTabPlayers }}" style="{{ aTabBtnStylePlayers }}">Players</button>
+          <button class="tabbtn" onClick="{{ aSetTabAnalytics }}" style="{{ aTabBtnStyleAnalytics }}">Analytics</button>
+        </div>
+
+        <sc-if value="{{ aTabIsDashboard }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:24px;padding:28px 32px 32px">
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+              <sc-for list="{{ aCourts }}" as="court" hint-placeholder-count="4">
+                <div style="background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:#221d18">Court {{ court.number }}</div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="font-size:11px;font-weight:700;color:#8a7c68;background:#f0e6d6;padding:4px 8px;border-radius:999px">{{ court.spread }} pt spread</span>
+                      <button class="tabbtn" onClick="{{ court.reroll }}" style="background:#ff6a2b;color:#221d18;border-radius:8px;padding:6px 10px;font-size:11px">Re-roll ⟲</button>
+                    </div>
+                  </div>
+                  <sc-for list="{{ court.slots }}" as="slot" hint-placeholder-count="4">
+                    <div class="slotrow" style="padding:7px 0;border-top:1px solid #f0e6d6">
+                      <sc-if value="{{ slot.occupied }}" hint-placeholder-val="{{ true }}">
+                        <span style="font-size:14px;font-weight:600;color:#221d18">{{ slot.player.name }}</span>
+                        <span style="font-size:13px;font-weight:800;color:#ff6a2b">{{ slot.player.elo }}</span>
+                      </sc-if>
+                      <sc-if value="{{ slot.empty }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:13px;color:#b3a891;font-style:italic">Open slot</span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+            <div style="width:260px;background:#fbf6ee;border-radius:12px;padding:16px 18px;border:1px solid #eee4d8">
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:10px">Waitlist</div>
+              <sc-for list="{{ aWaitlist }}" as="wp" hint-placeholder-count="2">
+                <div class="slotrow" style="padding:8px 0;border-top:1px solid #f0e6d6">
+                  <span style="font-size:13px;font-weight:600;color:#221d18">{{ wp.pos }}. {{ wp.name }}</span>
+                  <span style="font-size:12px;font-weight:700;color:#8a7c68">{{ wp.elo }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ aWaitlistEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#b3a891;font-style:italic;padding:8px 0">No one waiting</div>
+              </sc-if>
+              <div style="font-size:11px;color:#b3a891;margin-top:14px;line-height:1.5">Toggling a player's check-in off in the Players tab auto-promotes the next waitlisted player into the open slot.</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ aTabIsPlayers }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px">
+            <input value="{{ aSearch }}" onChange="{{ aSetSearch }}" placeholder="Search players…" style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:8px;border:1px solid #e2d8c8;font-size:14px;margin-bottom:14px;font-family:inherit">
+            <div style="display:flex;font-size:11px;font-weight:700;color:#b3a891;text-transform:uppercase;padding:0 4px 8px;letter-spacing:.03em">
+              <div style="flex:2">Name</div><div style="width:70px">ID</div><div style="width:110px">ELO</div><div style="width:100px">Status</div><div style="width:90px">Checked in</div>
+            </div>
+            <sc-for list="{{ aFilteredPlayers }}" as="p" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;padding:10px 4px;border-top:1px solid #f0e6d6">
+                <div style="flex:2;font-size:14px;font-weight:600;color:#221d18">{{ p.name }}</div>
+                <div style="width:70px;font-size:12px;color:#b3a891">{{ p.code }}</div>
+                <div style="width:110px;display:flex;align-items:center;gap:6px">
+                  <button class="elobtn" onClick="{{ p.eloDown }}" style="width:22px;height:22px;border-radius:6px;background:#f0e6d6;color:#221d18">−</button>
+                  <span style="font-size:14px;font-weight:800;color:#ff6a2b;width:36px;text-align:center">{{ p.elo }}</span>
+                  <button class="elobtn" onClick="{{ p.eloUp }}" style="width:22px;height:22px;border-radius:6px;background:#f0e6d6;color:#221d18">+</button>
+                </div>
+                <div style="width:100px">
+                  <button class="tabbtn" onClick="{{ p.toggleActive }}" style="{{ p.statusStyle }}">{{ p.statusLabel }}</button>
+                </div>
+                <div style="width:90px">
+                  <button class="tabbtn" onClick="{{ p.toggleCheckin }}" style="{{ p.checkinStyle }}">{{ p.checkinLabel }}</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ aTabIsAnalytics }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 32px 32px">
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px">
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">CHECKED IN</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ aStats.checkedIn }}</div></div>
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">AVG ELO</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ aStats.avgElo }}</div></div>
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">AVG SPREAD</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ aStats.avgSpread }}</div></div>
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">WAITLIST</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ aStats.waitlistCount }}</div></div>
+              <div style="background:#fbf6ee;border-radius:10px;padding:14px;border:1px solid #eee4d8"><div style="font-size:11px;color:#b3a891;font-weight:700">RE-ROLLS LOGGED</div><div style="font-size:24px;font-weight:800;color:#221d18">{{ aStats.rerollCount }}</div></div>
+            </div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#221d18;margin-bottom:12px">ELO tier breakdown</div>
+            <sc-for list="{{ aTiers }}" as="tier" hint-placeholder-count="3">
+              <div style="margin-bottom:10px">
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#8a7c68;margin-bottom:4px"><span>{{ tier.label }}</span><span>{{ tier.count }}</span></div>
+                <div style="background:#f0e6d6;border-radius:6px;height:10px;overflow:hidden"><div style="height:100%;background:#ff6a2b;width:{{ tier.pct }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+
+    <!-- OPTION 1B: OPS TABLE / SIDEBAR -->
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Ops Table — sidebar nav, dense list, electric blue/lime</div>
+      <div class="dv-card" style="width:1220px;background:#ffffff;font-family:'Inter',sans-serif;display:flex">
+        <div style="width:210px;background:#131a2e;color:#fff;padding:24px 18px;flex-shrink:0">
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;margin-bottom:2px">Riverside BC</div>
+          <div style="font-size:11px;color:#8891ab;margin-bottom:22px">Tue Evening · 7–9 PM</div>
+          <button class="tabbtn" onClick="{{ bSetTabDashboard }}" style="{{ bSideBtnStyleDashboard }}">◆ Dashboard</button>
+          <button class="tabbtn" onClick="{{ bSetTabPlayers }}" style="{{ bSideBtnStylePlayers }}">◆ Players</button>
+          <button class="tabbtn" onClick="{{ bSetTabAnalytics }}" style="{{ bSideBtnStyleAnalytics }}">◆ Analytics</button>
+          <div style="margin-top:28px;padding-top:18px;border-top:1px solid #262f47">
+            <div style="font-size:11px;color:#8891ab;margin-bottom:8px">SESSION</div>
+            <div style="font-size:13px;font-weight:700;color:#c4ff5c;margin-bottom:4px">{{ bStats.checkedIn }}/{{ bStats.total }} checked in</div>
+            <div style="font-size:13px;font-weight:700;color:#5cc9ff;margin-bottom:4px">{{ bStats.waitlistCount }} waiting</div>
+            <div style="font-size:13px;font-weight:700;color:#8891ab">{{ bStats.rerollCount }} re-rolls logged</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <sc-if value="{{ bTabIsDashboard }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:24px 28px">
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:#131a2e;margin-bottom:14px">Court assignments</div>
+              <sc-for list="{{ bCourts }}" as="court" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid #e6e9f2;border-radius:10px;margin-bottom:10px">
+                  <div style="width:64px;font-weight:800;font-size:13px;color:#131a2e">CRT {{ court.number }}</div>
+                  <div style="flex:1;display:flex;gap:8px;flex-wrap:wrap">
+                    <sc-for list="{{ court.slots }}" as="slot" hint-placeholder-count="4">
+                      <sc-if value="{{ slot.occupied }}" hint-placeholder-val="{{ true }}">
+                        <div style="background:#f2f6ff;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;color:#131a2e">{{ slot.player.name }} <span style="color:#5cc9ff;font-weight:800">{{ slot.player.elo }}</span></div>
+                      </sc-if>
+                      <sc-if value="{{ slot.empty }}" hint-placeholder-val="{{ false }}">
+                        <div style="background:#f7f7f7;border-radius:7px;padding:6px 10px;font-size:12px;color:#a7adbd;font-style:italic">open</div>
+                      </sc-if>
+                    </sc-for>
+                  </div>
+                  <span style="font-size:11px;font-weight:700;color:#8891ab;background:#f2f6ff;padding:4px 8px;border-radius:999px">{{ court.spread }} spread</span>
+                  <button class="tabbtn" onClick="{{ court.reroll }}" style="background:#131a2e;color:#c4ff5c;border-radius:7px;padding:7px 12px;font-size:11px">Re-roll</button>
+                </div>
+              </sc-for>
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:#131a2e;margin:20px 0 10px">Waitlist</div>
+              <sc-for list="{{ bWaitlist }}" as="wp" hint-placeholder-count="2">
+                <div style="display:flex;justify-content:space-between;padding:9px 14px;border:1px solid #e6e9f2;border-radius:10px;margin-bottom:8px">
+                  <span style="font-size:13px;font-weight:600;color:#131a2e">{{ wp.pos }}. {{ wp.name }}</span>
+                  <span style="font-size:12px;font-weight:800;color:#5cc9ff">{{ wp.elo }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ bWaitlistEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#a7adbd;font-style:italic">No one waiting</div>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ bTabIsPlayers }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:24px 28px">
+              <input value="{{ bSearch }}" onChange="{{ bSetSearch }}" placeholder="Search players…" style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:8px;border:1px solid #e6e9f2;font-size:14px;margin-bottom:14px;font-family:inherit">
+              <div style="display:flex;font-size:11px;font-weight:700;color:#a7adbd;text-transform:uppercase;padding:0 4px 8px">
+                <div style="flex:2">Name</div><div style="width:70px">ID</div><div style="width:110px">ELO</div><div style="width:100px">Status</div><div style="width:90px">Checked in</div>
+              </div>
+              <sc-for list="{{ bFilteredPlayers }}" as="p" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;padding:9px 4px;border-top:1px solid #eef0f6">
+                  <div style="flex:2;font-size:14px;font-weight:600;color:#131a2e">{{ p.name }}</div>
+                  <div style="width:70px;font-size:12px;color:#a7adbd">{{ p.code }}</div>
+                  <div style="width:110px;display:flex;align-items:center;gap:6px">
+                    <button class="elobtn" onClick="{{ p.eloDown }}" style="width:22px;height:22px;border-radius:6px;background:#f2f6ff;color:#131a2e">−</button>
+                    <span style="font-size:14px;font-weight:800;color:#5cc9ff;width:36px;text-align:center">{{ p.elo }}</span>
+                    <button class="elobtn" onClick="{{ p.eloUp }}" style="width:22px;height:22px;border-radius:6px;background:#f2f6ff;color:#131a2e">+</button>
+                  </div>
+                  <div style="width:100px"><button class="tabbtn" onClick="{{ p.toggleActive }}" style="{{ p.statusStyle }}">{{ p.statusLabel }}</button></div>
+                  <div style="width:90px"><button class="tabbtn" onClick="{{ p.toggleCheckin }}" style="{{ p.checkinStyle }}">{{ p.checkinLabel }}</button></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ bTabIsAnalytics }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:24px 28px">
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px">
+                <div style="background:#f7f9ff;border-radius:10px;padding:14px;border:1px solid #e6e9f2"><div style="font-size:11px;color:#8891ab;font-weight:700">CHECKED IN</div><div style="font-size:24px;font-weight:800;color:#131a2e">{{ bStats.checkedIn }}</div></div>
+                <div style="background:#f7f9ff;border-radius:10px;padding:14px;border:1px solid #e6e9f2"><div style="font-size:11px;color:#8891ab;font-weight:700">AVG ELO</div><div style="font-size:24px;font-weight:800;color:#131a2e">{{ bStats.avgElo }}</div></div>
+                <div style="background:#f7f9ff;border-radius:10px;padding:14px;border:1px solid #e6e9f2"><div style="font-size:11px;color:#8891ab;font-weight:700">AVG SPREAD</div><div style="font-size:24px;font-weight:800;color:#131a2e">{{ bStats.avgSpread }}</div></div>
+                <div style="background:#f7f9ff;border-radius:10px;padding:14px;border:1px solid #e6e9f2"><div style="font-size:11px;color:#8891ab;font-weight:700">WAITLIST</div><div style="font-size:24px;font-weight:800;color:#131a2e">{{ bStats.waitlistCount }}</div></div>
+                <div style="background:#f7f9ff;border-radius:10px;padding:14px;border:1px solid #e6e9f2"><div style="font-size:11px;color:#8891ab;font-weight:700">RE-ROLLS</div><div style="font-size:24px;font-weight:800;color:#131a2e">{{ bStats.rerollCount }}</div></div>
+              </div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#131a2e;margin-bottom:12px">ELO tier breakdown</div>
+              <sc-for list="{{ bTiers }}" as="tier" hint-placeholder-count="3">
+                <div style="margin-bottom:10px">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#8891ab;margin-bottom:4px"><span>{{ tier.label }}</span><span>{{ tier.count }}</span></div>
+                  <div style="background:#eef0f6;border-radius:6px;height:10px;overflow:hidden"><div style="height:100%;background:#5cc9ff;width:{{ tier.pct }}"></div></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTION 1C: COMMAND CENTER / DARK -->
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Command Center — dark, high-contrast, pink/lime accents</div>
+      <div class="dv-card" style="width:1220px;background:#12141c;font-family:'Inter',sans-serif;color:#f2f2ee">
+        <div style="padding:26px 32px;border-bottom:1px solid #262a38;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;letter-spacing:-0.01em">Riverside Badminton Club</div>
+            <div style="font-size:13px;color:#8d92a5;margin-top:4px">Tuesday Evening Session · 7:00–9:00 PM</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="tabbtn" onClick="{{ cSetTabDashboard }}" style="{{ cTabBtnStyleDashboard }}">Dashboard</button>
+            <button class="tabbtn" onClick="{{ cSetTabPlayers }}" style="{{ cTabBtnStylePlayers }}">Players</button>
+            <button class="tabbtn" onClick="{{ cSetTabAnalytics }}" style="{{ cTabBtnStyleAnalytics }}">Analytics</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#262a38;border-bottom:1px solid #262a38">
+          <div style="background:#12141c;padding:14px 18px"><div style="font-size:10px;color:#8d92a5;font-weight:700">CHECKED IN</div><div style="font-size:20px;font-weight:800;color:#e94ff5">{{ cStats.checkedIn }}/{{ cStats.total }}</div></div>
+          <div style="background:#12141c;padding:14px 18px"><div style="font-size:10px;color:#8d92a5;font-weight:700">WAITLIST</div><div style="font-size:20px;font-weight:800;color:#c4ff5c">{{ cStats.waitlistCount }}</div></div>
+          <div style="background:#12141c;padding:14px 18px"><div style="font-size:10px;color:#8d92a5;font-weight:700">AVG ELO</div><div style="font-size:20px;font-weight:800;color:#fff">{{ cStats.avgElo }}</div></div>
+          <div style="background:#12141c;padding:14px 18px"><div style="font-size:10px;color:#8d92a5;font-weight:700">AVG SPREAD</div><div style="font-size:20px;font-weight:800;color:#fff">{{ cStats.avgSpread }}</div></div>
+          <div style="background:#12141c;padding:14px 18px"><div style="font-size:10px;color:#8d92a5;font-weight:700">RE-ROLLS</div><div style="font-size:20px;font-weight:800;color:#fff">{{ cStats.rerollCount }}</div></div>
+        </div>
+
+        <sc-if value="{{ cTabIsDashboard }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:20px;padding:24px 32px 32px">
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <sc-for list="{{ cCourts }}" as="court" hint-placeholder-count="4">
+                <div style="background:#181b26;border-radius:12px;padding:16px 18px;border:1px solid #262a38">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#c4ff5c">COURT {{ court.number }}</div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="font-size:11px;font-weight:700;color:#8d92a5;background:#12141c;padding:4px 8px;border-radius:999px">{{ court.spread }} spread</span>
+                      <button class="tabbtn" onClick="{{ court.reroll }}" style="background:#e94ff5;color:#12141c;border-radius:8px;padding:6px 10px;font-size:11px">Re-roll</button>
+                    </div>
+                  </div>
+                  <sc-for list="{{ court.slots }}" as="slot" hint-placeholder-count="4">
+                    <div class="slotrow" style="padding:6px 0;border-top:1px solid #22263380">
+                      <sc-if value="{{ slot.occupied }}" hint-placeholder-val="{{ true }}">
+                        <span style="font-size:14px;font-weight:600;color:#f2f2ee">{{ slot.player.name }}</span>
+                        <span style="font-size:13px;font-weight:800;color:#c4ff5c">{{ slot.player.elo }}</span>
+                      </sc-if>
+                      <sc-if value="{{ slot.empty }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:13px;color:#565b6e;font-style:italic">Open slot</span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+            <div style="width:250px;background:#181b26;border-radius:12px;padding:16px 18px;border:1px solid #262a38">
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#e94ff5;margin-bottom:10px">WAITLIST</div>
+              <sc-for list="{{ cWaitlist }}" as="wp" hint-placeholder-count="2">
+                <div class="slotrow" style="padding:8px 0;border-top:1px solid #22263380">
+                  <span style="font-size:13px;font-weight:600;color:#f2f2ee">{{ wp.pos }}. {{ wp.name }}</span>
+                  <span style="font-size:12px;font-weight:700;color:#8d92a5">{{ wp.elo }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ cWaitlistEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#565b6e;font-style:italic;padding:8px 0">No one waiting</div>
+              </sc-if>
+              <div style="font-size:11px;color:#565b6e;margin-top:14px;line-height:1.5">Auto-promotes the next waitlisted player when a checked-in player leaves a court.</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ cTabIsPlayers }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:22px 32px 32px">
+            <input value="{{ cSearch }}" onChange="{{ cSetSearch }}" placeholder="Search players…" style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:8px;border:1px solid #262a38;background:#181b26;color:#f2f2ee;font-size:14px;margin-bottom:14px;font-family:inherit">
+            <div style="display:flex;font-size:11px;font-weight:700;color:#565b6e;text-transform:uppercase;padding:0 4px 8px">
+              <div style="flex:2">Name</div><div style="width:70px">ID</div><div style="width:110px">ELO</div><div style="width:100px">Status</div><div style="width:90px">Checked in</div>
+            </div>
+            <sc-for list="{{ cFilteredPlayers }}" as="p" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;padding:9px 4px;border-top:1px solid #262a38">
+                <div style="flex:2;font-size:14px;font-weight:600;color:#f2f2ee">{{ p.name }}</div>
+                <div style="width:70px;font-size:12px;color:#565b6e">{{ p.code }}</div>
+                <div style="width:110px;display:flex;align-items:center;gap:6px">
+                  <button class="elobtn" onClick="{{ p.eloDown }}" style="width:22px;height:22px;border-radius:6px;background:#262a38;color:#f2f2ee">−</button>
+                  <span style="font-size:14px;font-weight:800;color:#c4ff5c;width:36px;text-align:center">{{ p.elo }}</span>
+                  <button class="elobtn" onClick="{{ p.eloUp }}" style="width:22px;height:22px;border-radius:6px;background:#262a38;color:#f2f2ee">+</button>
+                </div>
+                <div style="width:100px"><button class="tabbtn" onClick="{{ p.toggleActive }}" style="{{ p.statusStyle }}">{{ p.statusLabel }}</button></div>
+                <div style="width:90px"><button class="tabbtn" onClick="{{ p.toggleCheckin }}" style="{{ p.checkinStyle }}">{{ p.checkinLabel }}</button></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ cTabIsAnalytics }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:22px 32px 32px">
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#e94ff5;margin-bottom:12px">ELO tier breakdown</div>
+            <sc-for list="{{ cTiers }}" as="tier" hint-placeholder-count="3">
+              <div style="margin-bottom:10px">
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#8d92a5;margin-bottom:4px"><span>{{ tier.label }}</span><span>{{ tier.count }}</span></div>
+                <div style="background:#262a38;border-radius:6px;height:10px;overflow:hidden"><div style="height:100%;background:#c4ff5c;width:{{ tier.pct }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "combine <a class="dv-oid" href="#1a">1a</a>'s court tiles with <a class="dv-oid" href="#1b">1b</a>'s sidebar" · "add session setup + self-registration to <a class="dv-oid" href="#1c">1c</a>" · "pick 1a and build out the mobile check-in view"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;mood&quot;: {
+    &quot;editor&quot;: &quot;enum&quot;,
+    &quot;default&quot;: &quot;clubhouse&quot;,
+    &quot;tsType&quot;: &quot;string&quot;,
+    &quot;options&quot;: [&quot;clubhouse&quot;, &quot;command&quot;, &quot;playful&quot;],
+    &quot;section&quot;: &quot;Feel&quot;
+  },
+  &quot;density&quot;: {
+    &quot;editor&quot;: &quot;enum&quot;,
+    &quot;default&quot;: &quot;comfortable&quot;,
+    &quot;tsType&quot;: &quot;string&quot;,
+    &quot;options&quot;: [&quot;comfortable&quot;, &quot;compact&quot;],
+    &quot;section&quot;: &quot;Feel&quot;
+  },
+  &quot;layout&quot;: {
+    &quot;editor&quot;: &quot;enum&quot;,
+    &quot;default&quot;: &quot;balanced&quot;,
+    &quot;tsType&quot;: &quot;string&quot;,
+    &quot;options&quot;: [&quot;balanced&quot;, &quot;focused&quot;],
+    &quot;section&quot;: &quot;Feel&quot;
+  }
+}">
+const NAMES = ["Ava Chen","Liam Ortiz","Maya Singh","Noah Kim","Zoe Alvarez","Ethan Brooks","Priya Nair","Jack Sullivan","Ruby Tanaka","Leo Fischer","Mia Delgado","Owen Walsh","Chloe Bennett","Sam Okafor","Grace Lindqvist","Theo Nakamura","Ivy Marsh","Finn O'Brien","Nina Petrova","Cole Whitfield"];
+const ELOS =  [2100,2050,1980,1920,1870,1830,1790,1740,1690,1650,1600,1560,1510,1470,1420,1380,1330,1280,1150,980];
+
+function makePlayers(){
+  return NAMES.map((name, i) => ({
+    id: i,
+    code: 'BC-' + String(101 + i),
+    name,
+    elo: ELOS[i],
+    status: i === 19 ? 'inactive' : 'active',
+    checkedIn: i < 18,
+    courtId: null,
+    waitlisted: false
+  }));
+}
+
+function assignInitial(players){
+  const checked = players.filter(p => p.checkedIn).sort((a,b) => b.elo - a.elo);
+  const assign = checked.slice(0, 16);
+  const wait = checked.slice(16);
+  // consecutive chunking of sorted-by-elo players minimizes within-court spread
+  assign.forEach((p, i) => { p.courtId = Math.floor(i / 4); p.waitlisted = false; });
+  wait.forEach(p => { p.waitlisted = true; p.courtId = null; });
+}
+
+function courtSpread(occupants){
+  if (occupants.length < 2) return 0;
+  const elos = occupants.map(p => p.elo);
+  return Math.max(...elos) - Math.min(...elos);
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const TIER_NAMES = ['Amateur', 'Intermediate', 'Advanced', 'Professional'];
+const TIER_MID = [900, 1500, 1850, 2150];
+function tierIndexForElo(elo){
+  if (elo < 1300) return 0;
+  if (elo < 1700) return 1;
+  if (elo < 2000) return 2;
+  return 3;
+}
+function levelGap(occupants){
+  if (occupants.length < 2) return 0;
+  const tiers = occupants.map(p => p.tier);
+  return Math.max(...tiers) - Math.min(...tiers);
+}
+function levelGapLabel(gap){
+  if (gap <= 0) return 'Same level';
+  return gap + ' level gap';
+}
+
+function makeFullPlayers(){
+  const base = makePlayers();
+  return base.map((p, i) => {
+    const membership = i % 4 === 0 ? 'Casual' : 'Member';
+    const feePaid = membership === 'Member' ? (i % 7 !== 0) : true;
+    const tier = tierIndexForElo(p.elo);
+    const trend = (i % 3) - 1; // -1 declining, 0 flat, 1 improving
+    const hist = [];
+    let t = Math.max(0, Math.min(3, tier - trend));
+    for (let k = 0; k < 7; k++) {
+      if (trend !== 0 && (i + k) % 3 === 0) t = Math.max(0, Math.min(3, t + trend));
+      hist.push(t);
+    }
+    hist.push(tier);
+    return Object.assign({}, p, { elo: TIER_MID[tier], tier, membership, feePaid, levelHistory: hist });
+  });
+}
+
+function assignInitialN(players, courtsCount){
+  const cap = courtsCount * 4;
+  const checked = players.filter(p => p.checkedIn).sort((a,b) => b.tier - a.tier);
+  const assign = checked.slice(0, cap);
+  const wait = checked.slice(cap);
+  assign.forEach((p, i) => { p.courtId = Math.floor(i / 4); p.waitlisted = false; });
+  wait.forEach(p => { p.waitlisted = true; p.courtId = null; });
+}
+
+function generateSessionLogs(players, courtsCount){
+  const active = players.filter(p => p.status === 'active');
+  const dates = ['May 6','May 13','May 20','May 27','Jun 3','Jun 10','Jun 17','Jun 24'];
+  const logs = [];
+  for (let s = 0; s < 8; s++) {
+    const attendCount = Math.min(active.length, 12 + ((s * 5) % 8));
+    const attendees = active.slice().sort((a,b) => ((a.id + s * 3) % players.length) - ((b.id + s * 3) % players.length)).slice(0, attendCount);
+    const sorted = attendees.slice().sort((a,b) => b.tier - a.tier);
+    const courts = [];
+    for (let c = 0; c * 4 < sorted.length && courts.length < courtsCount; c++) {
+      const group = sorted.slice(c * 4, c * 4 + 4);
+      if (group.length < 2) break;
+      courts.push({ court: c + 1, playerIds: group.map(p => p.id) });
+    }
+    const spreads = courts.map(c => {
+      const tiers = c.playerIds.map(id => players.find(p => p.id === id).tier);
+      return Math.max(...tiers) - Math.min(...tiers);
+    });
+    const avgSpread = spreads.length ? Math.round((spreads.reduce((a,b) => a+b, 0) / spreads.length) * 10) / 10 : 0;
+    const seated = courts.reduce((sum, c) => sum + c.playerIds.length, 0);
+    const waitlistCount = Math.max(0, attendees.length - seated);
+    logs.push({ date: dates[s], checkedIn: attendees.length, courts, avgSpread, waitlistCount, courtsCount });
+  }
+  return logs;
+}
+
+function computePartnerStats(playerId, logs){
+  const counts = {};
+  let matches = 0;
+  const dates = [];
+  logs.forEach(log => {
+    const court = log.courts.find(c => c.playerIds.includes(playerId));
+    if (court) {
+      matches++;
+      dates.push(log.date);
+      court.playerIds.forEach(id => { if (id !== playerId) counts[id] = (counts[id] || 0) + 1; });
+    }
+  });
+  const entries = Object.entries(counts).map(([id, count]) => ({ id: Number(id), count })).sort((a,b) => b.count - a.count);
+  const unique = entries.length;
+  const diversity = matches > 0 ? Math.round(Math.min(1, unique / Math.max(1, matches * 2.5)) * 100) : 0;
+  return { matches, dates, entries, diversity };
+}
+
+const MOODS = {
+  clubhouse: {
+    accent: '#ff6a2b', accentOn: '#221d18', headerBg: '#221d18', headerText: '#ffffff', headerSub: '#c9c2b8',
+    pageBg: '#fffdfa', cardBg: '#fbf6ee', cardBorder: '#eee4d8', cardRadius: '12px', cardShadow: 'none',
+    titleColor: '#221d18', mutedColor: '#8a7c68', pillBg: '#f0e6d6', font: "'Space Grotesk',sans-serif",
+    barSecondary: '#221d18', barTertiary: '#ffb38a'
+  },
+  command: {
+    accent: '#1f7a74', accentOn: '#ffffff', headerBg: '#16202b', headerText: '#eaf4f2', headerSub: '#93a8ab',
+    pageBg: '#ffffff', cardBg: '#ffffff', cardBorder: '#d7dee0', cardRadius: '6px', cardShadow: '0 1px 3px rgba(20,30,30,.08)',
+    titleColor: '#16202b', mutedColor: '#5b6b6e', pillBg: '#e7f0ef', font: "'Space Grotesk',sans-serif",
+    barSecondary: '#16202b', barTertiary: '#8fd6cf'
+  },
+  playful: {
+    accent: '#ff4d6d', accentOn: '#ffffff', headerBg: '#2b1533', headerText: '#ffffff', headerSub: '#d6b8dc',
+    pageBg: '#fffaf9', cardBg: '#fff2f6', cardBorder: '#ffd9e3', cardRadius: '22px', cardShadow: '0 8px 20px rgba(255,77,109,.14)',
+    titleColor: '#2b1533', mutedColor: '#9c6b7c', pillBg: '#ffe0e8', font: "'Space Grotesk',sans-serif",
+    barSecondary: '#2b1533', barTertiary: '#ffb3c4'
+  }
+};
+
+const DENSITIES = {
+  comfortable: { cardPad: '16px 18px', headerPad: '22px 32px', statPad: '12px 16px', gap: '20px' },
+  compact: { cardPad: '10px 12px', headerPad: '14px 22px', statPad: '8px 10px', gap: '12px' }
+};
+
+function buildTheme(props) {
+  const mood = MOODS[props.mood] || MOODS.clubhouse;
+  const d = DENSITIES[props.density] || DENSITIES.comfortable;
+  return {
+    header: 'padding:' + d.headerPad + ';border-bottom:1px solid ' + mood.cardBorder + ';display:flex;justify-content:space-between;align-items:center;background:' + mood.headerBg,
+    headerTitle: 'font-family:' + mood.font + ';font-weight:700;font-size:22px;letter-spacing:-0.01em;color:' + mood.headerText,
+    headerSub: 'font-size:12px;color:' + mood.headerSub + ';margin-top:3px',
+    statStrip: 'display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:' + mood.cardBorder + ';border-bottom:1px solid ' + mood.cardBorder,
+    statCell: 'background:' + mood.pageBg + ';padding:' + d.statPad,
+    statLabel: 'font-size:10px;color:' + mood.mutedColor + ';font-weight:700;letter-spacing:0.05em',
+    statValue: 'font-size:19px;font-weight:800;color:' + mood.titleColor + ';font-variant-numeric:tabular-nums;letter-spacing:-0.01em',
+    statValueAccent: 'font-size:19px;font-weight:800;color:' + mood.accent + ';font-variant-numeric:tabular-nums;letter-spacing:-0.01em',
+    card: 'background:' + mood.cardBg + ';border-radius:' + mood.cardRadius + ';padding:' + d.cardPad + ';border:1px solid ' + mood.cardBorder + ';box-shadow:' + mood.cardShadow,
+    sectionTitle: 'font-family:' + mood.font + ';font-weight:700;font-size:15px;color:' + mood.titleColor + ';margin-bottom:14px',
+    sectionTitleNoMargin: 'font-family:' + mood.font + ';font-weight:700;font-size:15px;color:' + mood.titleColor,
+    sectionTitleTight: 'font-family:' + mood.font + ';font-weight:700;font-size:14px;color:' + mood.titleColor + ';margin-bottom:10px',
+    spreadPill: 'font-size:11px;font-weight:700;color:' + mood.mutedColor + ';background:' + mood.pillBg + ';padding:4px 8px;border-radius:999px;letter-spacing:0.02em',
+    rerollBtn: 'background:' + mood.accent + ';color:' + mood.accentOn + ';border-radius:8px;padding:6px 10px;font-size:11px',
+    saveBtn: 'background:' + mood.accent + ';color:' + mood.accentOn + ';border-radius:8px;padding:8px 14px;font-size:12px',
+    loadBtn: 'background:' + mood.pillBg + ';color:' + mood.titleColor + ';border-radius:8px;padding:6px 12px;font-size:11px',
+    linkAccent: 'display:inline-block;font-size:12px;font-weight:700;color:' + mood.accent,
+    slotName: 'font-size:14px;font-weight:600;color:' + mood.titleColor + ';padding:6px 4px',
+    courtEloText: 'font-size:13px;font-weight:800;color:' + mood.accent + ';padding:6px 4px',
+    tableEloText: 'font-size:13px;font-weight:800;color:' + mood.accent + ';width:34px;text-align:center',
+    checkinEloText: 'width:110px;font-size:13px;font-weight:800;color:' + mood.accent,
+    hintText: 'font-size:11px;color:' + mood.mutedColor + ';margin-top:14px;line-height:1.5;font-weight:600',
+    accentColor: mood.accent,
+    barMain: mood.accent, barSecondary: mood.barSecondary, barTertiary: mood.barTertiary,
+    pillBgRaw: mood.pillBg, pageBgRaw: mood.pageBg, cardBorderRaw: mood.cardBorder, titleColorRaw: mood.titleColor,
+    gapRaw: d.gap,
+    tabActive: 'background:' + mood.accent + ';color:' + mood.accentOn + ';border-radius:8px;padding:8px 12px;font-size:12px',
+    tabInactive: 'background:transparent;color:' + mood.headerSub + ';border-radius:8px;padding:8px 12px;font-size:12px',
+    roundActive: 'background:' + mood.accent + ';color:' + mood.accentOn + ';border-radius:8px;padding:8px 14px;font-size:12px',
+    roundInactive: 'background:' + mood.pillBg + ';color:' + mood.titleColor + ';border-radius:8px;padding:8px 14px;font-size:12px'
+  };
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const a = makePlayers(); assignInitial(a);
+    const b = makePlayers(); assignInitial(b);
+    const c = makePlayers(); assignInitial(c);
+    const d = makePlayers(); assignInitial(d);
+    this.state = {
+      a: { tab: 'dashboard', search: '', players: a, rerollCount: 0 },
+      b: { tab: 'dashboard', search: '', players: b, rerollCount: 0 },
+      c: { tab: 'dashboard', search: '', players: c, rerollCount: 0 },
+      d: { tab: 'dashboard', search: '', players: d, rerollCount: 0, selectedWaitlistId: null },
+      e: this.makeInitialE()
+    };
+  }
+
+  makeInitialE() {
+    const players = makeFullPlayers();
+    const settings = { roundMode: 'game', roundDuration: 20, sessionCapacity: 20, courtsCount: 4 };
+    assignInitialN(players, settings.courtsCount);
+    const sessionLogs = generateSessionLogs(players, settings.courtsCount);
+    return {
+      tab: 'dashboard', search: '', players, rerollCount: 0, selectedWaitlistId: null, profileOpenId: null,
+      settings: Object.assign(settings, { notifyReminders: true, notifyCourtAlerts: true, notifyAnnouncements: false }),
+      sessionLogs,
+      templateName: '',
+      templates: [{ id: 1, name: 'Standard Tuesday', courtsCount: 4, roundMode: 'game', roundDuration: 20, sessionCapacity: 20 }],
+      pending: [
+        { id: 901, name: 'Harper Lin', contact: 'harper.lin@email.com', estTier: 1 },
+        { id: 902, name: 'Diego Ramos', contact: 'diego.r@email.com', estTier: 0 }
+      ]
+    };
+  }
+
+  setTab(key, tab) { this.setState(s => ({ [key]: { ...s[key], tab } })); }
+  setSearch(key, e) { const v = e && e.target ? e.target.value : ''; this.setState(s => ({ [key]: { ...s[key], search: v } })); }
+
+  autoPromote(key, players) {
+    // find courts with open slots, fill from waitlist (in array order) with highest elo waiting first for reasonable pairing
+    const waiting = players.filter(p => p.checkedIn && p.waitlisted).sort((a,b) => b.elo - a.elo);
+    for (let courtId = 0; courtId < 4; courtId++) {
+      let occCount = players.filter(p => p.checkedIn && p.courtId === courtId).length;
+      while (occCount < 4 && waiting.length) {
+        const p = waiting.shift();
+        p.waitlisted = false;
+        p.courtId = courtId;
+        occCount++;
+      }
+    }
+  }
+
+  toggleCheckin(key, id) {
+    this.setState(s => {
+      const players = s[key].players.map(p => ({ ...p }));
+      const p = players.find(pl => pl.id === id);
+      if (!p) return null;
+      if (p.checkedIn) {
+        p.checkedIn = false;
+        p.courtId = null;
+        p.waitlisted = false;
+        this.autoPromote(key, players);
+      } else {
+        p.checkedIn = true;
+        const openCourt = [0,1,2,3].find(cid => players.filter(pl => pl.checkedIn && pl.courtId === cid).length < 4);
+        if (openCourt !== undefined) { p.courtId = openCourt; p.waitlisted = false; }
+        else { p.waitlisted = true; p.courtId = null; }
+      }
+      return { [key]: { ...s[key], players } };
+    });
+  }
+
+  toggleActive(key, id) {
+    this.setState(s => {
+      const players = s[key].players.map(p => ({ ...p }));
+      const p = players.find(pl => pl.id === id);
+      if (!p) return null;
+      if (p.status === 'active') {
+        p.status = 'inactive';
+        p.checkedIn = false;
+        p.courtId = null;
+        p.waitlisted = false;
+        this.autoPromote(key, players);
+      } else {
+        p.status = 'active';
+      }
+      return { [key]: { ...s[key], players } };
+    });
+  }
+
+  adjustElo(key, id, delta) {
+    this.setState(s => {
+      const players = s[key].players.map(p => p.id === id ? { ...p, elo: Math.max(600, Math.min(2600, p.elo + delta)) } : p);
+      return { [key]: { ...s[key], players } };
+    });
+  }
+
+  selectWaitlist(key, id) {
+    this.setState(s => ({ [key]: { ...s[key], selectedWaitlistId: s[key].selectedWaitlistId === id ? null : id } }));
+  }
+
+  placeOrSwap(key, courtId, slotOccupantId) {
+    this.setState(s => {
+      const selId = s[key].selectedWaitlistId;
+      if (selId == null) return null;
+      const players = s[key].players.map(p => ({ ...p }));
+      const sel = players.find(p => p.id === selId);
+      if (!sel) return null;
+      if (slotOccupantId != null) {
+        const occ = players.find(p => p.id === slotOccupantId);
+        if (occ) { occ.waitlisted = true; occ.courtId = null; }
+      }
+      sel.waitlisted = false;
+      sel.courtId = courtId;
+      return { [key]: { ...s[key], players, selectedWaitlistId: null } };
+    });
+  }
+
+  reroll(key, courtId) {
+    this.setState(s => {
+      const players = s[key].players.map(p => ({ ...p }));
+      const occupants = players.filter(p => p.checkedIn && p.courtId === courtId);
+      const waiting = players.filter(p => p.checkedIn && p.waitlisted);
+      const pool = occupants.concat(waiting);
+      if (pool.length <= 4) return null;
+      let best = null, bestSpread = Infinity;
+      for (let t = 0; t < 24; t++) {
+        const cand = shuffle(pool).slice(0, 4);
+        const spread = courtSpread(cand);
+        if (spread < bestSpread) { bestSpread = spread; best = cand; }
+      }
+      const bestIds = new Set(best.map(p => p.id));
+      pool.forEach(p => {
+        if (bestIds.has(p.id)) { p.courtId = courtId; p.waitlisted = false; }
+        else { p.courtId = null; p.waitlisted = true; }
+      });
+      return { [key]: { ...s[key], players, rerollCount: s[key].rerollCount + 1 } };
+    });
+  }
+
+  // ---- key 'e' full-app methods ----
+  eSetTab(tab) { this.setState(s => ({ e: { ...s.e, tab } })); }
+  eSetSearch(ev) { const v = ev && ev.target ? ev.target.value : ''; this.setState(s => ({ e: { ...s.e, search: v } })); }
+  eToggleProfile(id) { this.setState(s => ({ e: { ...s.e, profileOpenId: s.e.profileOpenId === id ? null : id } })); }
+
+  eAutoPromote(players, courtsCount) {
+    const waiting = players.filter(p => p.checkedIn && p.waitlisted).sort((a,b) => b.tier - a.tier);
+    for (let courtId = 0; courtId < courtsCount; courtId++) {
+      let occ = players.filter(p => p.checkedIn && p.courtId === courtId).length;
+      while (occ < 4 && waiting.length) { const p = waiting.shift(); p.waitlisted = false; p.courtId = courtId; occ++; }
+    }
+  }
+
+  eToggleCheckin(id) {
+    this.setState(s => {
+      const cc = s.e.settings.courtsCount;
+      const players = s.e.players.map(p => ({ ...p }));
+      const p = players.find(pl => pl.id === id);
+      if (!p) return null;
+      if (p.checkedIn) {
+        p.checkedIn = false; p.courtId = null; p.waitlisted = false;
+        this.eAutoPromote(players, cc);
+      } else {
+        const checkedInCount = players.filter(pl => pl.checkedIn).length;
+        if (checkedInCount >= s.e.settings.sessionCapacity) return null;
+        p.checkedIn = true;
+        const openCourt = Array.from({length: cc}, (_, i) => i).find(cid => players.filter(pl => pl.checkedIn && pl.courtId === cid).length < 4);
+        if (openCourt !== undefined) { p.courtId = openCourt; p.waitlisted = false; }
+        else { p.waitlisted = true; p.courtId = null; }
+      }
+      return { e: { ...s.e, players } };
+    });
+  }
+
+  eToggleActive(id) {
+    this.setState(s => {
+      const players = s.e.players.map(p => ({ ...p }));
+      const p = players.find(pl => pl.id === id);
+      if (!p) return null;
+      if (p.status === 'active') { p.status = 'inactive'; p.checkedIn = false; p.courtId = null; p.waitlisted = false; this.eAutoPromote(players, s.e.settings.courtsCount); }
+      else { p.status = 'active'; }
+      return { e: { ...s.e, players } };
+    });
+  }
+
+  eToggleMembership(id) {
+    this.setState(s => {
+      const players = s.e.players.map(p => p.id === id ? { ...p, membership: p.membership === 'Member' ? 'Casual' : 'Member' } : p);
+      return { e: { ...s.e, players } };
+    });
+  }
+
+  eAdjustLevel(id, delta) {
+    this.setState(s => {
+      const players = s.e.players.map(p => {
+        if (p.id !== id) return p;
+        const tier = Math.max(0, Math.min(3, p.tier + delta));
+        return { ...p, tier, elo: TIER_MID[tier] };
+      });
+      return { e: { ...s.e, players } };
+    });
+  }
+
+  eSelectWaitlist(id) { this.setState(s => ({ e: { ...s.e, selectedWaitlistId: s.e.selectedWaitlistId === id ? null : id } })); }
+
+  ePlaceOrSwap(courtId, slotOccupantId) {
+    this.setState(s => {
+      const selId = s.e.selectedWaitlistId;
+      if (selId == null) return null;
+      const players = s.e.players.map(p => ({ ...p }));
+      const sel = players.find(p => p.id === selId);
+      if (!sel) return null;
+      if (slotOccupantId != null) {
+        const occ = players.find(p => p.id === slotOccupantId);
+        if (occ) { occ.waitlisted = true; occ.courtId = null; }
+      }
+      sel.waitlisted = false; sel.courtId = courtId;
+      return { e: { ...s.e, players, selectedWaitlistId: null } };
+    });
+  }
+
+  eReroll(courtId) {
+    this.setState(s => {
+      const players = s.e.players.map(p => ({ ...p }));
+      const occupants = players.filter(p => p.checkedIn && p.courtId === courtId);
+      const waiting = players.filter(p => p.checkedIn && p.waitlisted);
+      const pool = occupants.concat(waiting);
+      if (pool.length <= 4) return null;
+      let best = null, bestSpread = Infinity;
+      for (let t = 0; t < 24; t++) {
+        const cand = shuffle(pool).slice(0, 4);
+        const spread = levelGap(cand);
+        if (spread < bestSpread) { bestSpread = spread; best = cand; }
+      }
+      const bestIds = new Set(best.map(p => p.id));
+      pool.forEach(p => { if (bestIds.has(p.id)) { p.courtId = courtId; p.waitlisted = false; } else { p.courtId = null; p.waitlisted = true; } });
+      return { e: { ...s.e, players, rerollCount: s.e.rerollCount + 1 } };
+    });
+  }
+
+  eSetRoundMode(mode) { this.setState(s => ({ e: { ...s.e, settings: { ...s.e.settings, roundMode: mode } } })); }
+  eSetDuration(ev) { const v = Number(ev.target.value); this.setState(s => ({ e: { ...s.e, settings: { ...s.e.settings, roundDuration: v } } })); }
+  eSetCapacity(ev) { const v = Math.max(4, Number(ev.target.value) || 0); this.setState(s => ({ e: { ...s.e, settings: { ...s.e.settings, sessionCapacity: v } } })); }
+  eSetCourtsCount(ev) {
+    const v = Math.max(1, Math.min(8, Number(ev.target.value) || 1));
+    this.setState(s => {
+      const players = s.e.players.map(p => ({ ...p }));
+      players.forEach(p => { if (p.checkedIn) { p.courtId = null; p.waitlisted = true; } });
+      assignInitialN(players, v);
+      return { e: { ...s.e, players, settings: { ...s.e.settings, courtsCount: v } } };
+    });
+  }
+  eSetTemplateName(ev) { const v = ev.target.value; this.setState(s => ({ e: { ...s.e, templateName: v } })); }
+  eSaveTemplate() {
+    this.setState(s => {
+      if (!s.e.templateName.trim()) return null;
+      const t = { id: Date.now(), name: s.e.templateName.trim(), courtsCount: s.e.settings.courtsCount, roundMode: s.e.settings.roundMode, roundDuration: s.e.settings.roundDuration, sessionCapacity: s.e.settings.sessionCapacity };
+      return { e: { ...s.e, templates: s.e.templates.concat([t]), templateName: '' } };
+    });
+  }
+  eLoadTemplate(id) {
+    this.setState(s => {
+      const t = s.e.templates.find(x => x.id === id);
+      if (!t) return null;
+      const players = s.e.players.map(p => ({ ...p }));
+      players.forEach(p => { if (p.checkedIn) { p.courtId = null; p.waitlisted = true; } });
+      assignInitialN(players, t.courtsCount);
+      return { e: { ...s.e, players, settings: { ...s.e.settings, courtsCount: t.courtsCount, roundMode: t.roundMode, roundDuration: t.roundDuration, sessionCapacity: t.sessionCapacity } } };
+    });
+  }
+  eApprovePending(id) {
+    this.setState(s => {
+      const pend = s.e.pending.find(p => p.id === id);
+      if (!pend) return null;
+      const tier = pend.estTier;
+      const newPlayer = { id: Date.now(), code: 'BC-' + (200 + s.e.players.length), name: pend.name, elo: TIER_MID[tier], tier, status: 'active', checkedIn: false, courtId: null, waitlisted: false, membership: 'Casual', feePaid: true, levelHistory: [tier] };
+      return { e: { ...s.e, players: s.e.players.concat([newPlayer]), pending: s.e.pending.filter(p => p.id !== id) } };
+    });
+  }
+  eRejectPending(id) { this.setState(s => ({ e: { ...s.e, pending: s.e.pending.filter(p => p.id !== id) } })); }
+  eToggleSetting(key) { this.setState(s => ({ e: { ...s.e, settings: { ...s.e.settings, [key]: !s.e.settings[key] } } })); }
+
+  buildViewModelE() {
+    const s = this.state.e;
+    const players = s.players;
+    const cc = s.settings.courtsCount;
+    const checkedIn = players.filter(p => p.checkedIn);
+    const selectedPlayer = s.selectedWaitlistId != null ? players.find(p => p.id === s.selectedWaitlistId) : null;
+
+    const courts = Array.from({length: cc}, (_, courtId) => {
+      const occupants = players.filter(p => p.checkedIn && p.courtId === courtId);
+      const slots = [0,1,2,3].map(i => {
+        const p = occupants[i];
+        const occId = p ? p.id : null;
+        const invite = selectedPlayer != null;
+        const rowStyle = invite ? 'cursor:pointer;background:rgba(255,106,43,0.08);border-radius:6px' : '';
+        return p ? { occupied: true, empty: false, player: { name: p.name, level: TIER_NAMES[p.tier] }, rowStyle, onSlotClick: () => this.ePlaceOrSwap(courtId, occId) }
+                 : { occupied: false, empty: true, player: null, rowStyle, onSlotClick: () => this.ePlaceOrSwap(courtId, null) };
+      });
+      const gap = levelGap(occupants);
+      return { number: courtId + 1, slots, spread: levelGapLabel(gap), reroll: () => this.eReroll(courtId) };
+    });
+
+    const waitlist = players.filter(p => p.checkedIn && p.waitlisted).map((p, i) => ({
+      id: p.id, name: p.name, level: TIER_NAMES[p.tier], pos: i + 1,
+      rowStyle: p.id === s.selectedWaitlistId ? 'padding:8px 10px;border-radius:8px;background:#ff6a2b;color:#fff;cursor:pointer' : 'padding:8px 10px;border-radius:8px;cursor:pointer',
+      onSelect: () => this.eSelectWaitlist(p.id)
+    }));
+    const swapHint = selectedPlayer != null ? ('Placing ' + selectedPlayer.name + ' — click a court slot') : 'Click a waitlisted player, then click a court slot to place or swap them in.';
+
+    const byIdAll = {}; players.forEach(pl => byIdAll[pl.id] = pl);
+    const buildProfile = (p) => {
+      const stats = computePartnerStats(p.id, s.sessionLogs);
+      const topPartners = stats.entries.slice(0, 3).map(e => ({ name: byIdAll[e.id] ? byIdAll[e.id].name : '—', count: e.count }));
+      const rival = stats.entries[0] || null;
+      const hist = p.levelHistory.length > 1 ? p.levelHistory : [p.levelHistory[0], p.levelHistory[0]];
+      const pts = hist.map((v, i) => {
+        const x = Math.round(i / (hist.length - 1) * 260);
+        const y = Math.round(70 - (v / 3) * 60) + 5;
+        return x + ',' + y;
+      }).join(' ');
+      return {
+        matches: stats.matches, diversity: stats.diversity + '%',
+        membershipLabel: p.membership + (p.membership === 'Member' && !p.feePaid ? ' · fee due' : ''),
+        levelPoints: pts, topPartners,
+        hasRival: !!rival, rivalName: rival ? byIdAll[rival.id].name : '', rivalCount: rival ? rival.count : 0,
+        attendanceHistory: stats.dates.length ? stats.dates.join(', ') : 'No sessions logged yet'
+      };
+    };
+
+    const search = (s.search || '').toLowerCase();
+    const filteredPlayers = players.filter(p => p.name.toLowerCase().includes(search)).map(p => ({
+      id: p.id, name: p.name, code: p.code, level: TIER_NAMES[p.tier],
+      levelUp: p.tier < 3 ? (() => this.eAdjustLevel(p.id, 1)) : null,
+      levelDown: p.tier > 0 ? (() => this.eAdjustLevel(p.id, -1)) : null,
+      levelUpDisabled: p.tier >= 3, levelDownDisabled: p.tier <= 0,
+      statusLabel: p.status === 'active' ? 'Active' : 'Inactive',
+      statusStyle: p.status === 'active' ? 'background:transparent;color:#3a9a5c;font-size:11px;padding:5px 9px;border-radius:6px;border:1px solid #3a9a5c33' : 'background:transparent;color:#a3a3a3;font-size:11px;padding:5px 9px;border-radius:6px;border:1px solid #a3a3a333',
+      toggleActive: () => this.eToggleActive(p.id),
+      membershipLabel: p.membership,
+      membershipStyle: p.membership === 'Member' ? 'background:#f0e6d6;color:#8a5a2a;font-size:11px;padding:5px 9px;border-radius:6px' : 'background:transparent;color:#a3a3a3;font-size:11px;padding:5px 9px;border-radius:6px;border:1px solid #e2d8c8',
+      toggleMembership: () => this.eToggleMembership(p.id),
+      checkinLabel: p.checkedIn ? 'Checked in' : 'Check in',
+      checkinStyle: p.checkedIn ? 'background:#2ea043;color:#fff;font-size:11px;padding:5px 9px;border-radius:6px' : 'background:#e5e5e5;color:#555;font-size:11px;padding:5px 9px;border-radius:6px',
+      toggleCheckin: () => this.eToggleCheckin(p.id),
+      toggleProfile: () => this.eToggleProfile(p.id),
+      expanded: p.id === s.profileOpenId,
+      profile: p.id === s.profileOpenId ? buildProfile(p) : null
+    }));
+
+    const checkinPlayers = players.filter(p => p.status === 'active').map(p => ({
+      name: p.name, level: TIER_NAMES[p.tier], statusLabel: p.status === 'active' ? 'Active' : 'Inactive',
+      checkinLabel: p.checkedIn ? 'Present' : 'Mark present',
+      checkinStyle: p.checkedIn ? 'background:#2ea043;color:#fff;font-size:11px;padding:6px 10px;border-radius:6px' : 'background:#f0e6d6;color:#221d18;font-size:11px;padding:6px 10px;border-radius:6px',
+      toggleCheckin: () => this.eToggleCheckin(p.id)
+    }));
+
+    const avgTier = checkedIn.length ? checkedIn.reduce((sum,p) => sum+p.tier, 0) / checkedIn.length : 0;
+    const avgLevelLabel = checkedIn.length ? TIER_NAMES[Math.round(avgTier)] : '—';
+    const courtGaps = courts.map(c => {
+      const occ = players.filter(p => p.checkedIn && p.courtId === c.number - 1);
+      return levelGap(occ);
+    });
+    const avgLevelGap = courtGaps.length ? Math.round(courtGaps.reduce((a,b) => a+b, 0) / courtGaps.length) : 0;
+    const capacity = s.settings.sessionCapacity;
+    const remaining = Math.max(0, capacity - checkedIn.length);
+    const capacityPct = Math.min(100, Math.round(checkedIn.length / capacity * 100)) + '%';
+
+    const pending = s.pending.map(pr => ({ ...pr, estLevel: TIER_NAMES[pr.estTier], approve: () => this.eApprovePending(pr.id), reject: () => this.eRejectPending(pr.id) }));
+
+    const roundModeDesc = s.settings.roundMode === 'game' ? 'Players leave after one set; new players rotate in from the waitlist.' : 'Players rotate to a new court every ' + s.settings.roundDuration + ' minutes.';
+    const settingsVM = {
+      roundModeLabel: s.settings.roundMode === 'game' ? 'Game-based rounds' : 'Time-based rounds',
+      isTimeBased: s.settings.roundMode === 'time',
+      roundDuration: s.settings.roundDuration,
+      sessionCapacity: s.settings.sessionCapacity,
+      courtsCount: s.settings.courtsCount,
+      roundModeDesc,
+      remindersLabel: s.settings.notifyReminders ? 'On' : 'Off',
+      remindersStyle: s.settings.notifyReminders ? 'background:#2ea043;color:#fff;font-size:11px;padding:5px 12px;border-radius:6px' : 'background:#e5e5e5;color:#555;font-size:11px;padding:5px 12px;border-radius:6px',
+      courtAlertsLabel: s.settings.notifyCourtAlerts ? 'On' : 'Off',
+      courtAlertsStyle: s.settings.notifyCourtAlerts ? 'background:#2ea043;color:#fff;font-size:11px;padding:5px 12px;border-radius:6px' : 'background:#e5e5e5;color:#555;font-size:11px;padding:5px 12px;border-radius:6px',
+      announcementsLabel: s.settings.notifyAnnouncements ? 'On' : 'Off',
+      announcementsStyle: s.settings.notifyAnnouncements ? 'background:#2ea043;color:#fff;font-size:11px;padding:5px 12px;border-radius:6px' : 'background:#e5e5e5;color:#555;font-size:11px;padding:5px 12px;border-radius:6px'
+    };
+
+    const templates = s.templates.map(t => ({ id: t.id, name: t.name, summary: t.courtsCount + ' courts · ' + (t.roundMode === 'game' ? 'game-based' : t.roundDuration + 'min rotations') + ' · cap ' + t.sessionCapacity, load: () => this.eLoadTemplate(t.id) }));
+
+    const scheduleItems = [
+      { day: 'Tuesday', time: '7:00–9:00 PM', note: 'Standard club night · 4 courts · game-based' },
+      { day: 'Thursday', time: '6:30–8:30 PM', note: 'Intermediate/advanced focus · 3 courts · time-based (20min)' },
+      { day: 'Saturday', time: '9:00–11:00 AM', note: 'Open play, all levels · 4 courts · game-based' }
+    ];
+
+    // analytics from logs
+    const logs = s.sessionLogs;
+    const maxAttend = Math.max(...logs.map(l => l.checkedIn), 1);
+    const attendanceBars = logs.map(l => ({ h: Math.round(l.checkedIn / maxAttend * 60) + 'px', label: l.date + ': ' + l.checkedIn }));
+    const maxSpreadVal = Math.max(...logs.map(l => l.avgSpread), 1);
+    const spreadBars = logs.map(l => ({ h: Math.max(4, Math.round(l.avgSpread / maxSpreadVal * 50)) + 'px', label: l.date + ': ' + l.avgSpread + ' spread' }));
+
+    const utilByCourtCount = {};
+    logs.forEach(l => { l.courts.forEach(c => { utilByCourtCount[c.court] = (utilByCourtCount[c.court] || 0) + c.playerIds.length; }); });
+    const courtUtil = Array.from({length: cc}, (_, i) => {
+      const num = i + 1;
+      const filled = utilByCourtCount[num] || 0;
+      const pct = Math.min(100, Math.round(filled / (logs.length * 4) * 100));
+      return { number: num, pct: pct + '%' };
+    });
+
+    const levelCounts = TIER_NAMES.map((name, idx) => players.filter(p => p.tier === idx).length);
+    const maxLevelCount = Math.max(...levelCounts, 1);
+    const bellBars = levelCounts.map((c, i) => ({ h: Math.max(4, Math.round(c / maxLevelCount * 50)) + 'px', label: TIER_NAMES[i] + ': ' + c }));
+
+    const avgWaitlist = Math.round(logs.reduce((sum,l) => sum + l.waitlistCount, 0) / logs.length);
+    const stagnation = players.filter(p => {
+      const h = p.levelHistory; if (h.length < 6) return false;
+      const recent = h.slice(-6);
+      return Math.max(...recent) - Math.min(...recent) === 0;
+    }).length;
+    const inactiveCount = players.filter(p => p.status === 'inactive').length;
+    const churnRate = Math.round(inactiveCount / players.length * 100);
+    const memberCount = players.filter(p => p.membership === 'Member').length;
+    const feesOutstanding = players.filter(p => p.membership === 'Member' && !p.feePaid).length;
+
+    const kpis = {
+      momGrowth: '+' + Math.max(1, Math.round((logs[7].checkedIn - logs[0].checkedIn) / Math.max(1, logs[0].checkedIn) * 100)) + '%',
+      avgDuration: '112 min',
+      peakTime: 'Tue 7–8 PM',
+      rerollFreq: (s.rerollCount / Math.max(1, logs.length)).toFixed(1) + '/session',
+      waitlistPressure: avgWaitlist + ' avg waiting',
+      churnRate: churnRate + '%',
+      reactivationRate: '9%',
+      onboarding: '+' + (2 + (s.players.length % 3)) + ' this month',
+      memberCount,
+      feesOutstanding
+    };
+
+    return {
+      tab: s.tab, courts, waitlist, waitlistEmpty: waitlist.length === 0, swapHint, search, filteredPlayers, checkinPlayers,
+      stats: { checkedIn: checkedIn.length, capacity, remaining, capacityPct, atCapacity: checkedIn.length >= capacity, waitlistCount: waitlist.length, avgLevelLabel, avgLevelGap, rerollCount: s.rerollCount },
+      pending, pendingCount: pending.length,
+      settingsVM, templateName: s.templateName, templates, scheduleItems,
+      attendanceBars, spreadBars, courtUtil, bellBars, stagnation, kpis
+    };
+  }
+
+  buildViewModel(key) {
+    const s = this.state[key];
+    const players = s.players;
+    const checkedIn = players.filter(p => p.checkedIn);
+    const total = players.length;
+
+    const selectedWaitlistId = s.selectedWaitlistId || null;
+    const selectedPlayer = selectedWaitlistId != null ? players.find(p => p.id === selectedWaitlistId) : null;
+
+    const courts = [0,1,2,3].map(courtId => {
+      const occupants = players.filter(p => p.checkedIn && p.courtId === courtId);
+      const slots = [0,1,2,3].map(i => {
+        const p = occupants[i];
+        const occupantId = p ? p.id : null;
+        const invite = selectedPlayer != null;
+        const baseRow = invite ? 'cursor:pointer;background:rgba(255,106,43,0.08);border-radius:6px' : '';
+        return p
+          ? { occupied: true, empty: false, player: { name: p.name, elo: p.elo }, rowStyle: baseRow, onSlotClick: () => this.placeOrSwap(key, courtId, occupantId) }
+          : { occupied: false, empty: true, player: null, rowStyle: baseRow, onSlotClick: () => this.placeOrSwap(key, courtId, null) };
+      });
+      return {
+        number: courtId + 1,
+        slots,
+        spread: courtSpread(occupants),
+        reroll: () => this.reroll(key, courtId)
+      };
+    });
+
+    const waitlist = players.filter(p => p.checkedIn && p.waitlisted).map((p, i) => ({
+      id: p.id,
+      name: p.name,
+      elo: p.elo,
+      pos: i + 1,
+      selected: p.id === selectedWaitlistId,
+      rowStyle: p.id === selectedWaitlistId
+        ? 'padding:8px 10px;border-radius:8px;background:#ff6a2b;color:#fff;cursor:pointer'
+        : 'padding:8px 10px;border-radius:8px;cursor:pointer',
+      onSelect: () => this.selectWaitlist(key, p.id)
+    }));
+
+    const swapActive = selectedPlayer != null;
+    const swapHint = swapActive ? ('Placing ' + selectedPlayer.name + ' — click a court slot') : 'Click a waitlisted player, then click a court slot to place or swap them in.';
+
+    const search = (s.search || '').toLowerCase();
+    const filteredPlayers = players
+      .filter(p => p.name.toLowerCase().includes(search))
+      .map(p => ({
+        id: p.id,
+        name: p.name,
+        code: p.code,
+        elo: p.elo,
+        eloUp: () => this.adjustElo(key, p.id, 25),
+        eloDown: () => this.adjustElo(key, p.id, -25),
+        statusLabel: p.status === 'active' ? 'Active' : 'Inactive',
+        statusStyle: p.status === 'active'
+          ? 'background:transparent;color:#3a9a5c;font-size:12px;padding:5px 10px;border-radius:6px;border:1px solid #3a9a5c33'
+          : 'background:transparent;color:#a3a3a3;font-size:12px;padding:5px 10px;border-radius:6px;border:1px solid #a3a3a333',
+        toggleActive: () => this.toggleActive(key, p.id),
+        checkinLabel: p.checkedIn ? 'Checked in' : 'Check in',
+        checkinStyle: p.checkedIn
+          ? 'background:#2ea043;color:#fff;font-size:12px;padding:5px 10px;border-radius:6px'
+          : 'background:#e5e5e5;color:#555;font-size:12px;padding:5px 10px;border-radius:6px',
+        toggleCheckin: () => this.toggleCheckin(key, p.id)
+      }));
+
+    const avgElo = checkedIn.length ? Math.round(checkedIn.reduce((sum, p) => sum + p.elo, 0) / checkedIn.length) : 0;
+    const spreads = courts.map(c => c.spread).filter(x => x > 0 || true);
+    const avgSpread = courts.length ? Math.round(courts.reduce((sum, c) => sum + c.spread, 0) / courts.length) : 0;
+
+    const amateur = players.filter(p => p.elo < 1300).length;
+    const intermediate = players.filter(p => p.elo >= 1300 && p.elo < 1700).length;
+    const advanced = players.filter(p => p.elo >= 1700 && p.elo < 2000).length;
+    const professional = players.filter(p => p.elo >= 2000).length;
+    const maxTier = Math.max(amateur, intermediate, advanced, professional, 1);
+    const tiers = [
+      { label: 'Professional (2000+)', count: professional, pct: Math.round(professional / maxTier * 100) + '%' },
+      { label: 'Advanced (1700–1999)', count: advanced, pct: Math.round(advanced / maxTier * 100) + '%' },
+      { label: 'Intermediate (1300–1699)', count: intermediate, pct: Math.round(intermediate / maxTier * 100) + '%' },
+      { label: 'Amateur (<1300)', count: amateur, pct: Math.round(amateur / maxTier * 100) + '%' }
+    ];
+
+    const activeTabBtn = (tabName, isActiveStyle, isInactiveStyle) => s.tab === tabName ? isActiveStyle : isInactiveStyle;
+
+    return {
+      tabIsDashboard: s.tab === 'dashboard',
+      tabIsPlayers: s.tab === 'players',
+      tabIsAnalytics: s.tab === 'analytics',
+      setTabDashboard: () => this.setTab(key, 'dashboard'),
+      setTabPlayers: () => this.setTab(key, 'players'),
+      setTabAnalytics: () => this.setTab(key, 'analytics'),
+      search: s.search,
+      setSearch: (e) => this.setSearch(key, e),
+      courts,
+      waitlist,
+      waitlistEmpty: waitlist.length === 0,
+      swapActive,
+      swapHint,
+      filteredPlayers,
+      stats: {
+        checkedIn: checkedIn.length,
+        total,
+        avgElo,
+        avgSpread,
+        waitlistCount: waitlist.length,
+        rerollCount: s.rerollCount
+      },
+      tiers,
+      _activeTabBtn: activeTabBtn
+    };
+  }
+
+  renderValsE() {
+    const vm = this.buildViewModelE();
+    const tabs = ['dashboard','checkin','players','sessions','schedule','analytics','settings'];
+    const out = {
+      eTabIsDashboard: vm.tab === 'dashboard', eTabIsCheckin: vm.tab === 'checkin', eTabIsPlayers: vm.tab === 'players',
+      eTabIsSessions: vm.tab === 'sessions', eTabIsSchedule: vm.tab === 'schedule', eTabIsAnalytics: vm.tab === 'analytics', eTabIsSettings: vm.tab === 'settings',
+      eSetTabDashboard: () => this.eSetTab('dashboard'), eSetTabCheckin: () => this.eSetTab('checkin'), eSetTabPlayers: () => this.eSetTab('players'),
+      eSetTabSessions: () => this.eSetTab('sessions'), eSetTabSchedule: () => this.eSetTab('schedule'), eSetTabAnalytics: () => this.eSetTab('analytics'), eSetTabSettings: () => this.eSetTab('settings'),
+      eStats: vm.stats, eCourts: vm.courts, eWaitlist: vm.waitlist, eWaitlistEmpty: vm.waitlistEmpty, eSwapHint: vm.swapHint,
+      eSearch: vm.search, eSetSearch: (ev) => this.eSetSearch(ev), eFilteredPlayers: vm.filteredPlayers, eCheckinPlayers: vm.checkinPlayers,
+      ePending: vm.pending, ePendingCount: vm.pendingCount,
+      eSettings: vm.settingsVM,
+      eSetRoundGame: () => this.eSetRoundMode('game'), eSetRoundTime: () => this.eSetRoundMode('time'), eSetDuration: (ev) => this.eSetDuration(ev),
+      eSetCapacity: (ev) => this.eSetCapacity(ev), eSetCourtsCount: (ev) => this.eSetCourtsCount(ev),
+      eTemplateName: vm.templateName, eSetTemplateName: (ev) => this.eSetTemplateName(ev), eSaveTemplate: () => this.eSaveTemplate(), eTemplates: vm.templates,
+      eScheduleItems: vm.scheduleItems,
+      eAttendanceBars: vm.attendanceBars, eSpreadBars: vm.spreadBars, eCourtUtil: vm.courtUtil, eBellBars: vm.bellBars, eStagnationCount: vm.stagnation, eKpis: vm.kpis,
+      eToggleReminders: () => this.eToggleSetting('notifyReminders'), eToggleCourtAlerts: () => this.eToggleSetting('notifyCourtAlerts'), eToggleAnnouncements: () => this.eToggleSetting('notifyAnnouncements'),
+      eInviteLink: 'https://riversidebc.club/join/ab13x9'
+    };
+    const theme = buildTheme(this.props || {});
+    out.eTheme = theme;
+    out.eLayoutBalanced = (this.props && this.props.layout) !== 'focused';
+    out.eLayoutFocused = (this.props && this.props.layout) === 'focused';
+    tabs.forEach(t => { out['eTabStyle_' + t] = vm.tab === t ? theme.tabActive : theme.tabInactive; });
+    out.eRoundModeStyle_game = this.state.e.settings.roundMode === 'game' ? theme.roundActive : theme.roundInactive;
+    out.eRoundModeStyle_time = this.state.e.settings.roundMode === 'time' ? theme.roundActive : theme.roundInactive;
+    return out;
+  }
+
+  renderVals() {
+    const keys = ['a', 'b', 'c', 'd'];
+    const out = {};
+    keys.forEach(key => {
+      const vm = this.buildViewModel(key);
+      const P = key;
+      out[P + 'Stats'] = vm.stats;
+      out[P + 'Courts'] = vm.courts;
+      out[P + 'Waitlist'] = vm.waitlist;
+      out[P + 'WaitlistEmpty'] = vm.waitlistEmpty;
+      out[P + 'FilteredPlayers'] = vm.filteredPlayers;
+      out[P + 'Search'] = vm.search;
+      out[P + 'SetSearch'] = vm.setSearch;
+      out[P + 'TabIsDashboard'] = vm.tabIsDashboard;
+      out[P + 'TabIsPlayers'] = vm.tabIsPlayers;
+      out[P + 'TabIsAnalytics'] = vm.tabIsAnalytics;
+      out[P + 'SetTabDashboard'] = vm.setTabDashboard;
+      out[P + 'SetTabPlayers'] = vm.setTabPlayers;
+      out[P + 'SetTabAnalytics'] = vm.setTabAnalytics;
+      out[P + 'Tiers'] = vm.tiers;
+      out[P + 'SwapActive'] = vm.swapActive;
+      out[P + 'SwapHint'] = vm.swapHint;
+
+      const activeStyleTop = 'background:#221d18;color:#fff;border-radius:8px 8px 0 0;padding:10px 18px;font-size:13px';
+      const inactiveStyleTop = 'background:transparent;color:#8a7c68;border-radius:8px 8px 0 0;padding:10px 18px;font-size:13px';
+      if (key === 'a') {
+        out.aTabBtnStyleDashboard = vm.tabIsDashboard ? activeStyleTop : inactiveStyleTop;
+        out.aTabBtnStylePlayers = vm.tabIsPlayers ? activeStyleTop : inactiveStyleTop;
+        out.aTabBtnStyleAnalytics = vm.tabIsAnalytics ? activeStyleTop : inactiveStyleTop;
+      }
+      if (key === 'b') {
+        const activeSide = 'display:block;width:100%;text-align:left;background:#1e2740;color:#c4ff5c;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:4px';
+        const inactiveSide = 'display:block;width:100%;text-align:left;background:transparent;color:#8891ab;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:4px';
+        out.bSideBtnStyleDashboard = vm.tabIsDashboard ? activeSide : inactiveSide;
+        out.bSideBtnStylePlayers = vm.tabIsPlayers ? activeSide : inactiveSide;
+        out.bSideBtnStyleAnalytics = vm.tabIsAnalytics ? activeSide : inactiveSide;
+      }
+      if (key === 'c') {
+        const activeC = 'background:#e94ff5;color:#12141c;border-radius:8px;padding:9px 16px;font-size:13px';
+        const inactiveC = 'background:#181b26;color:#8d92a5;border-radius:8px;padding:9px 16px;font-size:13px';
+        out.cTabBtnStyleDashboard = vm.tabIsDashboard ? activeC : inactiveC;
+        out.cTabBtnStylePlayers = vm.tabIsPlayers ? activeC : inactiveC;
+        out.cTabBtnStyleAnalytics = vm.tabIsAnalytics ? activeC : inactiveC;
+      }
+      if (key === 'd') {
+        out.dTabBtnStyleDashboard = vm.tabIsDashboard ? activeStyleTop : inactiveStyleTop;
+        out.dTabBtnStylePlayers = vm.tabIsPlayers ? activeStyleTop : inactiveStyleTop;
+        out.dTabBtnStyleAnalytics = vm.tabIsAnalytics ? activeStyleTop : inactiveStyleTop;
+      }
+    });
+    return Object.assign(out, this.renderValsE());
+  }
+}
+
+</script>
+</body>
+</html>

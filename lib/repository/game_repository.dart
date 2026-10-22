@@ -1,12 +1,8 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:good_bad_board/model/game.dart';
+import 'package:good_bad_board/repository/json_collection.dart';
 import 'package:good_bad_board/repository/player_repository.dart';
-import 'package:good_bad_board/repository/repository_interface.dart';
-import 'package:good_bad_board/repository/repository_service.dart';
 
 part 'game_repository.freezed.dart';
 part 'game_repository.g.dart';
@@ -22,104 +18,57 @@ abstract class GameDto with _$GameDto {
   factory GameDto.fromJson(Map<String, dynamic> json) =>
       _$GameDtoFromJson(json);
 
-  factory GameDto.fromGame(Game game) => GameDto(
-    game.players.map(PlayerDto.fromPlayer),
-    game.id,
-    game.createdDate,
-  );
+  factory GameDto.fromGame(Game game) =>
+      GameDto(game.playerIds.map(PlayerDto.new), game.id, game.createdDate);
 }
 
-@freezed
-abstract class GameDatabase with _$GameDatabase {
-  const factory GameDatabase(Iterable<GameDto> games) = _GameDatabase;
+/// Thin adapter over [JsonCollection] for `games.json`.
+///
+/// The cache holds the stored player ids ([GameDto]), never resolved
+/// [Game.players], so a save can never shrink a roster whose ids no longer
+/// resolve (see ADR-0001). [Game.playerIds] is the DTO's ids, unchanged;
+/// resolving an id to a [Player] happens lazily in [Game.players], and an id
+/// that resolves to nothing simply yields no player there — it still
+/// survives on disk.
+class GameRepository {
+  GameRepository._(this._collection);
 
-  factory GameDatabase.fromJson(Map<String, dynamic> json) =>
-      _$GameDatabaseFromJson(json);
-}
-
-class GameRepository extends InMemoryRepository<Game> {
-  GameRepository._();
-
-  static final GameRepository instance = GameRepository._();
+  static late GameRepository instance;
 
   static const String databaseFilename = 'games.json';
 
-  late final Map<String, Game> _cache;
+  final JsonCollection<GameDto> _collection;
 
-  late final PlayerRepository _playerRepository;
+  /// Notifies after every successful write.
+  Listenable get listenable => _collection;
 
-  Future<void> initialize() async {
-    _playerRepository = PlayerRepository.instance;
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
+  static Future<GameRepository> initialize({required String rootDir}) async {
+    final collection = JsonCollection<GameDto>(
+      rootDir: rootDir,
+      fileName: databaseFilename,
+      collectionKey: 'games',
+      fromJson: GameDto.fromJson,
+      toJson: (dto) => dto.toJson(),
+      idOf: (dto) => dto.id,
     );
-
-    if (!await selectedFile.exists()) {
-      _cache = {};
-      return;
-    }
-    final json = await selectedFile.readAsString();
-    final dto = GameDatabase.fromJson(jsonDecode(json));
-    final games = await Future.wait(
-      dto.games.map((gameDto) async {
-        final maybePlayers = await Future.wait(
-          gameDto.playerDto.map(_playerRepository.getPlayerFromDto),
-        );
-        return Game(
-          players: maybePlayers.nonNulls.toList(growable: true),
-          id: gameDto.id,
-          createdDate: gameDto.createdDate,
-        );
-      }),
-    );
-
-    _cache = Map.fromEntries(games.map((e) => MapEntry(e.id, e)));
+    await collection.load();
+    return GameRepository._(collection);
   }
 
-  @override
-  Future<void> add(Game game) {
-    _cache[game.id] = game;
-    return save();
-  }
+  Game _resolve(GameDto dto) => Game(
+    playerIds: dto.playerDto
+        .map((playerDto) => playerDto.id)
+        .toList(growable: true),
+    id: dto.id,
+    createdDate: dto.createdDate,
+  );
 
-  Future<void> addAll(Iterable<Game> games) async {
-    _cache.addAll(Map.fromEntries(games.map((e) => MapEntry(e.id, e))));
-    return save();
-  }
+  Iterable<Game> getAll() => _collection.all().map(_resolve);
 
-  @override
-  Future<void> delete(id) async {
-    _cache.remove(id);
-    return save();
-  }
+  Future<void> add(Game game) => _collection.upsert(GameDto.fromGame(game));
 
-  @override
-  Future<Game?> get(String id) async {
-    return _cache[id];
-  }
+  Future<void> addAll(Iterable<Game> games) =>
+      _collection.upsertAll(games.map(GameDto.fromGame));
 
-  @override
-  Future<Iterable<Game>> getAll({int? count, int? offset}) async {
-    final skippedEntries = _cache.values.skip(offset ?? 0);
-    if (count != null) {
-      return skippedEntries.take(count);
-    }
-    return skippedEntries;
-  }
-
-  @override
-  Future<void> update(String id, Game value) {
-    _cache.update(id, (_) => value);
-    return save();
-  }
-
-  Future<void> save() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
-    await selectedFile.create(recursive: true);
-    final dto = GameDatabase(_cache.values.map(GameDto.fromGame));
-    await selectedFile.writeAsString(jsonEncode(dto.toJson()));
-    log('${runtimeType.toString()} saved at $selectedFile');
-  }
+  Future<void> delete(String id) => _collection.remove(id);
 }

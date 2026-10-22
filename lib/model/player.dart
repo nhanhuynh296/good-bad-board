@@ -17,6 +17,28 @@ enum Elo {
   String toDisplayName() => name.toUpperCase();
 }
 
+/// A player's club-membership standing.
+///
+/// Cycles Member → Casual → Disabled → Member via [next]. Disabled players
+/// are excluded from check-in and the session pool (see [GameData]).
+enum MembershipStatus {
+  member,
+  casual,
+  disabled;
+
+  MembershipStatus get next => switch (this) {
+    MembershipStatus.member => MembershipStatus.casual,
+    MembershipStatus.casual => MembershipStatus.disabled,
+    MembershipStatus.disabled => MembershipStatus.member,
+  };
+
+  String toDisplayName() => switch (this) {
+    MembershipStatus.member => 'Member',
+    MembershipStatus.casual => 'Casual',
+    MembershipStatus.disabled => 'Disabled',
+  };
+}
+
 @freezed
 abstract class Player with _$Player {
   const Player._();
@@ -28,6 +50,8 @@ abstract class Player with _$Player {
     required String id,
     String? signInId,
     DateTime? createdDate,
+    @Default(MembershipStatus.member) MembershipStatus membership,
+    DateTime? deletedDate,
   }) = _Player;
 
   factory Player.create({
@@ -35,6 +59,7 @@ abstract class Player with _$Player {
     required String lastName,
     required Elo elo,
     String? signInId,
+    MembershipStatus membership = MembershipStatus.member,
   }) => Player(
     firstName: firstName,
     lastName: lastName,
@@ -42,6 +67,7 @@ abstract class Player with _$Player {
     signInId: signInId,
     id: const Uuid().v4(),
     createdDate: DateTime.now(),
+    membership: membership,
   );
 
   factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
@@ -52,4 +78,8 @@ abstract class Player with _$Player {
       '$firstName $lastName (${elo.name.toUpperCase()})';
 
   String name() => '$firstName $lastName';
+
+  /// Whether this is an anonymised Player — see ADR-0001. The id, the Elo
+  /// and the created date stay; the name and sign-in id are erased.
+  bool get isAnonymised => deletedDate != null;
 }

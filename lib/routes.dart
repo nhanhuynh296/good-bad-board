@@ -1,30 +1,81 @@
-// GoRouter configuration
+// GoRouter configuration with responsive tab-based shell.
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:good_bad_board/global.dart';
-import 'package:good_bad_board/view/game_maker_page.dart';
-import 'package:good_bad_board/view/landing_page.dart';
-import 'package:good_bad_board/view/player_statistic_page.dart';
-import 'package:good_bad_board/view/sign_in_page.dart';
+import 'package:good_bad_board/shell/responsive_shell.dart';
+import 'package:good_bad_board/features/analytics/analytics.dart';
+import 'package:good_bad_board/features/dashboard/dashboard.dart';
+import 'package:good_bad_board/features/players/players.dart';
+import 'package:good_bad_board/features/registration/registration.dart';
+import 'package:good_bad_board/features/sessions/sessions.dart';
+import 'package:good_bad_board/features/settings/settings.dart';
 
 final router = GoRouter(
-  debugLogDiagnostics: true,
+  debugLogDiagnostics: kDebugMode,
   navigatorKey: navigatorKey,
+  initialLocation: '/dashboard',
   routes: [
+    // Redirect legacy routes to new tab-based paths
+    GoRoute(path: '/', redirect: (context, state) => '/dashboard'),
+    // Standalone self-registration page (REG-01…07) — public-facing, kept
+    // outside the admin StatefulShellRoute (no ResponsiveShell chrome).
     GoRoute(
-      path: '/',
-      builder: (context, state) => const LandingPage(),
-      routes: [
-        GoRoute(
-          path: '/register',
-          builder: (context, state) => const SignInPage(),
+      path: '/register',
+      builder: (context, state) => const RegistrationPage(),
+    ),
+    GoRoute(path: '/game', redirect: (context, state) => '/dashboard'),
+    GoRoute(path: '/stats', redirect: (context, state) => '/analytics'),
+    // Session templates replace the Schedule tab.
+    GoRoute(path: '/schedule', redirect: (context, state) => '/sessions'),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return ResponsiveShell(navigationShell: navigationShell);
+      },
+      branches: [
+        // Tab 0 — Dashboard (Courts)
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/dashboard',
+              builder: (context, state) => const DashboardPage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: '/game',
-          builder: (context, state) => const GameMakerPage(),
+        // Tab 1 — Players (with integrated check-in — CHK-01…06)
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/players',
+              builder: (context, state) => const PlayersPage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: '/stats',
-          builder: (context, state) => const PlayerStatisticPage(),
+        // Tab 2 — Sessions
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/sessions',
+              builder: (context, state) => const SessionsPage(),
+            ),
+          ],
+        ),
+        // Tab 3 — Analytics
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/analytics',
+              builder: (context, state) => const AnalyticsPage(),
+            ),
+          ],
+        ),
+        // Tab 4 — Settings
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/settings',
+              builder: (context, state) => const SettingsPage(),
+            ),
+          ],
         ),
       ],
     ),

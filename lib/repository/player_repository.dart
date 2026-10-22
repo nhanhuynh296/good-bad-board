@@ -1,11 +1,7 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:good_bad_board/model/player.dart';
-import 'package:good_bad_board/repository/repository_interface.dart';
-import 'package:good_bad_board/repository/repository_service.dart';
+import 'package:good_bad_board/repository/json_collection.dart';
 
 part 'player_repository.freezed.dart';
 part 'player_repository.g.dart';
@@ -21,91 +17,46 @@ abstract class PlayerDto with _$PlayerDto {
   factory PlayerDto.fromPlayer(Player player) => PlayerDto(player.id);
 }
 
-@freezed
-abstract class PlayerDatabase with _$PlayerDatabase {
-  const factory PlayerDatabase(Iterable<Player> players) = _PlayerDatabase;
+/// Thin adapter over [JsonCollection] for `players.json`.
+class PlayerRepository {
+  PlayerRepository._(this._collection);
 
-  factory PlayerDatabase.fromJson(Map<String, dynamic> json) =>
-      _$PlayerDatabaseFromJson(json);
-}
-
-class PlayerRepository extends InMemoryRepository<Player> {
-  PlayerRepository._();
-
-  static final PlayerRepository instance = PlayerRepository._();
+  static late PlayerRepository instance;
 
   static const String databaseFilename = 'players.json';
 
-  late final Map<String, Player> _cache;
+  final JsonCollection<Player> _collection;
 
-  Future<void> initialize() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
+  /// Notifies after every successful write.
+  Listenable get listenable => _collection;
+
+  static Future<PlayerRepository> initialize({required String rootDir}) async {
+    final collection = JsonCollection<Player>(
+      rootDir: rootDir,
+      fileName: databaseFilename,
+      collectionKey: 'players',
+      fromJson: Player.fromJson,
+      toJson: (player) => player.toJson(),
+      idOf: (player) => player.id,
     );
-    if (!await selectedFile.exists()) {
-      _cache = {};
-      return;
-    }
-    final json = await selectedFile.readAsString();
-    final dto = PlayerDatabase.fromJson(jsonDecode(json));
-    _cache = Map.fromEntries(
-      dto.players.map((player) => MapEntry(player.id, player)),
-    );
+    await collection.load();
+    return PlayerRepository._(collection);
   }
 
-  Iterable<Player> getAllCachedPlayers() {
-    return _cache.values.toSet();
-  }
+  /// Looks up a player by id, anonymised or not — for resolving a
+  /// historical Game roster, where an anonymised player must still resolve.
+  Player? byId(String id) => _collection.byId(id);
 
-  @override
-  Future<void> add(Player player) {
-    _cache[player.id] = player;
-    return save();
-  }
+  /// Listed players — excludes anonymised (deleted) rows. What the
+  /// organizer picks a player from: the roster list, check-in, matchmaking.
+  Iterable<Player> listedPlayers() =>
+      _collection.all().where((player) => !player.isAnonymised);
 
-  Future<void> addAll(Iterable<Player> players) async {
-    _cache.addAll(Map.fromEntries(players.map((e) => MapEntry(e.id, e))));
-    return save();
-  }
+  /// Adds a new player, or overwrites an existing one with the same id.
+  Future<void> add(Player player) => _collection.upsert(player);
 
-  @override
-  Future<void> delete(String id) async {
-    _cache.remove(id);
-    return save();
-  }
+  Future<void> addAll(Iterable<Player> players) =>
+      _collection.upsertAll(players);
 
-  @override
-  Future<Player?> get(String id) async {
-    return _cache[id];
-  }
-
-  @override
-  Future<Iterable<Player>> getAll({int? count, int? offset}) async {
-    final skippedEntries = _cache.values.skip(offset ?? 0);
-    if (count != null) {
-      return skippedEntries.take(count);
-    }
-    return skippedEntries;
-  }
-
-  Future<Player?> getPlayerFromDto(PlayerDto dto) async {
-    return _cache[dto.id];
-  }
-
-  @override
-  Future<void> update(String id, Player value) {
-    _cache.update(id, (_) => value);
-    return save();
-  }
-
-  Future<void> save() async {
-    final selectedFile = File(
-      '${RepositoryService.instance.rootPath}/$databaseFilename',
-    );
-
-    await selectedFile.create(recursive: true);
-    final dto = PlayerDatabase(_cache.values);
-    await selectedFile.writeAsString(jsonEncode(dto.toJson()));
-    log('${runtimeType.toString()} saved at $selectedFile');
-  }
+  Future<void> delete(String id) => _collection.remove(id);
 }

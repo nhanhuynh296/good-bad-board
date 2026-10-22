@@ -1,233 +1,9 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:good_bad_board/core/build_context_extension.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/player.dart';
-import 'package:good_bad_board/spacing.dart';
-import 'package:good_bad_board/state/game_data.dart';
+import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/view/component/button.dart';
-import 'package:good_bad_board/view/component/dialog/toasts.dart';
-import 'package:provider/provider.dart';
-
-class EditPlayerDialog extends StatefulWidget {
-  final Player player;
-  final ValueChanged<Player>? onSubmit;
-
-  /// Whether to pop after removing the player from the session
-  final bool persistAfterInactive;
-
-  const EditPlayerDialog({
-    super.key,
-    this.onSubmit,
-    required this.player,
-    this.persistAfterInactive = false,
-  });
-
-  @override
-  State<EditPlayerDialog> createState() => _EditPlayerDialogState();
-}
-
-class _EditPlayerDialogState extends State<EditPlayerDialog> {
-  final _formKey = GlobalKey<FormState>();
-
-  late String firstName;
-  late String lastName;
-  late Elo elo;
-  late String? signInId;
-
-  @override
-  void initState() {
-    super.initState();
-    firstName = widget.player.firstName;
-    lastName = widget.player.lastName;
-    elo = widget.player.elo;
-    signInId = widget.player.signInId;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final gameData = Provider.of<GameData>(context);
-    return AlertDialog(
-      title: Row(
-        spacing: spaceComponent,
-        children: [
-          Text('Edit player', style: context.textTheme.headlineMedium),
-          const Spacer(),
-          gameData.players.containsKey(widget.player.id)
-              ? Button(
-                  icon: Icon(
-                    Icons.no_accounts,
-                    color: context.colorScheme.surface,
-                  ),
-                  onPressed: () {
-                    gameData.removePlayer(widget.player);
-                    if (!widget.persistAfterInactive) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  type: ButtonType.filled,
-                  backgroundColor: context.colorScheme.onSurfaceVariant,
-                  child: Text(AppLocalizations.of(context)!.break_),
-                )
-              : Button(
-                  onPressed: () async {
-                    final bool confirmDelete = await showAdaptiveDialog(
-                      context: context,
-                      builder: (context) => const ConfirmDeleteDialog(),
-                    );
-                    if (!context.mounted || !confirmDelete) return;
-                    context.showToast("Player ${widget.player.name()} deleted");
-                    Provider.of<GameData>(
-                      context,
-                      listen: false,
-                    ).deletePlayer(widget.player);
-
-                    Navigator.of(context).pop();
-                  },
-                  icon: const Icon(Icons.delete),
-                  type: ButtonType.filled,
-                  backgroundColor: context.colorScheme.errorContainer,
-                ),
-        ],
-      ),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          spacing: spaceDefault,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              initialValue: firstName,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.first_name,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter name';
-                }
-                firstName = value;
-                return null;
-              },
-            ),
-            TextFormField(
-              initialValue: lastName,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.last_name,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter name';
-                }
-                lastName = value;
-                return null;
-              },
-            ),
-            DropdownButtonFormField(
-              initialValue: elo,
-              decoration: const InputDecoration(labelText: 'Elo'),
-              validator: (value) {
-                if (value != null) return null;
-                return 'Please select elo';
-              },
-              items: Elo.values
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(e.name.toUpperCase()),
-                    ),
-                  )
-                  .toList(growable: false),
-              onChanged: (Elo? value) {
-                if (value == null) return;
-                elo = value;
-              },
-            ),
-            TextFormField(
-              initialValue: signInId,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.sign_in_id,
-              ),
-              validator: (value) {
-                signInId = value;
-                return null;
-              },
-            ),
-            TextFormField(
-              initialValue: widget.player.id,
-              enabled: false,
-              readOnly: true,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.id,
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: <Widget>[
-        Button(
-          child: Text(AppLocalizations.of(context)!.cancel),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        Button(
-          type: ButtonType.filled,
-          onPressed: () {
-            // Validate returns true if the form is valid, or false otherwise.
-            if (!_formKey.currentState!.validate()) {
-              return;
-            }
-            widget.onSubmit?.call(
-              widget.player.copyWith(
-                firstName: firstName,
-                lastName: lastName,
-                elo: elo,
-                signInId: signInId,
-              ),
-            );
-            Navigator.of(context).pop();
-          },
-          child: Text(AppLocalizations.of(context)!.update),
-        ),
-      ],
-    );
-  }
-}
-
-class ConfirmDeleteDialog extends StatelessWidget {
-  const ConfirmDeleteDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Delete player'),
-      content: const Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Are you sure you want to delete this player?'),
-          Text("This action can not be undone!"),
-        ],
-      ),
-      actions: <Widget>[
-        Button(
-          child: Text(AppLocalizations.of(context)!.cancel),
-          onPressed: () {
-            Navigator.of(context).pop(false);
-          },
-        ),
-        Button(
-          type: ButtonType.filled,
-          backgroundColor: Theme.of(context).colorScheme.error,
-          onPressed: () {
-            Navigator.of(context).pop(true);
-          },
-          child: Text(AppLocalizations.of(context)!.delete),
-        ),
-      ],
-    );
-  }
-}
 
 class PlayerBulkEdit extends StatefulWidget {
   final List<Player> players;
@@ -251,8 +27,9 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text("Bulk Edit"),
+      title: Text(l10n.players_bulk_edit),
       actions: [
         Button(
           child: Text(AppLocalizations.of(context)!.cancel),
@@ -305,23 +82,29 @@ class _PlayerBulkEditState extends State<PlayerBulkEdit> {
                     border: TableBorder.all(),
                     showCheckboxColumn: true,
                     sortColumnIndex: 0,
-                    columns: const <DataColumn>[
+                    columns: <DataColumn>[
                       DataColumn(
                         label: Text(
-                          'Name',
-                          style: TextStyle(fontStyle: FontStyle.italic),
+                          l10n.players_name,
+                          style: AppTypography.smBold.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                       DataColumn(
                         label: Text(
-                          'Elo',
-                          style: TextStyle(fontStyle: FontStyle.italic),
+                          l10n.elo,
+                          style: AppTypography.smBold.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                       DataColumn(
                         label: Text(
-                          'Sign in ID',
-                          style: TextStyle(fontStyle: FontStyle.italic),
+                          l10n.sign_in_id,
+                          style: AppTypography.smBold.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                     ],
