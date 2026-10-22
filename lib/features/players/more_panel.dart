@@ -282,11 +282,6 @@ class _SignInIdEditorState extends State<_SignInIdEditor> {
   String? _message;
   bool _saved = false;
 
-  static const _border = OutlineInputBorder(
-    borderRadius: AppRadii.mdRadius,
-    borderSide: BorderSide(color: AppColors.controlBorder),
-  );
-
   @override
   void initState() {
     super.initState();
@@ -343,41 +338,56 @@ class _SignInIdEditorState extends State<_SignInIdEditor> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 220,
-                child: TextField(
-                  key: const Key('player-sign-in-id-field'),
-                  controller: _controller,
-                  focusNode: _focus,
-                  onSubmitted: (_) => _save(),
-                  onChanged: (_) {
-                    if (_message != null || _saved) {
-                      setState(() {
-                        _message = null;
-                        _saved = false;
-                      });
-                    }
-                  },
-                  textAlignVertical: TextAlignVertical.center,
-                  style: AppTypography.body.copyWith(
-                    fontSize: AppTypography.sizeSubtitle,
+              // The box draws the border, as on the scan field: the app
+              // theme border sat inside a shorter text field box. Focus
+              // shows as a ring outside the box, as on the canvas board.
+              ListenableBuilder(
+                listenable: _focus,
+                builder: (context, child) => FocusRing(
+                  focused: _focus.hasFocus,
+                  color: AppColors.focusOnLight,
+                  radius: AppRadii.md,
+                  child: child!,
+                ),
+                child: Container(
+                  key: const Key('player-sign-in-id-box'),
+                  width: 220,
+                  height: MorePanel.controlHeight,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: AppRadii.mdRadius,
+                    border: Border.all(color: AppColors.controlBorderSoft),
                   ),
-                  decoration: InputDecoration(
-                    constraints: const BoxConstraints.tightFor(
-                      height: MorePanel.controlHeight,
+                  alignment: Alignment.centerLeft,
+                  child: TextField(
+                    key: const Key('player-sign-in-id-field'),
+                    controller: _controller,
+                    focusNode: _focus,
+                    onSubmitted: (_) => _save(),
+                    onChanged: (_) {
+                      if (_message != null || _saved) {
+                        setState(() {
+                          _message = null;
+                          _saved = false;
+                        });
+                      }
+                    },
+                    textAlignVertical: TextAlignVertical.center,
+                    style: AppTypography.body.copyWith(
+                      fontSize: AppTypography.sizeSubtitle,
                     ),
-                    isDense: true,
-                    filled: true,
-                    fillColor: AppColors.white,
-                    hintText: l10n.sign_in_id,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    border: _border,
-                    enabledBorder: _border,
-                    focusedBorder: _border.copyWith(
-                      borderSide: const BorderSide(
-                        color: AppColors.focusOnLight,
-                        width: 2,
-                      ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      isCollapsed: true,
+                      filled: false,
+                      hintText: l10n.sign_in_id,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
                     ),
                   ),
                 ),
@@ -502,18 +512,23 @@ class _StepButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Opacity(
       opacity: enabled ? 1 : 0.35,
-      child: CourtsButton(
-        key: buttonKey,
-        label: label,
-        semanticsLabel: semanticsLabel,
-        // A dimmed button takes the tap and does nothing (PLY-09).
-        onPressed: enabled ? onPressed : _doNothing,
-        height: MorePanel.controlHeight,
-        background: AppColors.pageBg,
-        foreground: AppColors.textPrimary,
-        borderColor: AppColors.controlBorderSoft,
-        ringColor: AppColors.focusOnLight,
-        horizontalPadding: 14,
+      child: SizedBox.square(
+        // 40 × 40 with a 20/600 glyph, as on the canvas board.
+        dimension: MorePanel.controlHeight,
+        child: CourtsButton(
+          key: buttonKey,
+          label: label,
+          semanticsLabel: semanticsLabel,
+          // A dimmed button takes the tap and does nothing (PLY-09).
+          onPressed: enabled ? onPressed : _doNothing,
+          height: MorePanel.controlHeight,
+          background: AppColors.pageBg,
+          foreground: AppColors.textPrimary,
+          borderColor: AppColors.controlBorderSoft,
+          ringColor: AppColors.focusOnLight,
+          horizontalPadding: 0,
+          fontSize: AppTypography.sizeTitle,
+        ),
       ),
     );
   }
