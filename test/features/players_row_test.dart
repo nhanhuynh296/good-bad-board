@@ -266,6 +266,47 @@ void main() {
       expect(toggle.hoverColor, Colors.transparent);
     });
 
+    testWidgets('should_draw_no_press_box_inside_the_row', (tester) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      final toggle = tester.widget<InkWell>(
+        inRow(h, 'Alice', find.byKey(const Key('player-row-toggle'))),
+      );
+
+      expect(
+        [toggle.highlightColor, toggle.splashFactory],
+        [Colors.transparent, NoSplash.splashFactory],
+      );
+    });
+
+    testWidgets('should_tint_the_whole_row_while_pressed', (tester) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+      Color? fill() =>
+          (tester
+                      .widget<DecoratedBox>(
+                        inRow(
+                          h,
+                          'Alice',
+                          find.byKey(const Key('player-row-decoration')),
+                        ),
+                      )
+                      .decoration
+                  as BoxDecoration)
+              .color;
+      final before = fill();
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(h.rowOf('Alice')),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      final pressed = fill();
+      await gesture.up();
+
+      expect(pressed, isNot(before));
+    });
+
     testWidgets('should_tint_the_whole_row_on_hover', (tester) async {
       final h = PlayersHarness(tester);
       await h.pump(players: [alice]);
