@@ -142,7 +142,7 @@ void main() {
 
     expect(
       gameData.history.last.map((game) => game.playerIds),
-      contains([for (final player in players) player.id]),
+      contains(equals([for (final player in players) player.id])),
     );
   });
 

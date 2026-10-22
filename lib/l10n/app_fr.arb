@@ -371,5 +371,9 @@
   "sessions_delete_named": "Supprimer {name}",
   "sessions_no_templates": "Aucun modèle pour l'instant",
   "sessions_delete_template_confirm_title": "Supprimer le modèle « {name} » ?",
-  "sessions_delete_template_confirm_body": "Le modèle est supprimé. Les réglages actuels ne changent pas."
+  "sessions_delete_template_confirm_body": "Le modèle est supprimé. Les réglages actuels ne changent pas.",
+  "sessions_remove_court_title": "Quel terrain retirer ?",
+  "sessions_remove_court_body": "Ses joueurs vont sur la liste d'attente. Les terrains suivants prennent le numéro précédent.",
+  "sessions_remove_court_option": "Terrain {court} · {count, plural, =0{vide} =1{1 joueur} other{{count} joueurs}}",
+  "sessions_remove_court_action": "Retirer"
 }

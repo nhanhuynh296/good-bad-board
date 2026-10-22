@@ -203,6 +203,35 @@ class GameData extends ChangeNotifier {
     _padToCourtCount(lineup);
   }
 
+  /// Removes the court at [index] (0 = Court 1) from every lineup: the
+  /// live round, a saved round n+1 and the lineup in edit mode (R13-Q9).
+  ///
+  /// Its players go to the waitlist. The courts after it move up one
+  /// number. The round phase and the clock do not change. Returns `false`
+  /// and changes nothing for the last court or an index out of range.
+  bool removeCourt(int index) {
+    if (numberOfCourt <= 1 || index < 0 || index >= numberOfCourt) {
+      return false;
+    }
+    void dropFrom(GameContainer? lineup) {
+      if (lineup != null && index < lineup.length) lineup.removeAt(index);
+    }
+
+    stagingMatches = [...stagingMatches];
+    dropFrom(stagingMatches);
+    final next = _nextLineup;
+    dropFrom(next);
+    final edit = _editLineup;
+    if (!identical(edit, next)) dropFrom(edit);
+    final base = _editBase;
+    if (base != null && index < base.length) base.removeAt(index);
+    numberOfCourt--;
+    _prunePlayingGameIds();
+    _applyCourtCount();
+    notifyListeners();
+    return true;
+  }
+
   /// Removes the courts beyond [numberOfCourt] from the live round.
   void _dropCourtsBeyondCount() {
     if (stagingMatches.length > numberOfCourt) {
@@ -474,6 +503,52 @@ class GameData extends ChangeNotifier {
         _phase != RoundPhase.timeUp;
   }
 
+  /// Ids of the courts that the organizer fills by hand while the clock runs
+  /// (R13-Q7). A court gets in when it has no players and the organizer
+  /// puts the first player on it. It stays open until its round ends, so
+  /// the organizer can fill all 4 places.
+  final Set<String> _handFillCourtIds = {};
+
+  /// Whether the organizer can put a waitlist player on the court at
+  /// [courtIndex] of the round on screen while the courts are locked
+  /// (R13-Q7, R13-Q8): RUNNING, TIME UP or CHANGEOVER, on a court with no
+  /// players, or a court that was empty and is being filled by hand.
+  /// Courts with players stay locked (COURT-10). When [canEditCourts] is
+  /// true the normal rules apply, so this is `false`.
+  bool canHandFillCourt(int courtIndex) {
+    if (canEditCourts || _phase == RoundPhase.noLineup) return false;
+    final lineup = visibleMatches;
+    if (courtIndex < 0 || courtIndex >= lineup.length) return false;
+    final court = lineup[courtIndex];
+    if (_playingGameIds.contains(court.id)) return false;
+    if (court.playerIds.length >= Game.playerPerCourt) return false;
+    return court.playerIds.isEmpty || _handFillCourtIds.contains(court.id);
+  }
+
+  /// Whether any court on screen takes a hand fill now ([canHandFillCourt]).
+  bool get hasHandFillCourt =>
+      [for (var i = 0; i < visibleMatches.length; i++) i].any(canHandFillCourt);
+
+  /// Puts [player] from the waitlist into the open [slotIndex] of the court
+  /// at [courtIndex] while the clock runs (R13-Q7). The round log takes the
+  /// players on the court when the round ends.
+  ///
+  /// Returns `false` and changes nothing when the court does not take a
+  /// hand fill, when [player] is not checked in or is on a court on screen.
+  bool handFillSlot(Player player, int courtIndex, int slotIndex) {
+    if (!canHandFillCourt(courtIndex) || !isPlayerCheckedIn(player)) {
+      return false;
+    }
+    final lineup = visibleMatches;
+    if (_courtOf(lineup, player) != null) return false;
+    final court = lineup[courtIndex];
+    _handFillCourtIds.add(court.id);
+    final slot = slotIndex.clamp(0, court.playerIds.length);
+    court.playerIds.insert(slot, player.id);
+    notifyListeners();
+    return true;
+  }
+
   /// "Generate round 1": a matchmaker lineup, clock stopped (RND-12).
   ///
   /// Throws [NotEnoughPlayers] with fewer than 4 checked in (R45-39), and
@@ -686,6 +761,7 @@ class GameData extends ChangeNotifier {
     _waitingForEdit = false;
     _roundLogError = null;
     _playingGameIds.clear();
+    _handFillCourtIds.clear();
     _sessionRerollCount = 0;
     _roundNumber = 1;
     _pausedFrom = null;
@@ -855,9 +931,16 @@ class GameData extends ChangeNotifier {
     _pausedFrom = null;
     _phase = RoundPhase.running;
     _prunePlayingGameIds();
+    _pruneHandFillCourtIds();
     _timer.startRound(onExpired: _onClockZero);
     notifyListeners();
     return true;
+  }
+
+  /// Keeps the hand-fill ids of the courts that are still on screen.
+  void _pruneHandFillCourtIds() {
+    final live = {for (final game in visibleMatches) game.id};
+    _handFillCourtIds.retainWhere(live.contains);
   }
 
   void _openEdit(GameContainer source) {
@@ -1581,7 +1664,8 @@ class GameData extends ChangeNotifier {
     int courts,
   ) async {
     if (name.trim().isEmpty) return false;
-    if (capacity < minSessionCapacity || courts < 1 || courts > 8) {
+    // No upper limit on the court count (R13-Q12).
+    if (capacity < minSessionCapacity || courts < 1) {
       return false;
     }
     final written = SessionTemplateRepository.instance.add(

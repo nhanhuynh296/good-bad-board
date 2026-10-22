@@ -371,5 +371,9 @@
   "sessions_delete_named": "删除{name}",
   "sessions_no_templates": "还没有模板",
   "sessions_delete_template_confirm_title": "删除模板“{name}”？",
-  "sessions_delete_template_confirm_body": "模板将被删除。当前设置不会改变。"
+  "sessions_delete_template_confirm_body": "模板将被删除。当前设置不会改变。",
+  "sessions_remove_court_title": "移除哪个场地？",
+  "sessions_remove_court_body": "该场地的球员进入候补名单。后面的场地编号各减一。",
+  "sessions_remove_court_option": "{court}号场地 · {count, plural, =0{空} other{{count}名球员}}",
+  "sessions_remove_court_action": "移除"
 }

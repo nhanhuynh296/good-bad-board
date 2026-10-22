@@ -43,12 +43,16 @@ class _DesktopSettingsCard extends StatelessWidget {
     required this.onDuration,
     required this.onCapacity,
     required this.onCourts,
+    required this.onRemoveCourt,
   });
 
   final GameData gameData;
   final ValueChanged<Duration> onDuration;
   final ValueChanged<int> onCapacity;
   final Future<bool> Function(int courts) onCourts;
+
+  /// "−": removes one court; the organizer picks which (R13-Q9).
+  final VoidCallback onRemoveCourt;
 
   @override
   Widget build(BuildContext context) {
@@ -134,9 +138,7 @@ class _DesktopSettingsCard extends StatelessWidget {
               key: const Key('sessions-courts-less'),
               symbol: '−',
               semanticsLabel: l10n.sessions_courts_less,
-              onPressed: courts > _minCourts
-                  ? () => onCourts(courts - 1)
-                  : null,
+              onPressed: courts > _minCourts ? onRemoveCourt : null,
             ),
             value: _CourtsValue(
               courts: courts,
@@ -146,9 +148,8 @@ class _DesktopSettingsCard extends StatelessWidget {
               key: const Key('sessions-courts-more'),
               symbol: '+',
               semanticsLabel: l10n.sessions_courts_more,
-              onPressed: courts < _maxCourts
-                  ? () => onCourts(courts + 1)
-                  : null,
+              // No upper limit (R13-Q12).
+              onPressed: () => onCourts(courts + 1),
             ),
           ),
         // Read-only (R3-Q7).

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:good_bad_board/core/duration_extension.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/dashboard/dashboard.dart';
+import 'package:good_bad_board/features/sessions/remove_court_dialog.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 import 'package:good_bad_board/model/session_template.dart';
 import 'package:good_bad_board/shell/desktop_top_nav_bar.dart'
@@ -19,9 +20,9 @@ part 'desktop_sessions.dart';
 /// Largest session capacity the organizer can type in.
 const int _maxSessionCapacity = 200;
 
-/// Court-count range, matching the range `GameData.saveTemplate` accepts.
+/// Smallest court count, as `GameData.saveTemplate` accepts. There is no
+/// upper limit (R13-Q12, Nathan 2026-10-22).
 const int _minCourts = 1;
-const int _maxCourts = 8;
 
 /// Longest round the `mm:ss` control accepts: 99:59.
 const Duration _maxDuration = Duration(minutes: 99, seconds: 59);
@@ -92,6 +93,26 @@ class _SessionsPageState extends State<SessionsPage> {
     return true;
   }
 
+  /// "−" on the desktop board (R13-Q9): when a court holds players, the
+  /// organizer picks which court to remove. Its players go to the
+  /// waitlist, and the courts after it move up one number. With every court
+  /// empty the choice does not matter, so the last court goes at once.
+  Future<void> _removeCourt(GameData gameData) async {
+    final counts = [
+      for (var i = 0; i < gameData.numberOfCourt; i++)
+        i < gameData.visibleMatches.length
+            ? gameData.visibleMatches[i].playerIds.length
+            : 0,
+    ];
+    if (counts.every((count) => count == 0)) {
+      gameData.removeCourt(gameData.numberOfCourt - 1);
+      return;
+    }
+    final index = await showRemoveCourtDialog(context, playerCounts: counts);
+    if (index == null || !mounted) return;
+    gameData.removeCourt(index);
+  }
+
   /// SESS-06 (F25, R13-Q1): the duration, the capacity and the court count
   /// apply at once. A new court count never reshuffles, as in SESS-04.
   void _loadTemplate(GameData gameData, SessionTemplate template) {
@@ -152,6 +173,7 @@ class _SessionsPageState extends State<SessionsPage> {
             onDuration: _setDuration,
             onCapacity: gameData.setSessionCapacity,
             onCourts: (courts) => _changeCourts(gameData, courts),
+            onRemoveCourt: () => _removeCourt(gameData),
           ),
         ),
         const SizedBox(width: AppSpacing.xl),
@@ -258,7 +280,6 @@ class _SessionsPageState extends State<SessionsPage> {
               label: l10n.sessions_number_of_courts,
               value: gameData.numberOfCourt,
               min: _minCourts,
-              max: _maxCourts,
               onChanged: (v) => _changeCourts(gameData, v),
             ),
           ],
@@ -685,7 +706,7 @@ class _NumberField extends StatefulWidget {
     required this.label,
     required this.value,
     required this.min,
-    required this.max,
+    this.max,
     required this.onChanged,
     this.desktop = false,
   });
@@ -701,8 +722,9 @@ class _NumberField extends StatefulWidget {
   /// Smallest accepted value. A lower entry is raised to this.
   final int min;
 
-  /// Largest accepted value. A higher entry is lowered to this.
-  final int max;
+  /// Largest accepted value. A higher entry is lowered to this. `null`:
+  /// no upper limit (the court count, R13-Q12).
+  final int? max;
 
   /// Applies the new value. Returns `false` when it was declined (for
   /// example the organizer cancelled a confirmation).
@@ -756,7 +778,9 @@ class _NumberFieldState extends State<_NumberField> {
     // Submitting and then losing focus must not ask twice.
     if (_committing) return;
     final parsed = int.tryParse(_controller.text);
-    final value = (parsed ?? widget.min).clamp(widget.min, widget.max);
+    final low = parsed == null || parsed < widget.min ? widget.min : parsed;
+    final max = widget.max;
+    final value = max != null && low > max ? max : low;
     _controller.text = value.toString();
     if (value == widget.value) return;
     _committing = true;

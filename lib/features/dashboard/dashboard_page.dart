@@ -15,7 +15,6 @@ import 'package:provider/provider.dart';
 
 /// Court-count range, the same as on the Sessions tab.
 const int _minCourts = 1;
-const int _maxCourts = 8;
 
 /// Shortest court card the PR 45 desktop grid (game-based mode) accepts.
 const double _minLegacyCourtHeight = 134;
@@ -114,6 +113,15 @@ class _DashboardPageState extends State<DashboardPage> {
         ? court.players[slotIndex]
         : null;
     final selected = _selectedPlayer;
+    if (!_canEdit(gameData)) {
+      // R13-Q7: while the clock runs, only a waitlist player into an open
+      // slot of an empty court (or one being filled by hand).
+      if (selected != null && occupant == null) {
+        gameData.handFillSlot(selected, courtIndex, slotIndex);
+      }
+      _clearSelection();
+      return;
+    }
     if (selected == null) {
       // COURT-09: an open slot does nothing with no selection.
       if (occupant != null) setState(() => _selectedPlayerId = occupant.id);
@@ -193,6 +201,11 @@ class _DashboardPageState extends State<DashboardPage> {
     }
     _clearSelection();
   }
+
+  /// Whether a waitlist player can be selected: the courts can change, or
+  /// a court takes a hand fill while the clock runs (R13-Q7).
+  static bool _canSelectWaitlist(GameData gameData) =>
+      _canEdit(gameData) || gameData.hasHandFillCourt;
 
   /// Whether the courts on screen take a tap, a swap, Re-roll and the full
   /// slot menu (COURT-14). With no lineup there is nothing to change.
@@ -332,7 +345,14 @@ class _DashboardPageState extends State<DashboardPage> {
           ? SlotMenu.none
           : SlotMenu.checkOutOnly;
     }
-    final tappable = canEdit && (player != null || selectionActive);
+    // R13-Q7: an open slot of a hand-fill court takes the selected
+    // waitlist player while the clock runs.
+    final handFill =
+        !canEdit &&
+        player == null &&
+        selectionActive &&
+        gameData.canHandFillCourt(court);
+    final tappable = canEdit && (player != null || selectionActive) || handFill;
     return CourtSlotData(
       player: player,
       menu: menu,
@@ -356,7 +376,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildWaitlistPanel(GameData gameData) {
     final l10n = AppLocalizations.of(context)!;
-    final canEdit = _canEdit(gameData);
     final noLineup = gameData.phase == RoundPhase.noLineup;
     final rounds = gameData.getCurrentPlayersHistory();
     final next = gameData.nextLineup;
@@ -376,10 +395,11 @@ class _DashboardPageState extends State<DashboardPage> {
     final selected = entries.firstWhereOrNull(
       (entry) => entry.player.id == _selectedPlayerId,
     );
+    final canSelect = _canSelectWaitlist(gameData);
     final String? hint;
     if (noLineup) {
       hint = null;
-    } else if (!canEdit) {
+    } else if (!canSelect) {
       hint = l10n.courts_waitlist_hint_live;
     } else if (_selectedPlayer != null) {
       hint = l10n.dashboard_waitlist_hint_place(
@@ -392,7 +412,7 @@ class _DashboardPageState extends State<DashboardPage> {
       entries: entries,
       hint: hint,
       selectedPlayerId: _selectedPlayerId,
-      onSelect: canEdit ? _selectPlayer : null,
+      onSelect: canSelect ? _selectPlayer : null,
     );
   }
 
@@ -417,7 +437,7 @@ class _DashboardPageState extends State<DashboardPage> {
             players: waitlisted,
             selectedPlayerId: _selectedPlayerId,
             selectedPlayerName: _selectedPlayer?.name(),
-            onPlayerSelect: canEdit ? _selectPlayer : null,
+            onPlayerSelect: _canSelectWaitlist(gameData) ? _selectPlayer : null,
           ),
           const SizedBox(height: AppSpacing.lg),
           _buildLegacyCourtGrid(
@@ -487,8 +507,8 @@ class _DashboardPageState extends State<DashboardPage> {
   void _onCourtCountChanged(int delta) {
     final gameData = context.read<GameData>();
     final target = gameData.numberOfCourt + delta;
-    // Same range as the Sessions tab (1 to 8).
-    if (target < _minCourts || target > _maxCourts) return;
+    // As the Sessions tab: at least 1, no upper limit (R13-Q12).
+    if (target < _minCourts) return;
     gameData.setNumberOfCourt(target);
     _clearSelection();
   }
@@ -654,7 +674,11 @@ class _DashboardPageState extends State<DashboardPage> {
             final game = index < lineup.length ? lineup[index] : null;
             final players = game?.players ?? const <Player>[];
             final isPlaying = gameData.isCourtPlaying(index);
-            final editable = canEdit && !isPlaying;
+            // R13-Q7: a court with no players takes a hand fill while the
+            // clock runs.
+            final editable =
+                canEdit && !isPlaying ||
+                !isGameBased && gameData.canHandFillCourt(index);
             return CourtCard(
               courtNumber: index + 1,
               players: players,
