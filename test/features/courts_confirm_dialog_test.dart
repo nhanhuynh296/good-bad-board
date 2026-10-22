@@ -29,7 +29,7 @@ void main() {
     testWidgets('should_ask_before_ending_round_early', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toRunning();
+        ..toRunningWithNext();
       h.timer.elapse(const Duration(minutes: 5, seconds: 48));
       await h.pump();
 
@@ -46,7 +46,7 @@ void main() {
     ) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toRunning();
+        ..toRunningWithNext();
       await h.pump();
       await h.tap(inBar(find.text('Start round 2')));
       await tester.pumpAndSettle();
@@ -62,7 +62,7 @@ void main() {
     ) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toRunning();
+        ..toRunningWithNext();
       await h.pump();
       await h.tap(inBar(find.text('Start round 2')));
       await tester.pumpAndSettle();
@@ -79,7 +79,7 @@ void main() {
     ) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toPaused();
+        ..toPausedWithNext();
       await h.pump();
 
       await h.tap(inBar(find.text('Start round 2')));
@@ -89,19 +89,14 @@ void main() {
       expect(h.gameData.phase, RoundPhase.changeover);
     });
 
-    testWidgets('should_start_round_without_dialog_when_time_up', (
-      tester,
-    ) async {
+    // R13-Q5: TIME UP has no saved round n+1, so no "Start round n+1".
+    testWidgets('should_show_no_start_button_when_time_up', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
         ..toTimeUp();
       await h.pump();
 
-      await h.tap(inBar(find.text('Start round 2')));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(CourtsConfirmDialog), findsNothing);
-      expect(h.gameData.phase, RoundPhase.changeover);
+      expect(inBar(find.text('Start round 2')), findsNothing);
     });
 
     testWidgets('should_close_early_start_dialog_when_time_reaches_zero', (
@@ -109,7 +104,7 @@ void main() {
     ) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toRunning();
+        ..toRunningWithNext();
       await h.pump();
       await h.tap(inBar(find.text('Start round 2')));
       await tester.pumpAndSettle();
@@ -118,7 +113,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(CourtsConfirmDialog), findsNothing);
-      expect(h.gameData.phase, RoundPhase.timeUp);
+      expect(h.gameData.phase, RoundPhase.changeover);
     });
 
     testWidgets('should_start_one_changeover_when_confirm_tapped_twice', (
@@ -126,7 +121,7 @@ void main() {
     ) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toRunning();
+        ..toRunningWithNext();
       await h.pump();
       await h.tap(inBar(find.text('Start round 2')));
       await tester.pumpAndSettle();
@@ -145,7 +140,7 @@ void main() {
     testWidgets('should_focus_cancel_when_dialog_opens', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toRunning();
+        ..toRunningWithNext();
       await h.pump();
 
       await h.tap(inBar(find.text('Start round 2')));
@@ -162,7 +157,7 @@ void main() {
     testWidgets('should_cancel_dialog_when_escape_pressed', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toRunning();
+        ..toRunningWithNext();
       await h.pump();
       await h.tap(inBar(find.text('Start round 2')));
       await tester.pumpAndSettle();
@@ -177,7 +172,7 @@ void main() {
     testWidgets('should_give_dialog_alert_dialog_role', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toRunning();
+        ..toRunningWithNext();
       await h.pump();
 
       await h.tap(inBar(find.text('Start round 2')));

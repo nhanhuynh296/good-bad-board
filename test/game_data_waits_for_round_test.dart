@@ -7,6 +7,7 @@ import 'package:good_bad_board/state/timer_data.dart';
 
 import 'support/prefs_sandbox.dart';
 import 'support/repository_sandbox.dart';
+import 'support/next_round_steps.dart';
 
 // UAT PLY-17: "{name} is in · waits for round {n}". {n} is the first round
 // that has no saved lineup: the next round to start, or the round after a
@@ -55,7 +56,7 @@ void main() {
 
   test('should_wait_for_round_after_saved_round_when_running', () {
     toRunning();
-    gameData.quickSaveNextRound();
+    gameData.saveNewNextRound();
 
     expect(gameData.waitsForRound, 3);
   });
@@ -76,8 +77,8 @@ void main() {
 
   test('should_wait_for_round_after_the_starting_round_in_changeover', () {
     toRunning();
-    gameData.quickSaveNextRound();
-    gameData.startNextRound();
+    gameData.saveNewNextRound();
+    gameData.saveAndStartNextRound();
 
     expect(gameData.waitsForRound, 3);
   });

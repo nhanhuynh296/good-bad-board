@@ -5,6 +5,7 @@ import 'package:good_bad_board/model/elo.dart';
 import 'package:good_bad_board/model/game.dart';
 
 import '../support/courts_harness.dart';
+import '../support/next_round_steps.dart';
 
 /// The desktop waitlist panel (IMPLEMENTATION 8.5.5; UAT WL-01, WL-04,
 /// NAV-07, RND-12; F11, F12, F22).
@@ -99,7 +100,7 @@ void main() {
     final h = CourtsHarness(tester)
       ..checkIn(20)
       ..toRunning();
-    h.gameData.quickSaveNextRound();
+    h.gameData.saveNewNextRound();
     final nextIds = {
       for (final game in h.gameData.nextLineup!) ...game.playerIds,
     };

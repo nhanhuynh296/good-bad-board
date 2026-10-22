@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 
 import '../support/prefs_sandbox.dart';
 import '../support/repository_sandbox.dart';
+import '../support/next_round_steps.dart';
 
 // R45-02 and R45-39: the Dashboard shows a localised message for a refused
 // lineup, never the exception text.
@@ -117,8 +118,8 @@ void main() {
     gameData
       ..generateFirstRound()
       ..startFirstRound()
-      ..quickSaveNextRound()
-      ..startNextRound();
+      ..saveNewNextRound()
+      ..saveAndStartNextRound();
     await tester.pumpWidget(wrap(gameData, timerData: timerData));
     Directory(
       '${sandbox.tempDir.path}/${GameRepository.databaseFilename}.tmp',

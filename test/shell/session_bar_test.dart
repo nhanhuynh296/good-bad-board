@@ -5,6 +5,7 @@ import 'package:good_bad_board/shell/shell.dart';
 
 import '../support/courts_harness.dart';
 import '../support/shell_harness.dart';
+import '../support/next_round_steps.dart';
 
 /// The desktop session bar (IMPLEMENTATION 8.6.2, ARCHITECTURE §2.1
 /// SessionBar; UAT NAV-10, NAV-11).
@@ -171,7 +172,7 @@ void main() {
         tester,
         arrange: (h) {
           h.toRunning();
-          h.gameData.quickSaveNextRound();
+          h.gameData.saveNewNextRound();
         },
       );
 

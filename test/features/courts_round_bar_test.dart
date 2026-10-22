@@ -5,6 +5,7 @@ import 'package:good_bad_board/features/dashboard/dashboard.dart';
 import 'package:good_bad_board/state/game_data.dart';
 
 import '../support/courts_harness.dart';
+import '../support/next_round_steps.dart';
 
 /// Round bar, next-round strip and edit mode on the desktop Courts tab
 /// (IMPLEMENTATION 8.5.2, 8.5.3; UAT RND-01, RND-02, RND-05, RND-09, RND-10,
@@ -91,7 +92,9 @@ void main() {
       expect(h.gameData.phase, RoundPhase.running);
     });
 
-    testWidgets('should_show_pause_discard_and_start_next_when_running', (
+    // R13-Q5 (Nathan 2026-10-22): "Start round n+1" only after round n+1 is
+    // saved.
+    testWidgets('should_show_pause_and_discard_when_running_not_saved', (
       tester,
     ) async {
       final h = CourtsHarness(tester)
@@ -102,6 +105,18 @@ void main() {
 
       expect(inBar(find.text('Pause')), findsOneWidget);
       expect(inBar(find.text('Discard round 1 and start again')), findsOne);
+      expect(inBar(find.text('Start round 2')), findsNothing);
+    });
+
+    testWidgets('should_show_start_next_when_running_and_saved', (
+      tester,
+    ) async {
+      final h = CourtsHarness(tester)
+        ..checkIn(20)
+        ..toRunningWithNext();
+
+      await h.pump();
+
       expect(inBar(find.text('Start round 2')), findsOneWidget);
     });
 
@@ -130,7 +145,7 @@ void main() {
       expect(inBar(find.text('Discard round 1 and start again')), findsNothing);
     });
 
-    testWidgets('should_show_discard_start_and_resume_when_paused', (
+    testWidgets('should_show_discard_and_resume_when_paused_not_saved', (
       tester,
     ) async {
       final h = CourtsHarness(tester)
@@ -140,9 +155,23 @@ void main() {
       await h.pump();
 
       expect(inBar(find.text('Discard round 1 and start again')), findsOne);
-      expect(inBar(find.text('Start round 2')), findsOneWidget);
+      expect(inBar(find.text('Start round 2')), findsNothing);
       expect(inBar(find.text('Resume round 1')), findsOneWidget);
       expect(inBar(find.text('Clock paused')), findsOneWidget);
+    });
+
+    testWidgets('should_show_discard_start_and_resume_when_paused_saved', (
+      tester,
+    ) async {
+      final h = CourtsHarness(tester)
+        ..checkIn(20)
+        ..toPausedWithNext();
+
+      await h.pump();
+
+      expect(inBar(find.text('Discard round 1 and start again')), findsOne);
+      expect(inBar(find.text('Start round 2')), findsOneWidget);
+      expect(inBar(find.text('Resume round 1')), findsOneWidget);
     });
 
     testWidgets('should_resume_round_when_resume_tapped', (tester) async {
@@ -156,12 +185,13 @@ void main() {
       expect(h.gameData.phase, RoundPhase.running);
     });
 
-    testWidgets('should_show_start_and_resume_only_when_paused_in_edit_mode', (
+    testWidgets('should_show_start_and_resume_when_paused_editing_saved', (
       tester,
     ) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
-        ..toEditing();
+        ..toRunningWithNext();
+      h.gameData.editNextRound();
       h.gameData.pause();
 
       await h.pump();
@@ -171,9 +201,21 @@ void main() {
       expect(inBar(find.text('Discard round 1 and start again')), findsNothing);
     });
 
-    testWidgets('should_show_discard_and_start_next_when_time_up', (
+    testWidgets('should_show_resume_only_when_paused_editing_new_round', (
       tester,
     ) async {
+      final h = CourtsHarness(tester)
+        ..checkIn(20)
+        ..toEditing();
+      h.gameData.pause();
+
+      await h.pump();
+
+      expect(inBar(find.text('Start round 2')), findsNothing);
+      expect(inBar(find.text('Resume round 1')), findsOneWidget);
+    });
+
+    testWidgets('should_show_discard_only_when_time_up', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
         ..toTimeUp();
@@ -183,7 +225,7 @@ void main() {
       expect(inBar(find.text('TIME UP')), findsOneWidget);
       expect(inBar(find.text('Clock stopped at 0:00')), findsOneWidget);
       expect(inBar(find.text('Discard round 1 and start again')), findsOne);
-      expect(inBar(find.text('Start round 2')), findsOneWidget);
+      expect(inBar(find.text('Start round 2')), findsNothing);
     });
 
     testWidgets('should_show_no_start_buttons_when_time_up_in_edit_mode', (
@@ -250,7 +292,7 @@ void main() {
       final h = CourtsHarness(tester)
         ..checkIn(20)
         ..toRunning();
-      h.gameData.quickSaveNextRound();
+      h.gameData.saveNewNextRound();
       h.gameData.editNextRound();
       final lineup = h.gameData.visibleMatches;
       h.gameData.swapPlayers(lineup[0].players[0], lineup[1].players[0]);
@@ -357,9 +399,8 @@ void main() {
   });
 
   group('NextRoundStrip', () {
-    testWidgets('should_show_save_and_make_when_running_not_saved', (
-      tester,
-    ) async {
+    // R13-Q3 (Nathan 2026-10-22): one button "Generate next round (n+1)".
+    testWidgets('should_show_generate_when_running_not_saved', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
         ..toRunning();
@@ -368,54 +409,100 @@ void main() {
 
       expect(inStrip(find.text('Round 2 not saved')), findsOneWidget);
       expect(inStrip(find.text('Clock stops at 0:00 if not saved.')), findsOne);
-      expect(inStrip(find.text('Save round 2')), findsOneWidget);
-      expect(inStrip(find.text('Make round 2')), findsOneWidget);
+      expect(inStrip(find.text('Generate next round (2)')), findsOneWidget);
     });
 
-    testWidgets('should_save_next_round_without_edit_mode', (tester) async {
+    testWidgets('should_show_no_quick_save_when_running_not_saved', (
+      tester,
+    ) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
         ..toRunning();
+
       await h.pump();
 
-      await h.tap(inStrip(find.text('Save round 2')));
-
-      expect(inStrip(find.text('Round 2 saved')), findsOneWidget);
-      expect(h.gameData.isEditingNext, isFalse);
+      expect(inStrip(find.text('Save round 2')), findsNothing);
     });
 
-    testWidgets('should_show_make_round_only_when_paused', (tester) async {
+    testWidgets('should_make_no_next_round_before_generate', (tester) async {
+      final h = CourtsHarness(tester)
+        ..checkIn(20)
+        ..toRunning();
+
+      await h.pump();
+
+      expect(h.gameData.nextLineup, isNull);
+    });
+
+    testWidgets('should_show_generate_when_paused_not_saved', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
         ..toPaused();
 
       await h.pump();
 
-      expect(inStrip(find.text('Make round 2')), findsOneWidget);
-      expect(inStrip(find.text('Save round 2')), findsNothing);
+      expect(inStrip(find.text('Generate next round (2)')), findsOneWidget);
+    });
+
+    testWidgets('should_show_generate_when_time_up', (tester) async {
+      final h = CourtsHarness(tester)
+        ..checkIn(20)
+        ..toTimeUp();
+
+      await h.pump();
+
+      expect(inStrip(find.text('Generate next round (2)')), findsOneWidget);
+    });
+
+    testWidgets('should_hide_the_clock_stops_text_when_time_up', (
+      tester,
+    ) async {
+      final h = CourtsHarness(tester)
+        ..checkIn(20)
+        ..toTimeUp();
+
+      await h.pump();
+
+      expect(
+        inStrip(find.text('Clock stops at 0:00 if not saved.')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('should_open_edit_mode_when_generate_tapped_in_time_up', (
+      tester,
+    ) async {
+      final h = CourtsHarness(tester)
+        ..checkIn(20)
+        ..toTimeUp();
+      await h.pump();
+
+      await h.tap(inStrip(find.text('Generate next round (2)')));
+
+      expect(inStrip(find.text('Editing round 2')), findsOneWidget);
     });
 
     testWidgets('should_show_edit_round_when_next_saved', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
         ..toRunning();
-      h.gameData.quickSaveNextRound();
+      h.gameData.saveNewNextRound();
 
       await h.pump();
 
       expect(inStrip(find.text('Round 2 saved')), findsOneWidget);
       expect(inStrip(find.text('Starts 20 s after round 1 ends.')), findsOne);
       expect(inStrip(find.text('Edit round 2')), findsOneWidget);
-      expect(inStrip(find.text('Make round 2')), findsNothing);
+      expect(inStrip(find.text('Generate next round (2)')), findsNothing);
     });
 
-    testWidgets('should_open_edit_mode_when_make_round_tapped', (tester) async {
+    testWidgets('should_open_edit_mode_when_generate_tapped', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
         ..toRunning();
       await h.pump();
 
-      await h.tapText('Make round 2');
+      await h.tapText('Generate next round (2)');
 
       expect(h.gameData.isEditingNext, isTrue);
       expect(inStrip(find.text('Editing round 2')), findsOneWidget);
@@ -509,17 +596,17 @@ void main() {
       );
     });
 
-    testWidgets('should_hide_strip_when_time_up', (tester) async {
+    testWidgets('should_show_strip_when_time_up', (tester) async {
       final h = CourtsHarness(tester)
         ..checkIn(20)
         ..toTimeUp();
 
       await h.pump();
 
-      expect(find.byType(NextRoundStrip), findsNothing);
+      expect(find.byType(NextRoundStrip), findsOneWidget);
     });
 
-    testWidgets('should_tag_every_card_with_next_round_when_time_up', (
+    testWidgets('should_not_tag_cards_with_next_round_when_time_up', (
       tester,
     ) async {
       final h = CourtsHarness(tester)
@@ -528,7 +615,7 @@ void main() {
 
       await h.pump();
 
-      expect(find.text('ROUND 2'), findsNWidgets(4));
+      expect(find.text('ROUND 2'), findsNothing);
     });
 
     testWidgets('should_hide_strip_when_ready', (tester) async {

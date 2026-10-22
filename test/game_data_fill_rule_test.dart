@@ -10,6 +10,7 @@ import 'package:good_bad_board/state/timer_data.dart';
 
 import 'support/prefs_sandbox.dart';
 import 'support/repository_sandbox.dart';
+import 'support/next_round_steps.dart';
 
 // IMPLEMENTATION 8.4: the fill rule fills one place (8.4.0, 8.4.1), late
 // check-in (8.4.3), check-out (8.4.4), Move to waitlist (8.4.5), and the
@@ -253,7 +254,7 @@ void main() {
       final leaving = byId(gameData.stagingMatches[0].playerIds[0]);
       gameData.checkOutPlayer(leaving);
 
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       await gameData.startNextNow();
 
       expect(idsOf(gameData.history.last), contains(leaving.id));
@@ -263,7 +264,7 @@ void main() {
       final gameData = await fourCourts(18);
       gameData.generateFirstRound();
       gameData.startFirstRound();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       final leaving = byId(gameData.nextLineup![0].playerIds[0]);
 
       gameData.checkOutPlayer(leaving);
@@ -275,7 +276,7 @@ void main() {
       final gameData = await fourCourts(18);
       gameData.generateFirstRound();
       gameData.startFirstRound();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       final leaving = byId(gameData.nextLineup![2].playerIds[0]);
 
       final fills = gameData.checkOutPlayer(leaving);
@@ -288,7 +289,7 @@ void main() {
       final gameData = await fourCourts(18);
       gameData.generateFirstRound();
       gameData.startFirstRound();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       final leaving = byId(gameData.nextLineup![1].playerIds[0]);
 
       gameData.checkOutPlayer(leaving);
@@ -300,7 +301,7 @@ void main() {
       final gameData = await fourCourts(18);
       gameData.generateFirstRound();
       gameData.startFirstRound();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       final leaving = byId(gameData.stagingMatches[1].playerIds[0]);
 
       gameData.checkOutPlayer(leaving);
@@ -308,16 +309,29 @@ void main() {
       expect(gameData.stagingMatches[1].playerIds, contains(leaving.id));
     });
 
-    test('should_fill_planned_round_when_time_up', () async {
+    test('should_fill_next_round_when_generated_in_time_up', () async {
       final gameData = await fourCourts(18);
       gameData.generateFirstRound();
       gameData.startFirstRound();
       timer.elapse(const Duration(minutes: 10));
-      final leaving = byId(gameData.nextLineup![0].playerIds[0]);
+      gameData.generateNextRound();
+      final leaving = byId(gameData.visibleMatches[0].playerIds[0]);
 
       gameData.checkOutPlayer(leaving);
 
-      expect(gameData.nextLineup![0].playerIds, hasLength(4));
+      expect(gameData.visibleMatches[0].playerIds, hasLength(4));
+    });
+
+    test('should_keep_round_n_court_when_checked_out_in_time_up', () async {
+      final gameData = await fourCourts(18);
+      gameData.generateFirstRound();
+      gameData.startFirstRound();
+      timer.elapse(const Duration(minutes: 10));
+      final leaving = byId(gameData.stagingMatches[0].playerIds[0]);
+
+      gameData.checkOutPlayer(leaving);
+
+      expect(gameData.stagingMatches[0].playerIds, contains(leaving.id));
     });
 
     test('should_fill_live_court_when_paused', () async {
@@ -336,7 +350,7 @@ void main() {
       final gameData = await fourCourts(18);
       gameData.generateFirstRound();
       gameData.startFirstRound();
-      gameData.makeNextRound();
+      gameData.generateNextRound();
       final leaving = byId(gameData.visibleMatches[0].playerIds[0]);
 
       gameData.checkOutPlayer(leaving);
@@ -348,7 +362,7 @@ void main() {
       final gameData = await fourCourts(18);
       gameData.generateFirstRound();
       gameData.startFirstRound();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       gameData.editNextRound();
       final leaving = byId(gameData.visibleMatches[0].playerIds[0]);
 
@@ -389,7 +403,7 @@ void main() {
       final gameData = await fourCourts(16);
       gameData.generateFirstRound();
       gameData.startFirstRound();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       gameData.checkOutPlayer(byId(gameData.nextLineup![0].playerIds[0]));
       final late = await lateComer();
 
@@ -411,7 +425,7 @@ void main() {
       gameData.checkInPlayer(late);
 
       expect(
-        idsOf([...gameData.stagingMatches, ...gameData.nextLineup!]),
+        idsOf([...gameData.stagingMatches, ...?gameData.nextLineup]),
         isNot(contains(late.id)),
       );
     });
@@ -485,7 +499,7 @@ void main() {
       final live = [
         for (final game in gameData.stagingMatches) List.of(game.playerIds),
       ];
-      gameData.makeNextRound();
+      gameData.generateNextRound();
 
       gameData.moveToWaitlist(byId(gameData.visibleMatches[0].playerIds[0]));
 
@@ -559,23 +573,24 @@ void main() {
       expect(gameData.canEditCourts, isTrue);
     });
 
-    test('should_allow_edits_when_time_up', () {
+    // R13-Q4: TIME UP shows round n, the round that was played.
+    test('should_refuse_edits_when_time_up', () {
       gameData.startFirstRound();
       timer.elapse(const Duration(minutes: 10));
 
-      expect(gameData.canEditCourts, isTrue);
+      expect(gameData.canEditCourts, isFalse);
     });
 
     test('should_refuse_edits_when_changeover', () {
       gameData.startFirstRound();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       expect(gameData.canEditCourts, isFalse);
     });
 
     test('should_allow_edits_when_changeover_paused', () {
       gameData.startFirstRound();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       gameData.pause();
 
       expect(gameData.canEditCourts, isTrue);
@@ -583,7 +598,7 @@ void main() {
 
     test('should_allow_edits_when_editing_next_round', () {
       gameData.startFirstRound();
-      gameData.makeNextRound();
+      gameData.generateNextRound();
 
       expect(gameData.canEditCourts, isTrue);
     });

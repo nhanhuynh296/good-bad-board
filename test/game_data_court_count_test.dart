@@ -256,7 +256,7 @@ void main() {
     test('should_drop_a_removed_court_from_the_saved_next_round', () async {
       // Arrange
       final gameData = await runningSession(courts: 3);
-      gameData.makeNextRound();
+      gameData.generateNextRound();
       await gameData.saveNextRound();
 
       // Act
@@ -269,7 +269,7 @@ void main() {
     test('should_add_an_empty_court_to_the_saved_next_round', () async {
       // Arrange
       final gameData = await runningSession(courts: 3);
-      gameData.makeNextRound();
+      gameData.generateNextRound();
       await gameData.saveNextRound();
 
       // Act
@@ -282,7 +282,7 @@ void main() {
     test('should_apply_the_count_to_the_lineup_in_edit_mode', () async {
       // Arrange
       final gameData = await runningSession(courts: 3);
-      gameData.makeNextRound();
+      gameData.generateNextRound();
 
       // Act
       gameData.setNumberOfCourt(2);
@@ -294,7 +294,7 @@ void main() {
     test('should_not_count_an_added_court_as_an_unsaved_edit', () async {
       // Arrange
       final gameData = await runningSession(courts: 3);
-      gameData.makeNextRound();
+      gameData.generateNextRound();
 
       // Act
       gameData.setNumberOfCourt(4);

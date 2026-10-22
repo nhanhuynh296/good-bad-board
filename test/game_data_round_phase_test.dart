@@ -9,6 +9,7 @@ import 'package:good_bad_board/state/timer_data.dart';
 
 import 'support/prefs_sandbox.dart';
 import 'support/repository_sandbox.dart';
+import 'support/next_round_steps.dart';
 
 // IMPLEMENTATION 8.2: the round state machine. UAT RND-03…08, RND-10…20.
 
@@ -146,7 +147,7 @@ void main() {
       test('should_open_edit_mode_when_next_round_made', () {
         running();
 
-        gameData.makeNextRound();
+        gameData.generateNextRound();
 
         expect(gameData.isEditingNext, isTrue);
       });
@@ -155,7 +156,7 @@ void main() {
         running();
         final live = ids(gameData.stagingMatches);
 
-        gameData.makeNextRound();
+        gameData.generateNextRound();
 
         expect(ids(gameData.stagingMatches), live);
       });
@@ -163,7 +164,7 @@ void main() {
       test('should_show_edit_lineup_when_next_round_made', () {
         running();
 
-        gameData.makeNextRound();
+        gameData.generateNextRound();
 
         expect(
           identical(gameData.visibleMatches, gameData.stagingMatches),
@@ -173,45 +174,68 @@ void main() {
 
       test('should_refuse_second_next_round_when_one_is_saved', () {
         running();
-        gameData.quickSaveNextRound();
+        gameData.saveNewNextRound();
 
-        final made = gameData.makeNextRound();
+        final made = gameData.generateNextRound();
 
         expect(made, isFalse);
       });
 
-      test('should_save_next_round_without_edit_mode', () {
-        running();
-
-        gameData.quickSaveNextRound();
-
-        expect(
-          (gameData.isNextRoundSaved, gameData.isEditingNext),
-          (true, false),
-        );
-      });
-
-      test('should_keep_clock_when_next_round_quick_saved', () {
+      test('should_keep_clock_when_next_round_generated', () {
         running();
         timer.elapse(const Duration(minutes: 2));
 
-        gameData.quickSaveNextRound();
+        gameData.generateNextRound();
 
         expect(timer.remaining, const Duration(minutes: 8));
       });
 
-      test('should_refuse_quick_save_when_editing', () {
+      // R13-Q3 (Nathan 2026-10-22): round n+1 exists only after "Generate
+      // next round". Nothing makes it before the click.
+      test('should_have_no_next_round_before_generate', () {
         running();
-        gameData.makeNextRound();
 
-        final saved = gameData.quickSaveNextRound();
+        expect(gameData.nextLineup, isNull);
+      });
 
-        expect(saved, isFalse);
+      test('should_open_edit_mode_when_generated_in_paused', () {
+        running();
+        gameData.pause();
+
+        gameData.generateNextRound();
+
+        expect(gameData.isEditingNext, isTrue);
+      });
+
+      test('should_open_edit_mode_when_generated_in_time_up', () {
+        running();
+        timer.elapse(const Duration(minutes: 10));
+
+        gameData.generateNextRound();
+
+        expect(gameData.isEditingNext, isTrue);
+      });
+
+      test('should_refuse_generate_next_round_when_ready', () {
+        gameData.generateFirstRound();
+
+        final made = gameData.generateNextRound();
+
+        expect(made, isFalse);
+      });
+
+      test('should_refuse_generate_next_round_in_changeover', () {
+        running();
+        gameData.saveAndStartNextRound();
+
+        final made = gameData.generateNextRound();
+
+        expect(made, isFalse);
       });
 
       test('should_save_next_round_and_leave_edit_mode', () async {
         running();
-        gameData.makeNextRound();
+        gameData.generateNextRound();
 
         await gameData.saveNextRound();
 
@@ -223,7 +247,7 @@ void main() {
 
       test('should_keep_edits_when_next_round_saved', () async {
         running();
-        gameData.makeNextRound();
+        gameData.generateNextRound();
         changeLineup();
         final edited = ids(gameData.visibleMatches);
 
@@ -234,7 +258,7 @@ void main() {
 
       test('should_open_saved_lineup_when_next_round_edited', () {
         running();
-        gameData.quickSaveNextRound();
+        gameData.saveNewNextRound();
         final saved = ids(gameData.nextLineup!);
 
         gameData.editNextRound();
@@ -245,14 +269,14 @@ void main() {
       test('should_report_no_unsaved_edits_when_edit_mode_opens', () {
         running();
 
-        gameData.makeNextRound();
+        gameData.generateNextRound();
 
         expect(gameData.hasUnsavedEdits, isFalse);
       });
 
       test('should_report_unsaved_edits_when_edit_lineup_changes', () {
         running();
-        gameData.makeNextRound();
+        gameData.generateNextRound();
 
         changeLineup();
 
@@ -261,7 +285,7 @@ void main() {
 
       test('should_keep_edit_mode_when_next_round_regenerated', () {
         running();
-        gameData.makeNextRound();
+        gameData.generateNextRound();
 
         gameData.regenerateNext();
 
@@ -270,7 +294,7 @@ void main() {
 
       test('should_drop_unsaved_next_round_when_edit_mode_closed', () async {
         running();
-        gameData.makeNextRound();
+        gameData.generateNextRound();
 
         await gameData.exitEditNext();
 
@@ -279,7 +303,7 @@ void main() {
 
       test('should_keep_saved_next_round_when_edit_mode_closed', () async {
         running();
-        gameData.quickSaveNextRound();
+        gameData.saveNewNextRound();
         final saved = ids(gameData.nextLineup!);
         gameData.editNextRound();
         changeLineup();
@@ -302,7 +326,7 @@ void main() {
 
     test('should_keep_edit_mode_when_paused', () {
       running();
-      gameData.makeNextRound();
+      gameData.generateNextRound();
 
       gameData.pause();
 
@@ -330,7 +354,7 @@ void main() {
 
     test('should_pause_changeover', () {
       running();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       gameData.pause();
 
@@ -342,7 +366,7 @@ void main() {
 
     test('should_resume_changeover', () {
       running();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       gameData.pause();
 
       gameData.resume();
@@ -362,7 +386,7 @@ void main() {
   group('0:00 (RND-03, RND-15)', () {
     test('should_start_changeover_at_zero_when_next_round_saved', () {
       running();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
 
       timer.elapse(const Duration(minutes: 10));
 
@@ -371,7 +395,7 @@ void main() {
 
     test('should_count_20_s_at_zero_when_next_round_saved', () {
       running();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
 
       timer.elapse(const Duration(minutes: 10));
 
@@ -380,7 +404,7 @@ void main() {
 
     test('should_show_next_round_in_changeover', () {
       running();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
 
       timer.elapse(const Duration(minutes: 10));
 
@@ -389,7 +413,7 @@ void main() {
 
     test('should_keep_edit_mode_at_zero_when_next_round_saved', () {
       running();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       gameData.editNextRound();
 
       timer.elapse(const Duration(minutes: 10));
@@ -405,12 +429,40 @@ void main() {
       expect(gameData.phase, RoundPhase.timeUp);
     });
 
-    test('should_show_planned_round_when_time_up', () {
+    // R13-Q4 (Nathan 2026-10-22): 0:00 makes no round n+1.
+    test('should_make_no_next_round_at_zero_when_not_saved', () {
       running();
 
       timer.elapse(const Duration(minutes: 10));
 
-      expect(identical(gameData.visibleMatches, gameData.nextLineup), isTrue);
+      expect(gameData.nextLineup, isNull);
+    });
+
+    test('should_show_round_n_when_time_up', () {
+      running();
+
+      timer.elapse(const Duration(minutes: 10));
+
+      expect(
+        identical(gameData.visibleMatches, gameData.stagingMatches),
+        isTrue,
+      );
+    });
+
+    test('should_stop_the_clock_when_time_up', () {
+      running();
+
+      timer.elapse(const Duration(minutes: 10));
+
+      expect(timer.isRunning, isFalse);
+    });
+
+    test('should_lock_round_n_courts_when_time_up', () {
+      running();
+
+      timer.elapse(const Duration(minutes: 10));
+
+      expect(gameData.canEditCourts, isFalse);
     });
 
     test('should_keep_round_n_lineup_for_the_log_when_time_up', () {
@@ -424,7 +476,7 @@ void main() {
 
     test('should_keep_edit_mode_at_zero_when_next_round_not_saved', () {
       running();
-      gameData.makeNextRound();
+      gameData.generateNextRound();
       changeLineup();
 
       timer.elapse(const Duration(minutes: 10));
@@ -437,7 +489,7 @@ void main() {
 
     test('should_start_changeover_when_saved_in_time_up', () async {
       running();
-      gameData.makeNextRound();
+      gameData.generateNextRound();
       timer.elapse(const Duration(minutes: 10));
 
       await gameData.saveNextRound();
@@ -445,15 +497,18 @@ void main() {
       expect(gameData.phase, RoundPhase.changeover);
     });
 
-    test('should_keep_planned_round_when_edit_closed_in_time_up', () async {
-      running();
-      gameData.makeNextRound();
-      timer.elapse(const Duration(minutes: 10));
+    test(
+      'should_drop_unsaved_next_round_when_edit_closed_in_time_up',
+      () async {
+        running();
+        gameData.generateNextRound();
+        timer.elapse(const Duration(minutes: 10));
 
-      await gameData.exitEditNext();
+        await gameData.exitEditNext();
 
-      expect(gameData.nextLineup, isNotNull);
-    });
+        expect(gameData.nextLineup, isNull);
+      },
+    );
   });
 
   group('duration change while paused (R9-Q6, SESS-02)', () {
@@ -482,7 +537,7 @@ void main() {
     test('should_start_changeover_when_start_next_clicked_in_running', () {
       running();
 
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       expect(gameData.phase, RoundPhase.changeover);
     });
@@ -491,34 +546,63 @@ void main() {
       running();
       gameData.pause();
 
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       expect(gameData.phase, RoundPhase.changeover);
     });
 
-    test('should_use_planned_round_when_start_next_clicked_in_time_up', () {
+    // R13-Q5 (Nathan 2026-10-22): "Start round n+1" only after round n+1
+    // is saved.
+    test('should_refuse_start_next_when_not_saved_in_running', () {
+      running();
+
+      final started = gameData.startNextRound();
+
+      expect(started, isFalse);
+    });
+
+    test('should_refuse_start_next_when_not_saved_in_paused', () {
+      running();
+      gameData.pause();
+
+      final started = gameData.startNextRound();
+
+      expect(started, isFalse);
+    });
+
+    test('should_refuse_start_next_when_time_up', () {
       running();
       timer.elapse(const Duration(minutes: 10));
-      final planned = ids(gameData.nextLineup!);
 
-      gameData.startNextRound();
+      final started = gameData.startNextRound();
 
-      expect(ids(gameData.nextLineup!), planned);
+      expect(started, isFalse);
+    });
+
+    test('should_refuse_start_next_in_paused_edit_of_a_new_round', () {
+      running();
+      gameData.generateNextRound();
+      gameData.pause();
+
+      final started = gameData.startNextRound();
+
+      expect(started, isFalse);
     });
 
     test('should_use_saved_round_when_start_next_clicked', () {
       running();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       final saved = ids(gameData.nextLineup!);
 
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       expect(ids(gameData.nextLineup!), saved);
     });
 
     test('should_save_edits_when_start_next_clicked_in_paused_edit_mode', () {
       running();
-      gameData.makeNextRound();
+      gameData.saveNewNextRound();
+      gameData.editNextRound();
       changeLineup();
       final edited = ids(gameData.visibleMatches);
       gameData.pause();
@@ -532,7 +616,8 @@ void main() {
       'should_leave_edit_mode_when_start_next_clicked_in_paused_edit_mode',
       () {
         running();
-        gameData.makeNextRound();
+        gameData.saveNewNextRound();
+        gameData.editNextRound();
         gameData.pause();
 
         gameData.startNextRound();
@@ -543,9 +628,9 @@ void main() {
 
     test('should_refuse_start_next_when_editing_while_running', () {
       running();
-      gameData.makeNextRound();
+      gameData.generateNextRound();
 
-      final started = gameData.startNextRound();
+      final started = gameData.saveAndStartNextRound();
 
       expect(started, isFalse);
     });
@@ -553,7 +638,7 @@ void main() {
     test('should_refuse_start_next_when_ready', () {
       gameData.generateFirstRound();
 
-      final started = gameData.startNextRound();
+      final started = gameData.saveAndStartNextRound();
 
       expect(started, isFalse);
     });
@@ -617,14 +702,14 @@ void main() {
     test('should_label_next_number_in_changeover_after_start', () {
       running();
 
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       expect(gameData.displayRoundNumber, 2);
     });
 
     test('should_refuse_discard_in_edit_mode', () {
       running();
-      gameData.makeNextRound();
+      gameData.generateNextRound();
       gameData.pause();
 
       final discarded = gameData.discardAndStartNext();
@@ -636,7 +721,7 @@ void main() {
   group('changeover end with edits (RND-06, R9-Q4)', () {
     test('should_wait_at_zero_when_changeover_ends_with_unsaved_edits', () {
       running();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       gameData.editNextRound();
       timer.elapse(const Duration(minutes: 10));
       changeLineup();
@@ -651,7 +736,7 @@ void main() {
 
     test('should_keep_waiting_when_next_round_regenerated', () {
       running();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       gameData.editNextRound();
       timer.elapse(const Duration(minutes: 10));
       changeLineup();
@@ -664,7 +749,7 @@ void main() {
 
     test('should_refuse_pause_while_changeover_waits', () {
       running();
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       gameData.editNextRound();
       timer.elapse(const Duration(minutes: 10));
       changeLineup();
@@ -711,7 +796,7 @@ void main() {
 
     test('should_leave_edit_mode_when_session_ends', () async {
       running();
-      gameData.makeNextRound();
+      gameData.generateNextRound();
 
       await gameData.endSession();
 
@@ -720,7 +805,7 @@ void main() {
 
     test('should_clear_rounds_played_when_session_ends', () async {
       running();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       await gameData.startNextNow();
 
       await gameData.endSession();
@@ -743,14 +828,14 @@ void main() {
     test('should_name_ended_round_to_log_in_changeover', () {
       running();
 
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       expect(gameData.roundToLog, 1);
     });
 
     test('should_name_ended_round_to_log_in_paused_changeover', () {
       running();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       gameData.pause();
 

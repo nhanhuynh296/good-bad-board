@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 
 import 'prefs_sandbox.dart';
 import 'repository_sandbox.dart';
+import 'next_round_steps.dart';
 
 /// Sets up the preferences and a temp-dir repository sandbox for a Courts
 /// widget test file. Tests never touch the real data directory
@@ -123,6 +124,19 @@ class CourtsHarness {
     gameData.pause();
   }
 
+  /// RUNNING with round n+1 saved: "Start round n+1" shows only then
+  /// (R13-Q5).
+  void toRunningWithNext() {
+    toRunning();
+    gameData.saveNewNextRound();
+  }
+
+  /// PAUSED with round n+1 saved (R13-Q5).
+  void toPausedWithNext() {
+    toRunningWithNext();
+    gameData.pause();
+  }
+
   void toTimeUp() {
     toRunning();
     timer.elapse(timer.duration);
@@ -133,14 +147,14 @@ class CourtsHarness {
     if (discarded) {
       gameData.discardAndStartNext();
     } else {
-      gameData.quickSaveNextRound();
-      gameData.startNextRound();
+      gameData.saveNewNextRound();
+      gameData.saveAndStartNextRound();
     }
   }
 
   void toEditing() {
     toRunning();
-    gameData.makeNextRound();
+    gameData.generateNextRound();
   }
 
   /// Taps the widget found by [finder] and lets the frame settle.

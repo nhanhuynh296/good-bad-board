@@ -11,6 +11,7 @@ import 'package:good_bad_board/state/timer_data.dart';
 
 import 'support/prefs_sandbox.dart';
 import 'support/repository_sandbox.dart';
+import 'support/next_round_steps.dart';
 
 // IMPLEMENTATION 8.2.1 and 8.2.4: a round is logged when the next round
 // starts (R3-Q8), a discard logs nothing and keeps the number (R2-Q5, R9-Q1),
@@ -59,13 +60,13 @@ void main() {
 
   group('when a round is logged (R3-Q8, R6-Q2)', () {
     test('should_log_nothing_when_start_next_clicked', () {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       expect(gameData.history, isEmpty);
     });
 
     test('should_log_nothing_at_zero_when_next_round_saved', () async {
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
 
       timer.elapse(const Duration(minutes: 10));
       await gameData.settle();
@@ -81,7 +82,7 @@ void main() {
     });
 
     test('should_log_round_n_when_changeover_ends', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -90,7 +91,7 @@ void main() {
 
     test('should_write_round_n_games_when_changeover_ends', () async {
       final live = gameData.stagingMatches.map((g) => g.id).toSet();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -98,7 +99,7 @@ void main() {
     });
 
     test('should_write_one_session_log_when_changeover_ends', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -106,7 +107,7 @@ void main() {
     });
 
     test('should_run_round_n_plus_1_when_changeover_ends', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -114,7 +115,7 @@ void main() {
     });
 
     test('should_count_full_duration_when_changeover_ends', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -122,9 +123,9 @@ void main() {
     });
 
     test('should_make_saved_lineup_live_when_changeover_ends', () async {
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       final saved = gameData.nextLineup!.map((g) => g.id).toList();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -132,7 +133,7 @@ void main() {
     });
 
     test('should_have_no_next_round_when_changeover_ends', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -142,7 +143,7 @@ void main() {
     test(
       'should_leave_edit_mode_when_changeover_ends_with_no_changes',
       () async {
-        gameData.quickSaveNextRound();
+        gameData.saveNewNextRound();
         gameData.editNextRound();
         timer.elapse(const Duration(minutes: 10));
 
@@ -153,7 +154,7 @@ void main() {
     );
 
     test('should_log_round_n_when_start_now_clicked', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await gameData.startNextNow();
 
@@ -163,7 +164,7 @@ void main() {
 
   group('round number (8.2.1)', () {
     test('should_advance_round_number_when_round_logged', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -187,9 +188,9 @@ void main() {
     });
 
     test('should_log_once_per_round_over_two_rounds', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       await endChangeover();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -199,7 +200,7 @@ void main() {
 
   group('changeover waits for an edit (RND-06, R9-Q4, R11-Q2)', () {
     Future<void> waiting() async {
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       gameData.editNextRound();
       timer.elapse(const Duration(minutes: 10));
       changeLineup();
@@ -237,7 +238,7 @@ void main() {
     });
 
     test('should_start_saved_round_unchanged_when_edit_closed', () async {
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       final saved = [
         for (final game in gameData.nextLineup!) List.of(game.playerIds),
       ];
@@ -284,7 +285,7 @@ void main() {
       'should_log_ended_round_once_when_session_ends_in_changeover',
       () async {
         final ended = gameData.stagingMatches.map((g) => g.id).toSet();
-        gameData.startNextRound();
+        gameData.saveAndStartNextRound();
 
         await gameData.endSession();
 
@@ -312,7 +313,7 @@ void main() {
     });
 
     test('should_reset_round_number_when_session_ends', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       await endChangeover();
 
       await gameData.endSession();
@@ -335,8 +336,8 @@ void main() {
 
   group('double-click guard (8.2.4, R6-Q18)', () {
     test('should_log_round_once_when_start_clicked_twice', () async {
-      gameData.startNextRound();
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
+      gameData.saveAndStartNextRound();
 
       await endChangeover();
 
@@ -344,18 +345,18 @@ void main() {
     });
 
     test('should_report_second_start_click_as_no_op', () {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
-      final second = gameData.startNextRound();
+      final second = gameData.saveAndStartNextRound();
 
       expect(second, isFalse);
     });
 
     test('should_keep_changeover_time_when_start_clicked_twice', () {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       timer.elapse(const Duration(seconds: 5));
 
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       expect(timer.remaining, const Duration(seconds: 15));
     });
@@ -372,7 +373,7 @@ void main() {
     test(
       'should_start_one_changeover_when_time_up_save_clicked_twice',
       () async {
-        gameData.makeNextRound();
+        gameData.generateNextRound();
         timer.elapse(const Duration(minutes: 10));
 
         await Future.wait([gameData.saveNextRound(), gameData.saveNextRound()]);
@@ -383,7 +384,7 @@ void main() {
     );
 
     test('should_log_round_once_when_start_now_clicked_twice', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await Future.wait([gameData.startNextNow(), gameData.startNextNow()]);
 
@@ -391,7 +392,7 @@ void main() {
     });
 
     test('should_advance_round_once_when_start_now_clicked_twice', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       await Future.wait([gameData.startNextNow(), gameData.startNextNow()]);
 
@@ -399,7 +400,7 @@ void main() {
     });
 
     test('should_log_once_when_start_now_clicked_as_changeover_ends', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
 
       final click = gameData.startNextNow();
       timer.elapse(TimerData.changeoverLength);
@@ -410,7 +411,7 @@ void main() {
     });
 
     test('should_log_once_when_waiting_save_clicked_twice', () async {
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       gameData.editNextRound();
       timer.elapse(const Duration(minutes: 10));
       changeLineup();
@@ -422,10 +423,10 @@ void main() {
     });
 
     test('should_save_one_next_round_when_strip_save_clicked_twice', () {
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
       final first = gameData.nextLineup;
 
-      gameData.quickSaveNextRound();
+      gameData.saveNewNextRound();
 
       expect(identical(gameData.nextLineup, first), isTrue);
     });
@@ -439,7 +440,7 @@ void main() {
 
   group('failed write (R45-01)', () {
     test('should_not_start_round_when_the_log_write_fails', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       blockWrites(GameRepository.databaseFilename);
 
       await expectLater(gameData.startNextNow(), throwsA(anything));
@@ -448,7 +449,7 @@ void main() {
     });
 
     test('should_not_add_to_history_when_the_log_write_fails', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       blockWrites(GameRepository.databaseFilename);
 
       await expectLater(gameData.startNextNow(), throwsA(anything));
@@ -457,7 +458,7 @@ void main() {
     });
 
     test('should_report_error_when_changeover_end_write_fails', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       blockWrites(GameRepository.databaseFilename);
 
       await endChangeover();
@@ -466,7 +467,7 @@ void main() {
     });
 
     test('should_log_once_on_retry_after_a_failed_write', () async {
-      gameData.startNextRound();
+      gameData.saveAndStartNextRound();
       final block = blockWrites(GameRepository.databaseFilename);
       await endChangeover();
       block.deleteSync();

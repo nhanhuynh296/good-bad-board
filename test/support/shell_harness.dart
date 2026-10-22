@@ -13,6 +13,7 @@ import 'package:good_bad_board/state/timer_data.dart';
 import 'package:provider/provider.dart';
 
 import 'courts_harness.dart';
+import 'next_round_steps.dart';
 
 /// Builds the [ResponsiveShell] with the 5 real branches (IMPLEMENTATION
 /// 8.6) and a plain page in each, so the shell tests do not depend on the
@@ -144,7 +145,7 @@ class ShellHarness {
 
   void toChangeover() {
     toRunning();
-    gameData.quickSaveNextRound();
-    gameData.startNextRound();
+    gameData.saveNewNextRound();
+    gameData.saveAndStartNextRound();
   }
 }

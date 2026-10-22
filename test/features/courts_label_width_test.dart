@@ -45,9 +45,12 @@ void main() {
     'zh_HK': Locale.fromSubtags(languageCode: 'zh', countryCode: 'HK'),
   };
 
+  // With round n+1 saved the bar has the most buttons: "Start round n+1"
+  // shows only then (R13-Q5).
   final phases = <String, void Function(CourtsHarness)>{
-    'running': (h) => h.toRunning(),
-    'paused': (h) => h.toPaused(),
+    'running': (h) => h.toRunningWithNext(),
+    'paused': (h) => h.toPausedWithNext(),
+    'time_up': (h) => h.toTimeUp(),
   };
 
   Object? skipFor(Locale locale) =>
@@ -139,8 +142,48 @@ void main() {
   testWidgets('should_use_the_short_discard_label_in_fr_when_paused', (
     tester,
   ) async {
-    await pumpBar(tester, locales['fr']!, (h) => h.toPaused());
+    await pumpBar(tester, locales['fr']!, (h) => h.toPausedWithNext());
 
     expect(find.text('Annuler la manche 1'), findsOneWidget);
   });
+
+  // R13-Q3: "Generate next round (n+1)" on the next-round strip shows in
+  // full at 1280 px, and the strip has no overflow.
+  final stripPhases = <String, void Function(CourtsHarness)>{
+    'running': (h) => h.toRunning(),
+    'paused': (h) => h.toPaused(),
+    'time_up': (h) => h.toTimeUp(),
+  };
+  for (final MapEntry(key: name, value: locale) in locales.entries) {
+    for (final MapEntry(key: phase, value: arrange) in stripPhases.entries) {
+      testWidgets(
+        'should_show_the_generate_label_in_full_in_${name}_when_$phase',
+        skip: skipFor(locale) != null,
+        (tester) async {
+          await pumpBar(tester, locale, arrange);
+
+          final label = tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.byKey(const Key('generate-next-round')),
+              matching: find.byType(RichText),
+            ),
+          );
+          expect(label.didExceedMaxLines, isFalse);
+        },
+      );
+
+      testWidgets(
+        'should_keep_the_generate_button_on_screen_in_${name}_when_$phase',
+        skip: skipFor(locale) != null,
+        (tester) async {
+          await pumpBar(tester, locale, arrange);
+
+          final button = tester.getRect(
+            find.byKey(const Key('generate-next-round')),
+          );
+          expect(button.right, lessThanOrEqualTo(width.width));
+        },
+      );
+    }
+  }
 }

@@ -130,7 +130,7 @@ void main() {
       gameData
         ..generateFirstRound()
         ..startFirstRound()
-        ..makeNextRound();
+        ..generateNextRound();
       addTearDown(() => gameData.endSession());
 
       gameData.makeSingleCourt(0);

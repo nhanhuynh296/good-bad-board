@@ -97,7 +97,7 @@ void main() {
     test('should_swap_round_n_plus_1_when_edit_mode_open', () {
       gameData.startFirstRound();
       final live = ids(gameData.stagingMatches);
-      gameData.makeNextRound();
+      gameData.generateNextRound();
 
       gameData.swapPlayers(onCourt(0), onCourt(1));
 
