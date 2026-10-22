@@ -1573,7 +1573,9 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   delete (`btn.danger-outline`, F23); close; stats, partners, attendance. Disabled asks for
   confirmation, then checks the player out. The Sign-in ID field selects all its text on focus
   (F30). A duplicate ID on Save is refused with "ID {id} is used by {name}." (F23). UAT PLY-05,
-  PLY-06, PLY-09, PLY-15.
+  PLY-06, PLY-09, PLY-15. Two columns (Nathan, canvas comment 2026-10-22): left = sign-in ID,
+  delete, close, level, membership; right = stat tiles, partners, attendance; a 1 px
+  `#e4d8c4` line between them.
 - 8.7.7 **Bug: exact sign-in-ID match must ignore the level chips (F01, P1).** Today
   `_onSearchSubmitted` (`lib/features/players/players_page.dart:258`) looks for the exact ID in
   `_listedPlayers()` (`players_page.dart:339-347`), which applies the level chips and the search

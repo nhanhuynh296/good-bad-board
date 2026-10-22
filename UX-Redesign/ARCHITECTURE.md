@@ -451,7 +451,9 @@ when checked in).
 
 #### MorePanel (ExpandablePlayerProfile)
 **As drawn on the canvas board "Players · More panel" (R5-Q1, accepted R6-Q17).** An accordion
-under the row (row and panel in one rounded panel):
+under the row (row and panel in one rounded panel), in two equal columns with a 1 px `#e4d8c4`
+line between them (Nathan, 2026-10-22). Left column = the first three items, right column = the
+last item:
 ```
 ├── Top row: Sign In ID field (selects all on focus, F30) + "Save" (PLY-15; a duplicate ID gives
 │   "ID {id} is used by {name}.", F23); delete (btn.danger-outline, F23) and close at the right

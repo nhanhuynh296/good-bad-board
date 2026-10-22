@@ -1197,7 +1197,9 @@ profile has no level progression sparkline, because no level history is stored.
 And the layout is as drawn on the canvas board "Players · More panel" (R6-Q17): an accordion
 under the row; the sign-in ID field with Save; the level stepper "− Intermediate (B1) +"; the
 membership control "Member / Casual / Disabled"; delete and close; then the stats, partners and
-attendance. Choosing Disabled asks for confirmation, then checks the player out (PLY-06).
+attendance. The panel has two columns (Nathan, 2026-10-22): the controls that edit the player
+on the left, the stats, partners and attendance on the right. Choosing Disabled asks for
+confirmation, then checks the player out (PLY-06).
 
 **PLY-10** — Only one profile expanded at a time
 Given player A's profile is expanded
