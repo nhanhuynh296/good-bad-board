@@ -204,7 +204,15 @@ class _ScanField extends StatelessWidget {
                 decoration: InputDecoration(
                   isDense: true,
                   isCollapsed: true,
+                  // The app theme draws borders on text fields; the box
+                  // above draws the only border here.
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  filled: false,
                   hintText: hint,
                   hintStyle: AppTypography.title.copyWith(
                     fontWeight: AppTypography.regular,
