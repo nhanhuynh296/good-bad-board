@@ -336,14 +336,16 @@ class _MoreButtonState extends State<_MoreButton> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Icon(
-                      widget.expanded
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      size: 14,
-                      color: AppColors.textPrimary,
-                    ),
+                    // Only an open panel shows a chevron, as on the canvas
+                    // board.
+                    if (widget.expanded) ...[
+                      const SizedBox(width: AppSpacing.xs),
+                      const Icon(
+                        Icons.expand_less_rounded,
+                        size: 14,
+                        color: AppColors.textPrimary,
+                      ),
+                    ],
                   ],
                 ),
               ),
