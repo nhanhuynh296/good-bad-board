@@ -48,6 +48,30 @@ void main() {
       expect(tester.getSize(h.scanField).height, 52);
     });
 
+    testWidgets('should_draw_the_focus_ring_only_around_the_scan_field', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      expect(
+        tester.getSize(find.byKey(const Key('players-scan-focus-ring'))).height,
+        tester.getSize(h.scanField).height + 10,
+      );
+    }, variant: TargetPlatformVariant.desktop());
+
+    testWidgets('should_keep_the_rows_clear_of_the_scroll_bar', (tester) async {
+      final h = PlayersHarness(tester);
+      await h.pump(
+        players: [for (var i = 0; i < 30; i++) testPlayer('Player $i', Elo.b1)],
+      );
+
+      expect(
+        tester.getTopRight(h.rowOf('Player 0')).dx,
+        lessThanOrEqualTo(tester.getTopRight(find.byType(ListView)).dx - 16),
+      );
+    });
+
     testWidgets('should_focus_the_scan_field_when_the_page_opens', (
       tester,
     ) async {

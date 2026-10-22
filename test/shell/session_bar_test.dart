@@ -83,6 +83,15 @@ void main() {
       expect(inBar(find.text('View courts →')), findsOneWidget);
     });
 
+    testWidgets('should_put_view_courts_at_the_right_end', (tester) async {
+      await onPlayers(tester);
+
+      expect(
+        tester.getTopRight(inBar(find.text('View courts →'))).dx,
+        tester.getTopRight(bar).dx - AppSpacing.xl,
+      );
+    });
+
     testWidgets('should_open_courts_when_bar_tapped', (tester) async {
       final h = await onPlayers(tester, arrange: (h) => h.toRunning());
 
