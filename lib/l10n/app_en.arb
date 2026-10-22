@@ -1449,9 +1449,9 @@
       }
     }
   },
-  "courts_make_round": "Make round {n}",
-  "@courts_make_round": {
-    "description": "Strip button: opens edit mode with a new lineup (RND-05)",
+  "courts_generate_next_round": "Generate next round ({n})",
+  "@courts_generate_next_round": {
+    "description": "Next-round strip button while round n+1 is not made: makes the round n+1 lineup and opens edit mode; n is the number of round n+1 (R13-Q3)",
     "placeholders": {
       "n": {
         "type": "int"
@@ -1522,15 +1522,6 @@
   "courts_tag_next": "NEXT",
   "@courts_tag_next": {
     "description": "Court card tag in edit mode (RND-10)"
-  },
-  "courts_tag_round": "ROUND {n}",
-  "@courts_tag_round": {
-    "description": "Court card tag in TIME UP (F08)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
   },
   "courts_tag_players": "{count, plural, =1{1 player} other{{count} players}}",
   "@courts_tag_players": {

@@ -185,8 +185,9 @@ class GameData extends ChangeNotifier {
     // an unsaved edit (R11-Q2).
     final base = _editBase;
     if (base != null) {
-      if (base.length > numberOfCourt)
+      if (base.length > numberOfCourt) {
         base.removeRange(numberOfCourt, base.length);
+      }
       while (base.length < numberOfCourt) {
         base.add(<String>[]);
       }
@@ -268,8 +269,8 @@ class GameData extends ChangeNotifier {
   int get roundNumber => _roundNumber;
 
   /// The lineup the court grid renders: in edit mode the edit lineup; in
-  /// TIME UP the planned round and in the changeover the saved round
-  /// (RND-03, RND-15); else the live round.
+  /// the changeover the saved round (RND-03); else the live round. TIME UP
+  /// shows round n: 0:00 makes no round n+1 (R13-Q4).
   ///
   /// All court edits ([placePlayerInSlot], [makeSingleCourt],
   /// [removePlayerFromCourt]) apply to this container, so the organizer edits
@@ -278,9 +279,7 @@ class GameData extends ChangeNotifier {
     final edit = _editLineup;
     if (edit != null) return edit;
     final next = _nextLineup;
-    if (next != null && (_phase == RoundPhase.timeUp || _inChangeover)) {
-      return next;
-    }
+    if (next != null && _inChangeover) return next;
     return stagingMatches;
   }
 
@@ -363,7 +362,8 @@ class GameData extends ChangeNotifier {
   RoundPhase? get pausedFrom =>
       _phase == RoundPhase.paused ? _pausedFrom : null;
 
-  /// Round n+1: made in edit mode, saved, or planned at TIME UP.
+  /// Round n+1: made by "Generate next round" (in edit mode) or saved. It
+  /// never exists before that click (R13-Q3).
   GameContainer? _nextLineup;
   bool _nextSaved = false;
 
@@ -465,10 +465,13 @@ class GameData extends ChangeNotifier {
   /// Whether the courts on screen can change: place, swap, Re-roll and the
   /// full slot menu (COURT-14). False while the clock runs (RUNNING, and
   /// CHANGEOVER, R7-Q4), except in edit mode for round n+1. A paused
-  /// changeover follows the PAUSED rules (F17).
+  /// changeover follows the PAUSED rules (F17). TIME UP shows the round n
+  /// that was played, so it is locked too (R13-Q4).
   bool get canEditCourts {
     if (isEditingNext) return true;
-    return _phase != RoundPhase.running && _phase != RoundPhase.changeover;
+    return _phase != RoundPhase.running &&
+        _phase != RoundPhase.changeover &&
+        _phase != RoundPhase.timeUp;
   }
 
   /// "Generate round 1": a matchmaker lineup, clock stopped (RND-12).
@@ -506,12 +509,12 @@ class GameData extends ChangeNotifier {
     return true;
   }
 
-  /// "Make round n+1": a matchmaker lineup for round n+1 in edit mode. The
-  /// live courts do not change (RND-05). One next round at a time (RND-08).
-  bool makeNextRound() {
-    if (!_roundClockLive || isEditingNext || _nextLineup != null) {
-      return false;
-    }
+  /// "Generate next round (n+1)": a matchmaker lineup for round n+1 in edit
+  /// mode, in RUNNING, PAUSED or TIME UP (R13-Q3, R13-Q4, R13-Q5). The live
+  /// courts do not change (RND-05). One next round at a time (RND-08).
+  bool generateNextRound() {
+    final allowed = _roundClockLive || _phase == RoundPhase.timeUp;
+    if (!allowed || isEditingNext || _nextLineup != null) return false;
     final lineup = _computeFreshLineup();
     if (lineup.isEmpty) return false;
     _nextLineup = lineup;
@@ -528,21 +531,6 @@ class GameData extends ChangeNotifier {
       return false;
     }
     _openEdit(saved);
-    notifyListeners();
-    return true;
-  }
-
-  /// The strip "Save round n+1" in RUNNING: a matchmaker lineup, saved at
-  /// once, no edit mode. Logs nothing; the clock does not change (R12-Q2,
-  /// F28). A second click is a no-op (8.2.4).
-  bool quickSaveNextRound() {
-    if (_phase != RoundPhase.running || isEditingNext || _nextLineup != null) {
-      return false;
-    }
-    final lineup = _computeFreshLineup();
-    if (lineup.isEmpty) return false;
-    _nextLineup = lineup;
-    _nextSaved = true;
     notifyListeners();
     return true;
   }
@@ -577,13 +565,14 @@ class GameData extends ChangeNotifier {
   /// "×" in edit mode: drops the edits (RND-07). The UI calls it after
   /// "Close without saving?", or at once when [hasUnsavedEdits] is false.
   ///
-  /// A saved round n+1 stays saved. An unsaved one is dropped, except the
-  /// planned round of TIME UP (RND-15). While the changeover waits, the saved
-  /// round n+1 starts unchanged (R11-Q2).
+  /// A saved round n+1 stays saved. An unsaved one is dropped, also in
+  /// TIME UP: the strip then offers "Generate next round" again (R13-Q4).
+  /// While the changeover waits, the saved round n+1 starts unchanged
+  /// (R11-Q2).
   Future<bool> exitEditNext() async {
     if (!isEditingNext) return false;
     _closeEdit();
-    if (!_nextSaved && _phase != RoundPhase.timeUp && !_inChangeover) {
+    if (!_nextSaved && !_inChangeover) {
       _nextLineup = null;
     }
     if (_waitingForEdit) {
@@ -620,26 +609,21 @@ class GameData extends ChangeNotifier {
     return true;
   }
 
-  /// "Start round n+1" (RND-04): saves round n+1 — the saved round, the
-  /// planned round of TIME UP, or a new matchmaker lineup; in paused edit
-  /// mode the edit lineup with its changes (R11-Q3) — and starts the
-  /// changeover (R6-Q1). Logs nothing at the click.
+  /// "Start round n+1" (RND-04): starts the changeover (R6-Q1) with the
+  /// saved round n+1. In paused edit mode of a saved round it saves the
+  /// edits first (R11-Q3). Logs nothing at the click.
+  ///
+  /// It works only after round n+1 is saved (R13-Q5): with no saved round
+  /// n+1 it does nothing. TIME UP never has a saved round n+1, because a
+  /// save there starts the changeover at once.
   ///
   /// In RUNNING the UI asks "End round n now?" first ([startNeedsConfirm]).
   /// A second click is a no-op: the phase is CHANGEOVER (8.2.4).
   bool startNextRound() {
-    final pausedEdit =
-        _phase == RoundPhase.paused &&
-        _pausedFrom == RoundPhase.running &&
-        isEditingNext;
-    final fromRound =
-        (_roundClockLive || _phase == RoundPhase.timeUp) && !isEditingNext;
-    if (!pausedEdit && !fromRound) return false;
-    if (pausedEdit) {
-      _commitEdit();
-    } else {
-      _adoptNextLineup();
-    }
+    if (!isNextRoundSaved || !_roundClockLive) return false;
+    final pausedEdit = _phase == RoundPhase.paused && isEditingNext;
+    if (isEditingNext && !pausedEdit) return false;
+    if (pausedEdit) _commitEdit();
     _enterChangeover(discarded: false);
     notifyListeners();
     return true;
@@ -810,10 +794,9 @@ class GameData extends ChangeNotifier {
       if (isNextRoundSaved) {
         _enterChangeover(discarded: false);
       } else {
-        // The courts show the planned round n+1. Round n keeps its lineup
-        // for the log (RND-15). Edit mode stays as it is (R6-Q3).
-        _nextLineup ??= _computeFreshLineup();
-        _nextSaved = false;
+        // TIME UP: the clock stops and no round n+1 is made (R13-Q4). The
+        // strip offers "Generate next round". Edit mode stays as it is
+        // (R6-Q3).
         _phase = RoundPhase.timeUp;
       }
       notifyListeners();
@@ -831,8 +814,8 @@ class GameData extends ChangeNotifier {
     }
   }
 
-  /// Saves round n+1 for a start button: the saved round, the planned
-  /// round of TIME UP, or a new matchmaker lineup.
+  /// Saves round n+1 for "Discard round n and start again": the saved round,
+  /// or else a new matchmaker lineup (RND-16).
   void _adoptNextLineup() {
     _nextLineup ??= _computeFreshLineup();
     _nextSaved = true;

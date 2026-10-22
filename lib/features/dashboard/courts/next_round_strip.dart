@@ -18,14 +18,17 @@ class NextRoundStrip extends StatelessWidget {
 
   static const double height = 48;
 
-  /// Whether the strip shows: in edit mode, in RUNNING and PAUSED, and in
-  /// the changeover. Never in TIME UP (without edit mode), READY or with no
-  /// lineup (R6-Q4).
+  /// Whether the strip shows: in edit mode, in RUNNING, PAUSED and TIME UP,
+  /// and in the changeover. Never in READY or with no lineup (R6-Q4). TIME
+  /// UP shows it with "Generate next round" (R13-Q4).
   static bool showsFor(GameData gameData) {
     if (gameData.isEditingNext) return true;
     return switch (gameData.phase) {
-      RoundPhase.running || RoundPhase.paused || RoundPhase.changeover => true,
-      RoundPhase.noLineup || RoundPhase.ready || RoundPhase.timeUp => false,
+      RoundPhase.running ||
+      RoundPhase.paused ||
+      RoundPhase.timeUp ||
+      RoundPhase.changeover => true,
+      RoundPhase.noLineup || RoundPhase.ready => false,
     };
   }
 
@@ -164,20 +167,18 @@ class NextRoundStrip extends StatelessWidget {
       );
     }
 
+    // One button in RUNNING, PAUSED and TIME UP: it makes round n+1 and
+    // opens edit mode (R13-Q3 … R13-Q5). In TIME UP the clock has already
+    // stopped, so the "Clock stops at 0:00" text does not show.
     return _StripContent(
       title: l10n.courts_next_not_saved(next),
       titleColour: AppColors.warningText,
-      text: l10n.courts_next_clock_stops,
+      text: phase == RoundPhase.timeUp ? null : l10n.courts_next_clock_stops,
       buttons: [
-        // RUNNING also offers the one-click save, no edit mode (R12-Q2).
-        if (phase == RoundPhase.running)
-          CourtsButton.stripPrimary(
-            label: l10n.courts_save_round(next),
-            onPressed: gameData.quickSaveNextRound,
-          ),
-        CourtsButton.stripOutline(
-          label: l10n.courts_make_round(next),
-          onPressed: gameData.makeNextRound,
+        CourtsButton.stripPrimary(
+          key: const Key('generate-next-round'),
+          label: l10n.courts_generate_next_round(next),
+          onPressed: gameData.generateNextRound,
         ),
       ],
     );

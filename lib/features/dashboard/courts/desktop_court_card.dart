@@ -58,7 +58,6 @@ class DesktopCourtCard extends StatelessWidget {
     required this.slots,
     required this.levelGap,
     this.isNextRound = false,
-    this.roundTag,
     this.onReroll,
   });
 
@@ -71,9 +70,6 @@ class DesktopCourtCard extends StatelessWidget {
 
   /// Edit mode for round n+1: dashed border and "NEXT" tag (RND-10).
   final bool isNextRound;
-
-  /// TIME UP: the round the card shows, tag "ROUND {n}" (F08).
-  final int? roundTag;
 
   /// `null`: no "Re-roll" button (R3-Q10, COURT-14).
   final VoidCallback? onReroll;
@@ -111,10 +107,6 @@ class DesktopCourtCard extends StatelessWidget {
                 if (isNextRound) ...[
                   const SizedBox(width: AppSpacing.sm),
                   _Tag(l10n.courts_tag_next),
-                ],
-                if (roundTag != null) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  _Tag(l10n.courts_tag_round(roundTag!)),
                 ],
                 if (short) ...[
                   const SizedBox(width: AppSpacing.sm),

@@ -99,6 +99,7 @@ class _RoundBarView {
       _discard,
     );
     final pause = _BarAction.text(l10n.courts_pause, (_) => gameData.pause());
+    final saved = gameData.isNextRoundSaved;
     switch (phase) {
       case RoundPhase.noLineup:
         return [_BarAction.primary(l10n.courts_generate_round_one, _generate)];
@@ -113,12 +114,14 @@ class _RoundBarView {
             (_) => gameData.startFirstRound(),
           ),
         ];
+      // "Start round n+1" shows only after round n+1 is saved (R13-Q5).
       case RoundPhase.running:
         if (editing) return [pause];
         return [
           pause,
           discard,
-          _BarAction.primary(l10n.courts_start_round(next), _startNext),
+          if (saved)
+            _BarAction.primary(l10n.courts_start_round(next), _startNext),
         ];
       case RoundPhase.paused:
         if (pausedChangeover) {
@@ -131,18 +134,19 @@ class _RoundBarView {
         }
         return [
           if (!editing) discard,
-          _BarAction.outline(l10n.courts_start_round(next), _startNext),
+          if (saved)
+            _BarAction.outline(l10n.courts_start_round(next), _startNext),
           _BarAction.primary(
             l10n.courts_resume_round(liveRound),
             (_) => gameData.resume(),
           ),
         ];
+      // TIME UP has no saved round n+1: "Save round n+1" in edit mode
+      // starts the changeover at once (RND-14). The strip offers "Generate
+      // next round" (R13-Q4).
       case RoundPhase.timeUp:
         if (editing) return const [];
-        return [
-          discard,
-          _BarAction.primary(l10n.courts_start_round(next), _startNext),
-        ];
+        return [discard];
       case RoundPhase.changeover:
         if (gameData.waitingForEdit) return const [];
         if (editing) return [pause];
@@ -164,7 +168,7 @@ class _RoundBarView {
   }
 
   /// "Start round n+1": RUNNING with time left asks "End round n now?"
-  /// first; PAUSED and TIME UP start at once (R12-Q1, F05).
+  /// first; PAUSED starts at once (R12-Q1, F05).
   Future<void> _startNext(BuildContext context) async {
     if (gameData.startNeedsConfirm) {
       final confirmed = await showCourtsConfirm(

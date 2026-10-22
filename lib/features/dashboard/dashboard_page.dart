@@ -301,14 +301,11 @@ class _DashboardPageState extends State<DashboardPage> {
           selectionActive: selectionActive,
         ),
     ];
-    final timeUp =
-        gameData.phase == RoundPhase.timeUp && !gameData.isEditingNext;
     return DesktopCourtCard(
       courtIndex: index,
       slots: slots,
       levelGap: game?.tierGap() ?? 0,
       isNextRound: gameData.isEditingNext,
-      roundTag: timeUp ? gameData.roundNumber + 1 : null,
       onReroll: canEdit ? () => _onReroll(index) : null,
     );
   }
