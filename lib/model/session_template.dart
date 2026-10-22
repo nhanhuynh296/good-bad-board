@@ -26,7 +26,7 @@ class SessionTemplate {
   /// Maximum number of checked-in players.
   final int capacity;
 
-  /// Number of courts (1–8).
+  /// Number of courts: 1 or more, no upper limit (R13-Q12).
   final int courts;
 
   const SessionTemplate({

@@ -52,10 +52,11 @@ typedef SlotFill = ({Player player, int courtIndex, int round});
 /// Release flag for the court-count controls (R45-36).
 ///
 /// On (R13-Q1, Nathan 2026-10-22): the Sessions tab shows the court count
-/// control, 1 to 8, and a template Load applies its court count. The Courts
-/// tab has no stepper, also with the flag on (R2-Q2). With the flag off the
-/// club always uses [GameData.defaultCourtCount] courts and a template Load
-/// keeps the court count.
+/// control (minimum 1, no upper limit, R13-Q12), and a template Load applies
+/// its court count. The Courts tab has no stepper, also with the flag on
+/// (R2-Q2). With the flag off the club always uses
+/// [GameData.defaultCourtCount] courts and a template Load keeps the court
+/// count.
 abstract final class CourtCount {
   static bool editable = true;
 }
