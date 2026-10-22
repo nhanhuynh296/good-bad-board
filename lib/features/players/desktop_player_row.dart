@@ -60,6 +60,7 @@ class DesktopPlayerRow extends StatefulWidget {
 class _DesktopPlayerRowState extends State<DesktopPlayerRow> {
   bool _focused = false;
   bool _hovered = false;
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -69,10 +70,17 @@ class _DesktopPlayerRowState extends State<DesktopPlayerRow> {
     final checked = widget.isCheckedIn && !disabled;
 
     final base = checked ? AppColors.checkedInBg : AppColors.cardBg;
-    // Hover tints the whole row, not a box inside it.
-    final fill = _hovered && !disabled
-        ? Color.alphaBlend(AppColors.black.withValues(alpha: 0.03), base)
-        : base;
+    // Hover and press tint the whole row, not a box inside it.
+    final tint = disabled
+        ? 0.0
+        : _pressed
+        ? 0.06
+        : _hovered
+        ? 0.03
+        : 0.0;
+    final fill = tint == 0
+        ? base
+        : Color.alphaBlend(AppColors.black.withValues(alpha: tint), base);
     final text = disabled ? AppColors.textMuted : AppColors.textPrimary;
     final typeColour = checked
         ? AppColors.textMutedOnCheckedIn
@@ -129,8 +137,10 @@ class _DesktopPlayerRowState extends State<DesktopPlayerRow> {
                         // whole row shows focus (below).
                         focusColor: Colors.transparent,
                         hoverColor: Colors.transparent,
-                        splashColor: disabled ? Colors.transparent : null,
-                        highlightColor: disabled ? Colors.transparent : null,
+                        onHighlightChanged: (value) =>
+                            setState(() => _pressed = value),
+                        splashFactory: NoSplash.splashFactory,
+                        highlightColor: Colors.transparent,
                         child: ExcludeSemantics(
                           child: Padding(
                             padding: const EdgeInsets.only(
