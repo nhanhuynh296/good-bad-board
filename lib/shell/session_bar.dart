@@ -59,7 +59,7 @@ class _SessionBarState extends State<SessionBar> {
                 child: Row(
                   children: [
                     ..._status(gameData, l10n),
-                    Flexible(
+                    Expanded(
                       child: Text(
                         _counts(gameData, l10n),
                         maxLines: 1,
@@ -69,7 +69,6 @@ class _SessionBarState extends State<SessionBar> {
                         ),
                       ),
                     ),
-                    const Spacer(),
                     const SizedBox(width: _gap),
                     Text(
                       viewCourts,
