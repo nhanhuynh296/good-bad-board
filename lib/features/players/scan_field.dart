@@ -165,48 +165,57 @@ class _ScanField extends StatelessWidget {
   final String label;
   final String hint;
 
-  static const _border = OutlineInputBorder(
-    borderRadius: AppRadii.lgRadius,
-    borderSide: BorderSide(color: AppColors.controlBorder, width: 2),
-  );
-
   @override
   Widget build(BuildContext context) {
-    final field = TextField(
+    // The box draws the border, so the border, the box and the focus ring
+    // always have the same size. An InputDecoration border can sit inside a
+    // taller text field box with some fonts, and the ring then looks too big.
+    final field = SizedBox(
       key: const Key('players-scan-field'),
-      controller: controller,
-      focusNode: focusNode,
-      onSubmitted: (_) => onSubmitted(),
-      onTapOutside: (_) => onTapOutside(),
-      onChanged: (_) => onChanged(),
-      textAlignVertical: TextAlignVertical.center,
-      style: AppTypography.title,
-      cursorColor: AppColors.textPrimary,
-      decoration: InputDecoration(
-        constraints: const BoxConstraints.tightFor(
-          height: DesktopScanBar.height,
-        ),
-        isDense: true,
-        filled: true,
-        fillColor: AppColors.white,
-        hintText: hint,
-        hintStyle: AppTypography.title.copyWith(
-          fontWeight: AppTypography.regular,
-          color: AppColors.textMuted,
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        prefixIcon: const Padding(
-          padding: EdgeInsets.only(left: 14, right: 12),
-          child: Icon(
-            Icons.qr_code_scanner_rounded,
-            size: 22,
-            color: AppColors.textMuted,
+      height: DesktopScanBar.height,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          borderRadius: AppRadii.lgRadius,
+          border: Border.fromBorderSide(
+            BorderSide(color: AppColors.controlBorder, width: 2),
           ),
         ),
-        prefixIconConstraints: const BoxConstraints(minWidth: 48),
-        border: _border,
-        enabledBorder: _border,
-        focusedBorder: _border,
+        child: Row(
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(left: 14, right: 12),
+              child: Icon(
+                Icons.qr_code_scanner_rounded,
+                size: 22,
+                color: AppColors.textMuted,
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                onSubmitted: (_) => onSubmitted(),
+                onTapOutside: (_) => onTapOutside(),
+                onChanged: (_) => onChanged(),
+                textAlignVertical: TextAlignVertical.center,
+                style: AppTypography.title,
+                cursorColor: AppColors.textPrimary,
+                decoration: InputDecoration(
+                  isDense: true,
+                  isCollapsed: true,
+                  border: InputBorder.none,
+                  hintText: hint,
+                  hintStyle: AppTypography.title.copyWith(
+                    fontWeight: AppTypography.regular,
+                    color: AppColors.textMuted,
+                  ),
+                  contentPadding: const EdgeInsets.only(right: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
     return Semantics(
