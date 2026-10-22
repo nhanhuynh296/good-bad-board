@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/analytics/analytics.dart';
@@ -188,13 +192,20 @@ void main() {
       await seedGames(tester);
       await tester.pumpWidget(wrap(const AnalyticsPage()));
       await tester.pumpAndSettle();
-      final active = find.widgetWithText(AppKpiCard, '4');
-      expect(active, findsOneWidget);
+      String active() => tester
+          .widget<AppKpiCard>(
+            find.ancestor(
+              of: find.text('ACTIVE PLAYERS'),
+              matching: find.byType(AppKpiCard),
+            ),
+          )
+          .value;
+      expect(active(), '4');
 
       await tester.tap(find.text('4 wks'));
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(AppKpiCard, '2'), findsOneWidget);
+      expect(active(), '2');
     });
   });
 
@@ -229,18 +240,6 @@ void main() {
         matching: find.byType(AppKpiCard),
       );
       expect(tester.widget<AppKpiCard>(tile).value, '2');
-    });
-
-    testWidgets('should_not_cut_a_kpi_label_at_1280', (tester) async {
-      tester.view.physicalSize = const Size(1280, 2400);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(
-        wrap(const AnalyticsPage(), size: const Size(1280, 2400)),
-      );
-      await tester.pumpAndSettle();
-
-      expect(tester.takeException(), isNull);
     });
   });
 
@@ -571,5 +570,60 @@ void main() {
         findsOneWidget,
       );
     });
+  });
+
+  // R13-Q10: with the Members tile the desktop strip has 7 tiles in one
+  // row. The bundled Source Sans 3 gives the labels their real width. This
+  // group is last, because the font stays loaded after it.
+  group('Members tile fit (R13-Q10)', () {
+    setUpAll(() async {
+      final bytes = File(
+        'asset/font/SourceSans3VF-Upright.ttf',
+      ).readAsBytesSync();
+      final loader = FontLoader(AppTypography.family)
+        ..addFont(Future.value(ByteData.sublistView(bytes)));
+      await loader.load();
+    });
+
+    // fr is left out: "OCCUPATION DES TERRAINS" is cut with 6 columns too,
+    // before the Members tile (TODO(Nathan): shorter fr label).
+    for (final locale in const [Locale('en')]) {
+      testWidgets('should_not_cut_a_kpi_label_at_1280_in_$locale', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(1280, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          MediaQuery(
+            data: const MediaQueryData(size: Size(1280, 2400)),
+            child: MaterialApp(
+              theme: AppTheme.light(locale: locale),
+              locale: locale,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ChangeNotifierProvider<GameData>.value(
+                    value: GameData(),
+                    child: const AnalyticsPage(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final labels = tester.renderObjectList<RenderParagraph>(
+          find.descendant(
+            of: find.byType(AppKpiCard),
+            matching: find.byType(RichText),
+          ),
+        );
+        expect(labels.where((label) => label.didExceedMaxLines), isEmpty);
+      });
+    }
   });
 }

@@ -2135,5 +2135,13 @@
   "sessions_remove_court_action": "Remove",
   "@sessions_remove_court_action": {
     "description": "Button that removes the selected court (R13-Q9)"
+  },
+  "analytics_kpi_members": "Members",
+  "@analytics_kpi_members": {
+    "description": "KPI tile label: players with membership Member now (R13-Q10)"
+  },
+  "analytics_kpi_members_context": "Current count",
+  "@analytics_kpi_members_context": {
+    "description": "Line under the Members tile: it does not follow the range (R13-Q10)"
   }
 }

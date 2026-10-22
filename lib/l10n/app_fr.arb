@@ -375,5 +375,7 @@
   "sessions_remove_court_title": "Quel terrain retirer ?",
   "sessions_remove_court_body": "Ses joueurs vont sur la liste d'attente. Les terrains suivants prennent le numéro précédent.",
   "sessions_remove_court_option": "Terrain {court} · {count, plural, =0{vide} =1{1 joueur} other{{count} joueurs}}",
-  "sessions_remove_court_action": "Retirer"
+  "sessions_remove_court_action": "Retirer",
+  "analytics_kpi_members": "Membres",
+  "analytics_kpi_members_context": "Nombre actuel"
 }

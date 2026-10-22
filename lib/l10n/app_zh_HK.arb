@@ -375,5 +375,7 @@
   "sessions_remove_court_title": "移除邊個場地？",
   "sessions_remove_court_body": "呢個場地嘅球員會去候補名單。後面嘅場地編號各減一。",
   "sessions_remove_court_option": "{court}號場地 · {count, plural, =0{空} other{{count}位球員}}",
-  "sessions_remove_court_action": "移除"
+  "sessions_remove_court_action": "移除",
+  "analytics_kpi_members": "會員",
+  "analytics_kpi_members_context": "現時人數"
 }

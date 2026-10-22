@@ -283,6 +283,23 @@ List<KpiEntry> computeKpis(
   ];
 }
 
+/// The "Members" tile (R13-Q10, Nathan 2026-10-22): the number of
+/// [players] with membership Member now. Casual and Disabled players do not
+/// count. It does not follow the 4 / 12 / 26 wk range, so it has no delta.
+KpiEntry computeMembersKpi(
+  Iterable<Player> players, {
+  required AppLocalizations l10n,
+}) {
+  final members = players
+      .where((player) => player.membership == MembershipStatus.member)
+      .length;
+  return KpiEntry(
+    label: l10n.analytics_kpi_members,
+    value: '$members',
+    contextLine: l10n.analytics_kpi_members_context,
+  );
+}
+
 /// The games that the KPI and level cards can read for [range]: the range,
 /// its prior period, and the two retention windows before its start. Older
 /// games cannot change those results, so the page drops them first.

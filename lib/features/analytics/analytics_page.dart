@@ -127,7 +127,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         .where((g) => range.contains(g.createdDate))
         .toList();
     _results = _AnalyticsResults(
-      kpis: computeKpis(games, logs, range, l10n: l10n),
+      // The Members tile comes first; it does not follow the range
+      // (R13-Q10).
+      kpis: [
+        computeMembersKpi(allPlayers, l10n: l10n),
+        ...computeKpis(games, logs, range, l10n: l10n),
+      ],
       attendance: computeAttendanceTrend(logs, range, l10n: l10n),
       waitlist: computeWaitlistPressure(logs, range, l10n: l10n),
       levelGapTrend: computeLevelGapTrend(logs, range, l10n: l10n),

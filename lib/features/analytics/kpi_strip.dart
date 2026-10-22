@@ -3,8 +3,8 @@ import 'package:good_bad_board/design/design.dart';
 import 'package:good_bad_board/features/analytics/analytics_engine.dart';
 import 'package:good_bad_board/l10n/app_localizations.dart';
 
-/// Responsive grid of [AppKpiCard]s — ANA-02. 6 cols desktop, 3 tablet,
-/// 1 phone (ANA-14).
+/// Responsive grid of [AppKpiCard]s — ANA-02. 7 cols desktop (one row with
+/// the Members tile, R13-Q10), 3 tablet, 1 phone (ANA-14).
 class KpiStrip extends StatelessWidget {
   const KpiStrip({super.key, required this.kpis});
 
@@ -14,7 +14,7 @@ class KpiStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     // Window width, not the width left after shell padding (ANA-14).
     final width = MediaQuery.sizeOf(context).width;
-    final crossAxisCount = isDesktop(width) ? 6 : (isTablet(width) ? 3 : 1);
+    final crossAxisCount = isDesktop(width) ? 7 : (isTablet(width) ? 3 : 1);
 
     return GridView.builder(
       shrinkWrap: true,
@@ -25,8 +25,9 @@ class KpiStrip extends StatelessWidget {
         crossAxisSpacing: AppSpacing.md,
         // A fixed height, not an aspect ratio: at phone width a card is
         // narrow, the context line wraps, and a ratio-based height
-        // overflows.
-        mainAxisExtent: 140,
+        // overflows. 144, not 140: with 7 desktop columns a two-line
+        // context line needs the extra pixels (R13-Q10).
+        mainAxisExtent: 144,
       ),
       itemCount: kpis.length,
       itemBuilder: (context, index) {

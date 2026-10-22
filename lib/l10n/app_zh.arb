@@ -375,5 +375,7 @@
   "sessions_remove_court_title": "移除哪个场地？",
   "sessions_remove_court_body": "该场地的球员进入候补名单。后面的场地编号各减一。",
   "sessions_remove_court_option": "{court}号场地 · {count, plural, =0{空} other{{count}名球员}}",
-  "sessions_remove_court_action": "移除"
+  "sessions_remove_court_action": "移除",
+  "analytics_kpi_members": "会员",
+  "analytics_kpi_members_context": "当前人数"
 }
