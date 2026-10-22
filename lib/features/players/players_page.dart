@@ -46,6 +46,9 @@ class PlayersPage extends StatefulWidget {
   State<PlayersPage> createState() => _PlayersPageState();
 }
 
+/// Space at the right of the desktop list for the scroll bar.
+const double _scrollBarGutter = 16;
+
 class _PlayersPageState extends State<PlayersPage> {
   // ── Search & Filter ──────────────────────────────────────
   final TextEditingController _searchController = TextEditingController();
@@ -691,7 +694,10 @@ class _PlayersPageState extends State<PlayersPage> {
         gap,
         _TierChips(selected: _tierFilters, onToggle: _onTierToggled),
         gap,
-        const DesktopPlayerTableHeader(),
+        const Padding(
+          padding: EdgeInsets.only(right: _scrollBarGutter),
+          child: DesktopPlayerTableHeader(),
+        ),
         const SizedBox(height: 6),
         Expanded(
           child: players.isEmpty
@@ -710,6 +716,9 @@ class _PlayersPageState extends State<PlayersPage> {
                   ),
                 )
               : ListView.separated(
+                  // The desktop scroll bar draws over the right edge of the
+                  // list; the gutter keeps it off the rows.
+                  padding: const EdgeInsets.only(right: _scrollBarGutter),
                   itemCount: players.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 6),
                   itemBuilder: (context, index) =>
