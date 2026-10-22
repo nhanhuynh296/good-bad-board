@@ -179,7 +179,6 @@
   "sessions_load": "载入",
   "sessions_minutes_short": "分",
   "sessions_number_of_courts": "场地数量",
-  "sessions_reshuffle_confirm": "重新分配",
   "sessions_rotation_duration": "轮换时长",
   "sessions_round_mode": "轮换模式",
   "sessions_save_current": "保存当前设置",
@@ -360,7 +359,7 @@
   "sessions_capacity_note_over": "已签到{count}人 · 不会签退任何人",
   "sessions_capacity_less": "减少一名球员",
   "sessions_capacity_more": "增加一名球员",
-  "sessions_courts_note": "更改后会重新分配所有场地",
+  "sessions_courts_note": "不会重新分配 · 新场地为空",
   "sessions_courts_less": "减少一个场地",
   "sessions_courts_more": "增加一个场地",
   "sessions_changeover": "换场",
@@ -372,8 +371,6 @@
   "sessions_load_named": "载入{name}",
   "sessions_delete_named": "删除{name}",
   "sessions_no_templates": "还没有模板",
-  "sessions_reshuffle_confirm_title": "放弃第{round}轮？",
-  "sessions_reshuffle_confirm_body": "第{round}轮将被放弃，不会记录。所有球员重新分配到{courts, plural, other{{courts}个场地}}。",
   "sessions_delete_template_confirm_title": "删除模板“{name}”？",
   "sessions_delete_template_confirm_body": "模板将被删除。当前设置不会改变。"
 }

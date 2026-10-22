@@ -358,6 +358,15 @@ void main() {
       );
     });
 
+    testWidgets('should_say_that_a_new_court_starts_empty', (tester) async {
+      await SessionsHarness(tester).pump();
+
+      expect(
+        find.text('No reshuffle · a new court starts empty'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('should_add_a_court_without_asking_before_round_one', (
       tester,
     ) async {

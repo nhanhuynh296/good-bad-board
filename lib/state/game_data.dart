@@ -51,12 +51,13 @@ typedef SlotFill = ({Player player, int courtIndex, int round});
 
 /// Release flag for the court-count controls (R45-36).
 ///
-/// Off in the release build: the club always uses
-/// [GameData.defaultCourtCount] courts, so the Dashboard stepper and the
-/// Sessions field are hidden and a template Load keeps the court count. The
-/// code stays. Tests that cover court changes set this to `true`.
+/// On (R13-Q1, Nathan 2026-10-22): the Sessions tab shows the court count
+/// control, 1 to 8, and a template Load applies its court count. The Courts
+/// tab has no stepper, also with the flag on (R2-Q2). With the flag off the
+/// club always uses [GameData.defaultCourtCount] courts and a template Load
+/// keeps the court count.
 abstract final class CourtCount {
-  static bool editable = false;
+  static bool editable = true;
 }
 
 class GameData extends ChangeNotifier {
@@ -151,11 +152,11 @@ class GameData extends ChangeNotifier {
   /// [defaultCourtCount], and a template can set its own.
   int numberOfCourt = defaultCourtCount;
 
-  /// Sets the number of courts (SESS-04).
+  /// Sets the number of courts (SESS-04, R13-Q1).
   ///
-  /// When the current lineup has players, this is a full reshuffle of the
-  /// checked-in pool over the new count — the same assignment as [makeGame].
-  /// See [wouldReshuffleLineup].
+  /// The change applies to the current courts only and never reshuffles the
+  /// lineup: an added court is empty, and the players of a removed court go
+  /// to the waitlist. The round phase and the clock do not change.
   void setNumberOfCourt(int value) {
     if (value <= 0) return;
     numberOfCourt = value;
@@ -163,26 +164,42 @@ class GameData extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Whether a change of court count (or a template load) would replace the
-  /// current lineup: it holds players and there are enough to fill a court.
-  bool get wouldReshuffleLineup =>
-      hasAnyCourtLineup && _checkedInPlayers.length >= Game.playerPerCourt;
-
-  /// Brings the lineup in step with [numberOfCourt]. Does not notify.
+  /// Brings every lineup in step with [numberOfCourt]: the live round, a
+  /// saved round n+1 and the lineup in edit mode. Does not notify.
+  ///
+  /// It never reshuffles (R13-Q1). A court beyond the new count leaves the
+  /// grid, so its players go back to the waitlist. A new court is empty.
   void _applyCourtCount() {
-    if (wouldReshuffleLineup) {
-      _generateLineup();
-      return;
-    }
-    // Nothing to redistribute. A court beyond the new count leaves the grid,
-    // so its players go back to the waitlist (they are no longer on a court).
     _dropCourtsBeyondCount();
-    // A court added to a grid that already shows courts (after Save, say)
-    // needs a slot to take a tap and a re-roll.
+    // A court added to a grid that already shows courts needs a slot to
+    // take a tap and a re-roll.
     if (stagingMatches.isNotEmpty) {
       stagingMatches = [...stagingMatches];
       _padToCourtCount(stagingMatches);
     }
+    final next = _nextLineup;
+    if (next != null) _fitToCourtCount(next);
+    final edit = _editLineup;
+    if (edit != null && !identical(edit, next)) _fitToCourtCount(edit);
+    // The edit base gets the same change, so the count change alone is not
+    // an unsaved edit (R11-Q2).
+    final base = _editBase;
+    if (base != null) {
+      if (base.length > numberOfCourt)
+        base.removeRange(numberOfCourt, base.length);
+      while (base.length < numberOfCourt) {
+        base.add(<String>[]);
+      }
+    }
+  }
+
+  /// Drops the courts of [lineup] beyond [numberOfCourt] and pads it with
+  /// empty courts, in place.
+  void _fitToCourtCount(GameContainer lineup) {
+    if (lineup.length > numberOfCourt) {
+      lineup.removeRange(numberOfCourt, lineup.length);
+    }
+    _padToCourtCount(lineup);
   }
 
   /// Removes the courts beyond [numberOfCourt] from the live round.
@@ -1602,6 +1619,9 @@ class GameData extends ChangeNotifier {
   }
 
   /// Applies the settings from [template] to the current session.
+  ///
+  /// A new court count applies as in [setNumberOfCourt]: no reshuffle
+  /// (SESS-06, R13-Q1).
   void loadTemplate(SessionTemplate template) {
     _sessionCapacity = template.capacity < minSessionCapacity
         ? minSessionCapacity
@@ -1615,8 +1635,6 @@ class GameData extends ChangeNotifier {
       PersistentSetting.instance.setGameType(template.gameType);
     }
     PersistentSetting.instance.setGameDuration(template.duration);
-    // SESS-06 (F25): only a new court count reshuffles, as SESS-04 does.
-    // The same count keeps the lineup on the courts.
     if (courtsChange) _applyCourtCount();
     notifyListeners();
   }

@@ -49,8 +49,6 @@ class _SessionsPageState extends State<SessionsPage> {
   bool get _isTimeBased =>
       PersistentSetting.instance.getGameType() == GameType.timeBased;
 
-  bool get _isDesktop => isDesktop(MediaQuery.sizeOf(context).width);
-
   @override
   void dispose() {
     _templateNameController.dispose();
@@ -87,58 +85,17 @@ class _SessionsPageState extends State<SessionsPage> {
     if (saved && mounted) _templateNameController.clear();
   }
 
-  /// Whether a new court count ([courts]) may reshuffle the lineup.
-  ///
-  /// When round n has started (RUNNING, PAUSED, TIME UP or CHANGEOVER) and
-  /// the lineup holds players, the organizer first confirms throwing round n
-  /// away (SESS-04, F25).
-  Future<bool> _confirmReshuffle(GameData gameData, int courts) async {
-    final started = switch (gameData.phase) {
-      RoundPhase.noLineup || RoundPhase.ready => false,
-      _ => true,
-    };
-    if (!_isTimeBased || !started || !gameData.wouldReshuffleLineup) {
-      return true;
-    }
-    final l10n = AppLocalizations.of(context)!;
-    final round = gameData.displayRoundNumber;
-    final title = l10n.sessions_reshuffle_confirm_title(round);
-    final body = l10n.sessions_reshuffle_confirm_body(round, courts);
-    final confirmed = _isDesktop
-        ? await showCourtsConfirm(
-            context,
-            title: title,
-            body: body,
-            cancelLabel: l10n.cancel,
-            actionLabel: l10n.sessions_reshuffle_confirm,
-          )
-        : await confirmDiscard(
-            context,
-            title: title,
-            body: body,
-            confirmLabel: l10n.sessions_reshuffle_confirm,
-          );
-    return confirmed && mounted;
-  }
-
+  /// A new court count applies at once, on the current courts only, and
+  /// never reshuffles: no confirm (SESS-04, R13-Q1).
   Future<bool> _changeCourts(GameData gameData, int courts) async {
-    if (!await _confirmReshuffle(gameData, courts)) return false;
     gameData.setNumberOfCourt(courts);
     return true;
   }
 
-  /// SESS-06 (F25): the duration and the capacity apply at once. Only a new
-  /// court count asks first, as SESS-04 does.
-  Future<void> _loadTemplate(
-    GameData gameData,
-    SessionTemplate template,
-  ) async {
+  /// SESS-06 (F25, R13-Q1): the duration, the capacity and the court count
+  /// apply at once. A new court count never reshuffles, as in SESS-04.
+  void _loadTemplate(GameData gameData, SessionTemplate template) {
     final timerData = context.read<TimerData>();
-    final courtsChange =
-        CourtCount.editable && template.courts != gameData.numberOfCourt;
-    if (courtsChange && !await _confirmReshuffle(gameData, template.courts)) {
-      return;
-    }
     gameData.loadTemplate(template);
     // The new round length must reach the countdown, running or not (F2).
     timerData.updateDuration(template.duration);

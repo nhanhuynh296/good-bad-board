@@ -179,7 +179,6 @@
   "sessions_load": "Charger",
   "sessions_minutes_short": "min",
   "sessions_number_of_courts": "Nombre de terrains",
-  "sessions_reshuffle_confirm": "Remélanger",
   "sessions_rotation_duration": "Durée de rotation",
   "sessions_round_mode": "Mode de rotation",
   "sessions_save_current": "Enregistrer l'actuel",
@@ -360,7 +359,7 @@
   "sessions_capacity_note_over": "{count, plural, =0{0 présent} =1{1 présent} other{{count} présents}} · personne n'est marqué parti",
   "sessions_capacity_less": "Un joueur de moins",
   "sessions_capacity_more": "Un joueur de plus",
-  "sessions_courts_note": "Le changer remélange tous les terrains",
+  "sessions_courts_note": "Sans remélange · un nouveau terrain est vide",
   "sessions_courts_less": "Un terrain de moins",
   "sessions_courts_more": "Un terrain de plus",
   "sessions_changeover": "Changement",
@@ -372,8 +371,6 @@
   "sessions_load_named": "Charger {name}",
   "sessions_delete_named": "Supprimer {name}",
   "sessions_no_templates": "Aucun modèle pour l'instant",
-  "sessions_reshuffle_confirm_title": "Annuler la manche {round} ?",
-  "sessions_reshuffle_confirm_body": "La manche {round} est annulée et n'est pas enregistrée. Tous les joueurs sont replacés sur {courts, plural, =1{1 terrain} other{{courts} terrains}}.",
   "sessions_delete_template_confirm_title": "Supprimer le modèle « {name} » ?",
   "sessions_delete_template_confirm_body": "Le modèle est supprimé. Les réglages actuels ne changent pas."
 }

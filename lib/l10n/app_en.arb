@@ -895,10 +895,6 @@
   "@sessions_number_of_courts": {
     "description": "Label for the number of courts in use"
   },
-  "sessions_reshuffle_confirm": "Reshuffle",
-  "@sessions_reshuffle_confirm": {
-    "description": "Confirm button of the warning before a new court count or a loaded template reshuffles a running round"
-  },
   "sessions_rotation_duration": "Rotation duration",
   "@sessions_rotation_duration": {
     "description": "Label for the length of a timed rotation"
@@ -2025,9 +2021,9 @@
   "@sessions_capacity_more": {
     "description": "Screen reader label of the plus button of the session capacity"
   },
-  "sessions_courts_note": "Changing it reshuffles all courts",
+  "sessions_courts_note": "No reshuffle · a new court starts empty",
   "@sessions_courts_note": {
-    "description": "Note under the number of courts (SESS-04)"
+    "description": "Note under the number of courts: a change never reshuffles (SESS-04, R13-Q1)"
   },
   "sessions_courts_less": "One court less",
   "@sessions_courts_less": {
@@ -2111,27 +2107,6 @@
   "sessions_no_templates": "No templates yet",
   "@sessions_no_templates": {
     "description": "Text of the empty template list"
-  },
-  "sessions_reshuffle_confirm_title": "Discard round {round}?",
-  "@sessions_reshuffle_confirm_title": {
-    "description": "Title of the confirm before a new court count reshuffles a started round (SESS-04, F25)",
-    "placeholders": {
-      "round": {
-        "type": "int"
-      }
-    }
-  },
-  "sessions_reshuffle_confirm_body": "Round {round} is discarded and not logged. Everyone is placed again on {courts, plural, =1{1 court} other{{courts} courts}}.",
-  "@sessions_reshuffle_confirm_body": {
-    "description": "Text of the confirm before a new court count reshuffles a started round (SESS-04, F25)",
-    "placeholders": {
-      "round": {
-        "type": "int"
-      },
-      "courts": {
-        "type": "int"
-      }
-    }
   },
   "sessions_delete_template_confirm_title": "Delete template “{name}”?",
   "@sessions_delete_template_confirm_title": {
