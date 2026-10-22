@@ -890,4 +890,39 @@ void main() {
       expect(result.single.sessionsAttended, 1);
     });
   });
+
+  // R13-Q10 (Nathan 2026-10-22): one tile with the current member count. It
+  // does not follow the 4 / 12 / 26 wk range.
+  group('Members tile (R13-Q10)', () {
+    List<Player> club() => [
+      _p('A', Elo.c2),
+      _p('B', Elo.b1),
+      _p('C', Elo.b1).copyWith(membership: MembershipStatus.casual),
+      _p('D', Elo.b1).copyWith(membership: MembershipStatus.disabled),
+    ];
+
+    test('should_label_the_tile_members', () {
+      final kpi = computeMembersKpi(club(), l10n: l10n);
+
+      expect(kpi.label, 'Members');
+    });
+
+    test('should_count_only_members', () {
+      final kpi = computeMembersKpi(club(), l10n: l10n);
+
+      expect(kpi.value, '2');
+    });
+
+    test('should_say_it_is_the_current_count', () {
+      final kpi = computeMembersKpi(club(), l10n: l10n);
+
+      expect(kpi.contextLine, 'Current count');
+    });
+
+    test('should_show_no_delta_colour', () {
+      final kpi = computeMembersKpi(club(), l10n: l10n);
+
+      expect(kpi.deltaPositive, isNull);
+    });
+  });
 }

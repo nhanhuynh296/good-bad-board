@@ -198,6 +198,52 @@ void main() {
     });
   });
 
+  group('Members tile (R13-Q10)', () {
+    testWidgets('should_show_the_members_tile', (tester) async {
+      await tester.pumpWidget(wrap(const AnalyticsPage()));
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(AppKpiCard, 'MEMBERS'), findsOneWidget);
+    });
+
+    testWidgets('should_show_the_member_count', (tester) async {
+      await tester.pumpWidget(wrap(const AnalyticsPage()));
+      await tester.pumpAndSettle();
+
+      final tile = find.ancestor(
+        of: find.text('MEMBERS'),
+        matching: find.byType(AppKpiCard),
+      );
+      expect(tester.widget<AppKpiCard>(tile).value, '2');
+    });
+
+    testWidgets('should_keep_the_member_count_on_4_wks', (tester) async {
+      await tester.pumpWidget(wrap(const AnalyticsPage()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('4 wks'));
+      await tester.pumpAndSettle();
+
+      final tile = find.ancestor(
+        of: find.text('MEMBERS'),
+        matching: find.byType(AppKpiCard),
+      );
+      expect(tester.widget<AppKpiCard>(tile).value, '2');
+    });
+
+    testWidgets('should_not_cut_a_kpi_label_at_1280', (tester) async {
+      tester.view.physicalSize = const Size(1280, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        wrap(const AnalyticsPage(), size: const Size(1280, 2400)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('ANA-14: responsive reflow', () {
     Future<void> pumpAt(WidgetTester tester, double width) async {
       tester.view.physicalSize = Size(width, 2400);
@@ -218,9 +264,10 @@ void main() {
     double leftOf(WidgetTester tester, Type type) =>
         tester.getTopLeft(find.byType(type)).dx;
 
-    testWidgets('should_show_6_kpi_columns_on_desktop', (tester) async {
+    // R13-Q10: the Members tile makes 7 tiles in one row on desktop.
+    testWidgets('should_show_7_kpi_columns_on_desktop', (tester) async {
       await pumpAt(tester, 1280);
-      expect(kpiColumns(tester), 6);
+      expect(kpiColumns(tester), 7);
     });
 
     testWidgets('should_show_3_kpi_columns_on_tablet', (tester) async {
@@ -292,11 +339,11 @@ void main() {
     double leftOf(WidgetTester tester, Type type) =>
         tester.getTopLeft(find.byType(type)).dx;
 
-    testWidgets('should_show_6_kpi_columns_at_window_width_1100', (
+    testWidgets('should_show_7_kpi_columns_at_window_width_1100', (
       tester,
     ) async {
       await pumpPadded(tester, 1100, 24);
-      expect(kpiColumns(tester), 6);
+      expect(kpiColumns(tester), 7);
     });
 
     testWidgets('should_place_charts_side_by_side_at_window_width_1100', (

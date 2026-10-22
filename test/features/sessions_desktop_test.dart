@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_bad_board/features/sessions/sessions.dart';
 import 'package:good_bad_board/state/game_data.dart';
@@ -11,6 +12,9 @@ import '../support/sessions_harness.dart';
 
 const _confirm = Key('courts-confirm-action');
 const _cancel = Key('courts-confirm-cancel');
+const _removeCourtAction = Key('remove-court-action');
+const _removeCourtCancel = Key('remove-court-cancel');
+Key removeCourtOption(int index) => Key('remove-court-option-$index');
 
 void main() {
   setUpSessionsSandbox('sessions_desktop_test');
@@ -386,19 +390,28 @@ void main() {
       expect(stepButton(tester, courtsLess).onPressed, isNull);
     });
 
-    testWidgets('should_disable_plus_at_eight_courts', (tester) async {
+    // R13-Q12 (Nathan 2026-10-22): no upper limit.
+    testWidgets('should_allow_plus_at_eight_courts', (tester) async {
       final h = SessionsHarness(tester);
       h.gameData.setNumberOfCourt(8);
       await h.pump();
 
-      expect(stepButton(tester, courtsMore).onPressed, isNull);
+      expect(stepButton(tester, courtsMore).onPressed, isNotNull);
     });
 
-    // R13-Q1 (Nathan 2026-10-22): a court count change never reshuffles
-    // and never asks first, also while a round runs.
-    testWidgets('should_not_ask_when_a_court_is_removed_in_a_round', (
-      tester,
-    ) async {
+    testWidgets('should_add_a_ninth_court', (tester) async {
+      final h = SessionsHarness(tester);
+      h.gameData.setNumberOfCourt(8);
+      await h.pump();
+
+      await h.tap(find.byKey(courtsMore));
+
+      expect(h.gameData.numberOfCourt, 9);
+    });
+
+    // R13-Q1, R13-Q9 (Nathan 2026-10-22): no reshuffle. When a court holds
+    // players, "−" asks which court to remove.
+    testWidgets('should_ask_which_court_to_remove_in_a_round', (tester) async {
       final h = SessionsHarness(tester);
       h.checkIn(18);
       h.toRunning();
@@ -406,13 +419,76 @@ void main() {
 
       await h.tap(find.byKey(courtsLess));
 
-      expect(find.byKey(_confirm), findsNothing);
+      expect(find.text('Remove which court?'), findsOneWidget);
     });
 
-    testWidgets('should_remove_a_court_at_once_in_a_round', (tester) async {
+    testWidgets('should_list_each_court_with_its_players', (tester) async {
       final h = SessionsHarness(tester);
       h.checkIn(18);
       h.toRunning();
+      await h.pump();
+
+      await h.tap(find.byKey(courtsLess));
+
+      expect(find.text('Court 2 · 4 players'), findsOneWidget);
+    });
+
+    testWidgets('should_remove_the_chosen_court', (tester) async {
+      final h = SessionsHarness(tester);
+      h.checkIn(18);
+      h.toRunning();
+      await h.pump();
+      final before = h.rosters;
+      await h.tap(find.byKey(courtsLess));
+
+      await h.tap(find.byKey(removeCourtOption(1)));
+      await h.tap(find.byKey(_removeCourtAction));
+
+      expect(h.rosters, [before[0], before[2], before[3]]);
+    });
+
+    testWidgets('should_keep_every_court_on_cancel', (tester) async {
+      final h = SessionsHarness(tester);
+      h.checkIn(18);
+      h.toRunning();
+      await h.pump();
+      await h.tap(find.byKey(courtsLess));
+
+      await h.tap(find.byKey(_removeCourtCancel));
+
+      expect(h.gameData.numberOfCourt, 4);
+    });
+
+    testWidgets('should_keep_every_court_on_escape', (tester) async {
+      final h = SessionsHarness(tester);
+      h.checkIn(18);
+      h.toRunning();
+      await h.pump();
+      await h.tap(find.byKey(courtsLess));
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(h.gameData.numberOfCourt, 4);
+    });
+
+    testWidgets('should_preselect_the_last_court', (tester) async {
+      final h = SessionsHarness(tester);
+      h.checkIn(18);
+      h.toRunning();
+      await h.pump();
+      final before = h.rosters;
+      await h.tap(find.byKey(courtsLess));
+
+      await h.tap(find.byKey(_removeCourtAction));
+
+      expect(h.rosters, before.take(3));
+    });
+
+    testWidgets('should_remove_the_last_court_at_once_when_courts_are_empty', (
+      tester,
+    ) async {
+      final h = SessionsHarness(tester);
       await h.pump();
 
       await h.tap(find.byKey(courtsLess));
@@ -420,18 +496,15 @@ void main() {
       expect(h.gameData.numberOfCourt, 3);
     });
 
-    testWidgets('should_keep_the_other_courts_when_a_court_is_removed', (
+    testWidgets('should_not_ask_which_court_when_courts_are_empty', (
       tester,
     ) async {
       final h = SessionsHarness(tester);
-      h.checkIn(18);
-      h.toRunning();
       await h.pump();
-      final before = h.rosters;
 
       await h.tap(find.byKey(courtsLess));
 
-      expect(h.rosters, before.take(3));
+      expect(find.text('Remove which court?'), findsNothing);
     });
 
     testWidgets('should_add_an_empty_court_while_paused', (tester) async {

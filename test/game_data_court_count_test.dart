@@ -3,6 +3,7 @@ import 'package:good_bad_board/state/game_data.dart';
 import 'package:good_bad_board/state/persistent_setting.dart';
 import 'package:test/test.dart';
 
+import 'support/next_round_steps.dart';
 import 'support/prefs_sandbox.dart';
 import 'support/repository_sandbox.dart';
 
@@ -301,6 +302,113 @@ void main() {
 
       // Assert
       expect(gameData.hasUnsavedEdits, isFalse);
+    });
+  });
+
+  // R13-Q12 (Nathan 2026-10-22): no upper limit, minimum 1.
+  group('no upper limit (R13-Q12)', () {
+    test('should_accept_ten_courts', () async {
+      final gameData = await session(12, courts: 2);
+
+      gameData.setNumberOfCourt(10);
+
+      expect(gameData.stagingMatches, hasLength(10));
+    });
+
+    test('should_save_a_template_with_twelve_courts', () async {
+      final gameData = GameData();
+
+      final saved = await gameData.saveTemplate(
+        'Big',
+        GameType.timeBased,
+        const Duration(minutes: 10),
+        40,
+        12,
+      );
+
+      expect(saved, isTrue);
+    });
+
+    test('should_refuse_a_template_with_no_court', () async {
+      final gameData = GameData();
+
+      final saved = await gameData.saveTemplate(
+        'None',
+        GameType.timeBased,
+        const Duration(minutes: 10),
+        20,
+        0,
+      );
+
+      expect(saved, isFalse);
+    });
+  });
+
+  // R13-Q9 (Nathan 2026-10-22): the organizer picks which court to remove.
+  // Its players go to the waitlist; the courts after it move up one number.
+  group('remove a chosen court (R13-Q9)', () {
+    test('should_remove_the_chosen_court', () async {
+      final gameData = await session(12, courts: 3);
+      final before = rosters(gameData.stagingMatches);
+
+      gameData.removeCourt(0);
+
+      expect(rosters(gameData.stagingMatches), [before[1], before[2]]);
+    });
+
+    test('should_lower_the_court_count_when_a_court_is_removed', () async {
+      final gameData = await session(12, courts: 3);
+
+      gameData.removeCourt(1);
+
+      expect(gameData.numberOfCourt, 2);
+    });
+
+    test('should_waitlist_the_players_of_the_removed_court', () async {
+      final gameData = await session(12, courts: 3);
+      final removed = gameData.stagingMatches[1].players;
+
+      gameData.removeCourt(1);
+
+      expect(gameData.waitlistedPlayers, containsAll(removed));
+    });
+
+    test('should_refuse_to_remove_the_last_court', () async {
+      final gameData = await session(4, courts: 1);
+
+      final removed = gameData.removeCourt(0);
+
+      expect(removed, isFalse);
+    });
+
+    test('should_refuse_a_court_that_does_not_exist', () async {
+      final gameData = await session(12, courts: 3);
+
+      final removed = gameData.removeCourt(3);
+
+      expect(removed, isFalse);
+    });
+
+    test('should_remove_the_same_court_from_the_saved_next_round', () async {
+      final gameData = await session(16, courts: 3, generate: false);
+      gameData.generateFirstRound();
+      gameData.startFirstRound();
+      gameData.saveNewNextRound();
+      final next = rosters(gameData.nextLineup!);
+
+      gameData.removeCourt(0);
+
+      expect(rosters(gameData.nextLineup!), [next[1], next[2]]);
+    });
+
+    test('should_keep_the_round_running_when_a_court_is_removed', () async {
+      final gameData = await session(16, courts: 3, generate: false);
+      gameData.generateFirstRound();
+      gameData.startFirstRound();
+
+      gameData.removeCourt(1);
+
+      expect(gameData.phase, RoundPhase.running);
     });
   });
 }

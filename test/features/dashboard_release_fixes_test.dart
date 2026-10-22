@@ -93,7 +93,8 @@ void main() {
       await PersistentSetting.instance.setGameType(GameType.gameBased);
     }
 
-    testWidgets('should_not_go_above_eight_courts', (tester) async {
+    // R13-Q12 (Nathan 2026-10-22): no upper limit.
+    testWidgets('should_go_above_eight_courts', (tester) async {
       useDesktopSurface(tester);
       await useGameBased();
       final gameData = await seed(8, 8);
@@ -102,7 +103,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.add_rounded));
       await tester.pump();
 
-      expect(gameData.numberOfCourt, 8);
+      expect(gameData.numberOfCourt, 9);
     });
 
     testWidgets('should_not_go_below_one_court', (tester) async {
