@@ -12,9 +12,10 @@ import 'package:good_bad_board/model/player.dart';
 /// panel" (IMPLEMENTATION 8.7.6, R6-Q17). It opens under its row, in the
 /// same rounded panel (UAT PLY-09).
 ///
-/// Line 1: the sign-in ID field with Save (PLY-15), the level stepper with
-/// the Elo code (PLY-05, R2-Q18), the membership control (PLY-06), delete
-/// and close. Line 2: the stat tiles, partners and attendance (PLY-12).
+/// Two columns. Left: the sign-in ID field with Save (PLY-15), delete and
+/// close, then the level stepper with the Elo code (PLY-05, R2-Q18) and the
+/// membership control (PLY-06). Right: the stat tiles, partners and
+/// attendance (PLY-12).
 /// No control here toggles the check-in.
 class MorePanel extends StatelessWidget {
   const MorePanel({
@@ -57,128 +58,169 @@ class MorePanel extends StatelessWidget {
         color: AppColors.pageBg,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(22, 16, 20, 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _SignInIdEditor(
-                    key: ValueKey(player.id),
-                    initialValue: player.signInId ?? '',
-                    onSave: onSaveSignInId,
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  _Labelled(
-                    label: l10n.players_header_level,
-                    child: _LevelStepper(
-                      elo: player.elo,
-                      onDown: onLevelDown,
-                      onUp: onLevelUp,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  _Labelled(
-                    label: l10n.players_membership_label,
-                    child: _MembershipControl(
-                      value: player.membership,
-                      onPick: onMembership,
-                    ),
-                  ),
-                  const Spacer(),
-                  Padding(
-                    // Lines the buttons up with the fields under the labels.
-                    padding: const EdgeInsets.only(top: _Labelled.labelSpace),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _SquareButton(
-                          key: const Key('more-delete'),
-                          icon: Icons.delete_outline_rounded,
-                          color: AppColors.error,
-                          borderColor: AppColors.error,
-                          tooltip: l10n.players_delete_named(player.name()),
-                          onPressed: onDelete,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        _SquareButton(
-                          key: const Key('more-close'),
-                          icon: Icons.close_rounded,
-                          color: AppColors.textMuted,
-                          tooltip: l10n.players_close_details,
-                          onPressed: onClose,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _StatTile(
-                    label: l10n.players_current_level,
-                    value: player.elo.toDisplayName(),
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  _StatTile(
-                    label: l10n.players_matches,
-                    value: '${stats.matchCount}',
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  _StatTile(
-                    label: l10n.players_diversity,
-                    value: '${stats.diversityPercent}%',
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    child: _Section(
-                      label: l10n.players_most_frequent_partners,
-                      children: [
-                        for (final partner in stats.topPartners)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  partner.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTypography.body,
-                                ),
-                              ),
-                              Text(
-                                '${partner.count}',
-                                style: AppTypography.md.copyWith(
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    child: _Section(
-                      label: l10n.players_attendance,
-                      children: [
-                        Text(
-                          stats.attendanceSummary,
-                          style: AppTypography.body,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _editColumn(l10n)),
+                const VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: AppColors.cardBorder,
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(child: _statsColumn(l10n)),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  /// Left column: the controls that edit the player, with delete and close.
+  Widget _editColumn(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SignInIdEditor(
+                key: ValueKey(player.id),
+                initialValue: player.signInId ?? '',
+                onSave: onSaveSignInId,
+              ),
+              const Spacer(),
+              Padding(
+                // Lines the buttons up with the field under the label.
+                padding: const EdgeInsets.only(top: _Labelled.labelSpace),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _SquareButton(
+                      key: const Key('more-delete'),
+                      icon: Icons.delete_outline_rounded,
+                      color: AppColors.error,
+                      borderColor: AppColors.error,
+                      tooltip: l10n.players_delete_named(player.name()),
+                      onPressed: onDelete,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    _SquareButton(
+                      key: const Key('more-close'),
+                      icon: Icons.close_rounded,
+                      color: AppColors.textMuted,
+                      tooltip: l10n.players_close_details,
+                      onPressed: onClose,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.lg,
+            runSpacing: AppSpacing.md,
+            children: [
+              _Labelled(
+                label: l10n.players_header_level,
+                child: _LevelStepper(
+                  elo: player.elo,
+                  onDown: onLevelDown,
+                  onUp: onLevelUp,
+                ),
+              ),
+              _Labelled(
+                label: l10n.players_membership_label,
+                child: _MembershipControl(
+                  value: player.membership,
+                  onPick: onMembership,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Right column: the stat tiles, partners and attendance (read only).
+  Widget _statsColumn(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          spacing: AppSpacing.lg,
+          children: [
+            Expanded(
+              child: _StatTile(
+                label: l10n.players_current_level,
+                value: player.elo.toDisplayName(),
+              ),
+            ),
+            Expanded(
+              child: _StatTile(
+                label: l10n.players_matches,
+                value: '${stats.matchCount}',
+              ),
+            ),
+            Expanded(
+              child: _StatTile(
+                label: l10n.players_diversity,
+                value: '${stats.diversityPercent}%',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.lg,
+          children: [
+            Expanded(
+              flex: 2,
+              child: _Section(
+                label: l10n.players_most_frequent_partners,
+                children: [
+                  for (final partner in stats.topPartners)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            partner.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.body,
+                          ),
+                        ),
+                        Text(
+                          '${partner.count}',
+                          style: AppTypography.md.copyWith(
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: _Section(
+                label: l10n.players_attendance,
+                children: [
+                  Text(stats.attendanceSummary, style: AppTypography.body),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -590,7 +632,7 @@ class _SquareButtonState extends State<_SquareButton> {
   }
 }
 
-/// A 160 × 64 stat tile: the value (20/600) over a caps label.
+/// A 64 px high stat tile: the value (20/600) over a caps label.
 class _StatTile extends StatelessWidget {
   const _StatTile({required this.label, required this.value});
 
@@ -600,7 +642,6 @@ class _StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 160,
       height: 64,
       decoration: BoxDecoration(
         color: AppColors.cardBg,
