@@ -75,6 +75,7 @@ class CourtsButton extends StatefulWidget {
     this.icon,
     this.horizontalPadding = 16,
     this.semanticsLabel,
+    this.fontSize,
   });
 
   /// Orange primary on the round bar (44 px).
@@ -89,7 +90,8 @@ class CourtsButton extends StatefulWidget {
        ringColor = AppColors.focusOnDark,
        borderColor = null,
        horizontalPadding = 20,
-       semanticsLabel = null;
+       semanticsLabel = null,
+       fontSize = null;
 
   /// Outline on the round bar: 1 px `#c9c2b8`, white text (44 px).
   const CourtsButton.barOutline({
@@ -103,7 +105,8 @@ class CourtsButton extends StatefulWidget {
        ringColor = AppColors.focusOnDark,
        borderColor = AppColors.headerSub,
        horizontalPadding = 16,
-       semanticsLabel = null;
+       semanticsLabel = null,
+       fontSize = null;
 
   /// Text button on the round bar, e.g. "Pause" (44 px).
   const CourtsButton.barText({
@@ -117,7 +120,8 @@ class CourtsButton extends StatefulWidget {
        ringColor = AppColors.focusOnDark,
        borderColor = null,
        horizontalPadding = 16,
-       semanticsLabel = null;
+       semanticsLabel = null,
+       fontSize = null;
 
   /// Orange primary on the next-round strip (36 px).
   const CourtsButton.stripPrimary({
@@ -131,7 +135,8 @@ class CourtsButton extends StatefulWidget {
        borderColor = null,
        icon = null,
        horizontalPadding = 16,
-       semanticsLabel = null;
+       semanticsLabel = null,
+       fontSize = null;
 
   /// Outline on the strip: 1 px `#6f6352`, `#fffdfa` fill (36 px).
   const CourtsButton.stripOutline({
@@ -145,7 +150,8 @@ class CourtsButton extends StatefulWidget {
        borderColor = AppColors.controlBorder,
        icon = null,
        horizontalPadding = 12,
-       semanticsLabel = null;
+       semanticsLabel = null,
+       fontSize = null;
 
   /// Amber outline on the edit strip: "Discard & regenerate" (36 px).
   const CourtsButton.stripAmber({
@@ -159,7 +165,8 @@ class CourtsButton extends StatefulWidget {
        borderColor = AppColors.warningText,
        icon = null,
        horizontalPadding = 12,
-       semanticsLabel = null;
+       semanticsLabel = null,
+       fontSize = null;
 
   /// Secondary on a court card: "Re-roll" (36 px, 1 px `#8f826e`).
   const CourtsButton.secondary({
@@ -173,9 +180,13 @@ class CourtsButton extends StatefulWidget {
        foreground = AppColors.textPrimary,
        ringColor = AppColors.focusOnLight,
        borderColor = AppColors.controlBorderSoft,
-       horizontalPadding = 12;
+       horizontalPadding = 12,
+       fontSize = null;
 
   final String label;
+
+  /// The label size. Null = the button style (14).
+  final double? fontSize;
   final VoidCallback? onPressed;
   final double height;
   final Color background;
@@ -201,7 +212,10 @@ class _CourtsButtonState extends State<CourtsButton> {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       softWrap: false,
-      style: AppTypography.button.copyWith(color: widget.foreground),
+      style: AppTypography.button.copyWith(
+        color: widget.foreground,
+        fontSize: widget.fontSize,
+      ),
     );
     return Semantics(
       label: widget.semanticsLabel,
