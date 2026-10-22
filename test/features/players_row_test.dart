@@ -333,6 +333,31 @@ void main() {
     });
   });
 
+  group('More button as on the canvas board (Nathan 2026-10-22)', () {
+    testWidgets('should_show_no_chevron_while_the_panel_is_closed', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      expect(
+        inRow(h, 'Alice', find.byIcon(Icons.expand_more_rounded)),
+        findsNothing,
+      );
+    });
+
+    testWidgets('should_show_an_up_chevron_while_the_panel_is_open', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      await h.openMore('Alice');
+
+      expect(find.byIcon(Icons.expand_less_rounded), findsOneWidget);
+    });
+  });
+
   group('Taps', () {
     testWidgets('should_check_in_when_the_row_is_tapped', (tester) async {
       final h = PlayersHarness(tester);

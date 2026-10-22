@@ -169,6 +169,69 @@ void main() {
     }
   });
 
+  group('Sizes as on the canvas board (Nathan 2026-10-22)', () {
+    final field = find.byKey(const Key('player-sign-in-id-box'));
+    final save = find.byKey(const Key('player-sign-in-id-save'));
+
+    testWidgets('should_make_the_sign_in_id_field_40_px_high', (tester) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      await h.openMore('Alice');
+
+      expect(tester.getSize(field), const Size(220, 40));
+    });
+
+    testWidgets('should_line_up_the_sign_in_id_field_with_save', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      await h.openMore('Alice');
+
+      expect(
+        [tester.getTopLeft(field).dy, tester.getBottomLeft(field).dy],
+        [tester.getTopLeft(save).dy, tester.getBottomLeft(save).dy],
+      );
+    });
+
+    testWidgets('should_draw_no_theme_border_inside_the_sign_in_id_field', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+      await h.openMore('Alice');
+
+      final decoration = tester
+          .widget<TextField>(
+            find.descendant(of: field, matching: find.byType(TextField)),
+          )
+          .decoration!;
+
+      expect(
+        [decoration.enabledBorder, decoration.focusedBorder],
+        [InputBorder.none, InputBorder.none],
+      );
+    });
+
+    for (final name in ['more-level-down', 'more-level-up']) {
+      testWidgets('should_make_${name}_a_40_px_square', (tester) async {
+        final h = PlayersHarness(tester);
+        await h.pump(players: [alice]);
+
+        await h.openMore('Alice');
+
+        expect(
+          tester.getSize(
+            find.descendant(of: key(name), matching: find.byType(Material)),
+          ),
+          const Size(40, 40),
+        );
+      });
+    }
+  });
+
   group('Level (PLY-05)', () {
     testWidgets('should_show_the_tier_name_in_the_panel', (tester) async {
       final h = PlayersHarness(tester);
