@@ -965,22 +965,6 @@
     }
   },
   "settings": "Settings",
-  "settings_level_calibration_note": "New players self-estimate their level at signup, and organizers may override any estimate from the Players tab.",
-  "@settings_level_calibration_note": {
-    "description": "Explains how new players' levels are set"
-  },
-  "settings_membership_title": "Membership & self-registration",
-  "@settings_membership_title": {
-    "description": "Title of the membership card in Settings"
-  },
-  "settings_preview_signup": "Preview signup page →",
-  "@settings_preview_signup": {
-    "description": "Link that opens the public signup page"
-  },
-  "settings_total_members": "Total members",
-  "@settings_total_members": {
-    "description": "Label above the total member count"
-  },
   "players_sign_in_id_taken": "Sign In ID \"{id}\" is already used by {name}",
   "@players_sign_in_id_taken": {
     "description": "Error when a sign-in ID is already used by another player",
