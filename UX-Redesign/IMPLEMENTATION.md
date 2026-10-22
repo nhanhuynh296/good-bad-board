@@ -71,11 +71,11 @@ Five flags keep code in the tree but hide it in the release UI. All five default
 |------|------|---------------------|
 | `GameMode.enabled` | `lib/state/persistent_setting.dart` | `getGameType()` returns time-based. The stored `gameType` preference is never rewritten. The Sessions mode toggle is hidden. A template mode is ignored. GB-01…07 are hidden |
 | `PlayersPage.showImportButton` | `lib/features/players/players_page.dart` | CSV Import button hidden |
-| `SettingsPage.showSignupPreview` | `lib/features/settings/settings_page.dart` | "Preview signup page" link hidden. The `/register` route stays. REG-* is not reachable from the UI |
+| ~~`SettingsPage.showSignupPreview`~~ | removed | The flag went with the "Membership & self-registration" card (Nathan 2026-10-22, R13-Q2). The `/register` route stays. REG-* is not reachable from the UI |
 | `AnalyticsPage.showHiddenCards` | `lib/features/analytics/analytics_page.dart` | ANA-06 (per-court comparison) and ANA-12 (player mixing) hidden |
-| `CourtCount.editable` | `lib/state/game_data.dart` | Dashboard court stepper and Sessions "Number of courts" field hidden; template Load keeps 4 courts (R45-36) |
+| `CourtCount.editable` | `lib/state/game_data.dart` | **On** (Nathan 2026-10-22, R13-Q1): the Sessions court count control shows, minimum 1, no upper limit (R13-Q12), and a template Load applies its court count. The Courts tab has no stepper with the flag on too (R2-Q2). Off: 4 courts, Load keeps them (R45-36) |
 
-Stage 8 (2026-10-17 design) adds no flag and changes none. `CourtCount.editable` stays `false` (R2-Q2) and `GameMode.enabled` stays `false`.
+Stage 8 (2026-10-17 design) adds no flag. `GameMode.enabled` stays `false`. `CourtCount.editable` is `true` from 2026-10-22 (R13-Q1, 8.11).
 
 Other release changes: `Game.tierGap()` (4-tier gap, display only; logs keep `eloGap`); `GameData.defaultCourtCount` (4, not persisted); `NewPlayerEntry.needsAttention`; nullable retention in the KPI strip; `AppLoader` error screen (`app_load_error`). Release tests: `test/features/release_time_mode_test.dart`, `test/game_data_release_fixes_test.dart`, `test/features/dashboard_release_fixes_test.dart`, `test/features/dashboard_four_courts_fit_test.dart`, `test/timer_data_test.dart`, `test/app_loader_error_test.dart`, `test/features/players_scanner_test.dart`, `test/features/players_add_dialog_test.dart`, `test/features/release_court_count_test.dart`.
 
@@ -845,18 +845,18 @@ Implement the remaining tabs (Sessions, Settings). The Schedule tab was removed 
 - [x] **SESS-01** — Round mode toggle: Game-based / Time-based buttons with highlight; description updates; duration control visible only for Time-based (RND-09). **Hidden in release build (`GameMode.enabled=false`):** the toggle and description are not shown, the duration field is always shown, and tests cover the toggle with the flag on
 - [x] **SESS-02** — `mm:ss` duration control: two digit fields in one box, clicking either selects the whole segment, `Tab` moves minutes → seconds; minutes clamped 0–99, seconds 0–59; a total of 0:00 restores the previous value; Dashboard countdown recalculates at once via `TimerData.updateDuration`, triggering immediate rotation if the new duration < time already elapsed; a stopped timer takes the new duration as its remaining time (`_remaining = newDuration`); template Load applies the same rule (`test/timer_data_test.dart`)
 - [x] **SESS-03** — Session capacity change: stat strip / Check-in bar reflect immediately; a value below the minimum is **clamped up to 4** (`GameData.minSessionCapacity`), never raised back to the default of 20, and the number field writes the clamped value back so it cannot display a rejected number; no currently checked-in player bumped even if new capacity < current count — limit applies to future check-ins only. Empty/non-numeric courts entry clamps to 1
-- [x] **SESS-04** — **Hidden in release (`CourtCount.editable=false` in `game_data.dart`, R45-36): no Dashboard stepper, no Sessions courts field, template Load keeps 4 courts. Test: `test/features/release_court_count_test.dart`.** Courts count change (1–8; default `GameData.defaultCourtCount` = 4, not persisted; Dashboard stepper clamped 1..8): full reshuffle — every checked-in player unassigned and redistributed across new court count using level-sorted courts-of-4 logic. Asks first when round n has started (RUNNING, PAUSED, TIME UP or CHANGEOVER, time-based) and `GameData.wouldReshuffleLineup`, with the F25 text "Discard round {n}?" (changed 2026-10-21, 8.10; tablet: `confirmDiscard`, desktop: `showCourtsConfirm`); Cancel keeps the count. No lineup is generated when no court holds players or <4 are checked in (reducing the count then returns players on removed courts to the waitlist, `_dropCourtsBeyondCount`; raising it pads `stagingMatches` with empty courts, also after Save and on template load). A re-roll or a court-count change clears the selected player
+- [x] **SESS-04** — Changed (Nathan 2026-10-22, R13-Q1, R13-Q9, R13-Q12; 8.11): `CourtCount.editable=true`, the Sessions control shows (no Courts tab stepper, R2-Q2). Minimum 1, no upper limit; default `GameData.defaultCourtCount` = 4, not persisted. A change never reshuffles and never asks: `GameData._applyCourtCount` drops the courts beyond the count (their players go to the waitlist) and pads empty courts, in the live round, a saved round n+1 and the edit lineup (and its base). Desktop "−" with players on a court opens "Remove which court?" (`showRemoveCourtDialog`, `GameData.removeCourt(index)`; the courts after it move up). Removed: the reshuffle confirm, `wouldReshuffleLineup`, `confirmDiscard`, the `sessions_reshuffle_confirm*` keys. Tests: `test/game_data_court_count_test.dart`, `test/features/sessions_desktop_test.dart`, `test/features/sessions_test.dart`, `test/features/release_court_count_test.dart`. A re-roll or a court-count change clears the selected player
 - [x] **SESS-05** — Save template: captures duration (minutes **and** seconds), capacity, courts; blank/whitespace-only name is no-op; name field clears only when `saveTemplate` returns `true`; summary shown as "N courts · cap C" with no mode (`sessions_template_summary_no_mode`) on tablet and phone; desktop shows "10 min · cap 20" (8.10)
-- [x] **SESS-06** — Load template: overwrites duration, capacity and courts (courts only when `CourtCount.editable`); the template mode is ignored in release. Changed 2026-10-21 (F25, 8.10): duration and capacity apply at once with no dialog; only a new court count reshuffles (same as SESS-04) and asks first; the same count keeps the lineup
+- [x] **SESS-06** — Load template: overwrites duration, capacity and courts (courts only when `CourtCount.editable`, now on); the template mode is ignored in release. Changed 2026-10-21 (F25, 8.10): duration and capacity apply at once with no dialog. Changed (Nathan 2026-10-22, R13-Q1): a new court count also applies at once with no dialog and no reshuffle; with fewer courts the courts at the end go
 
 #### Schedule (SCHED-01)
 - [x] ~~**SCHED-01**~~ **REMOVED 2026-10-10** — Schedule tab removed; session templates replace it. Was: read-only recurring session list: day, time window, descriptive note, "Auto check-in opens 30 min prior" badge per entry; no create/edit/delete controls in this build
 
 #### Settings (SET-01…05)
 - [x] ~~**SET-01**~~ **REMOVED 2026-10-10** (offline app, no notifications). Was: 3 independent notification toggles: Session reminders, Court assignment alerts, General announcements; each shows On/Off label
-- [x] **SET-02** — Membership summary: total members (read-only, computed live from player roster). Fees outstanding removed 2026-10-10 (no fee data). `ListenableBuilder` on `PlayerRepository.listenable`
-- [x] **SET-03** — Invite link removed 2026-10-10 (offline, no server). Keeps "Preview signup page →" link opening Self-Registration in new tab/window. **Hidden in release (`SettingsPage.showSignupPreview=false`);** the `/register` route is kept
-- [x] **SET-04** — Level calibration note: explanatory text that new players self-estimate and organizers may override from Players tab (ref. PLY-05)
+- [x] ~~**SET-02**~~ **REMOVED (Nathan 2026-10-22, R13-Q2)** — the "Membership & self-registration" card (`_MembershipCard`) is removed. Was: total members, computed live from the roster (it counted every listed player). The member count moves to Analytics (ANA-02, R13-Q10)
+- [x] ~~**SET-03**~~ **REMOVED (Nathan 2026-10-22, R13-Q2)** — the signup preview link and `SettingsPage.showSignupPreview` went with the card; the `/register` route is kept
+- [x] ~~**SET-04**~~ **REMOVED (Nathan 2026-10-22, R13-Q2, R13-Q11)** — the level calibration note went with the card. Keys removed: `settings_membership_title`, `settings_total_members`, `settings_preview_signup`, `settings_level_calibration_note`. Test: `test/features/settings_test.dart`
 - [x] **SET-05** — Language picker (added 2026-10-10): chips with native language names; saves through `PersistentSetting.setLanguage`
 
 #### Responsive & quality
@@ -943,7 +943,7 @@ Implement the Analytics tab with charts, KPI strip, and data tables. This tab ha
 
 #### Time range & KPI (ANA-01…02)
 - [x] **ANA-01** — Time-range switcher: 4 wks / 12 wks / 26 wks segmented control, defaults to 12 wks; selecting different range recomputes all charts/KPIs against that window with "vs. prior period" deltas. At-risk, Mixing and New-player cards also recompute on range change. Speed (2026-10-14): `_recompute` builds every card once per data, range or language change, never on a plain rebuild. A save while the tab is hidden only marks the results stale; they recompute when the tab opens (`TickerMode`). `gamesForRange` drops games older than the prior period and the retention look-back before the KPI and level cards read them. Test: `test/features/analytics_speed_test.dart`
-- [x] **ANA-02** — KPI strip: 6 tiles — Active players, Avg attendance %, Retention (4wk) %, Court utilization %, Avg waitlist (per session), Re-rolls per session — each with labeled value and delta/context line vs prior period. Active players = distinct players in games in the range. Retention = share of players seen in the 4 weeks before the last 4 who came back. Retention is nullable: the value and delta show "—" when there is no base. The delta line shows "—" when the prior period has no players or sessions
+- [x] **ANA-02** — KPI strip: 7 tiles (Nathan 2026-10-22, R13-Q10) — Members (`computeMembersKpi`: listed players with membership Member now; not range-based, line "Current count", no delta), Active players, Avg attendance %, Retention (4wk) %, Court utilization %, Avg waitlist (per session), Re-rolls per session — each with labeled value and delta/context line vs prior period. Active players = distinct players in games in the range. Retention = share of players seen in the 4 weeks before the last 4 who came back. Retention is nullable: the value and delta show "—" when there is no base. The delta line shows "—" when the prior period has no players or sessions
 
 #### Attendance & waitlist (ANA-03…04)
 - [x] **ANA-03** — Attendance trend: per-session bar chart of checkedIn ÷ capacity; most recent session visually emphasized; growth note (e.g. "+X%") summarizing month-over-month change. Month = last 28 days vs the 28 days before, read from all logs
@@ -1075,7 +1075,7 @@ Build the approved 2026-10-17 design on desktop: the new round lifecycle, the Co
 shell with the session bar, the Players scan check-in, and the new type and colour tokens.
 
 ### Rules for this stage
-- **Authority.** `audit/design-diff-2026-10-17/decisions.md` (89 rows, IDs R1-Q1 … R12-Q2; a
+- **Authority.** `audit/design-diff-2026-10-17/decisions.md` (IDs R1-Q1 … R13-Q12; a
   later row overrides an earlier one) overrides the design HTML and the UX review resolutions.
   R11-Q2 … Q5 are in force: "×" in edit mode asks "Close without saving?" first, also while the
   changeover waits; "Start round {n+1}" in paused edit mode saves the edits, then the changeover
@@ -1085,7 +1085,9 @@ shell with the session bar, the Players scan check-in, and the new type and colo
   stage. Nathan answered F05 and F28 (R12-Q1, R12-Q2): "Start round {n+1}" while RUNNING with
   time left asks "End round {n} now? {mm:ss} left." first (no dialog in PAUSED or TIME UP);
   the RUNNING strip with round n+1 not saved also offers "Save round {n+1}" (matchmaker
-  lineup, saved at once, no edit mode). Both are built in this stage.
+  lineup, saved at once, no edit mode). Both are built in this stage. The 2026-10-22 decisions
+  R13-Q1 … R13-Q12 replace the quick save with "Generate next round ({n+1})" and change the
+  court count, Settings and Analytics (8.11).
   R6-Q12…18 accept the recommendations in `review-round6.md`. On a new conflict, ask Nathan and
   investigate first (R1-Q2). UAT.md is the feature source of truth.
 - **Order.** Docs first, Nathan reviews (R1-Q3). Then the design canvas is updated (R3-Q13).
@@ -1181,13 +1183,13 @@ changeover also keeps a `discarded` flag for the round it follows (R2-Q5, R9-Q1)
 | `generateFirstRound()` | noLineup | Matchmaker lineup → `ready`. Refuses with <4 checked in (R45-39) | RND-12 |
 | `regenerateDraft()` | ready | New lineup; clock stays stopped | RND-13 |
 | `startFirstRound()` | ready | Save round 1 → `running` at once, clock from full duration. No changeover (R9-Q2). No Undo | RND-13 |
-| `makeNextRound()` / `editNextRound()` | running, paused | Lineup for n+1 → `isEditingNext` | RND-05, RND-10 |
-| `quickSaveNextRound()` | running, not edit mode, n+1 not saved | Matchmaker lineup for n+1, saved at once; `isEditingNext` stays false. Same result as `makeNextRound()` + `saveNextRound()` with no change (R12-Q2, F28). Logs nothing; clock unchanged. Test first: `should_save_next_round_without_edit_mode` | RND-05, RND-08, RND-22 |
+| `generateNextRound()` (was `makeNextRound()`) / `editNextRound()` | running, paused, timeUp (generate); running, paused (edit) | "Generate next round ({n+1})": matchmaker lineup for n+1 → `isEditingNext`. No round n+1 exists before this click (Nathan 2026-10-22, R13-Q3 … R13-Q5) | RND-05, RND-10 |
+| ~~`quickSaveNextRound()`~~ | — | Removed (Nathan 2026-10-22, R13-Q3; overrides R12-Q2, F28) | RND-05 |
 | `saveNextRound()` / `regenerateNext()` / `exitEditNext()` | edit mode | Save n+1 / new n+1 lineup / drop edits (× ). `exitEditNext()` is called only after the "Close without saving?" dialog ("Close" / "Keep editing"), or with no dialog when nothing changed since edit mode opened; add `hasUnsavedEdits` (R11-Q2, F03). In `timeUp`, `saveNextRound()` also starts the changeover (R6-Q3). In `changeover` with `waitingForEdit`, `saveNextRound()` and `exitEditNext()` start round n+1 (log round n, → `running`; × starts the saved round unchanged, R11-Q2); `regenerateNext()` keeps waiting (R9-Q4) | RND-14, RND-07, RND-06 |
 | `pause()` / `resume()` | running, changeover | `paused` keeps remaining time and the phase to return to ("Resume round n" / "Resume changeover"). `pause()` never changes `isEditingNext` (F02). Paused in edit mode: the round bar shows "Start round {n+1}" and "Resume round {n}" (R9-Q5). A paused changeover follows the PAUSED rules for round n+1: Re-roll, swap and the full slot menu (F17) | RND-17, RND-18, RND-14, COURT-14 |
-| tick at 0:00 | running | Saved n+1 → `changeover` (20 s, `TimerData` second countdown). Else `timeUp`, and the matchmaker makes the planned n+1 lineup that the courts show (R6-Q4). `isEditingNext` stays as it is in both cases (R6-Q3, R7-Q4) | RND-03, RND-14, RND-15 |
+| tick at 0:00 | running | Saved n+1 → `changeover` (20 s, `TimerData` second countdown). Else `timeUp`: the clock stops and no round n+1 is made; the courts show round n, locked (Nathan 2026-10-22, R13-Q4). `isEditingNext` stays as it is in both cases (R6-Q3, R7-Q4) | RND-03, RND-14, RND-15 |
 | changeover end / `startNextNow()` | changeover | Log round n (8.2.1) unless `discarded`, n+1 → `running`, leave edit mode. If edit mode has unsaved changes at the end, the countdown stops at 0:00 and sets `waitingForEdit`; nothing is logged until `saveNextRound()` (R9-Q4) | RND-06, RND-19 |
-| `startNextRound()` (was `saveAndStartNew`) | running, paused, timeUp, not edit mode; or paused in edit mode (R9-Q5) | Save n+1 (saved, planned, or fresh lineup; in paused edit mode the edit lineup with its changes, saved, R11-Q3) → `changeover` (R6-Q1, R6-Q14, R7-Q1). Logs nothing at the click. In `running` the UI calls it only after the "End round {n} now?" confirm (R12-Q1, F05); in `paused` and `timeUp` it calls it at once. Add `timeLeft` for the dialog text | RND-04, RND-14 |
+| `startNextRound()` (was `saveAndStartNew`) | round n+1 saved, and running or paused, not edit mode; or paused in edit mode of the saved n+1 (R9-Q5) | The saved n+1 (in paused edit mode with its changes, R11-Q3) → `changeover` (R6-Q1, R6-Q14, R7-Q1). With no saved n+1 it does nothing, and the bar has no button (Nathan 2026-10-22, R13-Q5). Logs nothing at the click. In `running` the UI calls it only after the "End round {n} now?" confirm (R12-Q1, F05); in `paused` it calls it at once. Add `timeLeft` for the dialog text | RND-04, RND-14 |
 | `discardAndStartNext()` (was `discardAndStartNew`) | running, paused, timeUp; not edit mode | Called only after the confirm dialog (R9-Q3). → `changeover` with `discarded = true`; never logs round n; number n again, label "Discard round {n} and start again" (R2-Q5, R9-Q1) | RND-16 |
 | `endSession()` | any with a lineup | Log the round that started last once (also the round that ended in `timeUp` / before `changeover`; never a discarded or not-started round, R6-Q5), stop clock, check out all, `noLineup`, round 1. Add `roundToLog` (n, n−1 in `changeover`, or none) for the dialog text (F09) | RND-20 |
 | `swapPlayers()` / `undoSwap()` | any state that allows a swap | Swap two players; keep one swap memento for 10 s; any other change clears it (R6-Q6, R7-Q2) | COURT-08, COURT-10, COURT-17 |
@@ -1216,7 +1218,7 @@ the pause of it (R4-Q5). Wire the existing unused `pause()`.
 8.2.4 **Double-click guard (R6-Q18).** Two fast clicks on "Start round {n+1}" (also the
 "End round {n} now?" confirm, R12-Q1), "Discard round
 {n} and start again" (dialog confirm), "Save round {n+1}" or "Start round {n+1} now" start one changeover
-and log round n once. Two fast clicks on the strip "Save round {n+1}" (R12-Q2) save one round n+1. The guard is a phase check plus the one-at-a-time flag of 8.2.1, so the
+and log round n once. Two fast clicks on "Generate next round ({n+1})" make one round n+1 (R13-Q3). The guard is a phase check plus the one-at-a-time flag of 8.2.1, so the
 second call is a no-op. Test: `test/game_data_round_logging_test.dart`
 `should_log_round_once_when_start_clicked_twice` (and one per button).
 
@@ -1230,13 +1232,13 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   `startNeedsConfirm` (R12-Q1: true only in RUNNING with time left, not in edit mode). The UI
   shows the "End round {n} now?" dialog when `startNeedsConfirm` is true, then calls
   `startNextRound()`. `visibleMatches` shows the edit lineup in edit mode, and `nextLineup` in
-  TIME UP and the changeover.
+  the changeover. TIME UP shows round n (R13-Q4).
 - Every method returns `false` (or a `Future` of `false`) when the phase does not allow it.
   That is the 8.2.4 guard. `saveNextRound`, `exitEditNext`, `startNextNow` and `endSession`
   return a `Future`, because they can log a round. They share the `_isRotating` flag (the
   write guard that `rotateNow` had; it stays after 8.2.2).
 - `startNextNow()` does nothing while edit mode has unsaved changes (the bar shows "Pause" only,
-  R4-Q9). `quickSaveNextRound()` works in RUNNING only, as the table says.
+  R4-Q9). `quickSaveNextRound()` is removed (R13-Q3).
 - Write failure at the end of the changeover (RND-06, R45-01): the phase stays CHANGEOVER at
   00:00, nothing is logged, and `roundLogError` holds the error for the message. "Start round
   {n+1} now" (`startNextNow()`) tries again; that call throws when its write fails.
@@ -1311,8 +1313,8 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
 ### 8.4 — Fill rule, late check-in, check-out (R2-Q8, R2-Q9, R3-Q12, R7-Q4…Q7, R10-Q1…Q3)
 - 8.4.0 **Scope of the fill rule (R10-Q1, narrows R2-Q9).** The fill rule fills **one** empty
   place only: a check-out, a delete or a set to Disabled, and "Move to waitlist". A full round
-  (`generateFirstRound`, `regenerateDraft`, `makeNextRound`, `regenerateNext`, the planned round
-  at `timeUp`, a fresh lineup at a start button) keeps `makeGame()`: the weighted random pick
+  (`generateFirstRound`, `regenerateDraft`, `generateNextRound`, `regenerateNext`, a fresh lineup
+  for "Discard round {n} and start again") keeps `makeGame()`: the weighted random pick
   `_choosePlayer` and the swap optimiser `_improveEloSpread`, unchanged. Re-roll (COURT-02)
   stays as it is. Test: a full round still calls `_choosePlayer` (seeded `random:`), not
   `pickForSlot`.
@@ -1334,8 +1336,8 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   up and `pickForSlot` puts them first. UAT CHK-02, PLY-17.
 - 8.4.4 `checkOutPlayer`: drop the id from the checked-in set at once (count drops, R2-Q8).
   Live court while the clock runs (RUNNING): leave the player in the live lineup until the round
-  ends (the log holds them), no marker. Saved next round (also in CHANGEOVER), planned round in
-  TIME UP, or a stopped live court: remove and fill by 8.4.1. No bottom message on Courts
+  ends (the log holds them), no marker. Saved next round (also in CHANGEOVER), round n+1 in edit
+  mode, or a stopped live court: remove and fill by 8.4.1. No bottom message on Courts
   (R7-Q5). Return a result that names who took which slot, for PLY-18. UAT CHK-05, COURT-16,
   RND-11.
 - 8.4.5 `moveToWaitlist`: the player goes to the waitlist, stays checked in, and the place is
@@ -1353,8 +1355,8 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
     not named. The fill puts the new player in the freed slot position, and the edit-mode base
     gets the same change, so a fill alone is not an unsaved edit (R11-Q2).
   - **Round n keeps the leaver in RUNNING, TIME UP and CHANGEOVER** (also a paused
-    changeover): the round is played and waits for its log. No doc names TIME UP here; the
-    TIME UP courts show the planned round, which is filled. In READY and a paused round the
+    changeover): the round is played and waits for its log. TIME UP shows round n and makes no
+    planned round (R13-Q4). In READY and a paused round the
     live court is filled.
   - `isCheckedOutOnLiveCourt(player)` is true for a checked-out player still on round n; the
     8.5 slot hides "⋯" for that player (R11-Q4).
@@ -1394,18 +1396,19 @@ second call is a no-op. Test: `test/game_data_round_logging_test.dart`
   `Semantics(liveRegion: true)`; the time is not (F24). Focus ring `#ff6a2b` on the bar (F07).
   Each 32 px button gets a 40 px hit area (F27). UAT RND-01, RND-02, RND-04, RND-09,
   RND-12, RND-13, RND-15…19, RND-06.
-- 8.5.3 `NextRoundStrip` and edit mode: strip texts; in RUNNING with round n+1 not saved two
-  buttons, "Save round {n+1}" (calls `quickSaveNextRound()`, no edit mode) and "Make round
-  {n+1}" (opens edit mode, unchanged); in PAUSED "Make round {n+1}" only (R12-Q2, F28). Test
-  first: `should_save_next_round_without_edit_mode` (Arrange: RUNNING, round n+1 not saved; Act:
-  tap "Save round {n+1}"; Assert: the strip reads "Round {n+1} saved" and edit mode is not
-  open), then `should_show_make_round_only_when_paused`; dashed NEXT cards, edit strip with
+- 8.5.3 `NextRoundStrip` and edit mode: strip texts; in RUNNING, PAUSED and TIME UP with no
+  round n+1 one button, "Generate next round ({n+1})" (`courts_generate_next_round`, calls
+  `generateNextRound()`, opens edit mode; key `generate-next-round`). The quick save and "Make
+  round {n+1}" are removed (Nathan 2026-10-22, R13-Q3 … R13-Q5). Tests:
+  `should_show_generate_when_running_not_saved`, `should_show_generate_when_time_up`; dashed NEXT cards, edit strip with
   "Discard & regenerate", "Save round {n+1}", "×"; round bar shows Pause only while RUNNING
-  (R4-Q9), and "Start round {n+1}" + "Resume round {n}" while PAUSED (R9-Q5). Court tag
+  (R4-Q9), and "Start round {n+1}" (only after round n+1 is saved, R13-Q5) + "Resume round {n}"
+  while PAUSED (R9-Q5). Court tag
   "{count} players" (for example "3 players", ICU plural) on a court one player short (UX-04). CHANGEOVER
   strip reads "Round {n} ended" (R6-Q2); after a discard it reads "Round {n} discarded · new lineup
-  for round {n}" (`discarded` flag, F10). No strip in TIME UP; the courts show the planned round
-  (R6-Q4), and every card shows the tag "ROUND {n+1}" (F08). "×" opens "Close without saving?"
+  for round {n}" (`discarded` flag, F10). TIME UP shows the strip with "Generate next round
+  ({n+1})" and no "Clock stops" text; the courts show round n, with no "ROUND {n+1}" tag (the
+  F08 tag and `courts_tag_round` are removed, R13-Q4). "×" opens "Close without saving?"
   ("Close" / "Keep editing") when the edit has changes, and closes at once when it has none
   (R11-Q2, F03). UAT RND-05, RND-07, RND-08, RND-10, RND-14, RND-15, RND-22.
 - 8.5.4 `CourtCard` / `PlayerSlot`: "Court {k}", plain gap text, secondary Re-roll shown per
@@ -1646,13 +1649,13 @@ again", R9-Q1; replaces `courts_discard_and_start_new`), `courts_discard_confirm
 `courts_discard_confirm_body`, `courts_discard_confirm_action` (R9-Q3), `courts_pause`, `courts_resume_round`,
 `courts_resume_changeover`, `courts_start_round_now`, `courts_end_round_confirm_title` ("End
 round {n} now?"), `courts_end_round_confirm_body` ("{time} left.") (R12-Q1, F05; the button
-reuses `courts_start_round`, Cancel reuses the existing cancel key), `courts_save_round` also on
-the strip (R12-Q2, F28; no new key), `courts_chip_ready`,
+reuses `courts_start_round`, Cancel reuses the existing cancel key), `courts_chip_ready`,
 `courts_chip_running`, `courts_chip_paused`, `courts_chip_time_up`, `courts_chip_changeover`,
 `courts_sub_not_started`, `courts_sub_paused`, `courts_sub_time_up`,
 `courts_sub_players_to_courts`, `courts_counts_in_waiting`, `courts_next_not_saved`,
 `courts_next_saved`, `courts_next_clock_stops`, `courts_next_starts_after`,
-`courts_round_ended`, `courts_make_round`, `courts_edit_round`, `courts_editing_round`,
+`courts_round_ended`, `courts_generate_next_round` (replaces `courts_make_round`, R13-Q3),
+`courts_edit_round`, `courts_editing_round`,
 `courts_save_round`, `courts_tag_next`, `courts_tag_players` ("{count} players", plural), `courts_slot_move_to_waitlist`,
 `courts_slot_check_out`, `courts_swapped_undo` ("Swapped {a} and {b}. Undo"), `common_undo`
 (the swap message action only),
@@ -1699,8 +1702,10 @@ As built for Sessions (8.10): `sessions_round_settings`, `sessions_round_duratio
 `sessions_changeover`, `sessions_changeover_value`, `sessions_save_settings_label`,
 `sessions_saves_summary`, `sessions_template_summary_duration` (plural) /
 `_duration_no_courts`, `sessions_load_named`, `sessions_delete_named`, `sessions_no_templates`,
-`sessions_reshuffle_confirm_title` / `_body` (plural), `sessions_delete_template_confirm_title`
-/ `_body`. The actions reuse `sessions_reshuffle_confirm`, `delete` and `cancel`.
+`sessions_delete_template_confirm_title` / `_body`. The actions reuse `delete` and `cancel`.
+The `sessions_reshuffle_confirm*` keys are removed (R13-Q1). Added 2026-10-22 (8.11):
+`sessions_remove_court_title`, `_body`, `_option` (plural), `_action` (R13-Q9),
+`courts_generate_next_round` (R13-Q3), `analytics_kpi_members`, `_members_context` (R13-Q10).
 **l10n check (2026-10-21).** A script compared the 140 stage 8 keys in en, fr, zh and zh_HK:
 no key is missing, the placeholders match, and every en plural is a plural in the other three.
 Kept as they are: fr "Pause", "TYPE", "Minutes" and "{minutes} min" (French words equal to the
@@ -1726,7 +1731,7 @@ Not used (R7-Q7): `players_scan_in_joins`. Remove keys the build no longer reads
 | Logging, round number, double-click guard (8.2.4) | `test/game_data_round_logging_test.dart` | RND-04, RND-06, RND-16, RND-19, RND-20 |
 | Swap Undo (memento; a scan sets none, R9-Q8) | `test/game_data_undo_test.dart` | COURT-17 |
 | Fill rule (one place), waitlist order, late player at 0 rounds, full round still uses `_choosePlayer` (8.4.0) | `test/game_data_fill_rule_test.dart` (replaces the level order in `game_data_waitlist_promotion_test.dart`) | WL-01…03, CHK-02, CHK-05, COURT-15, COURT-16 |
-| Round bar, strip, edit mode, strip "Save round {n+1}" (R12-Q2) | `test/features/courts_round_bar_test.dart` | RND-01, RND-02, RND-05, RND-09, RND-10, RND-15, RND-22 |
+| Round bar, strip, edit mode, strip "Generate next round ({n+1})" (R13-Q3) | `test/features/courts_round_bar_test.dart` | RND-01, RND-02, RND-05, RND-09, RND-10, RND-15, RND-22 |
 | Slot menu, re-roll visibility | `test/features/courts_slot_menu_test.dart` | COURT-01, COURT-10, COURT-14, COURT-15 |
 | Swap Undo message | `test/features/courts_swap_undo_test.dart` | COURT-17 |
 | Confirm dialogs: "×" asks first, End session text by state, early start confirm in RUNNING only (R12-Q1), focus and Esc, a phase change closes the dialog (R11-Q2, F03, F09, F14, F18) | `test/features/courts_confirm_dialog_test.dart` | RND-04, RND-06, RND-07, RND-16, RND-20 |
@@ -1760,7 +1765,8 @@ row) and F25. Tablet and phone keep the PR 45 layout (R6-Q7).
     Value boxes 128×52, white, 1 px `#6f6352` (3 px `#c2410c` with focus), 28/600 tabular.
     Round duration: the `mm:ss` fields (SESS-02 rules) and ±1 minute ("−" off at ≤1:00, "+" off
     at 99:59). Session capacity: the field (clamped 4…200) and ±1. Number of courts (only with
-    `CourtCount.editable`): read-only value, ±1 within 1…8, a live region. Changeover: "20 s ·
+    `CourtCount.editable`, on from 2026-10-22): read-only value, "−" from 2 (opens "Remove which
+    court?" when a court holds players, R13-Q9), "+" with no upper limit (R13-Q12), a live region. Changeover: "20 s ·
     fixed" (R3-Q7).
   - Duration note: "Applies now · round {n} has {mm:ss} left" while round n has its clock
     (RUNNING, PAUSED; it ticks); "Applies from round {n+1}" in TIME UP (and RUNNING at 0:00);
@@ -1774,14 +1780,9 @@ row) and F25. Tablet and phone keep the PR 45 layout (R6-Q7).
   - Summary: "{duration} · {n} courts · cap {c}", duration as in the top nav ("10 min", else
     `m:ss`). With `CourtCount.editable` off the courts are left out ("10 min · cap 20"), because a
     Load keeps 4 courts.
-  - F25 Load: duration (by `TimerData.updateDuration`, SESS-02) and capacity apply at once. Only
-    a different court count (flag on) asks first. Fix in `GameData.loadTemplate`: the same court
-    count no longer reshuffles the courts (before, every Load made a new lineup).
-  - Reshuffle confirm: asks when round n has started (RUNNING, PAUSED, TIME UP, CHANGEOVER) and
-    the lineup holds players. Title "Discard round {n}?", text "Round {n} is discarded and not
-    logged. Everyone is placed again on {count} courts.", buttons "Reshuffle" / "Cancel"
-    (`showCourtsConfirm`, F14; phase change closes it, F18). Tablet uses the same rule and text
-    in `confirmDiscard`.
+  - F25 Load: duration (by `TimerData.updateDuration`, SESS-02), capacity and court count apply
+    at once (Nathan 2026-10-22, R13-Q1: no reshuffle and no confirm for a new court count).
+  - ~~Reshuffle confirm~~: removed (Nathan 2026-10-22, R13-Q1).
   - Delete confirm (desktop): "Delete template “{name}”?", "The template is deleted. The current
     settings do not change.", "Delete" / "Cancel". Tablet and phone have no delete button.
   - Data format unchanged: `session_templates.json` is read and written as before.
@@ -1797,16 +1798,58 @@ row) and F25. Tablet and phone keep the PR 45 layout (R6-Q7).
     READY and TIME UP and the reshuffle text follow UAT, not the canvas ("round 3 is past this
     length", "round 3 starts again"); the summary leaves out the courts when the flag is off.
 
+### 8.11 — 2026-10-22 decisions (Nathan, R13-Q1 … R13-Q12)
+As built (2026-10-22). Tests first, one commit per change.
+- **Court count (R13-Q1, R13-Q12).** `CourtCount.editable = true`. Minimum 1, no upper limit
+  (`saveTemplate` accepts any count from 1; `_maxCourts` is removed; the tablet field has no
+  upper clamp). `setNumberOfCourt` and `loadTemplate` never reshuffle:
+  `_applyCourtCount` drops courts beyond the count and pads empty courts in the live round,
+  the saved round n+1 and the edit lineup (the edit base gets the same change, so the count
+  alone is not an unsaved edit). The round phase and the clock do not change. Note under the
+  control: "No reshuffle · a new court starts empty" (`sessions_courts_note`).
+- **Remove a chosen court (R13-Q9).** Desktop "−": with a player on any court,
+  `showRemoveCourtDialog` (`lib/features/sessions/remove_court_dialog.dart`, F14 pattern, last
+  court selected first) returns the index; `GameData.removeCourt(index)` drops that court from
+  every lineup, its players go to the waitlist, later courts move up one number. With every court
+  empty, "−" removes the last court at once (as built; no decision covers it). The tablet field
+  and a template with fewer courts remove from the end.
+- **Hand fill (R13-Q7, R13-Q8).** `GameData.canHandFillCourt(i)`, `hasHandFillCourt`,
+  `handFillSlot(player, i, slot)`: while `canEditCourts` is false (RUNNING, TIME UP,
+  CHANGEOVER), a waitlist player can go into an open slot of a court with no players. The
+  court id joins `_handFillCourtIds` at the first player, so the organizer can fill all 4
+  places; the set is pruned when a round starts and cleared at End session. No auto fill. The
+  round log takes the players on the court at the end of the round (test
+  `test/game_data_hand_fill_test.dart`). The Courts tab lets the waitlist select and the open
+  slot take the tap (`test/features/courts_hand_fill_test.dart`).
+- **Generate next round (R13-Q3 … R13-Q6, overrides R12-Q2 / F28).** One strip button in
+  RUNNING, PAUSED and TIME UP. `generateNextRound()` (was `makeNextRound`) works in TIME UP too.
+  `quickSaveNextRound()` is removed. 0:00 with no saved round n+1 makes no lineup (the planned
+  round of RND-15 is gone); TIME UP shows round n and locks it (`canEditCourts` is false in
+  TIME UP without edit mode; choice: round n was played, so its log must not change). "×" in
+  TIME UP drops the unsaved round n+1. `startNextRound()` works only with a saved round n+1; the
+  round bar shows "Start round {n+1}" only then, in RUNNING and PAUSED (R13-Q5 names PAUSED;
+  RUNNING follows the same rule, as built). TIME UP has "Discard round {n} and start again"
+  only. In paused edit mode of a round n+1 that was never saved, the bar shows "Resume round
+  {n}" only. The session bar text "· round {n+1} not saved" stays correct and is unchanged.
+  Tests use `test/support/next_round_steps.dart` (`saveNewNextRound`, `saveAndStartNextRound`).
+- **Settings (R13-Q2, R13-Q11).** `_MembershipCard` and `SettingsPage.showSignupPreview` are
+  removed with their 4 keys. Settings shows the language card only.
+- **Analytics (R13-Q10).** `computeMembersKpi` is the first KPI tile: players with membership
+  Member (the old Settings count was every listed player). The desktop strip has 7 columns and
+  tiles 144 px high. `TODO(Nathan)`: the fr label "OCCUPATION DES TERRAINS" is cut at 1280 px,
+  with 6 columns too.
+
 ### Acceptance Criteria
 > **UAT mapping:** NAV-01, NAV-06…11, RND-01…20, RND-22 (RND-21 on hold), COURT-01…17,
-> WL-01…04, CHK-01…06, PLY-05, PLY-06, PLY-08, PLY-09, PLY-12…19 (PLY-20 removed), SESS-01…06 (8.10).
+> WL-01…04, CHK-01…06, PLY-05, PLY-06, PLY-08, PLY-09, PLY-12…19 (PLY-20 removed), SESS-01…06 (8.10),
+> ANA-02 and SET-02…04 removed (8.11).
 
 - [ ] Every UAT ID above has a test that failed first and now passes
 - [ ] All TODO(Nathan) points in UAT.md are answered and the specs updated
 - [ ] The design canvas shows every decided change (R3-Q13), and the More panel is drawn (R5-Q1);
       the design-review canvas pass (8.0) is done
-- [ ] F05 and F28 are built as decided: the RUNNING early start confirm, no dialog in PAUSED or
-      TIME UP (R12-Q1); the RUNNING strip "Save round {n+1}" with no edit mode (R12-Q2)
+- [ ] F05 is built as decided: the RUNNING early start confirm, no dialog in PAUSED (R12-Q1).
+      F28 (R12-Q2) is replaced by "Generate next round ({n+1})" (Nathan 2026-10-22, R13-Q3)
 - [ ] Two fast clicks on any start or save button log round n once (R6-Q18, 8.2.4)
 - [ ] No Courts round Undo ships (R6-Q6); no scan Undo ships (R9-Q8); the swap Undo has no
       keyboard shortcut (R7-Q2)

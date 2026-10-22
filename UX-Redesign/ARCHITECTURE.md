@@ -3,7 +3,7 @@
 > Extracted from the UX-Redesign HTML handoff (`Badminton App.dc.html`, `Analytics Dashboard.dc.html`, `Dashboard Options.dc.html`, `Responsive Layouts.dc.html`, `Self Registration.dc.html`).
 > This document defines a **reusable design system** to guide the Flutter implementation.
 >
-> **2026-10-17 design build.** The approved design (`Main`, `Players`, `ScanStates`, `TypeColour` `.dc.html`, artifact `9JBfi4Rk8igxQMVDexk6So`) and `audit/design-diff-2026-10-17/decisions.md` (R1-Q1 … R12-Q2; a later row overrides an earlier one) and the 2026-10-20 design review (`audit/design-review-2026-10-20/resolution.md`, F01 … F30; F05 and F28 decided by R12-Q1 and R12-Q2) replace §1.1, §1.2 and the desktop components of the Courts tab, the shell and the Players tab. Phone and tablet keep the PR 45 components as they are now (R2-Q23, R6-Q7). UAT.md is the feature source of truth; "TODO" marks points Nathan has not decided. Courts round Undo is on hold (R6-Q6, UAT RND-21). The Players scan Undo is removed (R9-Q8): the only Undo is the Courts swap. **Sessions tab redesign: built on desktop** from the canvas board "Sessions" (R7-Q3, IMPLEMENTATION 8.10, §2.5 SessionsBoard); Nathan reviews it in a separate task.
+> **2026-10-17 design build.** The approved design (`Main`, `Players`, `ScanStates`, `TypeColour` `.dc.html`, artifact `9JBfi4Rk8igxQMVDexk6So`) and `audit/design-diff-2026-10-17/decisions.md` (R1-Q1 … R13-Q12; a later row overrides an earlier one; the 2026-10-22 rows R13-Q1 … R13-Q12 are Nathan's) and the 2026-10-20 design review (`audit/design-review-2026-10-20/resolution.md`, F01 … F30; F05 and F28 decided by R12-Q1 and R12-Q2) replace §1.1, §1.2 and the desktop components of the Courts tab, the shell and the Players tab. Phone and tablet keep the PR 45 components as they are now (R2-Q23, R6-Q7). UAT.md is the feature source of truth; "TODO" marks points Nathan has not decided. Courts round Undo is on hold (R6-Q6, UAT RND-21). The Players scan Undo is removed (R9-Q8): the only Undo is the Courts swap. **Sessions tab redesign: built on desktop** from the canvas board "Sessions" (R7-Q3, IMPLEMENTATION 8.10, §2.5 SessionsBoard); Nathan reviews it in a separate task.
 
 ---
 
@@ -309,11 +309,11 @@ Full-width band under the top nav: 80px, bg #2b241e, no radius, padding 0 24px
 |---|---|---|---|---|
 | No lineup | READY | "Not started" | `#ffffff` | "Generate round 1" |
 | READY (draft) | READY | "Not started" | `#ffffff` | "Discard & regenerate" (outline), "Start round 1" (R7-Q1) |
-| RUNNING | RUNNING | none (R4-Q8) | `#ffffff`; `#ffb38a` at ≤60 s (R6-Q8) | "Pause" (text), "Discard round N and start again" (outline, R9-Q1), "Start round N+1" (asks "End round N now?" first, R12-Q1) |
+| RUNNING | RUNNING | none (R4-Q8) | `#ffffff`; `#ffb38a` at ≤60 s (R6-Q8) | "Pause" (text), "Discard round N and start again" (outline, R9-Q1), "Start round N+1" only when round N+1 is saved (asks "End round N now?" first, R12-Q1; Nathan 2026-10-22, R13-Q5) |
 | RUNNING + edit mode | RUNNING | none | as RUNNING | "Pause" only (R4-Q9) |
-| PAUSED | PAUSED | "Clock paused" | `#c9c2b8` (never amber, R6-Q8) | "Discard round N and start again" (outline), "Start round N+1" (outline, R6-Q14), "Resume round N" |
-| PAUSED + edit mode | PAUSED | "Clock paused" | `#c9c2b8` | "Start round N+1" (outline), "Resume round N" (R9-Q5, as the board "Courts · Paused") |
-| TIME UP | TIME UP | "Clock stopped at 0:00" | `#ff6a2b` (R11-Q5) | "Discard round N and start again" (outline), "Start round N+1" (R6-Q4, R7-Q1). Courts show the planned round N+1, each card tagged "ROUND N+1" (F08); no strip |
+| PAUSED | PAUSED | "Clock paused" | `#c9c2b8` (never amber, R6-Q8) | "Discard round N and start again" (outline), "Start round N+1" (outline, R6-Q14; only when round N+1 is saved, Nathan 2026-10-22, R13-Q5), "Resume round N" |
+| PAUSED + edit mode | PAUSED | "Clock paused" | `#c9c2b8` | "Start round N+1" (outline; only when round N+1 was saved before, R13-Q5), "Resume round N" (R9-Q5, as the board "Courts · Paused") |
+| TIME UP | TIME UP | "Clock stopped at 0:00" | `#ff6a2b` (R11-Q5) | "Discard round N and start again" (outline) only. No round N+1 is made at 0:00: the courts show round N, locked, and the strip shows "Generate next round (N+1)" (Nathan 2026-10-22, R13-Q4, R13-Q5) |
 | TIME UP + edit mode | TIME UP | "Clock stopped at 0:00" | `#ff6a2b` (R11-Q5) | no start buttons (edit mode, R4-Q9); the edit strip "Save round N+1" starts the changeover (R6-Q3) |
 | CHANGEOVER | CHANGEOVER | "Players to courts" | `#ff6a2b` | "Pause" (text), "Start round N+1 now" (after a discard the new round keeps number N: "ROUND N", "Start round N now", R9-Q1) |
 | CHANGEOVER + edit mode | CHANGEOVER | "Players to courts" | `#ff6a2b` | "Pause" only (R4-Q9). At 0:00 with unsaved edits the time stops at 00:00 and the bar shows no buttons; the edit strip "Save round N+1" starts the round (R9-Q4) |
@@ -333,8 +333,9 @@ are `#b91c1c` fill, white text; the cancel button is outline.
 | Action | Description |
 |--------|-------------|
 | `generateFirstRound` | Fills the courts for round 1; clock stays stopped |
+| `generateNextRound` | "Generate next round (N+1)" in RUNNING, PAUSED and TIME UP: makes round N+1 with the matchmaker and opens edit mode. No round N+1 exists before this click (Nathan 2026-10-22, R13-Q3 … R13-Q5) |
 | `startFirstRound` | "Start round 1": starts the round 1 clock at once, no changeover (R9-Q2) |
-| `startNextRound` | "Start round N+1": in RUNNING a confirm first ("End round N now? mm:ss left.", "Start round N+1" / "Cancel", R12-Q1, F05); none in PAUSED or TIME UP. Then saves round N+1 (saved, planned or fresh lineup; in paused edit mode the edit lineup, R9-Q5) → 20 s changeover; round N is logged when N+1 starts (R6-Q1, R6-Q2) |
+| `startNextRound` | "Start round N+1": in RUNNING a confirm first ("End round N now? mm:ss left.", "Start round N+1" / "Cancel", R12-Q1, F05); none in PAUSED. It shows and works only after round N+1 is saved (Nathan 2026-10-22, R13-Q5; never in TIME UP). Starts the saved round N+1 (in paused edit mode the edit lineup, R9-Q5, R11-Q3) → 20 s changeover; round N is logged when N+1 starts (R6-Q1, R6-Q2) |
 | `discardAndStartNext` | "Discard round N and start again": confirm dialog first ("Discard round N?", "Discard round" / "Cancel", R9-Q3; the UAT RND-16 text, F14) → 20 s changeover; round N is never logged; the new round keeps number N (R2-Q5, R9-Q1) |
 | `pause` / `resume` | Freezes / continues the round or the changeover |
 | `startNextNow` | Ends the changeover at once; logs round N (unless discarded) |
@@ -354,17 +355,17 @@ dialog is open closes it with no action.
 48px band under the round bar, padding 0 24px, bg #f3eadb, bottom 1px #e4d8c4
 ├── Title (14/600): "Round N+1 not saved" (#9a3412) or "Round N+1 saved" (#1f7a3d)
 ├── Text (14/400, #221d18): "Clock stops at 0:00 if not saved." / "Starts 20 s after round N ends."
-└── Right: not saved, RUNNING: "Save round N+1" + "Make round N+1" (R12-Q2); not saved, PAUSED:
-    "Make round N+1"; saved: "Edit round N+1" (36px, 1px #6f6352 border, #fffdfa fill)
+└── Right: not saved (RUNNING, PAUSED, TIME UP): "Generate next round (N+1)" (36px primary,
+    Nathan 2026-10-22, R13-Q3); saved: "Edit round N+1" (36px, 1px #6f6352 border, #fffdfa fill)
 Edit mode: bg #fde7c8, bottom 1px #c2410c, title "Editing round N+1" (#9a3412)
 └── Right: "Discard & regenerate" (outline #9a3412), "Save round N+1" (primary), "×" (far right)
 ```
-Shown in RUNNING and PAUSED (and edit mode). The strip "Save round N+1" saves the matchmaker
-lineup at once with no edit mode, the same as "Make round N+1" then "Save round N+1" with no
-change (R12-Q2, F28); "Make round N+1" still opens edit mode (R2-Q6). CHANGEOVER: title "Round N ended", no button
+Shown in RUNNING, PAUSED and TIME UP (and edit mode). "Generate next round (N+1)" makes the
+round N+1 lineup with the matchmaker and opens edit mode; then "Save round N+1" or "×". It
+replaces the quick save of R12-Q2 (F28) and "Make round N+1" (Nathan 2026-10-22, R13-Q3). In
+TIME UP the text "Clock stops at 0:00 if not saved." does not show (R13-Q4). CHANGEOVER: title "Round N ended", no button
 (R6-Q2); after a discard: "Round N discarded · new lineup for round N" (F10). "×" asks
-"Close without saving?" first when the edit has changes (R11-Q2, F03). Not shown in TIME UP (the courts show the planned next round, R6-Q4), READY or with
-no lineup.
+"Close without saving?" first when the edit has changes (R11-Q2, F03). Not shown in READY or with no lineup.
 
 #### CourtCard
 ```
@@ -589,7 +590,9 @@ Two equal cards, 24px apart, no page scroll (the template list scrolls in its ca
 │   ├── value box: 128×52, bg #ffffff, 1px #6f6352, radius 10, 28/600 tabular;
 │   │   focus = 3px #c2410c border; mm:ss = two 44px fields (Tab moves min → sec)
 │   ├── rows: Round duration (±1 min), Session capacity (±1, 4…200),
-│   │   Number of courts (±1, 1…8, read-only live region; only with CourtCount.editable)
+│   │   Number of courts (read-only live region; CourtCount.editable is on, R13-Q1):
+│   │   "+" no upper limit (R13-Q12); "−" from 2, asks "Remove which court?" when a court
+│   │   holds players (R13-Q9); note "No reshuffle · a new court starts empty"
 │   └── Changeover (min 64px): "20 s · fixed", 16/400 #6f6352 (R3-Q7)
 ├── "Session templates":
 │   ├── caps label 12/600 0.08em #6f6352; name field 44px, white, 1px #6f6352, radius 8;
@@ -762,9 +765,9 @@ Tablet/Phone (<1080px), unchanged (R2-Q23):
 | Pattern | Desktop | Tablet | Phone |
 |---------|---------|--------|-------|
 | Stat Strip | none (R3-Q4) | 3 cols | 2 cols (4 stats) |
-| Court Grid | 2×2, fills the free height (4 courts fixed, R2-Q2); with `CourtCount.editable` on: largest courts that fit, min height 136px, else scroll | 2 cols | 1 col |
+| Court Grid | 2×2 for the default 4 courts, fills the free height; with more courts (set on the Sessions tab, no upper limit, R13-Q12): largest courts that fit, min height 136px, else scroll | 2 cols | 1 col |
 | Analytics Grid | 2 cards per row | 1 col | 1 col |
-| KPI Row | 6 cols | 3 cols | 1 col |
+| KPI Row | 7 cols (Members tile added, R13-Q10) | 3 cols | 1 col |
 | Two-Column Form | Row | Row | Column |
 | Chart Grid | 2:1 | 1 col | 1 col |
 | Player Row | NAME 1fr, SIGN-IN ID 140, LEVEL 140, TYPE 120, More 88 | fixed (PR 45) | intrinsic widths, so the name keeps the leftover space |
@@ -829,7 +832,7 @@ Waitlist panel order (R10-Q2): the order the rule would use for the next open pl
 check-in order, earliest first.
 ```
 **Full round (matchmaker, unchanged, R10-Q1).** "Generate round 1", "Discard & regenerate",
-"Make round N+1", the planned round at TIME UP and a fresh lineup at a start button keep
+"Generate next round (N+1)" (R13-Q3) and a fresh lineup for "Discard round N and start again" keep
 `GameData.makeGame()`: the weighted random pick `_choosePlayer` (weight
 `1 / exp(2 × (rounds played − session average))`) and then the court swap optimiser
 `_improveEloSpread` (cost `0.1 × average court gap + largest court gap`). Re-roll (§4.2) also
@@ -868,14 +871,16 @@ stays as it is.
       │                                         │  "Resume changeover")          (not if discarded)
       │                                         │  0:00 with unsaved edits: waits at 00:00 until
       │                                         │  "Save round n+1" (R9-Q4)
-      └── 0:00, not saved ──► [TIME UP n] ──────┤ Start round n+1 / Discard… / Save round n+1 (edit open)
-                              courts show the   │
-                              planned round n+1 │
- Start round n+1  (RUNNING, PAUSED, TIME UP) ───┤ saves n+1, logs nothing at the click;
-                                                │ RUNNING asks "End round n now?" first (R12-Q1)
- Discard round n and start again (same; confirm) ┘ round n never logged; number n again (R9-Q1, R9-Q3)
- Make / Edit round n+1 (RUNNING, PAUSED) → edit mode → Save round n+1 | Discard & regenerate | ×
- Save round n+1 in the strip (RUNNING, not saved) → n+1 saved, no edit mode (R12-Q2)
+      └── 0:00, not saved ──► [TIME UP n] ──────┤ Discard… / Generate next round → Save round n+1
+                              courts show       │
+                              round n, locked   │ (no round n+1 is made at 0:00, R13-Q4)
+ Start round n+1  (RUNNING, PAUSED; n+1 saved) ─┤ logs nothing at the click; only after round
+                                                │ n+1 is saved (R13-Q5); RUNNING asks
+                                                │ "End round n now?" first (R12-Q1)
+ Discard round n and start again (RUNNING, PAUSED, TIME UP; confirm) ┘ round n never logged;
+                                                  number n again (R9-Q1, R9-Q3)
+ Generate next round (RUNNING, PAUSED, TIME UP; no n+1) → edit mode → Save round n+1 | Discard &
+ regenerate | × (R13-Q3). Edit round n+1 (RUNNING, PAUSED; n+1 saved) → edit mode
 ```
 Rules: every new round after round 1 goes through the 20 s changeover (R6-Q1). A round is
 logged only when the next round starts (R3-Q8, R6-Q2). Round number = logged rounds this session
@@ -891,8 +896,9 @@ saved round n+1 unchanged (R11-Q2). "Start round n+1" in paused edit mode saves 
 then the changeover starts (R11-Q3). The changeover strip after a discard reads "Round n
 discarded · new lineup for round n" (F10). A paused changeover follows the PAUSED rules for
 round n+1 (F17). Edit mode is a flag, kept through Pause (F02). "Start round n+1" while
-RUNNING asks "End round n now?" first; PAUSED and TIME UP do not (R12-Q1). The RUNNING strip
-"Save round n+1" saves without edit mode (R12-Q2).
+RUNNING asks "End round n now?" first; PAUSED does not (R12-Q1). The RUNNING strip
+quick save (R12-Q2) is replaced by "Generate next round (n+1)" (Nathan 2026-10-22, R13-Q3). While
+the clock runs, a court with no players takes a waitlist player by hand (R13-Q7, R13-Q8).
 State API as built: `GameData.phase` (`RoundPhase` in `lib/state/round_phase.dart`), with
 `pausedFrom`, `isEditingNext`, `discarded`, `waitingForEdit` and `startNeedsConfirm`; the clock is
 the shared `TimerData` (IMPLEMENTATION 8.2.5).
@@ -942,10 +948,10 @@ the dialog closes.
 | **Courts** | Round bar, next-round strip, 2×2 court grid, waitlist panel (desktop); stat strip and chips on tablet/phone | Generate / start / discard and start rounds, pause, edit the next round, place/swap, undo a swap, re-roll, slot ⋯ menu, end session |
 | ~~**Check-in**~~ | Merged into Players | — |
 | **Players** | Scan field + result box, count, player table, More panel, pending approvals, 4 tier chips | Scan check-in/out, add player, adjust level and membership (More panel), view stats |
-| **Sessions** | Desktop: SessionsBoard (§2.5) — "Round settings" card (duration, capacity, courts only with `CourtCount.editable`, fixed changeover) and "Session templates" card (R7-Q3, 8.10). Tablet/phone: round mode toggle (hidden in release), capacity/courts inputs, template list | Configure session, save/load/delete templates |
+| **Sessions** | Desktop: SessionsBoard (§2.5) — "Round settings" card (duration, capacity, courts — on, R13-Q1 — fixed changeover) and "Session templates" card (R7-Q3, 8.10). Tablet/phone: round mode toggle (hidden in release), capacity/courts inputs, template list | Configure session, save/load/delete templates |
 | ~~**Schedule**~~ | Removed 2026-10-10 | — |
 | **Analytics** (via ⋯) | Attendance trend, court utilization, level gap, level distribution, KPI row | Filter time range (4/12/26 wks) |
-| **Settings** (via ⋯) | Language, membership summary, level note | Change language |
+| **Settings** (via ⋯) | Language (the membership card is removed, Nathan 2026-10-22, R13-Q2) | Change language |
 
 ### Deep Analytics (standalone page)
 - KPI strip (6 metrics)
