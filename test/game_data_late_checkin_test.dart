@@ -22,7 +22,7 @@ void main() {
   });
 
   tearDown(() {
-    CourtCount.editable = false;
+    CourtCount.editable = true;
     sandbox.tearDown();
   });
 

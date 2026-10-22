@@ -38,7 +38,6 @@ void main() {
   setUp(() async {
     // Game-based mode is hidden in the release build; these tests cover it.
     GameMode.enabled = true;
-    // Court-count changes are hidden in the release; these tests cover them.
     CourtCount.editable = true;
     mockPreferences({});
     await PersistentSetting.instance.initialize();
@@ -47,7 +46,7 @@ void main() {
 
   tearDown(() {
     GameMode.enabled = false;
-    CourtCount.editable = false;
+    CourtCount.editable = true;
     sandbox.tearDown();
   });
 
@@ -473,7 +472,15 @@ void main() {
       );
     });
 
-    testWidgets('SESS-04: should_ask_before_reshuffling_a_running_round', (
+    // R13-Q1 (Nathan 2026-10-22): a court count change never reshuffles
+    // and never asks first.
+    Future<void> typeCourts(WidgetTester tester, String value) async {
+      await tester.enterText(find.byKey(courtsField), value);
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('SESS-04: should_not_ask_when_courts_change_in_a_round', (
       tester,
     ) async {
       final timerData = TimerData();
@@ -482,14 +489,12 @@ void main() {
         createTestWidget(gameData: gameData, timerData: timerData),
       );
 
-      await tester.enterText(find.byKey(courtsField), '3');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
+      await typeCourts(tester, '3');
 
-      expect(find.text('Discard round 1?'), findsOneWidget);
+      expect(find.text('Discard round 1?'), findsNothing);
     });
 
-    testWidgets('SESS-04: should_keep_the_court_count_when_cancelled', (
+    testWidgets('SESS-04: should_change_the_court_count_in_a_round', (
       tester,
     ) async {
       final timerData = TimerData();
@@ -497,17 +502,13 @@ void main() {
       await tester.pumpWidget(
         createTestWidget(gameData: gameData, timerData: timerData),
       );
-      await tester.enterText(find.byKey(courtsField), '3');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
+      await typeCourts(tester, '3');
 
-      expect(gameData.numberOfCourt, 2);
+      expect(gameData.numberOfCourt, 3);
     });
 
-    testWidgets('SESS-04: should_restore_the_field_when_cancelled', (
+    testWidgets('SESS-04: should_add_an_empty_court_in_a_round', (
       tester,
     ) async {
       final timerData = TimerData();
@@ -515,33 +516,10 @@ void main() {
       await tester.pumpWidget(
         createTestWidget(gameData: gameData, timerData: timerData),
       );
-      await tester.enterText(find.byKey(courtsField), '3');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
+      await typeCourts(tester, '3');
 
-      expect(
-        tester.widget<TextField>(find.byKey(courtsField)).controller!.text,
-        '2',
-      );
-    });
-
-    testWidgets('SESS-04: should_reshuffle_when_confirmed', (tester) async {
-      final timerData = TimerData();
-      final gameData = await session(tester, timerData);
-      await tester.pumpWidget(
-        createTestWidget(gameData: gameData, timerData: timerData),
-      );
-      await tester.enterText(find.byKey(courtsField), '3');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Reshuffle'));
-      await tester.pumpAndSettle();
-
-      expect(gameData.waitlistedPlayers, isEmpty);
+      expect(gameData.stagingMatches[2].playerIds, isEmpty);
     });
 
     testWidgets('SESS-04: should_not_ask_when_no_round_is_running', (
@@ -560,7 +538,7 @@ void main() {
       expect(find.text('Discard round 1?'), findsNothing);
     });
 
-    testWidgets('SESS-06: should_keep_everything_when_load_is_cancelled', (
+    testWidgets('SESS-06: should_apply_the_template_courts_at_once', (
       tester,
     ) async {
       final timerData = TimerData();
@@ -578,10 +556,8 @@ void main() {
 
       await tester.tap(find.text('Load'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
 
-      expect(gameData.numberOfCourt, 2);
+      expect(gameData.numberOfCourt, 3);
     });
 
     testWidgets(

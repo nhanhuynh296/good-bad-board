@@ -64,15 +64,15 @@ void main() {
     testWidgets('SESS-04: should_hide_the_court_row_when_not_editable', (
       tester,
     ) async {
+      CourtCount.editable = false;
       await SessionsHarness(tester).pump();
 
       expect(find.byKey(courtsValue), findsNothing);
     });
 
-    testWidgets('SESS-04: should_show_the_court_row_when_editable', (
+    testWidgets('SESS-04: should_show_the_court_row_by_default', (
       tester,
     ) async {
-      CourtCount.editable = true;
       await SessionsHarness(tester).pump();
 
       expect(find.byKey(courtsValue), findsOneWidget);
@@ -385,18 +385,9 @@ void main() {
       expect(stepButton(tester, courtsMore).onPressed, isNull);
     });
 
-    testWidgets('should_ask_to_discard_the_running_round', (tester) async {
-      final h = SessionsHarness(tester);
-      h.checkIn(18);
-      h.toRunning();
-      await h.pump();
-
-      await h.tap(find.byKey(courtsLess));
-
-      expect(find.text('Discard round 1?'), findsOneWidget);
-    });
-
-    testWidgets('should_name_the_new_court_count_in_the_dialog', (
+    // R13-Q1 (Nathan 2026-10-22): a court count change never reshuffles
+    // and never asks first, also while a round runs.
+    testWidgets('should_not_ask_when_a_court_is_removed_in_a_round', (
       tester,
     ) async {
       final h = SessionsHarness(tester);
@@ -406,65 +397,56 @@ void main() {
 
       await h.tap(find.byKey(courtsLess));
 
-      expect(
-        find.text(
-          'Round 1 is discarded and not logged. Everyone is placed again '
-          'on 3 courts.',
-        ),
-        findsOneWidget,
-      );
+      expect(find.byKey(_confirm), findsNothing);
     });
 
-    testWidgets('should_ask_while_paused', (tester) async {
+    testWidgets('should_remove_a_court_at_once_in_a_round', (tester) async {
+      final h = SessionsHarness(tester);
+      h.checkIn(18);
+      h.toRunning();
+      await h.pump();
+
+      await h.tap(find.byKey(courtsLess));
+
+      expect(h.gameData.numberOfCourt, 3);
+    });
+
+    testWidgets('should_keep_the_other_courts_when_a_court_is_removed', (
+      tester,
+    ) async {
+      final h = SessionsHarness(tester);
+      h.checkIn(18);
+      h.toRunning();
+      await h.pump();
+      final before = h.rosters;
+
+      await h.tap(find.byKey(courtsLess));
+
+      expect(h.rosters, before.take(3));
+    });
+
+    testWidgets('should_add_an_empty_court_while_paused', (tester) async {
       final h = SessionsHarness(tester);
       h.checkIn(18);
       h.toPaused();
       await h.pump();
 
-      await h.tap(find.byKey(courtsLess));
+      await h.tap(find.byKey(courtsMore));
 
-      expect(find.text('Discard round 1?'), findsOneWidget);
+      expect(h.gameData.stagingMatches[4].playerIds, isEmpty);
     });
 
-    testWidgets('should_keep_the_court_count_on_cancel', (tester) async {
+    testWidgets('should_keep_the_round_paused_when_a_court_is_added', (
+      tester,
+    ) async {
       final h = SessionsHarness(tester);
       h.checkIn(18);
-      h.toRunning();
-      await h.pump();
-      await h.tap(find.byKey(courtsLess));
-
-      await h.tap(find.byKey(_cancel));
-
-      expect(h.gameData.numberOfCourt, 4);
-    });
-
-    testWidgets('should_change_the_court_count_on_reshuffle', (tester) async {
-      final h = SessionsHarness(tester);
-      h.checkIn(18);
-      h.toRunning();
-      await h.pump();
-      await h.tap(find.byKey(courtsLess));
-
-      await h.tap(find.byKey(_confirm));
-
-      expect(h.gameData.numberOfCourt, 3);
-    });
-
-    testWidgets('should_label_the_confirm_button_reshuffle', (tester) async {
-      final h = SessionsHarness(tester);
-      h.checkIn(18);
-      h.toRunning();
+      h.toPaused();
       await h.pump();
 
-      await h.tap(find.byKey(courtsLess));
+      await h.tap(find.byKey(courtsMore));
 
-      expect(
-        find.descendant(
-          of: find.byKey(_confirm),
-          matching: find.text('Reshuffle'),
-        ),
-        findsOneWidget,
-      );
+      expect(h.gameData.phase, RoundPhase.paused);
     });
   });
 
@@ -521,16 +503,16 @@ void main() {
     testWidgets('should_summarise_what_save_keeps', (tester) async {
       await SessionsHarness(tester).pump();
 
-      expect(find.text('Saves 10 min · cap 20'), findsOneWidget);
+      expect(find.text('Saves 10 min · 4 courts · cap 20'), findsOneWidget);
     });
 
-    testWidgets('should_name_the_courts_in_the_summary_when_editable', (
+    testWidgets('should_leave_the_courts_out_when_not_editable', (
       tester,
     ) async {
-      CourtCount.editable = true;
+      CourtCount.editable = false;
       await SessionsHarness(tester).pump();
 
-      expect(find.text('Saves 10 min · 4 courts · cap 20'), findsOneWidget);
+      expect(find.text('Saves 10 min · cap 20'), findsOneWidget);
     });
 
     testWidgets('should_summarise_a_saved_template', (tester) async {
@@ -542,7 +524,7 @@ void main() {
         capacity: 12,
       );
 
-      expect(find.text('8:30 · cap 12'), findsOneWidget);
+      expect(find.text('8:30 · 4 courts · cap 12'), findsOneWidget);
     });
 
     testWidgets('should_say_when_no_template_is_saved', (tester) async {
@@ -621,8 +603,7 @@ void main() {
       expect(h.timer.remaining, const Duration(minutes: 10));
     });
 
-    testWidgets('should_ask_when_the_court_count_changes', (tester) async {
-      CourtCount.editable = true;
+    testWidgets('should_not_ask_when_the_court_count_changes', (tester) async {
       final h = SessionsHarness(tester);
       h.checkIn(18);
       h.toRunning();
@@ -631,23 +612,34 @@ void main() {
 
       await h.tap(find.byKey(loadKey(template)));
 
-      expect(find.text('Discard round 1?'), findsOneWidget);
+      expect(find.byKey(_confirm), findsNothing);
     });
 
-    testWidgets('should_keep_everything_when_the_load_is_cancelled', (
-      tester,
-    ) async {
-      CourtCount.editable = true;
+    testWidgets('should_apply_the_template_court_count', (tester) async {
       final h = SessionsHarness(tester);
       h.checkIn(18);
       h.toRunning();
       await h.pump();
       final template = await h.saveTemplate(courts: 3);
+
       await h.tap(find.byKey(loadKey(template)));
 
-      await h.tap(find.byKey(_cancel));
+      expect(h.gameData.numberOfCourt, 3);
+    });
 
-      expect(h.gameData.sessionCapacity, 20);
+    testWidgets('should_keep_the_other_courts_when_a_template_has_less', (
+      tester,
+    ) async {
+      final h = SessionsHarness(tester);
+      h.checkIn(18);
+      h.toRunning();
+      await h.pump();
+      final template = await h.saveTemplate(courts: 3);
+      final before = h.rosters;
+
+      await h.tap(find.byKey(loadKey(template)));
+
+      expect(h.rosters, before.take(3));
     });
 
     testWidgets('should_label_the_load_button_with_the_name', (tester) async {

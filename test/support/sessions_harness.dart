@@ -39,7 +39,7 @@ void setUpSessionsSandbox(String name) {
     sandbox = await RepositorySandbox.setUp(name);
   });
   tearDown(() {
-    CourtCount.editable = false;
+    CourtCount.editable = true;
     sandbox.tearDown();
   });
 }

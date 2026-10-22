@@ -6,13 +6,14 @@ import 'package:test/test.dart';
 import 'support/prefs_sandbox.dart';
 import 'support/repository_sandbox.dart';
 
-/// SESS-04 / SESS-06: a new court count (typed, or from a template) is a full
-/// reshuffle of the checked-in pool, like a fresh makeGame.
+/// SESS-04 / SESS-06 (R13-Q1, Nathan 2026-10-22): a new court count (typed,
+/// or from a template) changes the current courts only. It never reshuffles
+/// the lineup: an added court is empty, and the players of a removed court go
+/// to the waitlist.
 void main() {
   late RepositorySandbox sandbox;
 
   setUp(() async {
-    // These tests cover court-count changes, hidden in the release.
     CourtCount.editable = true;
     mockPreferences({});
     await PersistentSetting.instance.initialize();
@@ -20,7 +21,7 @@ void main() {
   });
 
   tearDown(() {
-    CourtCount.editable = false;
+    CourtCount.editable = true;
     sandbox.tearDown();
   });
 
@@ -46,7 +47,11 @@ void main() {
     courts: courts,
   );
 
-  test('should_seat_the_whole_pool_when_courts_increase', () async {
+  List<List<String>> rosters(GameContainer lineup) => [
+    for (final game in lineup) [...game.playerIds],
+  ];
+
+  test('should_add_an_empty_court_when_courts_increase', () async {
     // Arrange — 12 players, 2 courts: 4 wait.
     final gameData = await session(12, courts: 2);
 
@@ -54,7 +59,42 @@ void main() {
     gameData.setNumberOfCourt(3);
 
     // Assert
-    expect(gameData.waitlistedPlayers, isEmpty);
+    expect(gameData.stagingMatches[2].playerIds, isEmpty);
+  });
+
+  test('should_keep_the_lineup_when_courts_increase', () async {
+    // Arrange
+    final gameData = await session(12, courts: 2);
+    final before = rosters(gameData.stagingMatches);
+
+    // Act
+    gameData.setNumberOfCourt(3);
+
+    // Assert
+    expect(rosters(gameData.stagingMatches).take(2), before);
+  });
+
+  test('should_keep_the_waitlist_when_courts_increase', () async {
+    // Arrange
+    final gameData = await session(12, courts: 2);
+
+    // Act
+    gameData.setNumberOfCourt(3);
+
+    // Assert
+    expect(gameData.waitlistedPlayers, hasLength(4));
+  });
+
+  test('should_keep_the_other_courts_when_courts_decrease', () async {
+    // Arrange
+    final gameData = await session(12, courts: 3);
+    final before = rosters(gameData.stagingMatches);
+
+    // Act
+    gameData.setNumberOfCourt(2);
+
+    // Assert
+    expect(rosters(gameData.stagingMatches), before.take(2));
   });
 
   test(
@@ -109,7 +149,7 @@ void main() {
     },
   );
 
-  test('should_reshuffle_pool_when_template_is_loaded', () async {
+  test('should_add_an_empty_court_when_a_template_has_more', () async {
     // Arrange
     final gameData = await session(12, courts: 2);
 
@@ -117,7 +157,30 @@ void main() {
     gameData.loadTemplate(template(courts: 3));
 
     // Assert
-    expect(gameData.waitlistedPlayers, isEmpty);
+    expect(gameData.stagingMatches[2].playerIds, isEmpty);
+  });
+
+  test('should_keep_the_lineup_when_a_template_has_more_courts', () async {
+    // Arrange
+    final gameData = await session(12, courts: 2);
+    final before = rosters(gameData.stagingMatches);
+
+    // Act
+    gameData.loadTemplate(template(courts: 3));
+
+    // Assert
+    expect(rosters(gameData.stagingMatches).take(2), before);
+  });
+
+  test('should_waitlist_a_removed_court_when_a_template_has_less', () async {
+    // Arrange
+    final gameData = await session(12, courts: 3);
+
+    // Act
+    gameData.loadTemplate(template(courts: 1));
+
+    // Assert
+    expect(gameData.waitlistedPlayers, hasLength(8));
   });
 
   test(
@@ -159,16 +222,85 @@ void main() {
     },
   );
 
-  test(
-    'should_report_reshuffle_pending_only_with_lineup_and_four_players',
-    () async {
+  group('round state (R13-Q1)', () {
+    Future<GameData> runningSession({required int courts}) async {
+      final gameData = await session(16, courts: courts, generate: false);
+      gameData.generateFirstRound();
+      gameData.startFirstRound();
+      return gameData;
+    }
+
+    test('should_keep_the_round_running_when_courts_change', () async {
       // Arrange
-      final withLineup = await session(12, courts: 2);
-      final withoutLineup = await session(12, courts: 2, generate: false);
+      final gameData = await runningSession(courts: 3);
+
+      // Act
+      gameData.setNumberOfCourt(4);
 
       // Assert
-      expect(withLineup.wouldReshuffleLineup, isTrue);
-      expect(withoutLineup.wouldReshuffleLineup, isFalse);
-    },
-  );
+      expect(gameData.phase, RoundPhase.running);
+    });
+
+    test('should_keep_the_live_lineup_when_courts_change_in_a_round', () async {
+      // Arrange
+      final gameData = await runningSession(courts: 3);
+      final before = rosters(gameData.stagingMatches);
+
+      // Act
+      gameData.setNumberOfCourt(4);
+
+      // Assert
+      expect(rosters(gameData.stagingMatches).take(3), before);
+    });
+
+    test('should_drop_a_removed_court_from_the_saved_next_round', () async {
+      // Arrange
+      final gameData = await runningSession(courts: 3);
+      gameData.makeNextRound();
+      await gameData.saveNextRound();
+
+      // Act
+      gameData.setNumberOfCourt(2);
+
+      // Assert
+      expect(gameData.nextLineup, hasLength(2));
+    });
+
+    test('should_add_an_empty_court_to_the_saved_next_round', () async {
+      // Arrange
+      final gameData = await runningSession(courts: 3);
+      gameData.makeNextRound();
+      await gameData.saveNextRound();
+
+      // Act
+      gameData.setNumberOfCourt(4);
+
+      // Assert
+      expect(gameData.nextLineup![3].playerIds, isEmpty);
+    });
+
+    test('should_apply_the_count_to_the_lineup_in_edit_mode', () async {
+      // Arrange
+      final gameData = await runningSession(courts: 3);
+      gameData.makeNextRound();
+
+      // Act
+      gameData.setNumberOfCourt(2);
+
+      // Assert
+      expect(gameData.visibleMatches, hasLength(2));
+    });
+
+    test('should_not_count_an_added_court_as_an_unsaved_edit', () async {
+      // Arrange
+      final gameData = await runningSession(courts: 3);
+      gameData.makeNextRound();
+
+      // Act
+      gameData.setNumberOfCourt(4);
+
+      // Assert
+      expect(gameData.hasUnsavedEdits, isFalse);
+    });
+  });
 }

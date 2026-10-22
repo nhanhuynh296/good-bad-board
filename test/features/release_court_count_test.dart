@@ -12,20 +12,20 @@ import 'package:provider/provider.dart';
 import '../support/prefs_sandbox.dart';
 import '../support/repository_sandbox.dart';
 
-/// R45-36 (Nathan, 2026-10-14): the court count is fixed at 4 in the
-/// release. The Dashboard and Sessions controls are hidden; the code stays.
+/// R45-36 (Nathan, 2026-10-14) fixed the court count at 4. R13-Q1 (Nathan
+/// 2026-10-22) turns the Sessions control on again, range 1 to 8. The Courts
+/// tab still has no stepper (R2-Q2).
 void main() {
   late RepositorySandbox sandbox;
 
   setUp(() async {
-    CourtCount.editable = false;
     mockPreferences({});
     await PersistentSetting.instance.initialize();
     sandbox = await RepositorySandbox.setUp('release_court_count_test');
   });
 
   tearDown(() {
-    CourtCount.editable = false;
+    CourtCount.editable = true;
     sandbox.tearDown();
   });
 
@@ -50,8 +50,8 @@ void main() {
     addTearDown(tester.view.reset);
   }
 
-  test('should_default_the_court_count_flag_to_off', () {
-    expect(CourtCount.editable, isFalse);
+  test('should_default_the_court_count_flag_to_on', () {
+    expect(CourtCount.editable, isTrue);
   });
 
   testWidgets('should_hide_the_court_stepper_on_the_dashboard', (tester) async {
@@ -73,14 +73,25 @@ void main() {
     expect(find.byIcon(Icons.add_rounded), findsNothing);
   });
 
-  testWidgets('should_hide_the_courts_field_on_sessions', (tester) async {
+  testWidgets('should_show_the_court_count_on_desktop_sessions', (
+    tester,
+  ) async {
     desktop(tester);
     await tester.pumpWidget(wrap(const SessionsPage(), GameData()));
 
-    expect(find.byKey(const Key('sessions-courts-field')), findsNothing);
+    expect(find.byKey(const Key('sessions-courts-value')), findsOneWidget);
   });
 
-  test('should_keep_4_courts_when_a_6_court_template_is_loaded', () {
+  testWidgets('should_show_the_courts_field_on_phone_sessions', (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(wrap(const SessionsPage(), GameData()));
+
+    expect(find.byKey(const Key('sessions-courts-field')), findsOneWidget);
+  });
+
+  test('should_apply_6_courts_when_a_6_court_template_is_loaded', () {
     final gameData = GameData();
 
     gameData.loadTemplate(
@@ -94,6 +105,6 @@ void main() {
       ),
     );
 
-    expect(gameData.numberOfCourt, 4);
+    expect(gameData.numberOfCourt, 6);
   });
 }
