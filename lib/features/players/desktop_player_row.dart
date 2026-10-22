@@ -59,6 +59,7 @@ class DesktopPlayerRow extends StatefulWidget {
 
 class _DesktopPlayerRowState extends State<DesktopPlayerRow> {
   bool _focused = false;
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +68,11 @@ class _DesktopPlayerRowState extends State<DesktopPlayerRow> {
     final disabled = player.membership == MembershipStatus.disabled;
     final checked = widget.isCheckedIn && !disabled;
 
-    final fill = checked ? AppColors.checkedInBg : AppColors.cardBg;
+    final base = checked ? AppColors.checkedInBg : AppColors.cardBg;
+    // Hover tints the whole row, not a box inside it.
+    final fill = _hovered && !disabled
+        ? Color.alphaBlend(AppColors.black.withValues(alpha: 0.03), base)
+        : base;
     final text = disabled ? AppColors.textMuted : AppColors.textPrimary;
     final typeColour = checked
         ? AppColors.textMutedOnCheckedIn
@@ -102,72 +107,69 @@ class _DesktopPlayerRowState extends State<DesktopPlayerRow> {
             Row(
               children: [
                 Expanded(
-                  child: FocusRing(
-                    focused: _focused,
-                    color: AppColors.focusOnLight,
-                    radius: AppRadii.md,
-                    child: Semantics(
-                      container: true,
-                      button: true,
-                      toggled: disabled ? null : checked,
-                      enabled: !disabled,
-                      label: label,
-                      child: Material(
-                        type: MaterialType.transparency,
-                        child: InkWell(
-                          key: const Key('player-row-toggle'),
-                          onTap: widget.onToggleCheckin,
-                          onFocusChange: (value) =>
-                              setState(() => _focused = value),
-                          borderRadius: radius,
-                          mouseCursor: disabled
-                              ? SystemMouseCursors.forbidden
-                              : SystemMouseCursors.click,
-                          hoverColor: disabled
-                              ? Colors.transparent
-                              : AppColors.black.withValues(alpha: 0.03),
-                          splashColor: disabled ? Colors.transparent : null,
-                          highlightColor: disabled ? Colors.transparent : null,
-                          child: ExcludeSemantics(
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: PlayerTableColumns.nameInset - 1,
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      player.name(),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: AppTypography.subtitle.copyWith(
-                                        color: text,
-                                      ),
+                  child: Semantics(
+                    container: true,
+                    button: true,
+                    toggled: disabled ? null : checked,
+                    enabled: !disabled,
+                    label: label,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: InkWell(
+                        key: const Key('player-row-toggle'),
+                        onTap: widget.onToggleCheckin,
+                        onFocusChange: (value) =>
+                            setState(() => _focused = value),
+                        borderRadius: radius,
+                        mouseCursor: disabled
+                            ? SystemMouseCursors.forbidden
+                            : SystemMouseCursors.click,
+                        onHover: (value) => setState(() => _hovered = value),
+                        // The row fill shows hover, and the ring over the
+                        // whole row shows focus (below).
+                        focusColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        splashColor: disabled ? Colors.transparent : null,
+                        highlightColor: disabled ? Colors.transparent : null,
+                        child: ExcludeSemantics(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              left: PlayerTableColumns.nameInset - 1,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    player.name(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.subtitle.copyWith(
+                                      color: text,
                                     ),
                                   ),
-                                  const SizedBox(width: PlayerTableColumns.gap),
-                                  _Cell(
-                                    width: PlayerTableColumns.id,
-                                    text: player.signInId ?? '',
-                                    color: text,
-                                    tabular: true,
+                                ),
+                                const SizedBox(width: PlayerTableColumns.gap),
+                                _Cell(
+                                  width: PlayerTableColumns.id,
+                                  text: player.signInId ?? '',
+                                  color: text,
+                                  tabular: true,
+                                ),
+                                const SizedBox(width: PlayerTableColumns.gap),
+                                _Cell(
+                                  width: PlayerTableColumns.level,
+                                  text: player.elo.skillTier.localizedLabel(
+                                    l10n,
                                   ),
-                                  const SizedBox(width: PlayerTableColumns.gap),
-                                  _Cell(
-                                    width: PlayerTableColumns.level,
-                                    text: player.elo.skillTier.localizedLabel(
-                                      l10n,
-                                    ),
-                                    color: text,
-                                  ),
-                                  const SizedBox(width: PlayerTableColumns.gap),
-                                  _Cell(
-                                    width: PlayerTableColumns.type,
-                                    text: type,
-                                    color: typeColour,
-                                  ),
-                                ],
-                              ),
+                                  color: text,
+                                ),
+                                const SizedBox(width: PlayerTableColumns.gap),
+                                _Cell(
+                                  width: PlayerTableColumns.type,
+                                  text: type,
+                                  color: typeColour,
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -200,6 +202,25 @@ class _DesktopPlayerRowState extends State<DesktopPlayerRow> {
                   child: ColoredBox(
                     key: Key('player-row-bar'),
                     color: AppColors.success,
+                  ),
+                ),
+              ),
+            // One focus ring over the whole row, inside its edge, so the
+            // list does not clip it.
+            if (_focused &&
+                FocusManager.instance.highlightMode ==
+                    FocusHighlightMode.traditional)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    key: const Key('player-row-focus-ring'),
+                    decoration: BoxDecoration(
+                      borderRadius: radius,
+                      border: Border.all(
+                        color: AppColors.focusOnLight,
+                        width: 3,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -286,6 +307,8 @@ class _MoreButtonState extends State<_MoreButton> {
             onTap: widget.onPressed,
             onFocusChange: (value) => setState(() => _focused = value),
             borderRadius: AppRadii.mdRadius,
+            // The ring shows focus; no grey fill as well.
+            focusColor: Colors.transparent,
             child: ExcludeSemantics(
               child: SizedBox(
                 width: 72,
