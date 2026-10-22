@@ -1,5 +1,6 @@
 import 'dart:ui' show Tristate;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_bad_board/features/players/players.dart';
@@ -198,6 +199,96 @@ void main() {
         inRow(h, 'Dave', find.byKey(const Key('player-row-toggle'))),
       );
       expect(ink.mouseCursor, SystemMouseCursors.forbidden);
+    });
+  });
+
+  group('Focus and hover (Nathan 2026-10-22)', () {
+    final ring = find.byKey(const Key('player-row-focus-ring'));
+
+    Future<void> focusRow(WidgetTester tester, PlayersHarness h) async {
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
+      addTearDown(
+        () => FocusManager.instance.highlightStrategy =
+            FocusHighlightStrategy.automatic,
+      );
+      final inside = find.descendant(
+        of: inRow(h, 'Alice', find.byKey(const Key('player-row-toggle'))),
+        matching: find.byType(ExcludeSemantics),
+      );
+      Focus.of(tester.element(inside.first)).requestFocus();
+      await tester.pump();
+    }
+
+    testWidgets('should_draw_the_focus_ring_around_the_whole_row', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      await focusRow(tester, h);
+
+      expect(tester.getRect(ring), tester.getRect(h.rowOf('Alice')));
+    });
+
+    testWidgets('should_not_tint_the_row_while_it_has_focus', (tester) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      final toggle = tester.widget<InkWell>(
+        inRow(h, 'Alice', find.byKey(const Key('player-row-toggle'))),
+      );
+
+      expect(toggle.focusColor, Colors.transparent);
+    });
+
+    testWidgets('should_not_fill_the_more_button_while_it_has_focus', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      final more = tester.widget<InkWell>(
+        inRow(h, 'Alice', find.byKey(const Key('player-more'))),
+      );
+
+      expect(more.focusColor, Colors.transparent);
+    });
+
+    testWidgets('should_not_draw_a_hover_box_inside_the_row', (tester) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      final toggle = tester.widget<InkWell>(
+        inRow(h, 'Alice', find.byKey(const Key('player-row-toggle'))),
+      );
+
+      expect(toggle.hoverColor, Colors.transparent);
+    });
+
+    testWidgets('should_tint_the_whole_row_on_hover', (tester) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+      BoxDecoration decoration() =>
+          tester
+                  .widget<DecoratedBox>(
+                    inRow(
+                      h,
+                      'Alice',
+                      find.byKey(const Key('player-row-decoration')),
+                    ),
+                  )
+                  .decoration
+              as BoxDecoration;
+      final before = decoration().color;
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+
+      await gesture.moveTo(tester.getCenter(h.rowOf('Alice')));
+      await tester.pump();
+
+      expect(decoration().color, isNot(before));
     });
   });
 

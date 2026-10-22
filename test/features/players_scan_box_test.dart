@@ -60,6 +60,24 @@ void main() {
       );
     }, variant: TargetPlatformVariant.desktop());
 
+    testWidgets('should_draw_no_second_border_inside_the_scan_field', (
+      tester,
+    ) async {
+      final h = PlayersHarness(tester);
+      await h.pump(players: [alice]);
+
+      final decoration = tester
+          .widget<TextField>(
+            find.descendant(of: h.scanField, matching: find.byType(TextField)),
+          )
+          .decoration!;
+
+      expect(
+        [decoration.enabledBorder, decoration.focusedBorder],
+        [InputBorder.none, InputBorder.none],
+      );
+    });
+
     testWidgets('should_keep_the_rows_clear_of_the_scroll_bar', (tester) async {
       final h = PlayersHarness(tester);
       await h.pump(

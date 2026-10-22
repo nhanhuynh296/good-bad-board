@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:good_bad_board/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_bad_board/design/design.dart';
@@ -84,6 +85,9 @@ class PlayersHarness {
         child: ChangeNotifierProvider<GameData>.value(
           value: gameData,
           child: MaterialApp(
+            // The app theme, so the theme defaults (input borders, focus
+            // colours) show as they do in the app.
+            theme: lightThemeFor(locale),
             locale: locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
